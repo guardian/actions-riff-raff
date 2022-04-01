@@ -1,0 +1,23 @@
+{
+  "name": "actions-riff-raff",
+  "version": "0.1.0",
+  "description": "A Github Action to build and upload Riff Raff artifacts.",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild index.ts --bundle --platform=node --target=node16 --outfile=index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/guardian/actions-riff-raff"
+  },
+  "author": "nicolas.long@theguardian.com",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.14.29"
+  },
+  "devDependencies": {
+    "@actions/core": "^1.6.0",
+    "typescript": "^4.6.3"
+  }
+}
