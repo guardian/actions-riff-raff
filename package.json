@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "esbuild index.ts --bundle --platform=node --target=node16 --outfile=index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -14,10 +15,11 @@
   "author": "nicolas.long@theguardian.com",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "^0.14.29"
+    "esbuild": "^0.14.29",
+    "@actions/core": "^1.6.0"
+
   },
   "devDependencies": {
-    "@actions/core": "^1.6.0",
     "typescript": "^4.6.3"
   }
 }
