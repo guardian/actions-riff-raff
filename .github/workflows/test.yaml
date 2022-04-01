@@ -1,5 +1,5 @@
 name: test
-on: 
+on:
   pull_request:
   workflow_dispatch:
   push:
@@ -16,15 +16,16 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
 
-      - run: |
-        npm ci
-        npm run build
+      - name: build
+        run: |
+          npm ci
+          npm run build
 
       - uses: ./
         with:
           app: foo
           stack: deployTools
-          deployments:
+          deployments: |
             upload:
               type: aws-s3
               source: test-data
