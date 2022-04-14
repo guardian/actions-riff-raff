@@ -12,18 +12,18 @@ https://github.com/guardian/node-riffraff-artifact.
 To use, add (something like) the following to your workflow file:
 
 ```
-      - uses: @guardian/actions-riff-raff
-        with:
-          app: foo
-          stack: deploy
-          deployments: |
-            upload:
-              type: aws-s3
-              sources: test-data
-              parameters:
-                bucket: aws-some-bucket
-                cacheControl: private
-                publicReadAcl: false
+- uses: @guardian/actions-riff-raff
+  with:
+    app: foo
+    stack: deploy
+    deployments: |
+      upload:
+        type: aws-s3
+        sources: test-data
+        parameters:
+          bucket: aws-some-bucket
+          cacheControl: private
+          publicReadAcl: false
 ```
 
 By default, `stack::app` will be the Riffraff project name. Use the (optional)
@@ -45,10 +45,10 @@ some-config.yaml
 The following deployment:
 
 ```
-            my-deployment:
-              type: aws-s3
-              sources: cfn,some-config.yaml
-              parameters: ...
+my-deployment:
+  type: aws-s3
+  sources: cfn,some-config.yaml
+  parameters: ...
 ```
 
 will result in a Riffraff package like:
