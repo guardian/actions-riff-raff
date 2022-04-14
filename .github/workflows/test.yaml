@@ -16,10 +16,16 @@ jobs:
           node-version-file: ".nvmrc"
           cache: npm
 
-      - name: build
+      - name: build + test
         run: |
           npm ci
           npm run build
+          npm test
+
+      - name: prep action
+        run: |
+          mkdir test-data
+          touch test-data/foo.txt
 
       - uses: ./
         with:
