@@ -1,0 +1,11 @@
+stacks:
+  - deploy
+regions:
+  - eu-west-1
+deployments:
+  upload:
+    type: aws-s3
+    parameters:
+      bucket: aws-some-bucket
+      cacheControl: private
+      publicReadAcl: false

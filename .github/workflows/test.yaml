@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: npm
 
       - name: build
@@ -23,12 +23,13 @@ jobs:
 
       - uses: ./
         with:
+          dryRun: true
           app: foo
-          stack: deployTools
+          stack: deploy
           deployments: |
             upload:
               type: aws-s3
-              source: test-data
+              sources: test-data
               parameters:
                 bucket: aws-some-bucket
                 cacheControl: private
