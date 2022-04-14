@@ -55,7 +55,7 @@ will result in a Riffraff package like:
 
 ```
 riff-raff.yaml
-build.info
+build.json
 my-deployment/
   cloudformation-CODE.yaml
   cloudformation-PROD.yaml
