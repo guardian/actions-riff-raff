@@ -1,6 +1,7 @@
 import { main } from ".";
 import { walk } from "./file/file";
 import * as yaml from "js-yaml";
+import * as child_process from "child_process";
 
 // Read yaml config and set env vars to mimic GHA
 const readConfig = (yamlConfig: string): void => {
@@ -38,11 +39,16 @@ deployments: |
       `${staging}/upload/foo.txt`,
     ];
 
+    child_process.execSync("mkdir test-data");
+    child_process.execSync("touch test-data/foo.txt");
+
     readConfig(input);
     main();
 
     const got = walk(staging, (path: string) => path);
 
     expect(got.sort()).toEqual(want.sort());
+
+    child_process.execSync("rm -rf test-data");
   });
 });

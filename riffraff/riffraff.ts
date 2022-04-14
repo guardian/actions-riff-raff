@@ -24,13 +24,19 @@ const vcsURL = (): string | undefined => {
     : undefined;
 };
 
-export const manifest = (): Manifest => {
+export const manifest = (
+  app: string,
+  stack: string,
+  projectName?: string
+): Manifest => {
+  const name = projectName ?? `${stack}::${app}`;
+
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: process.env.GITHUB_SHA || "dev",
     buildNumber: process.env.GITHUB_RUN_NUMBER || "dev",
-    projectName: "sdf",
+    projectName: name,
     startTime: new Date(),
   };
 };

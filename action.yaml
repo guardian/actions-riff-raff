@@ -10,6 +10,9 @@ inputs:
   deployments:
     description: "Riff Raff deployments. This is equivalent to the deployments section of a riff-raff.yaml file but with two additional properties: 'sources' (required - comma-separated list of the target files/directories for the deployment), and 'compression' (optional - 'gzip', 'tar', or the default 'none')."
     required: true
+  projectName:
+    description: "Determines Riffraff project name. Use this to override the default `stack::app` naming convention.",
+    required: false,
   dryRun:
     description: If set to true, logs the output but does not upload deployments to the Riff Raff S3 bucket.
     required: false

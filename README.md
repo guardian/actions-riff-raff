@@ -2,9 +2,9 @@
 
 A language-agnostic Github Action to create and upload Riffraff artifacts. It will:
 
-* create your `riff-raff.yaml` and `build.json` files
-* package files into deployment directories
-* upload the above to Riffraff's S3 bucket ready to deploy
+- create your `riff-raff.yaml` and `build.json` files
+- package files into deployment directories
+- upload the above to Riffraff's S3 bucket ready to deploy
 
 It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
@@ -25,6 +25,9 @@ To use, add (something like) the following to your workflow file:
                 cacheControl: private
                 publicReadAcl: false
 ```
+
+By default, `stack::app` will be the Riffraff project name. Use the (optional)
+`projectName` setting to override this.
 
 The `deployments` section structure is equivalent to the same section of a
 `riff-raff.yaml` file with an addition field per deployment called `source` that

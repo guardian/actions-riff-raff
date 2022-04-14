@@ -9,6 +9,7 @@ import { write, cp, printDir } from "./file/file";
 export const main = () => {
   const app = core.getInput("app");
   const stack = core.getInput("stack");
+  const projectName = core.getInput("projectName");
   const dryRun = core.getInput("dryRun");
   const deploymentsYaml = core.getInput("deployments");
   const deploymentsObj = yaml.load(deploymentsYaml);
@@ -32,7 +33,7 @@ export const main = () => {
   });
 
   const rrYaml = riffraffYaml(stack, deployments);
-  const mfest = manifest();
+  const mfest = manifest(app, stack, projectName);
   const manifestJSON = JSON.stringify(mfest);
 
   const stagingDir = "staging";
