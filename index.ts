@@ -6,7 +6,7 @@ import type { Deployment } from "./riffraff/riffraff";
 import { riffraffYaml, riffraffPrefix, manifest } from "./riffraff/riffraff";
 import { write, cp, printDir } from "./file/file";
 
-export const main = () => {
+export const main = async () => {
   const app = core.getInput("app");
   const stack = core.getInput("stack");
   const projectName = core.getInput("projectName");
@@ -54,8 +54,8 @@ export const main = () => {
   const store = new S3Store(new S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
 
-  store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
-  sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
+  await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
+  await sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
 
   core.info("Upload complete. The following files were sent:");
   core.info(printDir(stagingDir));

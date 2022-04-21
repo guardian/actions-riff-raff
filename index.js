@@ -38989,7 +38989,7 @@ var riffraffPrefix = (m) => {
 };
 
 // index.ts
-var main = () => {
+var main = async () => {
   const app = core2.getInput("app");
   const stack = core2.getInput("stack");
   const projectName = core2.getInput("projectName");
@@ -39021,8 +39021,8 @@ var main = () => {
   }
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
-  store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
-  sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
+  await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
+  await sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
   core2.info("Upload complete. The following files were sent:");
   core2.info(printDir(stagingDir));
 };
