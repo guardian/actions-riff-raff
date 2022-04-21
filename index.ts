@@ -55,7 +55,7 @@ export const main = async () => {
   const keyPrefix = riffraffPrefix(mfest);
 
   await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
-  await sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
+  await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
 
   core.info("Upload complete. The following files were sent:");
   core.info(printDir(stagingDir));

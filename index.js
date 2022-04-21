@@ -39022,7 +39022,7 @@ var main = async () => {
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
   await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
-  await sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
+  await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
   core2.info("Upload complete. The following files were sent:");
   core2.info(printDir(stagingDir));
 };
