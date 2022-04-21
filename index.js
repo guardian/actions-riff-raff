@@ -38950,7 +38950,7 @@ var S3Store = class {
 var sync = async (store, dir, bucket, keyPrefix) => {
   const responses = walk(dir, (filePath) => {
     const data = fs2.readFileSync(filePath).toString("utf-8");
-    const key = keyPrefix + "/" + filePath.substring(dir.length);
+    const key = keyPrefix + filePath.substring(dir.length);
     core2.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);
   });
@@ -39013,7 +39013,6 @@ var main = async () => {
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = "staging";
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
-  write(`${stagingDir}/build.json`, manifestJSON);
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });

@@ -32,7 +32,7 @@ export const sync = async (
 ): Promise<void> => {
   const responses = walk(dir, (filePath: string) => {
     const data = fs.readFileSync(filePath).toString("utf-8");
-    const key = keyPrefix + "/" + filePath.substring(dir.length);
+    const key = keyPrefix + filePath.substring(dir.length);
 
     core.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);

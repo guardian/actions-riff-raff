@@ -39,7 +39,6 @@ export const main = async () => {
   const stagingDir = "staging";
 
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
-  write(`${stagingDir}/build.json`, manifestJSON);
 
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
