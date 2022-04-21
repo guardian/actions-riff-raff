@@ -27,7 +27,7 @@ export const main = async () => {
 
     return {
       name: name,
-      sources: (sources as string).split(","),
+      sources: (sources as string).split(",").map((source) => source.trim()),
       data: rest,
     };
   });

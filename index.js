@@ -39004,7 +39004,7 @@ var main = async () => {
     const _a = data, { sources } = _a, rest = __objRest(_a, ["sources"]);
     return {
       name,
-      sources: sources.split(","),
+      sources: sources.split(",").map((source) => source.trim()),
       data: rest
     };
   });
