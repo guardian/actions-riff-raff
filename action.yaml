@@ -10,12 +10,28 @@ inputs:
   deployments:
     description: "Riff Raff deployments. This is equivalent to the deployments section of a riff-raff.yaml file but with two additional properties: 'sources' (required - comma-separated list of the target files/directories for the deployment), and 'compression' (optional - 'gzip', 'tar', or the default 'none')."
     required: true
+  role-to-assume:
+    description: ARN of Riffraff role to allow S3 uploads to the Riffraff buckets. Typically, set this to the 'GU_RIFF_RAFF_ROLE_ARN' secret.
+    required: true
+
   projectName:
     description: "Determines Riffraff project name. Use this to override the default `stack::app` naming convention."
     required: false
   dryRun:
     description: If set to true, logs the output but does not upload deployments to the Riff Raff S3 bucket.
     required: false
+
 runs:
-  using: "node16"
-  main: "index.js"
+  using: "composite"
+
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: eu-west-1
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: "14"
+    - run: node ${{ github.action_path }}/index.js
+      shell: bash
