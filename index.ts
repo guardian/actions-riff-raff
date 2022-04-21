@@ -54,6 +54,8 @@ export const main = async () => {
   const store = new S3Store(new S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
 
+  core.info(`S3 prefix: ${keyPrefix}`);
+
   await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
 
