@@ -34,6 +34,30 @@ The `deployments` section structure is equivalent to the same section of a
 can point to files and directories, all of which will be included in the package
 for the deployment.
 
+Note, you will need to provide credentials to upload to S3. Typically, this
+involves adding the following in your workflow file:
+
+(to your job)
+
+```
+permissions:
+  id-token: write
+  contents: read
+```
+
+(to your steps)
+
+```
+uses: aws-actions/configure-aws-credentials@v1
+with:
+  aws-region: eu-west-1
+  role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+```
+
+For more info, see: https://github.com/aws-actions/configure-aws-credentials.
+
+### Example
+
 To illustrate, with the following file structure:
 
 ```
