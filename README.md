@@ -12,7 +12,7 @@ https://github.com/guardian/node-riffraff-artifact.
 To use, add (something like) the following to your workflow file:
 
 ```
-- uses: @guardian/actions-riff-raff
+- uses: guardian/actions-riff-raff@main
   with:
     app: foo
     stack: deploy
