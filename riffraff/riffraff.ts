@@ -29,7 +29,7 @@ export const manifest = (
   stack: string,
   projectName?: string
 ): Manifest => {
-  const name = projectName ?? `${stack}::${app}`;
+  const name = projectName ? projectName : `${stack}::${app}`;
 
   return {
     branch: branchName() ?? "dev",

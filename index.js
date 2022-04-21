@@ -38969,7 +38969,7 @@ var vcsURL = () => {
   return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
 };
 var manifest = (app, stack, projectName) => {
-  const name = projectName ?? `${stack}::${app}`;
+  const name = projectName ? projectName : `${stack}::${app}`;
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
