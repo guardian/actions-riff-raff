@@ -30,7 +30,7 @@ By default, `stack::app` will be the Riffraff project name. Use the (optional)
 `projectName` setting to override this.
 
 The `deployments` section structure is equivalent to the same section of a
-`riff-raff.yaml` file with an addition field per deployment called `source` that
+`riff-raff.yaml` file with an addition field per deployment called `sources` that
 can point to files and directories, all of which will be included in the package
 for the deployment.
 
