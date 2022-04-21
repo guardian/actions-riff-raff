@@ -39026,8 +39026,7 @@ var main = async () => {
   core3.info(`S3 prefix: ${keyPrefix}`);
   await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
-  core3.info("Upload complete. The following files were sent:");
-  core3.info(printDir(stagingDir));
+  core3.info("Upload complete.");
 };
 try {
   if (require.main === module)
