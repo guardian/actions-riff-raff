@@ -39019,7 +39019,7 @@ var main = () => {
     core2.info(printDir(stagingDir));
     return;
   }
-  const store = new S3Store(new import_client_s32.S3Client({}));
+  const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
   store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
   sync(store, stagingDir, "riffraff-artifacts", keyPrefix);
