@@ -4,7 +4,7 @@ A language-agnostic Github Action to create and upload Riffraff artifacts. It wi
 
 - create your `riff-raff.yaml` and `build.json` files
 - package files into deployment directories
-- upload the above to Riffraff's S3 bucket ready to deploy
+- upload the above to Riffraff's S3 buckets ready to deploy
 
 It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
