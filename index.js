@@ -38961,8 +38961,12 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 var import_client_s32 = __toESM(require_dist_cjs60());
 
 // riffraff/riffraff.ts
+var envOrUndefined = (variableName) => {
+  const maybeEnvVar = process.env[variableName];
+  return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
+};
 var branchName = () => {
-  const branchName2 = process.env.GITHUB_HEAD_REF ?? process.env.GITHUB_REF;
+  const branchName2 = envOrUndefined("GITHUB_HEAD_REF") ?? envOrUndefined("GITHUB_REF");
   return branchName2 ? branchName2.replace("refs/heads/", "") : void 0;
 };
 var vcsURL = () => {
