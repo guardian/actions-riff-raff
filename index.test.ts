@@ -16,9 +16,9 @@ const readConfig = (yamlConfig: string): void => {
 
 describe("action", () => {
   it("should generate expected file structure", () => {
-    // Note, don't check contents here as other tests capture that
+    child_process.execSync("rm -rf test-data");
+    child_process.execSync("rm -rf staging");
 
-    // TODO convert automaatically to process.env vars
     const input = `dryRun: true
 app: foo
 stack: deploy
@@ -33,11 +33,7 @@ deployments: |
 
     const staging = "staging";
 
-    const want = [
-      `${staging}/riff-raff.yaml`,
-      `${staging}/build.json`,
-      `${staging}/upload/foo.txt`,
-    ];
+    const want = [`${staging}/riff-raff.yaml`, `${staging}/upload/foo.txt`];
 
     child_process.execSync("mkdir test-data");
     child_process.execSync("touch test-data/foo.txt");
@@ -48,7 +44,5 @@ deployments: |
     const got = walk(staging, (path: string) => path);
 
     expect(got.sort()).toEqual(want.sort());
-
-    child_process.execSync("rm -rf test-data");
   });
 });

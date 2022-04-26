@@ -38949,7 +38949,7 @@ var S3Store = class {
 };
 var sync = async (store, dir, bucket, keyPrefix) => {
   const responses = walk(dir, (filePath) => {
-    const data = fs2.readFileSync(filePath).toString("utf-8");
+    const data = fs2.readFileSync(filePath);
     const key = keyPrefix + filePath.substring(dir.length);
     core2.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);
@@ -39028,7 +39028,7 @@ var main = async () => {
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
   core3.info(`S3 prefix: ${keyPrefix}`);
-  await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
+  await store.put(Buffer.from(manifestJSON, "utf8"), "riffraff-builds", keyPrefix + "/build.json");
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
   core3.info("Upload complete.");
 };
