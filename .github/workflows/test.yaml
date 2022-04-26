@@ -24,8 +24,8 @@ jobs:
 
       - name: prep action
         run: |
-          mkdir test-data
-          touch test-data/foo.txt
+          mkdir my-sources
+          touch my-sources/foo.txt
 
       - uses: ./
         with:
@@ -35,7 +35,7 @@ jobs:
           deployments: |
             upload:
               type: aws-s3
-              sources: test-data
+              sources: my-sources
               parameters:
                 bucket: aws-some-bucket
                 cacheControl: private
