@@ -3,7 +3,7 @@ import { walk } from "../file/file";
 import * as fs from "fs";
 import * as core from "@actions/core";
 export interface Store {
-  put: (data: string, bucket: string, key: string) => Promise<void>;
+  put: (data: Buffer, bucket: string, key: string) => Promise<void>;
 }
 
 export class S3Store implements Store {
@@ -13,7 +13,7 @@ export class S3Store implements Store {
     this.client = client;
   }
 
-  async put(data: string, bucket: string, key: string): Promise<void> {
+  async put(data: Buffer, bucket: string, key: string): Promise<void> {
     const cmd = new PutObjectCommand({
       Body: data,
       Key: key,
@@ -31,7 +31,7 @@ export const sync = async (
   keyPrefix: string
 ): Promise<void> => {
   const responses = walk(dir, (filePath: string) => {
-    const data = fs.readFileSync(filePath).toString("utf-8");
+    const data = fs.readFileSync(filePath);
     const key = keyPrefix + filePath.substring(dir.length);
 
     core.info(`s3 sync: ${filePath} -> ${key}`);

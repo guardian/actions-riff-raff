@@ -55,7 +55,11 @@ export const main = async () => {
 
   core.info(`S3 prefix: ${keyPrefix}`);
 
-  await store.put(manifestJSON, "riffraff-builds", keyPrefix + "/build.json");
+  await store.put(
+    Buffer.from(manifestJSON, "utf8"),
+    "riffraff-builds",
+    keyPrefix + "/build.json"
+  );
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
 
   core.info("Upload complete.");
