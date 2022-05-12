@@ -21,7 +21,7 @@ deployments:
       templatePath: Amiable.template.json
 `;
 
-    const got = riffraffYaml("deploy", [
+    const got = riffraffYaml(["deploy"], ["eu-west-1"], [
       {
         name: "amiable",
         sources: [],

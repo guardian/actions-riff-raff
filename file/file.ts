@@ -20,6 +20,10 @@ export const walk = <A>(path: string, fn: (path: string) => A): A[] => {
   return []; // Ignore block devices, symlinks, etc.
 };
 
+export const read = (filePath: string): string => {
+  return fs.readFileSync(filePath, "utf-8")
+}
+
 // Write to file, creating any directories as required
 export const write = (filePath: string, data: string): void => {
   const dir = path.dirname(filePath);

@@ -2,45 +2,63 @@ import * as core from "@actions/core";
 import * as yaml from "js-yaml";
 import { S3Store, sync } from "./s3/s3";
 import { S3Client } from "@aws-sdk/client-s3";
-import type { Deployment } from "./riffraff/riffraff";
-import { riffraffYaml, riffraffPrefix, manifest } from "./riffraff/riffraff";
-import { write, cp, printDir } from "./file/file";
+import type { Deployment, RiffraffYaml } from "./riffraff/riffraff";
+import { riffraffPrefix, manifest } from "./riffraff/riffraff";
+import { read, write, cp, printDir } from "./file/file";
 
-export const main = async () => {
-  const app = core.getInput("app");
-  const stack = core.getInput("stack");
+const readConfigFile = (path: string): object => {
+  const data = read(path);
+  return yaml.load(data) as object;
+}
+
+const defaultProjectName = (app: string, stacks: string[]): string => {
+  if (stacks.length < 1) {
+    throw new Error("Must provide at least one stack.")
+  }
+
+  return `${stacks[0]}::${app}`;
+}
+
+export const main = async (): Promise<void> => {
+  const app = core.getInput("app", {required: true});
+  const config = core.getInput("config");
+  const configPath = core.getInput("configPath");
   const projectName = core.getInput("projectName");
   const dryRun = core.getInput("dryRun");
-  const deploymentsYaml = core.getInput("deployments");
-  const deploymentsObj = yaml.load(deploymentsYaml);
 
+  if (!config && !configPath) {
+    throw new Error("Must specify either config or configPath.")
+  }
+
+  const configObj = (config ? yaml.load(config) : readConfigFile(configPath)) as RiffraffYaml;
   core.info(
-    `Inputs are: dryRun: ${dryRun}; app: ${app}; stack: ${stack}; deployments: ${JSON.stringify(
-      deploymentsObj
-    )}`
+    `Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(configObj)}}`
   );
 
   const deployments: Deployment[] = Object.entries(
-    deploymentsObj as object
+    configObj.deployments
   ).map(([name, data]) => {
     const { sources, ...rest } = data;
 
     return {
       name: name,
-      sources: (sources as string).split(",").map((source) => source.trim()),
+      sources: (sources as string[]).map((source) => source.trim()),
       data: rest,
     };
   });
 
-  const rrYaml = riffraffYaml(stack, deployments);
-  const mfest = manifest(app, stack, projectName);
+  const rrYaml = yaml.dump(configObj);
+
+  const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
+  const mfest = manifest(name);
   const manifestJSON = JSON.stringify(mfest);
 
   const stagingDir = "staging";
 
+  core.info("writting rr yaml...")
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
 
-  deployments.forEach((deployment) => {
+  deployments.forEach((deployment: Deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
 

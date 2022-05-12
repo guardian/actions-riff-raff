@@ -12,27 +12,43 @@ https://github.com/guardian/node-riffraff-artifact.
 To use, add (something like) the following to your workflow file:
 
 ```
-- uses: guardian/actions-riff-raff@main
+- uses: guardian/actions-riff-raff@v1.0.0
   with:
     app: foo
-    stack: deploy
-    deployments: |
-      upload:
-        type: aws-s3
-        sources: test-data
-        parameters:
-          bucket: aws-some-bucket
-          cacheControl: private
-          publicReadAcl: false
+    config: |
+      stacks:
+        - deploy
+      regions:
+        - eu-west-1
+      allowedStages:
+        - CODE
+        - PROD
+      deployments:
+        upload:
+          type: aws-s3
+          sources:
+            - test-data
+          parameters:
+            bucket: aws-some-bucket
+            cacheControl: private
+            publicReadAcl: false
 ```
 
-By default, `stack::app` will be the Riffraff project name. Use the (optional)
-`projectName` setting to override this.
+Note, inputs can only be strings in Github Actions so `|` is used to provide the
+config as a multiline string.
 
-The `deployments` section structure is equivalent to the same section of a
-`riff-raff.yaml` file with an additional field per deployment called `sources` that
-can point to a (comma-separated) list of files and directories, all of which will
-be included in the package for the deployment.
+By default, `stack::app` will be the Riffraff project name. Use the (optional)
+`projectName` setting to override this. When multiple stacks are specified in
+the config, `projectName` becomes required and must be specified.
+
+The `config` section is equivalent to the contents of a `riff-raff.yaml` file
+with an additional (optional) field per deployment called `sources` that can
+point to a list of files and directories, all of which will be included in the
+package for the deployment.
+
+`configPath` can be used instead of `config` to point directly to a
+`riff-raff.yaml` file if you'd prefer that over storing the config directly in
+your workflow file.
 
 Note, you will need to provide credentials to upload to S3. Typically, this
 involves adding the following in your workflow file:
@@ -69,6 +85,7 @@ some-config.yaml
 The following deployment:
 
 ```
+...
 my-deployment:
   type: aws-s3
   sources: cfn,some-config.yaml
