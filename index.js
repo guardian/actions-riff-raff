@@ -38989,6 +38989,21 @@ var riffraffPrefix = (m) => {
   return [m.projectName, m.buildNumber].join("/");
 };
 
+// deleteRecursively/deleteRecursively.ts
+var deleteRecursively = (obj, key) => {
+  if (key === "")
+    return obj;
+  if (Array.isArray(obj)) {
+    obj.forEach((val) => deleteRecursively(val, key));
+  } else if (typeof obj === "object" && obj != null) {
+    delete obj[key];
+    Object.entries(obj).forEach(([_, v]) => {
+      deleteRecursively(v, key);
+    });
+  }
+  return obj;
+};
+
 // index.ts
 var readConfigFile = (path2) => {
   const data = read(path2);
@@ -39019,7 +39034,8 @@ var main = async () => {
       data: rest
     };
   });
-  const rrYaml = dump(configObj);
+  const rrObj = deleteRecursively(configObj, "sources");
+  const rrYaml = dump(rrObj);
   const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
   const mfest = manifest(name);
   const manifestJSON = JSON.stringify(mfest);
