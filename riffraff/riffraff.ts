@@ -33,18 +33,14 @@ const vcsURL = (): string | undefined => {
 };
 
 export const manifest = (
-  app: string,
-  stack: string,
-  projectName?: string
+  projectName: string
 ): Manifest => {
-  const name = projectName ? projectName : `${stack}::${app}`;
-
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: process.env.GITHUB_SHA || "dev",
     buildNumber: process.env.GITHUB_RUN_NUMBER || "dev",
-    projectName: name,
+    projectName: projectName,
     startTime: new Date(),
   };
 };
@@ -62,12 +58,13 @@ export type RiffraffYaml = {
 };
 
 export const riffraffYaml = (
-  stack: string,
+  stacks: string[],
+  regions: string[],
   deployments: Deployment[]
 ): string => {
   const rrYaml: RiffraffYaml = {
-    stacks: [stack],
-    regions: ["eu-west-1"],
+    stacks: stacks,
+    regions: regions,
     deployments: deployments.reduce(
       (acc, deployment) => ({ ...acc, [deployment.name]: deployment.data }),
       {}

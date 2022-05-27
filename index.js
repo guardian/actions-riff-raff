@@ -38909,6 +38909,9 @@ var walk = (path2, fn) => {
   }
   return [];
 };
+var read = (filePath) => {
+  return fs.readFileSync(filePath, "utf-8");
+};
 var write = (filePath, data) => {
   const dir = path.dirname(filePath);
   child_process.execSync(`mkdir -p ${dir}`);
@@ -38972,50 +38975,72 @@ var branchName = () => {
 var vcsURL = () => {
   return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
 };
-var manifest = (app, stack, projectName) => {
-  const name = projectName ? projectName : `${stack}::${app}`;
+var manifest = (projectName) => {
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: process.env.GITHUB_SHA || "dev",
     buildNumber: process.env.GITHUB_RUN_NUMBER || "dev",
-    projectName: name,
+    projectName,
     startTime: new Date()
   };
-};
-var riffraffYaml = (stack, deployments) => {
-  const rrYaml = {
-    stacks: [stack],
-    regions: ["eu-west-1"],
-    deployments: deployments.reduce((acc, deployment) => __spreadProps(__spreadValues({}, acc), { [deployment.name]: deployment.data }), {})
-  };
-  return dump(rrYaml);
 };
 var riffraffPrefix = (m) => {
   return [m.projectName, m.buildNumber].join("/");
 };
 
+// deleteRecursively/deleteRecursively.ts
+var deleteRecursively = (obj, key) => {
+  if (key === "")
+    return obj;
+  if (Array.isArray(obj)) {
+    obj.forEach((val) => deleteRecursively(val, key));
+  } else if (typeof obj === "object" && obj != null) {
+    delete obj[key];
+    Object.entries(obj).forEach(([_, v]) => {
+      deleteRecursively(v, key);
+    });
+  }
+  return obj;
+};
+
 // index.ts
+var readConfigFile = (path2) => {
+  const data = read(path2);
+  return load(data);
+};
+var defaultProjectName = (app, stacks) => {
+  if (stacks.length < 1) {
+    throw new Error("Must provide at least one stack.");
+  }
+  return `${stacks[0]}::${app}`;
+};
 var main = async () => {
-  const app = core3.getInput("app");
-  const stack = core3.getInput("stack");
+  const app = core3.getInput("app", { required: true });
+  const config = core3.getInput("config");
+  const configPath = core3.getInput("configPath");
   const projectName = core3.getInput("projectName");
   const dryRun = core3.getInput("dryRun");
-  const deploymentsYaml = core3.getInput("deployments");
-  const deploymentsObj = load(deploymentsYaml);
-  core3.info(`Inputs are: dryRun: ${dryRun}; app: ${app}; stack: ${stack}; deployments: ${JSON.stringify(deploymentsObj)}`);
-  const deployments = Object.entries(deploymentsObj).map(([name, data]) => {
+  if (!config && !configPath) {
+    throw new Error("Must specify either config or configPath.");
+  }
+  const configObj = config ? load(config) : readConfigFile(configPath);
+  core3.info(`Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(configObj)}}`);
+  const deployments = Object.entries(configObj.deployments).map(([name2, data]) => {
     const _a = data, { sources } = _a, rest = __objRest(_a, ["sources"]);
     return {
-      name,
-      sources: sources.split(",").map((source) => source.trim()),
+      name: name2,
+      sources: sources.map((source) => source.trim()),
       data: rest
     };
   });
-  const rrYaml = riffraffYaml(stack, deployments);
-  const mfest = manifest(app, stack, projectName);
+  const rrObj = deleteRecursively(configObj, "sources");
+  const rrYaml = dump(rrObj);
+  const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
+  const mfest = manifest(name);
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = "staging";
+  core3.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);

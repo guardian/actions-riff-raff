@@ -31,12 +31,20 @@ jobs:
         with:
           dryRun: true
           app: foo
-          stack: deploy
-          deployments: |
-            upload:
-              type: aws-s3
-              sources: my-sources
-              parameters:
-                bucket: aws-some-bucket
-                cacheControl: private
-                publicReadAcl: false
+          config: |
+            stacks:
+              - deploy
+            regions:
+              - eu-west-1
+            allowedStages:
+              - CODE
+              - PROD
+            deployments:
+              upload:
+                type: aws-s3
+                sources:
+                  - my-sources
+                parameters:
+                  bucket: aws-some-bucket
+                  cacheControl: private
+                  publicReadAcl: false

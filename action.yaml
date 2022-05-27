@@ -4,12 +4,12 @@ inputs:
   app:
     description: Riff Raff app name.
     required: true
-  stack:
-    description: Riff Raff stack name.
-    required: true
-  deployments:
-    description: "Riff Raff deployments. This is equivalent to the deployments section of a riff-raff.yaml file but with two additional properties: 'sources' (required - comma-separated list of the target files/directories for the deployment), and 'compression' (optional - 'gzip', 'tar', or the default 'none')."
-    required: true
+  config:
+    description: Riff Raff configuration (what would normally go in a riff-raff.yaml file). Use `|` to provide a multiline string here. The format should be the same as a normal riff-raff.yaml but with an additional 'sources' list property that can be added to deployments. See the README.md for more info on how this works.
+    required: false
+  configPath:
+    description: Use this to specify the path of a riff-raff.yaml file if you'd rather that than enter the config in your workflow file directly.
+    required: false
   projectName:
     description: "Determines Riffraff project name. Use this to override the default `stack::app` naming convention."
     required: false

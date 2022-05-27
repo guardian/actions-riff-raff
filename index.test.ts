@@ -15,21 +15,26 @@ const readConfig = (yamlConfig: string): void => {
 };
 
 describe("action", () => {
-  it("should generate expected file structure", () => {
+  it("should generate expected file structure", async () => {
     child_process.execSync("rm -rf test-data");
     child_process.execSync("rm -rf staging");
 
     const input = `dryRun: true
 app: foo
-stack: deploy
-deployments: |
-  upload:
-    type: aws-s3
-    sources: test-data
-    parameters:
-      bucket: aws-some-bucket
-      cacheControl: private
-      publicReadAcl: false`;
+config: |
+  stacks:
+    - deploy
+  regions:
+    - eu-west-1
+  deployments:
+    upload:
+      type: aws-s3
+      sources:
+        - test-data
+      parameters:
+        bucket: aws-some-bucket
+        cacheControl: private
+        publicReadAcl: false`;
 
     const staging = "staging";
 
@@ -39,7 +44,7 @@ deployments: |
     child_process.execSync("touch test-data/foo.txt");
 
     readConfig(input);
-    main();
+    await main();
 
     const got = walk(staging, (path: string) => path);
 
