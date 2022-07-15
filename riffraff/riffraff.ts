@@ -33,13 +33,14 @@ const vcsURL = (): string | undefined => {
 };
 
 export const manifest = (
-  projectName: string
+  projectName: string,
+  buildNumber?: string,
 ): Manifest => {
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: process.env.GITHUB_SHA || "dev",
-    buildNumber: process.env.GITHUB_RUN_NUMBER || "dev",
+    buildNumber: buildNumber || process.env.GITHUB_RUN_NUMBER || "dev",
     projectName: projectName,
     startTime: new Date(),
   };

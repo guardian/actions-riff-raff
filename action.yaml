@@ -16,6 +16,9 @@ inputs:
   dryRun:
     description: If set to true, logs the output but does not upload deployments to the Riff Raff S3 bucket.
     required: false
+  buildNumber:
+    description: If set, will be used for the build number. (Typically this is read from process.env.GITHUB_RUN_NUMBER.)
+    required: false
 runs:
   using: "node16"
   main: "index.js"
