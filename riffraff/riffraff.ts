@@ -1,4 +1,5 @@
 import * as yaml from "js-yaml";
+import * as core from "@actions/core";
 
 export type Manifest = {
   branch: string;
@@ -35,6 +36,7 @@ const vcsURL = (): string | undefined => {
 export const manifest = (
   projectName: string
 ): Manifest => {
+  core.info('env is: ' + process.env)
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",

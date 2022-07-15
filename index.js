@@ -699,12 +699,12 @@ var require_http_client = __commonJS({
           throw new Error("Client has already been disposed.");
         }
         let parsedUrl = new URL(requestUrl);
-        let info3 = this._prepareRequest(verb, parsedUrl, headers);
+        let info4 = this._prepareRequest(verb, parsedUrl, headers);
         let maxTries = this._allowRetries && RetryableHttpVerbs.indexOf(verb) != -1 ? this._maxRetries + 1 : 1;
         let numTries = 0;
         let response;
         while (numTries < maxTries) {
-          response = await this.requestRaw(info3, data);
+          response = await this.requestRaw(info4, data);
           if (response && response.message && response.message.statusCode === HttpCodes.Unauthorized) {
             let authenticationHandler;
             for (let i = 0; i < this.handlers.length; i++) {
@@ -714,7 +714,7 @@ var require_http_client = __commonJS({
               }
             }
             if (authenticationHandler) {
-              return authenticationHandler.handleAuthentication(this, info3, data);
+              return authenticationHandler.handleAuthentication(this, info4, data);
             } else {
               return response;
             }
@@ -737,8 +737,8 @@ var require_http_client = __commonJS({
                 }
               }
             }
-            info3 = this._prepareRequest(verb, parsedRedirectUrl, headers);
-            response = await this.requestRaw(info3, data);
+            info4 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+            response = await this.requestRaw(info4, data);
             redirectsRemaining--;
           }
           if (HttpResponseRetryCodes.indexOf(response.message.statusCode) == -1) {
@@ -758,7 +758,7 @@ var require_http_client = __commonJS({
         }
         this._disposed = true;
       }
-      requestRaw(info3, data) {
+      requestRaw(info4, data) {
         return new Promise((resolve, reject) => {
           let callbackForResult = function(err, res) {
             if (err) {
@@ -766,13 +766,13 @@ var require_http_client = __commonJS({
             }
             resolve(res);
           };
-          this.requestRawWithCallback(info3, data, callbackForResult);
+          this.requestRawWithCallback(info4, data, callbackForResult);
         });
       }
-      requestRawWithCallback(info3, data, onResult) {
+      requestRawWithCallback(info4, data, onResult) {
         let socket;
         if (typeof data === "string") {
-          info3.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info4.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         let handleResult = (err, res) => {
@@ -781,7 +781,7 @@ var require_http_client = __commonJS({
             onResult(err, res);
           }
         };
-        let req = info3.httpModule.request(info3.options, (msg) => {
+        let req = info4.httpModule.request(info4.options, (msg) => {
           let res = new HttpClientResponse(msg);
           handleResult(null, res);
         });
@@ -792,7 +792,7 @@ var require_http_client = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error("Request timeout: " + info3.options.path), null);
+          handleResult(new Error("Request timeout: " + info4.options.path), null);
         });
         req.on("error", function(err) {
           handleResult(err, null);
@@ -814,27 +814,27 @@ var require_http_client = __commonJS({
         return this._getAgent(parsedUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info3 = {};
-        info3.parsedUrl = requestUrl;
-        const usingSsl = info3.parsedUrl.protocol === "https:";
-        info3.httpModule = usingSsl ? https : http;
+        const info4 = {};
+        info4.parsedUrl = requestUrl;
+        const usingSsl = info4.parsedUrl.protocol === "https:";
+        info4.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info3.options = {};
-        info3.options.host = info3.parsedUrl.hostname;
-        info3.options.port = info3.parsedUrl.port ? parseInt(info3.parsedUrl.port) : defaultPort;
-        info3.options.path = (info3.parsedUrl.pathname || "") + (info3.parsedUrl.search || "");
-        info3.options.method = method;
-        info3.options.headers = this._mergeHeaders(headers);
+        info4.options = {};
+        info4.options.host = info4.parsedUrl.hostname;
+        info4.options.port = info4.parsedUrl.port ? parseInt(info4.parsedUrl.port) : defaultPort;
+        info4.options.path = (info4.parsedUrl.pathname || "") + (info4.parsedUrl.search || "");
+        info4.options.method = method;
+        info4.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info3.options.headers["user-agent"] = this.userAgent;
+          info4.options.headers["user-agent"] = this.userAgent;
         }
-        info3.options.agent = this._getAgent(info3.parsedUrl);
+        info4.options.agent = this._getAgent(info4.parsedUrl);
         if (this.handlers) {
           this.handlers.forEach((handler) => {
-            handler.prepareRequest(info3.options);
+            handler.prepareRequest(info4.options);
           });
         }
-        return info3;
+        return info4;
       }
       _mergeHeaders(headers) {
         const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => (c[k.toLowerCase()] = obj[k], c), {});
@@ -1283,10 +1283,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       command_1.issueCommand("notice", utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
     }
     exports.notice = notice;
-    function info3(message) {
+    function info4(message) {
       process.stdout.write(message + os.EOL);
     }
-    exports.info = info3;
+    exports.info = info4;
     function startGroup(name) {
       command_1.issue("group", name);
     }
@@ -36277,7 +36277,7 @@ __export(actions_riff_raff_exports, {
   main: () => main
 });
 module.exports = __toCommonJS(actions_riff_raff_exports);
-var core3 = __toESM(require_core());
+var core4 = __toESM(require_core());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -38899,11 +38899,11 @@ var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
 var child_process = __toESM(require("child_process"));
 var walk = (path2, fn) => {
-  const info3 = fs.lstatSync(path2);
-  if (info3.isFile()) {
+  const info4 = fs.lstatSync(path2);
+  if (info4.isFile()) {
     return [fn(path2)];
   }
-  if (info3.isDirectory()) {
+  if (info4.isDirectory()) {
     const children = fs.readdirSync(path2).flatMap((p) => walk(`${path2}/${p}`, fn));
     return new Array().concat(children);
   }
@@ -38920,10 +38920,10 @@ var write = (filePath, data) => {
 var cp = (sources, destDir) => {
   child_process.execSync(`mkdir -p ${destDir}`);
   sources.forEach((src) => {
-    const info3 = fs.lstatSync(src);
-    if (info3.isDirectory()) {
+    const info4 = fs.lstatSync(src);
+    if (info4.isDirectory()) {
       child_process.execSync(`cp -r ${src}/* ${destDir}`);
-    } else if (info3.isFile()) {
+    } else if (info4.isFile()) {
       child_process.execSync(`cp ${src} ${destDir}`);
     } else {
       throw new Error(`source is neither file not directory: '${src}'`);
@@ -38964,6 +38964,7 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 var import_client_s32 = __toESM(require_dist_cjs60());
 
 // riffraff/riffraff.ts
+var core3 = __toESM(require_core());
 var envOrUndefined = (variableName) => {
   const maybeEnvVar = process.env[variableName];
   return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
@@ -38976,6 +38977,7 @@ var vcsURL = () => {
   return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
 };
 var manifest = (projectName) => {
+  core3.info("env is: " + process.env);
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
@@ -39016,16 +39018,16 @@ var defaultProjectName = (app, stacks) => {
   return `${stacks[0]}::${app}`;
 };
 var main = async () => {
-  const app = core3.getInput("app", { required: true });
-  const config = core3.getInput("config");
-  const configPath = core3.getInput("configPath");
-  const projectName = core3.getInput("projectName");
-  const dryRun = core3.getInput("dryRun");
+  const app = core4.getInput("app", { required: true });
+  const config = core4.getInput("config");
+  const configPath = core4.getInput("configPath");
+  const projectName = core4.getInput("projectName");
+  const dryRun = core4.getInput("dryRun");
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
   }
   const configObj = config ? load(config) : readConfigFile(configPath);
-  core3.info(`Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(configObj)}}`);
+  core4.info(`Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(configObj)}}`);
   const deployments = Object.entries(configObj.deployments).map(([name2, data]) => {
     const _a = data, { sources } = _a, rest = __objRest(_a, ["sources"]);
     return {
@@ -39040,30 +39042,30 @@ var main = async () => {
   const mfest = manifest(name);
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = "staging";
-  core3.info("writting rr yaml...");
+  core4.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
   if (dryRun) {
-    core3.info("Output (dryRun=true):");
-    core3.info(printDir(stagingDir));
+    core4.info("Output (dryRun=true):");
+    core4.info(printDir(stagingDir));
     return;
   }
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
-  core3.info(`S3 prefix: ${keyPrefix}`);
+  core4.info(`S3 prefix: ${keyPrefix}`);
   await store.put(Buffer.from(manifestJSON, "utf8"), "riffraff-builds", keyPrefix + "/build.json");
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
-  core3.info("Upload complete.");
+  core4.info("Upload complete.");
 };
 try {
   if (require.main === module)
     main();
 } catch (e) {
   const error2 = e;
-  core3.error(error2);
-  core3.setFailed(error2.message);
+  core4.error(error2);
+  core4.setFailed(error2.message);
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
