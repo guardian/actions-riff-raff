@@ -26,6 +26,7 @@ export const main = async (): Promise<void> => {
   const configPath = core.getInput("configPath");
   const projectName = core.getInput("projectName");
   const dryRun = core.getInput("dryRun");
+  const buildNumber = core.getInput("buildNumber")
 
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
@@ -59,7 +60,7 @@ export const main = async (): Promise<void> => {
   const name = projectName
     ? projectName
     : defaultProjectName(app, configObj.stacks);
-  const mfest = manifest(name);
+  const mfest = manifest(name, buildNumber);
   const manifestJSON = JSON.stringify(mfest);
 
   const stagingDir = "staging";

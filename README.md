@@ -50,6 +50,9 @@ package for the deployment.
 `riff-raff.yaml` file if you'd prefer that over storing the config directly in
 your workflow file.
 
+`buildNumber` can be used to override the default build number, for example, if
+you need to offset it.
+
 Note, you will need to provide credentials to upload to S3. Typically, this
 involves adding the following in your workflow file:
 
@@ -72,7 +75,7 @@ with:
 
 For more info, see: https://github.com/aws-actions/configure-aws-credentials.
 
-### Example
+## Example - sources
 
 To illustrate, with the following file structure:
 
@@ -104,3 +107,8 @@ my-deployment/
 ```
 
 Use the `dryRun` flag to print outputs rather than upload.
+
+## Local development
+
+Edit the Typescript as usual and remember to build (`npm run build`) before
+committing.

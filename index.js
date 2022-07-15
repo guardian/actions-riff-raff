@@ -38975,12 +38975,12 @@ var branchName = () => {
 var vcsURL = () => {
   return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
 };
-var manifest = (projectName) => {
+var manifest = (projectName, buildNumber) => {
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: process.env.GITHUB_SHA || "dev",
-    buildNumber: process.env.GITHUB_RUN_NUMBER || "dev",
+    buildNumber: buildNumber || process.env.GITHUB_RUN_NUMBER || "dev",
     projectName,
     startTime: new Date()
   };
@@ -39021,6 +39021,7 @@ var main = async () => {
   const configPath = core3.getInput("configPath");
   const projectName = core3.getInput("projectName");
   const dryRun = core3.getInput("dryRun");
+  const buildNumber = core3.getInput("buildNumber");
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
   }
@@ -39037,7 +39038,7 @@ var main = async () => {
   const rrObj = deleteRecursively(configObj, "sources");
   const rrYaml = dump(rrObj);
   const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
-  const mfest = manifest(name);
+  const mfest = manifest(name, buildNumber);
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = "staging";
   core3.info("writting rr yaml...");
