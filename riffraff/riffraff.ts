@@ -36,7 +36,7 @@ const vcsURL = (): string | undefined => {
 export const manifest = (
   projectName: string
 ): Manifest => {
-  core.info('env is: ' + process.env)
+  core.info('env is: ' + JSON.stringify(process.env))
   return {
     branch: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
