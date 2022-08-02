@@ -6,6 +6,8 @@ import type { Deployment, RiffraffYaml } from "./riffraff/riffraff";
 import { riffraffPrefix, manifest } from "./riffraff/riffraff";
 import { read, write, cp, printDir } from "./file/file";
 import { deleteRecursively } from "./deleteRecursively/deleteRecursively";
+import * as fs from "fs";
+import path from "path";
 
 const readConfigFile = (path: string): object => {
   const data = read(path);
@@ -26,7 +28,8 @@ export const main = async (): Promise<void> => {
   const configPath = core.getInput("configPath");
   const projectName = core.getInput("projectName");
   const dryRun = core.getInput("dryRun");
-  const buildNumber = core.getInput("buildNumber")
+  const buildNumber = core.getInput("buildNumber");
+  const stagingDirOverride = core.getInput("stagingDir");
 
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
@@ -63,7 +66,9 @@ export const main = async (): Promise<void> => {
   const mfest = manifest(name, buildNumber);
   const manifestJSON = JSON.stringify(mfest);
 
-  const stagingDir = "staging";
+  // Ensure unique name as multiple steps may run using this action within the
+  // same workflow (this has happened!).
+  const stagingDir = stagingDirOverride || fs.mkdtempSync("staging-");
 
   core.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);

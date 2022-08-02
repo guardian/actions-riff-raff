@@ -110,5 +110,9 @@ Use the `dryRun` flag to print outputs rather than upload.
 
 ## Local development
 
-Edit the Typescript as usual and remember to build (`npm run build`) before
-committing.
+Edit the Typescript as usual and **remember to build** (`npm run build`) before
+committing to ensure `index.js` is updated.
+
+After merging into `main`, assuming it is not a breaking change (please avoid
+these for as long as possible!), write to the `v1` tag and also add a new
+`v1.x.x` tag as appropriate and create a release for that too.

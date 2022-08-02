@@ -21,6 +21,7 @@ describe("action", () => {
 
     const input = `dryRun: true
 app: foo
+stagingDir: staging
 config: |
   stacks:
     - deploy
@@ -37,6 +38,7 @@ config: |
         publicReadAcl: false`;
 
     const staging = "staging";
+    child_process.execSync("rm -rf staging*");
 
     const want = [`${staging}/riff-raff.yaml`, `${staging}/upload/foo.txt`];
 

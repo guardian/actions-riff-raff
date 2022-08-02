@@ -204,7 +204,7 @@ var require_file_command = __commonJS({
     };
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.issueCommand = void 0;
-    var fs3 = __importStar(require("fs"));
+    var fs4 = __importStar(require("fs"));
     var os = __importStar(require("os"));
     var utils_1 = require_utils();
     function issueCommand(command, message) {
@@ -212,10 +212,10 @@ var require_file_command = __commonJS({
       if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
       }
-      if (!fs3.existsSync(filePath)) {
+      if (!fs4.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
       }
-      fs3.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+      fs4.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
         encoding: "utf8"
       });
     }
@@ -39005,6 +39005,7 @@ var deleteRecursively = (obj, key) => {
 };
 
 // index.ts
+var fs3 = __toESM(require("fs"));
 var readConfigFile = (path2) => {
   const data = read(path2);
   return load(data);
@@ -39022,6 +39023,7 @@ var main = async () => {
   const projectName = core3.getInput("projectName");
   const dryRun = core3.getInput("dryRun");
   const buildNumber = core3.getInput("buildNumber");
+  const stagingDirOverride = core3.getInput("stagingDir");
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
   }
@@ -39040,7 +39042,7 @@ var main = async () => {
   const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
   const mfest = manifest(name, buildNumber);
   const manifestJSON = JSON.stringify(mfest);
-  const stagingDir = "staging";
+  const stagingDir = stagingDirOverride || fs3.mkdtempSync("staging-");
   core3.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
   deployments.forEach((deployment) => {
