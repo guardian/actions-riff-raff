@@ -110,5 +110,5 @@ Use the `dryRun` flag to print outputs rather than upload.
 
 ## Local development
 
-Edit the Typescript as usual and remember to build (`npm run build`) before
-committing.
+Edit the Typescript as usual and **remember to build** (`npm run build`) before
+committing to ensure `index.js` is updated.

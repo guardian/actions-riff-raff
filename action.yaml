@@ -19,6 +19,9 @@ inputs:
   buildNumber:
     description: If set, will be used for the build number. (Typically this is read from process.env.GITHUB_RUN_NUMBER.)
     required: false
+  stagingDir:
+    description: Used to set staging directory. You should not need to set this; it is intended for internal (testing) use only.
+    required: false
 runs:
   using: "node16"
   main: "index.js"
