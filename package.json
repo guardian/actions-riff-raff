@@ -15,7 +15,7 @@
   "author": "nicolas.long@theguardian.com",
   "license": "ISC",
   "dependencies": {
-    "@actions/core": "^1.6.0",
+    "@actions/core": "^1.9.1",
     "@aws-sdk/client-s3": "^3.67.0",
     "esbuild": "^0.14.29",
     "js-yaml": "^4.1.0"
