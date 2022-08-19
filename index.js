@@ -39048,7 +39048,7 @@ var main = async () => {
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
-  if (dryRun) {
+  if (dryRun === "true") {
     core3.info("Output (dryRun=true):");
     core3.info(printDir(stagingDir));
     return;

@@ -77,7 +77,7 @@ export const main = async (): Promise<void> => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
 
-  if (dryRun) {
+  if (dryRun === "true") {
     core.info("Output (dryRun=true):");
     core.info(printDir(stagingDir));
     return;
