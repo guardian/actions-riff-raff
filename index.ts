@@ -47,10 +47,11 @@ export const main = async (): Promise<void> => {
   const deployments: Deployment[] = Object.entries(configObj.deployments).map(
     ([name, data]) => {
       const { sources, ...rest } = data;
+      const arrSources = sources as string[] || []; // as might be undefined for some deployments
 
       return {
         name: name,
-        sources: (sources as string[]).map((source) => source.trim()),
+        sources: (arrSources).map((source) => source.trim()),
         data: rest,
       };
     }

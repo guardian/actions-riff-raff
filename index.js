@@ -39031,9 +39031,10 @@ var main = async () => {
   core3.info(`Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(configObj)}}`);
   const deployments = Object.entries(configObj.deployments).map(([name2, data]) => {
     const _a = data, { sources } = _a, rest = __objRest(_a, ["sources"]);
+    const arrSources = sources || [];
     return {
       name: name2,
-      sources: sources.map((source) => source.trim()),
+      sources: arrSources.map((source) => source.trim()),
       data: rest
     };
   });
