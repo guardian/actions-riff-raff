@@ -1,5 +1,3 @@
-import * as yaml from "js-yaml";
-
 export type Manifest = {
   branch: string;
   vcsURL: string;
@@ -56,23 +54,6 @@ export type RiffraffYaml = {
   stacks: string[];
   regions: string[];
   deployments: { [name: string]: any };
-};
-
-export const riffraffYaml = (
-  stacks: string[],
-  regions: string[],
-  deployments: Deployment[]
-): string => {
-  const rrYaml: RiffraffYaml = {
-    stacks: stacks,
-    regions: regions,
-    deployments: deployments.reduce(
-      (acc, deployment) => ({ ...acc, [deployment.name]: deployment.data }),
-      {}
-    ),
-  };
-
-  return yaml.dump(rrYaml);
 };
 
 export const riffraffPrefix = (m: Manifest): string => {
