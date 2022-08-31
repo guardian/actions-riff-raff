@@ -109,7 +109,9 @@ The following deployment:
 ...
 my-deployment:
   type: aws-s3
-  sources: cfn,some-config.yaml
+  sources:
+    - cfn
+    - some-config.yaml
   parameters: ...
 ```
 
