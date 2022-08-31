@@ -89,12 +89,15 @@ export const main = async (): Promise<void> => {
 
   core.info(`S3 prefix: ${keyPrefix}`);
 
+  await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
+
+  // Do this bit last to avoid any race conditions, as this is the file that
+  // triggers RR CD.
   await store.put(
     Buffer.from(manifestJSON, "utf8"),
     "riffraff-builds",
     keyPrefix + "/build.json"
   );
-  await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
 
   core.info("Upload complete.");
 };
