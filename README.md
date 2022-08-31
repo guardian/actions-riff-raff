@@ -9,6 +9,8 @@ A language-agnostic Github Action to create and upload Riffraff artifacts. It wi
 It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
 
+## Example usage
+
 To use, add (something like) the following to your workflow file:
 
 ```
@@ -34,27 +36,10 @@ To use, add (something like) the following to your workflow file:
             publicReadAcl: false
 ```
 
-Note, inputs can only be strings in Github Actions so `|` is used to provide the
-config as a multiline string.
+## Credentials
 
-By default, `stack::app` will be the Riffraff project name. Use the (optional)
-`projectName` setting to override this. When multiple stacks are specified in
-the config, `projectName` becomes required and must be specified.
-
-The `config` section is equivalent to the contents of a `riff-raff.yaml` file
-with an additional (optional) field per deployment called `sources` that can
-point to a list of files and directories, all of which will be included in the
-package for the deployment.
-
-`configPath` can be used instead of `config` to point directly to a
-`riff-raff.yaml` file if you'd prefer that over storing the config directly in
-your workflow file.
-
-`buildNumber` can be used to override the default build number, for example, if
-you need to offset it.
-
-Note, you will need to provide credentials to upload to S3. Typically, this
-involves adding the following in your workflow file:
+You will need to provide credentials to upload to S3. Typically, this involves
+adding the following in your workflow file:
 
 (to your job)
 
@@ -75,6 +60,39 @@ with:
 
 For more info, see: https://github.com/aws-actions/configure-aws-credentials.
 
+## Available inputs
+
+### app (required, unless setting `projectName`)
+
+The app name. By default, `stack::app` will be used for the Riffraff project
+name. But note, if you have multiple stacks specified, use `projectName`
+instead.
+
+### config (required, unless setting `configPath`)
+
+The actual Riffraff configuration. This section is equivalent to the contents of
+a `riff-raff.yaml` file with an additional (optional) field per deployment
+called `sources` that can point to a list of files and directories, all of which
+will be included in the package for the deployment.
+
+Note, inputs can only be strings in Github Actions so `|` is used to provide the
+config as a multiline string.
+
+### projectName (alternative to `app`)
+
+Used instead of `app` to override the default Riffraff project naming strategy.
+Useful when your Riffraff configuration contains multiple stacks.
+
+### configPath (alternative to `config`)
+
+Can be used instead of `config` to point to a riff-raff.yaml file instead of
+storing the config directly in your workflow file.
+
+### buildNumber (optional)
+
+Used to override the default build number, for example, if you want to offset
+it.
+
 ## Example - sources
 
 To illustrate, with the following file structure:
@@ -91,7 +109,9 @@ The following deployment:
 ...
 my-deployment:
   type: aws-s3
-  sources: cfn,some-config.yaml
+  sources:
+    - cfn
+    - some-config.yaml
   parameters: ...
 ```
 
