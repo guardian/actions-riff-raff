@@ -39057,8 +39057,8 @@ var main = async () => {
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
   core3.info(`S3 prefix: ${keyPrefix}`);
-  await store.put(Buffer.from(manifestJSON, "utf8"), "riffraff-builds", keyPrefix + "/build.json");
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
+  await store.put(Buffer.from(manifestJSON, "utf8"), "riffraff-builds", keyPrefix + "/build.json");
   core3.info("Upload complete.");
 };
 try {
