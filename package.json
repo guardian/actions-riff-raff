@@ -37,5 +37,9 @@
   "prettier": "@guardian/prettier",
   "eslintConfig": {
     "extends": "@guardian/eslint-config-typescript"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   }
 }
