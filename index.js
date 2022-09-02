@@ -33750,7 +33750,7 @@ var require_S3Client = __commonJS({
     var middleware_user_agent_1 = require_dist_cjs30();
     var smithy_client_1 = require_dist_cjs7();
     var runtimeConfig_1 = require_runtimeConfig3();
-    var S3Client3 = class extends smithy_client_1.Client {
+    var S3Client2 = class extends smithy_client_1.Client {
       constructor(configuration) {
         const _config_0 = (0, runtimeConfig_1.getRuntimeConfig)(configuration);
         const _config_1 = (0, config_resolver_1.resolveRegionConfig)(_config_0);
@@ -33777,7 +33777,7 @@ var require_S3Client = __commonJS({
         super.destroy();
       }
     };
-    exports.S3Client = S3Client3;
+    exports.S3Client = S3Client2;
   }
 });
 
@@ -35574,7 +35574,9 @@ __export(actions_riff_raff_exports, {
   main: () => main
 });
 module.exports = __toCommonJS(actions_riff_raff_exports);
+var fs3 = __toESM(require("fs"));
 var core3 = __toESM(require_core());
+var import_client_s32 = __toESM(require_dist_cjs61());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -38220,13 +38222,25 @@ var safeLoad = renamed("safeLoad", "load");
 var safeLoadAll = renamed("safeLoadAll", "loadAll");
 var safeDump = renamed("safeDump", "dump");
 
-// s3/s3.ts
-var import_client_s3 = __toESM(require_dist_cjs61());
+// deleteRecursively/deleteRecursively.ts
+var deleteRecursively = (obj, key) => {
+  if (key === "")
+    return obj;
+  if (Array.isArray(obj)) {
+    obj.forEach((val) => deleteRecursively(val, key));
+  } else if (typeof obj === "object" && obj != null) {
+    delete obj[key];
+    Object.entries(obj).forEach(([, v]) => {
+      deleteRecursively(v, key);
+    });
+  }
+  return obj;
+};
 
 // file/file.ts
+var child_process = __toESM(require("child_process"));
 var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
-var child_process = __toESM(require("child_process"));
 var walk = (path2, fn) => {
   const info3 = fs.lstatSync(path2);
   if (info3.isFile()) {
@@ -38263,9 +38277,36 @@ var printDir = (dir) => {
   return walk(dir, (path2) => path2).join("\n");
 };
 
+// riffraff/riffraff.ts
+var envOrUndefined = (variableName) => {
+  const maybeEnvVar = process.env[variableName];
+  return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
+};
+var branchName = () => {
+  const branchName2 = envOrUndefined("GITHUB_HEAD_REF") ?? envOrUndefined("GITHUB_REF");
+  return branchName2 ? branchName2.replace("refs/heads/", "") : void 0;
+};
+var vcsURL = () => {
+  return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
+};
+var manifest = (projectName, buildNumber) => {
+  return {
+    branch: branchName() ?? "dev",
+    vcsURL: vcsURL() ?? "dev",
+    revision: process.env.GITHUB_SHA ?? "dev",
+    buildNumber: buildNumber ?? process.env.GITHUB_RUN_NUMBER ?? "dev",
+    projectName,
+    startTime: new Date()
+  };
+};
+var riffraffPrefix = (m) => {
+  return [m.projectName, m.buildNumber].join("/");
+};
+
 // s3/s3.ts
 var fs2 = __toESM(require("fs"));
 var core2 = __toESM(require_core());
+var import_client_s3 = __toESM(require_dist_cjs61());
 var S3Store = class {
   client;
   constructor(client) {
@@ -38291,51 +38332,6 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 };
 
 // index.ts
-var import_client_s32 = __toESM(require_dist_cjs61());
-
-// riffraff/riffraff.ts
-var envOrUndefined = (variableName) => {
-  const maybeEnvVar = process.env[variableName];
-  return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
-};
-var branchName = () => {
-  const branchName2 = envOrUndefined("GITHUB_HEAD_REF") ?? envOrUndefined("GITHUB_REF");
-  return branchName2 ? branchName2.replace("refs/heads/", "") : void 0;
-};
-var vcsURL = () => {
-  return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
-};
-var manifest = (projectName, buildNumber) => {
-  return {
-    branch: branchName() ?? "dev",
-    vcsURL: vcsURL() ?? "dev",
-    revision: process.env.GITHUB_SHA || "dev",
-    buildNumber: buildNumber || process.env.GITHUB_RUN_NUMBER || "dev",
-    projectName,
-    startTime: new Date()
-  };
-};
-var riffraffPrefix = (m) => {
-  return [m.projectName, m.buildNumber].join("/");
-};
-
-// deleteRecursively/deleteRecursively.ts
-var deleteRecursively = (obj, key) => {
-  if (key === "")
-    return obj;
-  if (Array.isArray(obj)) {
-    obj.forEach((val) => deleteRecursively(val, key));
-  } else if (typeof obj === "object" && obj != null) {
-    delete obj[key];
-    Object.entries(obj).forEach(([_, v]) => {
-      deleteRecursively(v, key);
-    });
-  }
-  return obj;
-};
-
-// index.ts
-var fs3 = __toESM(require("fs"));
 var readConfigFile = (path2) => {
   const data = read(path2);
   return load(data);
@@ -38364,12 +38360,10 @@ var main = async () => {
     )}}`
   );
   const deployments = Object.entries(configObj.deployments).map(
-    ([name2, data]) => {
-      const { sources, ...rest } = data;
-      const arrSources = sources || [];
+    ([name2, { sources = [], ...rest }]) => {
       return {
         name: name2,
-        sources: arrSources.map((source) => source.trim()),
+        sources: sources.map((source) => source.trim()),
         data: rest
       };
     }
@@ -38401,13 +38395,13 @@ var main = async () => {
   );
   core3.info("Upload complete.");
 };
-try {
-  if (require.main === module)
-    main();
-} catch (e) {
-  const error2 = e;
-  core3.error(error2);
-  core3.setFailed(error2.message);
+if (require.main === module) {
+  main().catch((err) => {
+    if (err instanceof Error) {
+      core3.error(err);
+      core3.setFailed(err.message);
+    }
+  });
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
