@@ -1,6 +1,6 @@
 import * as child_process from 'child_process';
 import * as yaml from 'js-yaml';
-import { walk } from './file/file';
+import { walk } from './file';
 import { main } from '.';
 
 // Read yaml config and set env vars to mimic GHA

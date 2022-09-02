@@ -35568,12 +35568,12 @@ var require_dist_cjs61 = __commonJS({
   }
 });
 
-// index.ts
-var actions_riff_raff_exports = {};
-__export(actions_riff_raff_exports, {
+// src/index.ts
+var src_exports = {};
+__export(src_exports, {
   main: () => main
 });
-module.exports = __toCommonJS(actions_riff_raff_exports);
+module.exports = __toCommonJS(src_exports);
 var fs3 = __toESM(require("fs"));
 var core3 = __toESM(require_core());
 var import_client_s32 = __toESM(require_dist_cjs61());
@@ -38222,7 +38222,7 @@ var safeLoad = renamed("safeLoad", "load");
 var safeLoadAll = renamed("safeLoadAll", "loadAll");
 var safeDump = renamed("safeDump", "dump");
 
-// deleteRecursively/deleteRecursively.ts
+// src/deleteRecursively.ts
 var deleteRecursively = (obj, key) => {
   if (key === "")
     return obj;
@@ -38237,7 +38237,7 @@ var deleteRecursively = (obj, key) => {
   return obj;
 };
 
-// file/file.ts
+// src/file.ts
 var child_process = __toESM(require("child_process"));
 var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
@@ -38277,7 +38277,7 @@ var printDir = (dir) => {
   return walk(dir, (path2) => path2).join("\n");
 };
 
-// riffraff/riffraff.ts
+// src/riffraff.ts
 var envOrUndefined = (variableName) => {
   const maybeEnvVar = process.env[variableName];
   return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
@@ -38303,7 +38303,7 @@ var riffraffPrefix = (m) => {
   return [m.projectName, m.buildNumber].join("/");
 };
 
-// s3/s3.ts
+// src/s3.ts
 var fs2 = __toESM(require("fs"));
 var core2 = __toESM(require_core());
 var import_client_s3 = __toESM(require_dist_cjs61());
@@ -38331,7 +38331,7 @@ var sync = async (store, dir, bucket, keyPrefix) => {
   await Promise.all(responses);
 };
 
-// index.ts
+// src/index.ts
 var readConfigFile = (path2) => {
   const data = read(path2);
   return load(data);

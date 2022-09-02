@@ -2,11 +2,11 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
-import { deleteRecursively } from './deleteRecursively/deleteRecursively';
-import { cp, printDir, read, write } from './file/file';
-import type { Deployment, RiffraffYaml } from './riffraff/riffraff';
-import { manifest, riffraffPrefix } from './riffraff/riffraff';
-import { S3Store, sync } from './s3/s3';
+import { deleteRecursively } from './deleteRecursively';
+import { cp, printDir, read, write } from './file';
+import type { Deployment, RiffraffYaml } from './riffraff';
+import { manifest, riffraffPrefix } from './riffraff';
+import { S3Store, sync } from './s3';
 
 const readConfigFile = (path: string): object => {
 	const data = read(path);

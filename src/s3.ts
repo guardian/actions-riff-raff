@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 import type { S3Client } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { walk } from '../file/file';
+import { walk } from './file';
 
 export interface Store {
 	put: (data: Buffer, bucket: string, key: string) => Promise<void>;
