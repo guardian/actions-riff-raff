@@ -19,6 +19,8 @@ jobs:
       - name: build + test
         run: |
           npm ci
+          npm run lint
+          npm run format
           npm run build
           npm test
 
