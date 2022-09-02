@@ -7,7 +7,6 @@ import { riffraffPrefix, manifest } from "./riffraff/riffraff";
 import { read, write, cp, printDir } from "./file/file";
 import { deleteRecursively } from "./deleteRecursively/deleteRecursively";
 import * as fs from "fs";
-import path from "path";
 
 const readConfigFile = (path: string): object => {
   const data = read(path);

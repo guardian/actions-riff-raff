@@ -38938,6 +38938,7 @@ var printDir = (dir) => {
 var fs2 = __toESM(require("fs"));
 var core2 = __toESM(require_core());
 var S3Store = class {
+  client;
   constructor(client) {
     this.client = client;
   }
