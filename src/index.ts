@@ -23,7 +23,7 @@ const defaultProjectName = (app: string, stacks: string[]): string => {
 };
 
 export const main = async (): Promise<void> => {
-	const app = core.getInput('app', { required: true });
+	const app = core.getInput('app');
 	const config = core.getInput('config');
 	const configPath = core.getInput('configPath');
 	const projectName = core.getInput('projectName');
@@ -35,14 +35,31 @@ export const main = async (): Promise<void> => {
 		throw new Error('Must specify either config or configPath.');
 	}
 
-	const configObj = (
+	if (!app && !projectName) {
+		throw new Error('Must specify either app or projectName.');
+	}
+
+	const configObjFromInput = (
 		config ? yaml.load(config) : readConfigFile(configPath)
 	) as RiffraffYaml;
-	core.info(
-		`Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(
-			configObj,
-		)}}`,
-	);
+
+	const configObj: RiffraffYaml = {
+		/*
+    A valid `riff-raff.yaml` does not need to have `stacks` at the root level, it can be defined within each individual deployment.
+    This action uses the top level `stacks` to create a default project name.
+    This is a little hack to enable this behaviour, else we'd have to start validating `stacks` within each deployment.
+    We create a default project name if and only if `stacks` has a single value.
+     */
+		...{ stacks: [] },
+
+		...configObjFromInput,
+	};
+
+	if (configObj.stacks.length !== 1 && !projectName) {
+		throw new Error(
+			`Unable to determine project name as 'projectName' is not set and unable to determine a unique stack value from the loaded config. If deploying to multiple stacks, explicitly set the 'projectName' input.`,
+		);
+	}
 
 	const deployments: Deployment[] = Object.entries(configObj.deployments).map(
 		([name, { sources = [], ...rest }]) => {

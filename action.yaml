@@ -2,8 +2,8 @@ name: "guardian/actions-riff-raff"
 description: "Build and upload Riff Raff artifacts."
 inputs:
   app:
-    description: Riff Raff app name.
-    required: true
+    description: Riff Raff app name. Either this or projectName should be set.
+    required: false
   config:
     description: Riff Raff configuration (what would normally go in a riff-raff.yaml file). Use `|` to provide a multiline string here. The format should be the same as a normal riff-raff.yaml but with an additional 'sources' list property that can be added to deployments. See the README.md for more info on how this works.
     required: false

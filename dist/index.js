@@ -38343,7 +38343,7 @@ var defaultProjectName = (app, stacks) => {
   return `${stacks[0]}::${app}`;
 };
 var main = async () => {
-  const app = core3.getInput("app", { required: true });
+  const app = core3.getInput("app");
   const config = core3.getInput("config");
   const configPath = core3.getInput("configPath");
   const projectName = core3.getInput("projectName");
@@ -38353,12 +38353,19 @@ var main = async () => {
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
   }
-  const configObj = config ? load(config) : readConfigFile(configPath);
-  core3.info(
-    `Inputs are: dryRun: ${dryRun}; app: ${app}; config: ${JSON.stringify(
-      configObj
-    )}}`
-  );
+  if (!app && !projectName) {
+    throw new Error("Must specify either app or projectName.");
+  }
+  const configObjFromInput = config ? load(config) : readConfigFile(configPath);
+  const configObj = {
+    ...{ stacks: [] },
+    ...configObjFromInput
+  };
+  if (configObj.stacks.length !== 1 && !projectName) {
+    throw new Error(
+      `Unable to determine project name as 'projectName' is not set and unable to determine a unique stack value from the loaded config. If deploying to multiple stacks, explicitly set the 'projectName' input.`
+    );
+  }
   const deployments = Object.entries(configObj.deployments).map(
     ([name2, { sources = [], ...rest }]) => {
       return {
