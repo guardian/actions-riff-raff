@@ -1,9 +1,3 @@
 {
-    "compilerOptions": {
-      "target": "es2019",
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": true
-    }
-  }
+  "extends": "@guardian/tsconfig/tsconfig.json"
+}
