@@ -18,11 +18,11 @@ describe('riffraff', () => {
 		expect(got).toBe(want);
 	});
 
-  it('should fallback to "dev" when buildNumber empty', () => {
+	it('should fallback to "dev" when buildNumber empty', () => {
 		delete process.env.GITHUB_RUN_NUMBER;
-    const got = manifest("example", undefined);
-    const want = "dev";
+		const got = manifest('example', undefined);
+		const want = 'dev';
 
-    expect(got.buildNumber).toBe(want);
+		expect(got.buildNumber).toBe(want);
 	});
 });

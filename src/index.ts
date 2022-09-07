@@ -23,10 +23,13 @@ const defaultProjectName = (app: string, stacks: string[]): string => {
 };
 
 // getInput is like core.getInput but returns undefined for the empty string.
-const getInput = (name: string, options?: core.InputOptions): string | undefined => {
-  const got = core.getInput(name, options);
-  return got === "" ? undefined : got;
-}
+const getInput = (
+	name: string,
+	options?: core.InputOptions,
+): string | undefined => {
+	const got = core.getInput(name, options);
+	return got === '' ? undefined : got;
+};
 
 export const main = async (): Promise<void> => {
 	const app = getInput('app');
