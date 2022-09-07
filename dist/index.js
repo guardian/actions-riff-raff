@@ -2050,7 +2050,7 @@ var require_core = __commonJS({
       process.env["PATH"] = `${inputPath}${path2.delimiter}${process.env["PATH"]}`;
     }
     exports.addPath = addPath;
-    function getInput2(name, options) {
+    function getInput3(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -2060,16 +2060,16 @@ var require_core = __commonJS({
       }
       return val.trim();
     }
-    exports.getInput = getInput2;
+    exports.getInput = getInput3;
     function getMultilineInput(name, options) {
-      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput3(name, options).split("\n").filter((x) => x !== "");
       return inputs;
     }
     exports.getMultilineInput = getMultilineInput;
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput2(name, options);
+      const val = getInput3(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -38342,14 +38342,18 @@ var defaultProjectName = (app, stacks) => {
   }
   return `${stacks[0]}::${app}`;
 };
+var getInput2 = (name, options) => {
+  const got = core3.getInput(name, options);
+  return got === "" ? void 0 : got;
+};
 var main = async () => {
-  const app = core3.getInput("app");
-  const config = core3.getInput("config");
-  const configPath = core3.getInput("configPath");
-  const projectName = core3.getInput("projectName");
-  const dryRun = core3.getInput("dryRun");
-  const buildNumber = core3.getInput("buildNumber");
-  const stagingDirOverride = core3.getInput("stagingDir");
+  const app = getInput2("app");
+  const config = getInput2("config");
+  const configPath = getInput2("configPath");
+  const projectName = getInput2("projectName");
+  const dryRun = getInput2("dryRun");
+  const buildNumber = getInput2("buildNumber");
+  const stagingDirOverride = getInput2("stagingDir");
   if (!config && !configPath) {
     throw new Error("Must specify either config or configPath.");
   }
@@ -38380,7 +38384,7 @@ var main = async () => {
   const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
   const mfest = manifest(name, buildNumber);
   const manifestJSON = JSON.stringify(mfest);
-  const stagingDir = stagingDirOverride || fs3.mkdtempSync("staging-");
+  const stagingDir = stagingDirOverride ?? fs3.mkdtempSync("staging-");
   core3.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
   deployments.forEach((deployment) => {

@@ -22,14 +22,23 @@ const defaultProjectName = (app: string, stacks: string[]): string => {
 	return `${stacks[0]}::${app}`;
 };
 
+// getInput is like core.getInput but returns undefined for the empty string.
+const getInput = (
+	name: string,
+	options?: core.InputOptions,
+): string | undefined => {
+	const got = core.getInput(name, options);
+	return got === '' ? undefined : got;
+};
+
 export const main = async (): Promise<void> => {
-	const app = core.getInput('app');
-	const config = core.getInput('config');
-	const configPath = core.getInput('configPath');
-	const projectName = core.getInput('projectName');
-	const dryRun = core.getInput('dryRun');
-	const buildNumber = core.getInput('buildNumber');
-	const stagingDirOverride = core.getInput('stagingDir');
+	const app = getInput('app');
+	const config = getInput('config');
+	const configPath = getInput('configPath');
+	const projectName = getInput('projectName');
+	const dryRun = getInput('dryRun');
+	const buildNumber = getInput('buildNumber');
+	const stagingDirOverride = getInput('stagingDir');
 
 	if (!config && !configPath) {
 		throw new Error('Must specify either config or configPath.');
@@ -40,7 +49,7 @@ export const main = async (): Promise<void> => {
 	}
 
 	const configObjFromInput = (
-		config ? yaml.load(config) : readConfigFile(configPath)
+		config ? yaml.load(config) : readConfigFile(configPath as string)
 	) as RiffraffYaml;
 
 	const configObj: RiffraffYaml = {
@@ -77,13 +86,13 @@ export const main = async (): Promise<void> => {
 
 	const name = projectName
 		? projectName
-		: defaultProjectName(app, configObj.stacks);
+		: defaultProjectName(app as string, configObj.stacks);
 	const mfest = manifest(name, buildNumber);
 	const manifestJSON = JSON.stringify(mfest);
 
 	// Ensure unique name as multiple steps may run using this action within the
 	// same workflow (this has happened!).
-	const stagingDir = stagingDirOverride || fs.mkdtempSync('staging-');
+	const stagingDir = stagingDirOverride ?? fs.mkdtempSync('staging-');
 
 	core.info('writting rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, rrYaml);
