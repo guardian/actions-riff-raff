@@ -2,97 +2,55 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
+import { getConfiguration } from './config';
 import { deleteRecursively } from './deleteRecursively';
-import { cp, printDir, read, write } from './file';
-import type { Deployment, RiffraffYaml } from './riffraff';
+import { cp, printDir, write } from './file';
+import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
 
-const readConfigFile = (path: string): object => {
-	const data = read(path);
-	return yaml.load(data) as object;
-};
-
-const defaultProjectName = (app: string, stacks: string[]): string => {
-	if (stacks.length < 1) {
-		throw new Error('Must provide at least one stack.');
-	}
-
-	// eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- length is checked above
-	return `${stacks[0]}::${app}`;
-};
-
-// getInput is like core.getInput but returns undefined for the empty string.
-const getInput = (
-	name: string,
-	options?: core.InputOptions,
-): string | undefined => {
-	const got = core.getInput(name, options);
-	return got === '' ? undefined : got;
-};
-
 export const main = async (): Promise<void> => {
-	const app = getInput('app');
-	const config = getInput('config');
-	const configPath = getInput('configPath');
-	const projectName = getInput('projectName');
-	const dryRun = getInput('dryRun');
-	const buildNumber = getInput('buildNumber');
-	const stagingDirOverride = getInput('stagingDir');
+	const config = getConfiguration();
 
-	if (!config && !configPath) {
-		throw new Error('Must specify either config or configPath.');
-	}
+	core.debug(JSON.stringify(config, null, 2));
 
-	if (!app && !projectName) {
-		throw new Error('Must specify either app or projectName.');
-	}
+	const {
+		riffRaffYaml,
+		projectName,
+		dryRun,
+		buildNumber,
+		branchName,
+		vcsURL,
+		revision,
+		stagingDirInput,
+	} = config;
 
-	const configObjFromInput = (
-		config ? yaml.load(config) : readConfigFile(configPath as string)
-	) as RiffraffYaml;
-
-	const configObj: RiffraffYaml = {
-		/*
-    A valid `riff-raff.yaml` does not need to have `stacks` at the root level, it can be defined within each individual deployment.
-    This action uses the top level `stacks` to create a default project name.
-    This is a little hack to enable this behaviour, else we'd have to start validating `stacks` within each deployment.
-    We create a default project name if and only if `stacks` has a single value.
-     */
-		...{ stacks: [] },
-
-		...configObjFromInput,
-	};
-
-	if (configObj.stacks.length !== 1 && !projectName) {
-		throw new Error(
-			`Unable to determine project name as 'projectName' is not set and unable to determine a unique stack value from the loaded config. If deploying to multiple stacks, explicitly set the 'projectName' input.`,
-		);
-	}
-
-	const deployments: Deployment[] = Object.entries(configObj.deployments).map(
-		([name, { sources = [], ...rest }]) => {
-			return {
-				name: name,
-				sources: sources.map((source) => source.trim()),
-				data: rest,
-			};
-		},
-	);
+	const deployments: Deployment[] = Object.entries(
+		riffRaffYaml.deployments,
+	).map(([name, { sources = [], ...rest }]) => {
+		return {
+			name: name,
+			sources: sources.map((source) => source.trim()),
+			data: rest,
+		};
+	});
 
 	// ensure sources doesn't end up in rrYaml as RiffRaff errors with unexpected fields
-	const rrObj = deleteRecursively(configObj, 'sources');
+	const rrObj = deleteRecursively(riffRaffYaml, 'sources');
 	const rrYaml = yaml.dump(rrObj);
 
-	const name = projectName
-		? projectName
-		: defaultProjectName(app as string, configObj.stacks);
-	const mfest = manifest(name, buildNumber);
+	const mfest = manifest(
+		projectName,
+		buildNumber,
+		branchName,
+		vcsURL,
+		revision,
+	);
 	const manifestJSON = JSON.stringify(mfest);
 
 	// Ensure unique name as multiple steps may run using this action within the
 	// same workflow (this has happened!).
-	const stagingDir = stagingDirOverride ?? fs.mkdtempSync('staging-');
+	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
 
 	core.info('writting rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, rrYaml);
@@ -101,7 +59,7 @@ export const main = async (): Promise<void> => {
 		cp(deployment.sources, `${stagingDir}/${deployment.name}`);
 	});
 
-	if (dryRun === 'true') {
+	if (dryRun) {
 		core.info('Output (dryRun=true):');
 		core.info(printDir(stagingDir));
 		return;
