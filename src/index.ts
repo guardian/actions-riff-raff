@@ -22,17 +22,9 @@ export const main = async (): Promise<void> => {
 		branchName,
 		vcsURL,
 		revision,
+		deployments,
 		stagingDirInput,
 	} = config;
-
-	const deployments: Deployment[] = Object.entries(
-		riffRaffYaml.deployments,
-	).map(([name, { sources = [] }]) => {
-		return {
-			name: name,
-			sources: sources.map((source) => source.trim()),
-		};
-	});
 
 	// ensure sources doesn't end up in rrYaml as RiffRaff errors with unexpected fields
 	const rrObj = deleteRecursively(riffRaffYaml, 'sources');

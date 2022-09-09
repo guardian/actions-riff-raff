@@ -22,6 +22,10 @@ inputs:
   stagingDir:
     description: Used to set staging directory. You should not need to set this; it is intended for internal (testing) use only.
     required: false
+  contentDirectories:
+    required: false
+    description: A list of files/directories to upload to Riff-Raff. An alternative to nesting `sources` inside the `config` input.
+
 runs:
   using: "node16"
   main: "dist/index.js"

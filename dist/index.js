@@ -38295,6 +38295,38 @@ var getProjectName = ({ stacks }) => {
     );
   }
 };
+var getDeployments = (riffRaffYaml) => {
+  const fromRiffRaff = Object.entries(
+    riffRaffYaml.deployments
+  ).map(([name, { sources = [] }]) => {
+    return {
+      name,
+      sources: sources.map((source) => source.trim())
+    };
+  });
+  const input = getInput2("contentDirectories");
+  const contentDirectoriesInput = input ? load(input) : [];
+  const fromInput = contentDirectoriesInput.flatMap(
+    (i) => Object.entries(i).map(([name, sources]) => ({ name, sources }))
+  );
+  const totalFromRiffRaff = fromRiffRaff.reduce(
+    (acc, { sources }) => acc + sources.length,
+    0
+  );
+  const totalFromInput = fromInput.reduce(
+    (acc, { sources }) => acc + sources.length,
+    0
+  );
+  if (totalFromRiffRaff > 0 && totalFromInput > 0) {
+    throw new Error("Must specify either sources or contentDirectories.");
+  }
+  if (totalFromRiffRaff === 0 && totalFromInput === 0) {
+    throw new Error(
+      "Not configured with any deployment sources, no files will be uploaded to Riff-Raff."
+    );
+  }
+  return totalFromRiffRaff > 0 ? fromRiffRaff : fromInput;
+};
 var getRiffRaffYaml = () => {
   const configInput = getInput2("config");
   const configPathInput = getInput2("configPath");
@@ -38334,6 +38366,7 @@ function getConfiguration() {
     branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
+    deployments: getDeployments(riffRaffYaml),
     stagingDirInput
   };
 }
@@ -38408,16 +38441,9 @@ var main = async () => {
     branchName: branchName2,
     vcsURL: vcsURL2,
     revision,
+    deployments,
     stagingDirInput
   } = config;
-  const deployments = Object.entries(
-    riffRaffYaml.deployments
-  ).map(([name, { sources = [] }]) => {
-    return {
-      name,
-      sources: sources.map((source) => source.trim())
-    };
-  });
   const rrObj = deleteRecursively(riffRaffYaml, "sources");
   const rrYaml = dump(rrObj);
   const mfest = manifest(

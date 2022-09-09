@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as yaml from 'js-yaml';
 import { read } from './file';
-import type { RiffraffYaml } from './riffraff';
+import type { Deployment, RiffraffYaml } from './riffraff';
 
 // getInput is like core.getInput but returns undefined for the empty string.
 const getInput = (
@@ -41,6 +41,48 @@ const getProjectName = ({ stacks }: RiffraffYaml): string => {
 			)}).`,
 		);
 	}
+};
+
+const getDeployments = (riffRaffYaml: RiffraffYaml): Deployment[] => {
+	const fromRiffRaff: Deployment[] = Object.entries(
+		riffRaffYaml.deployments,
+	).map(([name, { sources = [] }]) => {
+		return {
+			name: name,
+			sources: sources.map((source) => source.trim()),
+		};
+	});
+
+	const input = getInput('contentDirectories');
+	const contentDirectoriesInput = input
+		? (yaml.load(input) as Array<Record<string, string[]>>)
+		: [];
+
+	const fromInput: Deployment[] = contentDirectoriesInput.flatMap((i) =>
+		Object.entries(i).map(([name, sources]) => ({ name, sources })),
+	);
+
+	const totalFromRiffRaff: number = fromRiffRaff.reduce(
+		(acc, { sources }) => acc + sources.length,
+		0,
+	);
+
+	const totalFromInput: number = fromInput.reduce(
+		(acc, { sources }) => acc + sources.length,
+		0,
+	);
+
+	if (totalFromRiffRaff > 0 && totalFromInput > 0) {
+		throw new Error('Must specify either sources or contentDirectories.');
+	}
+
+	if (totalFromRiffRaff === 0 && totalFromInput === 0) {
+		throw new Error(
+			'Not configured with any deployment sources, no files will be uploaded to Riff-Raff.',
+		);
+	}
+
+	return totalFromRiffRaff > 0 ? fromRiffRaff : fromInput;
 };
 
 const getRiffRaffYaml = (): RiffraffYaml => {
@@ -100,6 +142,7 @@ export interface Configuration {
 	branchName: string;
 	vcsURL: string;
 	revision: string;
+	deployments: Deployment[];
 	stagingDirInput?: string;
 }
 
@@ -121,6 +164,7 @@ export function getConfiguration(): Configuration {
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
+		deployments: getDeployments(riffRaffYaml),
 		stagingDirInput,
 	};
 }
