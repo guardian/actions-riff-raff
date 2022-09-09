@@ -4,7 +4,7 @@ import { walk } from './file';
 import { main } from '.';
 
 // Read yaml config and set env vars to mimic GHA
-const readConfig = (yamlConfig: string): void => {
+export const readConfig = (yamlConfig: string): void => {
 	const config = yaml.load(yamlConfig) as object;
 	Object.entries(config).forEach(([k, v]) => {
 		const name = `INPUT_${k.replace(/ /g, '_').toUpperCase()}`;
@@ -16,12 +16,24 @@ const readConfig = (yamlConfig: string): void => {
 
 describe('action', () => {
 	it('should generate expected file structure', async () => {
-		child_process.execSync('rm -rf test-data');
-		child_process.execSync('rm -rf staging');
+		const artifactDir = 'test-data';
+		const stagingDir = 'staging';
+
+		// ensure we have a clean state
+		child_process.execSync(`rm -rf ${artifactDir}`);
+		child_process.execSync(`rm -rf ${stagingDir}*`);
+
+		// Create an artifact (`test-data/foo.txt`) to upload
+		child_process.execSync(`mkdir ${artifactDir}`);
+		child_process.execSync(`touch ${artifactDir}/foo.txt`);
+		child_process.execSync(`touch ${artifactDir}/image.jpg`);
 
 		const input = `dryRun: true
 app: foo
 stagingDir: staging
+contentDirectories: |
+  upload:
+    - test-data
 config: |
   stacks:
     - deploy
@@ -30,25 +42,21 @@ config: |
   deployments:
     upload:
       type: aws-s3
-      sources:
-        - test-data
       parameters:
         bucket: aws-some-bucket
         cacheControl: private
         publicReadAcl: false`;
 
-		const staging = 'staging';
-		child_process.execSync('rm -rf staging*');
-
-		const want = [`${staging}/riff-raff.yaml`, `${staging}/upload/foo.txt`];
-
-		child_process.execSync('mkdir test-data');
-		child_process.execSync('touch test-data/foo.txt');
-
 		readConfig(input);
 		await main();
 
-		const got = walk(staging, (path: string) => path);
+		const got = walk(stagingDir, (path: string) => path);
+
+		const want = [
+			`${stagingDir}/riff-raff.yaml`,
+			`${stagingDir}/upload/foo.txt`,
+			`${stagingDir}/upload/image.jpg`,
+		];
 
 		expect(got.sort()).toEqual(want.sort());
 	});
