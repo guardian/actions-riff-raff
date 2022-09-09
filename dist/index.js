@@ -38412,11 +38412,10 @@ var main = async () => {
   } = config;
   const deployments = Object.entries(
     riffRaffYaml.deployments
-  ).map(([name, { sources = [], ...rest }]) => {
+  ).map(([name, { sources = [] }]) => {
     return {
       name,
-      sources: sources.map((source) => source.trim()),
-      data: rest
+      sources: sources.map((source) => source.trim())
     };
   });
   const rrObj = deleteRecursively(riffRaffYaml, "sources");

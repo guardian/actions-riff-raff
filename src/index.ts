@@ -27,11 +27,10 @@ export const main = async (): Promise<void> => {
 
 	const deployments: Deployment[] = Object.entries(
 		riffRaffYaml.deployments,
-	).map(([name, { sources = [], ...rest }]) => {
+	).map(([name, { sources = [] }]) => {
 		return {
 			name: name,
 			sources: sources.map((source) => source.trim()),
-			data: rest,
 		};
 	});
 

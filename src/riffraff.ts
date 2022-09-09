@@ -27,7 +27,6 @@ export const manifest = (
 export type Deployment = {
 	name: string;
 	sources: string[];
-	data: object;
 };
 
 export type RiffraffYaml = {
