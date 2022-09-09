@@ -1,4 +1,4 @@
-import { manifest, riffraffPrefix } from './riffraff';
+import { riffraffPrefix } from './riffraff';
 import type { Manifest } from './riffraff';
 
 describe('riffraff', () => {
@@ -16,13 +16,5 @@ describe('riffraff', () => {
 		const want = 'example/10';
 
 		expect(got).toBe(want);
-	});
-
-	it('should fallback to "dev" when buildNumber empty', () => {
-		delete process.env.GITHUB_RUN_NUMBER;
-		const got = manifest('example', undefined);
-		const want = 'dev';
-
-		expect(got.buildNumber).toBe(want);
 	});
 });

@@ -848,7 +848,7 @@ var require_tunnel = __commonJS({
         connectOptions.headers = connectOptions.headers || {};
         connectOptions.headers["Proxy-Authorization"] = "Basic " + new Buffer(connectOptions.proxyAuth).toString("base64");
       }
-      debug("making CONNECT request");
+      debug2("making CONNECT request");
       var connectReq = self2.request(connectOptions);
       connectReq.useChunkedEncodingByDefault = false;
       connectReq.once("response", onResponse);
@@ -868,7 +868,7 @@ var require_tunnel = __commonJS({
         connectReq.removeAllListeners();
         socket.removeAllListeners();
         if (res.statusCode !== 200) {
-          debug(
+          debug2(
             "tunneling socket could not be established, statusCode=%d",
             res.statusCode
           );
@@ -880,7 +880,7 @@ var require_tunnel = __commonJS({
           return;
         }
         if (head.length > 0) {
-          debug("got illegal response body from proxy");
+          debug2("got illegal response body from proxy");
           socket.destroy();
           var error2 = new Error("got illegal response body from proxy");
           error2.code = "ECONNRESET";
@@ -888,13 +888,13 @@ var require_tunnel = __commonJS({
           self2.removeSocket(placeholder);
           return;
         }
-        debug("tunneling connection has established");
+        debug2("tunneling connection has established");
         self2.sockets[self2.sockets.indexOf(placeholder)] = socket;
         return cb(socket);
       }
       function onError(cause) {
         connectReq.removeAllListeners();
-        debug(
+        debug2(
           "tunneling socket could not be established, cause=%s\n",
           cause.message,
           cause.stack
@@ -956,9 +956,9 @@ var require_tunnel = __commonJS({
       }
       return target;
     }
-    var debug;
+    var debug2;
     if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
-      debug = function() {
+      debug2 = function() {
         var args = Array.prototype.slice.call(arguments);
         if (typeof args[0] === "string") {
           args[0] = "TUNNEL: " + args[0];
@@ -968,10 +968,10 @@ var require_tunnel = __commonJS({
         console.error.apply(console, args);
       };
     } else {
-      debug = function() {
+      debug2 = function() {
       };
     }
-    exports.debug = debug;
+    exports.debug = debug2;
   }
 });
 
@@ -2096,10 +2096,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       return process.env["RUNNER_DEBUG"] === "1";
     }
     exports.isDebug = isDebug;
-    function debug(message) {
+    function debug2(message) {
       command_1.issueCommand("debug", {}, message);
     }
-    exports.debug = debug;
+    exports.debug = debug2;
     function error2(message, properties = {}) {
       command_1.issueCommand("error", utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
     }
@@ -35575,7 +35575,7 @@ __export(src_exports, {
 });
 module.exports = __toCommonJS(src_exports);
 var fs3 = __toESM(require("fs"));
-var core3 = __toESM(require_core());
+var core4 = __toESM(require_core());
 var import_client_s32 = __toESM(require_dist_cjs61());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
@@ -38222,20 +38222,8 @@ var safeLoad = renamed("safeLoad", "load");
 var safeLoadAll = renamed("safeLoadAll", "loadAll");
 var safeDump = renamed("safeDump", "dump");
 
-// src/deleteRecursively.ts
-var deleteRecursively = (obj, key) => {
-  if (key === "")
-    return obj;
-  if (Array.isArray(obj)) {
-    obj.forEach((val) => deleteRecursively(val, key));
-  } else if (typeof obj === "object" && obj != null) {
-    delete obj[key];
-    Object.entries(obj).forEach(([, v]) => {
-      deleteRecursively(v, key);
-    });
-  }
-  return obj;
-};
+// src/config.ts
+var core2 = __toESM(require_core());
 
 // src/file.ts
 var child_process = __toESM(require("child_process"));
@@ -38277,7 +38265,48 @@ var printDir = (dir) => {
   return walk(dir, (path2) => path2).join("\n");
 };
 
-// src/riffraff.ts
+// src/config.ts
+var getInput2 = (name, options) => {
+  const got = core2.getInput(name, options);
+  return got === "" ? void 0 : got;
+};
+var readConfigFile = (path2) => {
+  const data = read(path2);
+  return load(data);
+};
+var getProjectName = ({ stacks }) => {
+  const appInput = getInput2("app");
+  const projectNameInput = getInput2("projectName");
+  if (!appInput && !projectNameInput) {
+    throw new Error("Must specify either app or projectName.");
+  }
+  if (projectNameInput) {
+    return projectNameInput;
+  }
+  const numberOfStacks = stacks.length;
+  if (numberOfStacks === 1 && appInput) {
+    const stack = stacks[0];
+    return `${stack}::${appInput}`;
+  } else {
+    throw new Error(
+      `Unable to generate a project name as multiple stacks detected (${stacks.join(
+        ","
+      )}).`
+    );
+  }
+};
+var getRiffRaffYaml = () => {
+  const configInput = getInput2("config");
+  const configPathInput = getInput2("configPath");
+  if (!configInput && !configPathInput) {
+    throw new Error("Must specify either config or configPath.");
+  }
+  const configObjFromInput = configInput ? load(configInput) : readConfigFile(configPathInput);
+  return {
+    ...{ stacks: [] },
+    ...configObjFromInput
+  };
+};
 var envOrUndefined = (variableName) => {
   const maybeEnvVar = process.env[variableName];
   return maybeEnvVar && maybeEnvVar.trim() !== "" ? maybeEnvVar.trim() : void 0;
@@ -38287,14 +38316,50 @@ var branchName = () => {
   return branchName2 ? branchName2.replace("refs/heads/", "") : void 0;
 };
 var vcsURL = () => {
-  return process.env.GITHUB_REPOSITORY ? "https://github.com/" + process.env.GITHUB_REPOSITORY : void 0;
+  const repoFromEnv = envOrUndefined("GITHUB_REPOSITORY");
+  return repoFromEnv ? `https://github.com/${repoFromEnv}` : void 0;
 };
-var manifest = (projectName, buildNumber) => {
+function getConfiguration() {
+  const riffRaffYaml = getRiffRaffYaml();
+  const projectName = getProjectName(riffRaffYaml);
+  const dryRunInput = getInput2("dryRun");
+  const buildNumberInput = getInput2("buildNumber");
+  const stagingDirInput = getInput2("stagingDir");
+  const buildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
   return {
-    branch: branchName() ?? "dev",
+    projectName,
+    riffRaffYaml,
+    dryRun: dryRunInput === "true",
+    buildNumber,
+    branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
-    revision: process.env.GITHUB_SHA ?? "dev",
-    buildNumber: buildNumber ?? process.env.GITHUB_RUN_NUMBER ?? "dev",
+    revision: envOrUndefined("GITHUB_SHA") ?? "dev",
+    stagingDirInput
+  };
+}
+
+// src/deleteRecursively.ts
+var deleteRecursively = (obj, key) => {
+  if (key === "")
+    return obj;
+  if (Array.isArray(obj)) {
+    obj.forEach((val) => deleteRecursively(val, key));
+  } else if (typeof obj === "object" && obj != null) {
+    delete obj[key];
+    Object.entries(obj).forEach(([, v]) => {
+      deleteRecursively(v, key);
+    });
+  }
+  return obj;
+};
+
+// src/riffraff.ts
+var manifest = (projectName, buildNumber, branch, vcsURL2, revision) => {
+  return {
+    branch,
+    vcsURL: vcsURL2,
+    revision,
+    buildNumber,
     projectName,
     startTime: new Date()
   };
@@ -38305,7 +38370,7 @@ var riffraffPrefix = (m) => {
 
 // src/s3.ts
 var fs2 = __toESM(require("fs"));
-var core2 = __toESM(require_core());
+var core3 = __toESM(require_core());
 var import_client_s3 = __toESM(require_dist_cjs61());
 var S3Store = class {
   client;
@@ -38325,92 +38390,72 @@ var sync = async (store, dir, bucket, keyPrefix) => {
   const responses = walk(dir, (filePath) => {
     const data = fs2.readFileSync(filePath);
     const key = keyPrefix + filePath.substring(dir.length);
-    core2.info(`s3 sync: ${filePath} -> ${key}`);
+    core3.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);
   });
   await Promise.all(responses);
 };
 
 // src/index.ts
-var readConfigFile = (path2) => {
-  const data = read(path2);
-  return load(data);
-};
-var defaultProjectName = (app, stacks) => {
-  if (stacks.length < 1) {
-    throw new Error("Must provide at least one stack.");
-  }
-  return `${stacks[0]}::${app}`;
-};
-var getInput2 = (name, options) => {
-  const got = core3.getInput(name, options);
-  return got === "" ? void 0 : got;
-};
 var main = async () => {
-  const app = getInput2("app");
-  const config = getInput2("config");
-  const configPath = getInput2("configPath");
-  const projectName = getInput2("projectName");
-  const dryRun = getInput2("dryRun");
-  const buildNumber = getInput2("buildNumber");
-  const stagingDirOverride = getInput2("stagingDir");
-  if (!config && !configPath) {
-    throw new Error("Must specify either config or configPath.");
-  }
-  if (!app && !projectName) {
-    throw new Error("Must specify either app or projectName.");
-  }
-  const configObjFromInput = config ? load(config) : readConfigFile(configPath);
-  const configObj = {
-    ...{ stacks: [] },
-    ...configObjFromInput
-  };
-  if (configObj.stacks.length !== 1 && !projectName) {
-    throw new Error(
-      `Unable to determine project name as 'projectName' is not set and unable to determine a unique stack value from the loaded config. If deploying to multiple stacks, explicitly set the 'projectName' input.`
-    );
-  }
-  const deployments = Object.entries(configObj.deployments).map(
-    ([name2, { sources = [], ...rest }]) => {
-      return {
-        name: name2,
-        sources: sources.map((source) => source.trim()),
-        data: rest
-      };
-    }
-  );
-  const rrObj = deleteRecursively(configObj, "sources");
+  const config = getConfiguration();
+  core4.debug(JSON.stringify(config, null, 2));
+  const {
+    riffRaffYaml,
+    projectName,
+    dryRun,
+    buildNumber,
+    branchName: branchName2,
+    vcsURL: vcsURL2,
+    revision,
+    stagingDirInput
+  } = config;
+  const deployments = Object.entries(
+    riffRaffYaml.deployments
+  ).map(([name, { sources = [], ...rest }]) => {
+    return {
+      name,
+      sources: sources.map((source) => source.trim()),
+      data: rest
+    };
+  });
+  const rrObj = deleteRecursively(riffRaffYaml, "sources");
   const rrYaml = dump(rrObj);
-  const name = projectName ? projectName : defaultProjectName(app, configObj.stacks);
-  const mfest = manifest(name, buildNumber);
+  const mfest = manifest(
+    projectName,
+    buildNumber,
+    branchName2,
+    vcsURL2,
+    revision
+  );
   const manifestJSON = JSON.stringify(mfest);
-  const stagingDir = stagingDirOverride ?? fs3.mkdtempSync("staging-");
-  core3.info("writting rr yaml...");
+  const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
+  core4.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, rrYaml);
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
-  if (dryRun === "true") {
-    core3.info("Output (dryRun=true):");
-    core3.info(printDir(stagingDir));
+  if (dryRun) {
+    core4.info("Output (dryRun=true):");
+    core4.info(printDir(stagingDir));
     return;
   }
   const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1" }));
   const keyPrefix = riffraffPrefix(mfest);
-  core3.info(`S3 prefix: ${keyPrefix}`);
+  core4.info(`S3 prefix: ${keyPrefix}`);
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
   await store.put(
     Buffer.from(manifestJSON, "utf8"),
     "riffraff-builds",
     keyPrefix + "/build.json"
   );
-  core3.info("Upload complete.");
+  core4.info("Upload complete.");
 };
 if (require.main === module) {
   main().catch((err) => {
     if (err instanceof Error) {
-      core3.error(err);
-      core3.setFailed(err.message);
+      core4.error(err);
+      core4.setFailed(err.message);
     }
   });
 }
