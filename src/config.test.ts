@@ -38,31 +38,4 @@ config: |
 
 		expect(deployments).toEqual(expected);
 	});
-
-	it('should parse deployments from config sources', () => {
-		const input = `dryRun: true
-app: foo
-stagingDir: staging
-config: |
-  stacks:
-    - deploy
-  regions:
-    - eu-west-1
-  deployments:
-    upload:
-      type: aws-s3
-      sources:
-        - test-data
-      parameters:
-        bucket: aws-some-bucket
-        cacheControl: private
-        publicReadAcl: false`;
-
-		readConfig(input);
-		const { deployments } = getConfiguration();
-
-		const expected = [{ name: 'upload', sources: ['test-data'] }];
-
-		expect(deployments).toEqual(expected);
-	});
 });

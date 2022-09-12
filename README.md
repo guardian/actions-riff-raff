@@ -28,12 +28,13 @@ To use, add (something like) the following to your workflow file:
       deployments:
         upload:
           type: aws-s3
-          sources:
-            - test-data
           parameters:
             bucket: aws-some-bucket
             cacheControl: private
             publicReadAcl: false
+    contentDirectories: |
+      - upload:
+        - test-data
 ```
 
 Or, to use with an existing `riff-raff.yaml`:
@@ -91,10 +92,7 @@ Useful when your Riffraff configuration contains multiple stacks.
 
 ### config (required, unless setting `configPath`)
 
-The actual Riffraff configuration. This section is equivalent to the contents of
-a `riff-raff.yaml` file with an additional (optional) field per deployment
-called `sources` that can point to a list of files and directories, all of which
-will be included in the package for the deployment.
+The actual Riffraff configuration.
 
 Note, inputs can only be strings in Github Actions so `|` is used to provide the
 config as a multiline string.
@@ -109,7 +107,7 @@ storing the config directly in your workflow file.
 Used to override the default build number, for example, if you want to offset
 it.
 
-### contentDirectories (optional, alternative to `sources`)
+### contentDirectories (required)
 
 A list of content to upload, with the structure:
 
@@ -152,41 +150,6 @@ contentDirectories: |
   - prism:
     - target/prism.deb
 ```
-
-## Example - sources
-
-To illustrate, with the following file structure:
-
-```
-cfn/cloudformation-PROD.yaml
-cfn/cloudformation-CODE.yaml
-some-config.yaml
-```
-
-The following deployment:
-
-```
-...
-my-deployment:
-  type: aws-s3
-  sources:
-    - cfn
-    - some-config.yaml
-  parameters: ...
-```
-
-will result in a Riffraff package like:
-
-```
-riff-raff.yaml
-build.json
-my-deployment/
-  cloudformation-CODE.yaml
-  cloudformation-PROD.yaml
-  some-config.yaml
-```
-
-Use the `dryRun` flag to print outputs rather than upload.
 
 ## Local development
 

@@ -43,17 +43,9 @@ const getProjectName = ({ stacks }: RiffraffYaml): string => {
 	}
 };
 
-const getDeployments = (riffRaffYaml: RiffraffYaml): Deployment[] => {
-	const fromRiffRaff: Deployment[] = Object.entries(
-		riffRaffYaml.deployments,
-	).map(([name, { sources = [] }]) => {
-		return {
-			name: name,
-			sources: sources.map((source) => source.trim()),
-		};
-	});
+const getDeployments = (): Deployment[] => {
+	const input = getInput('contentDirectories', { required: true });
 
-	const input = getInput('contentDirectories');
 	const contentDirectoriesInput = input
 		? (yaml.load(input) as Array<Record<string, string[]>>)
 		: [];
@@ -62,27 +54,18 @@ const getDeployments = (riffRaffYaml: RiffraffYaml): Deployment[] => {
 		Object.entries(i).map(([name, sources]) => ({ name, sources })),
 	);
 
-	const totalFromRiffRaff: number = fromRiffRaff.reduce(
-		(acc, { sources }) => acc + sources.length,
-		0,
-	);
-
 	const totalFromInput: number = fromInput.reduce(
 		(acc, { sources }) => acc + sources.length,
 		0,
 	);
 
-	if (totalFromRiffRaff > 0 && totalFromInput > 0) {
-		throw new Error('Must specify either sources or contentDirectories.');
-	}
-
-	if (totalFromRiffRaff === 0 && totalFromInput === 0) {
+	if (totalFromInput === 0) {
 		throw new Error(
 			'Not configured with any deployment sources, no files will be uploaded to Riff-Raff.',
 		);
 	}
 
-	return totalFromRiffRaff > 0 ? fromRiffRaff : fromInput;
+	return fromInput;
 };
 
 const getRiffRaffYaml = (): RiffraffYaml => {
@@ -164,7 +147,7 @@ export function getConfiguration(): Configuration {
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
-		deployments: getDeployments(riffRaffYaml),
+		deployments: getDeployments(),
 		stagingDirInput,
 	};
 }

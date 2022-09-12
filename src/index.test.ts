@@ -11,6 +11,9 @@ describe('action', () => {
 		const input = `dryRun: true
 app: foo
 stagingDir: staging
+contentDirectories: |
+  - upload:
+    - test-data
 config: |
   stacks:
     - deploy
@@ -19,8 +22,6 @@ config: |
   deployments:
     upload:
       type: aws-s3
-      sources:
-        - test-data
       parameters:
         bucket: aws-some-bucket
         cacheControl: private

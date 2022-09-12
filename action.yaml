@@ -5,7 +5,7 @@ inputs:
     description: Riff Raff app name. Either this or projectName should be set.
     required: false
   config:
-    description: Riff Raff configuration (what would normally go in a riff-raff.yaml file). Use `|` to provide a multiline string here. The format should be the same as a normal riff-raff.yaml but with an additional 'sources' list property that can be added to deployments. See the README.md for more info on how this works.
+    description: Riff Raff configuration (what would normally go in a riff-raff.yaml file). Use `|` to provide a multiline string here.
     required: false
   configPath:
     description: Use this to specify the path of a riff-raff.yaml file if you'd rather that than enter the config in your workflow file directly.
@@ -23,7 +23,7 @@ inputs:
     description: Used to set staging directory. You should not need to set this; it is intended for internal (testing) use only.
     required: false
   contentDirectories:
-    required: false
+    required: true
     description: A list of files/directories to upload to Riff-Raff. An alternative to nesting `sources` inside the `config` input.
 
 runs:

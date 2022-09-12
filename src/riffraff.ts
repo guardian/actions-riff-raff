@@ -32,13 +32,7 @@ export type Deployment = {
 export type RiffraffYaml = {
 	stacks: string[];
 	regions: string[];
-	deployments: Record<
-		string,
-		{
-			sources?: string[];
-			[name: string]: unknown;
-		}
-	>;
+	deployments: Record<string, Record<string, unknown>>;
 };
 
 export const riffraffPrefix = (m: Manifest): string => {
