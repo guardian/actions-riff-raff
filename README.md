@@ -190,6 +190,33 @@ Riff-Raff will receive a package like:
 This can also be seen with the `dryRun` flag.
 When set, the package is not uploaded, instead, it is printed to stdout.
 
+### How Riff-Raff defines package names
+Riff-Raff doesn't always use the key as the package name. If you set `contentDirectory` on a deployment, that will win.
+
+For example in this `riff-raff.yaml`:
+
+```yaml
+regions: [ eu-west-1 ]
+stacks: [ deploy ]
+deployments:
+  my-cloudformation-deployment:
+    type: cloud-formation
+    app: prism
+    contentDirectory: cfn-templates
+    parameters:
+      templateStagePaths:
+        CODE: Prism-CODE.template.json
+        PROD: Prism-PROD.template.json
+      amiParameter: AMIPrism
+      amiEncrypted: true
+      amiTags:
+        Recipe: arm64-bionic-java11-deploy-infrastructure
+        AmigoStage: PROD
+        BuiltBy: amigo
+```
+
+The package name is "cfn-templates" rather than "my-cloudformation-deployment".
+
 ## Local development
 
 Edit the Typescript as usual and **remember to build** (`npm run build`) before
