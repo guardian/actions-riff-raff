@@ -38295,6 +38295,23 @@ var getProjectName = ({ stacks }) => {
     );
   }
 };
+var getDeployments = () => {
+  const input = getInput2("contentDirectories", { required: true });
+  const contentDirectoriesInput = input ? load(input) : {};
+  const deployments = Object.entries(contentDirectoriesInput).map(
+    ([name, sources]) => ({ name, sources })
+  );
+  const totalDeployments = deployments.reduce(
+    (acc, { sources }) => acc + sources.length,
+    0
+  );
+  if (totalDeployments === 0) {
+    throw new Error(
+      "Not configured with any deployment sources, no files will be uploaded to Riff-Raff."
+    );
+  }
+  return deployments;
+};
 var getRiffRaffYaml = () => {
   const configInput = getInput2("config");
   const configPathInput = getInput2("configPath");
@@ -38334,24 +38351,10 @@ function getConfiguration() {
     branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
+    deployments: getDeployments(),
     stagingDirInput
   };
 }
-
-// src/deleteRecursively.ts
-var deleteRecursively = (obj, key) => {
-  if (key === "")
-    return obj;
-  if (Array.isArray(obj)) {
-    obj.forEach((val) => deleteRecursively(val, key));
-  } else if (typeof obj === "object" && obj != null) {
-    delete obj[key];
-    Object.entries(obj).forEach(([, v]) => {
-      deleteRecursively(v, key);
-    });
-  }
-  return obj;
-};
 
 // src/riffraff.ts
 var manifest = (projectName, buildNumber, branch, vcsURL2, revision) => {
@@ -38408,19 +38411,9 @@ var main = async () => {
     branchName: branchName2,
     vcsURL: vcsURL2,
     revision,
+    deployments,
     stagingDirInput
   } = config;
-  const deployments = Object.entries(
-    riffRaffYaml.deployments
-  ).map(([name, { sources = [], ...rest }]) => {
-    return {
-      name,
-      sources: sources.map((source) => source.trim()),
-      data: rest
-    };
-  });
-  const rrObj = deleteRecursively(riffRaffYaml, "sources");
-  const rrYaml = dump(rrObj);
   const mfest = manifest(
     projectName,
     buildNumber,
@@ -38431,7 +38424,7 @@ var main = async () => {
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
   core4.info("writting rr yaml...");
-  write(`${stagingDir}/riff-raff.yaml`, rrYaml);
+  write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });

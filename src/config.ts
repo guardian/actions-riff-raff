@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as yaml from 'js-yaml';
 import { read } from './file';
-import type { RiffraffYaml } from './riffraff';
+import type { Deployment, RiffraffYaml } from './riffraff';
 
 // getInput is like core.getInput but returns undefined for the empty string.
 const getInput = (
@@ -41,6 +41,31 @@ const getProjectName = ({ stacks }: RiffraffYaml): string => {
 			)}).`,
 		);
 	}
+};
+
+const getDeployments = (): Deployment[] => {
+	const input = getInput('contentDirectories', { required: true });
+
+	const contentDirectoriesInput = input
+		? (yaml.load(input) as Record<string, string[]>)
+		: {};
+
+	const deployments: Deployment[] = Object.entries(contentDirectoriesInput).map(
+		([name, sources]) => ({ name, sources }),
+	);
+
+	const totalDeployments: number = deployments.reduce(
+		(acc, { sources }) => acc + sources.length,
+		0,
+	);
+
+	if (totalDeployments === 0) {
+		throw new Error(
+			'Not configured with any deployment sources, no files will be uploaded to Riff-Raff.',
+		);
+	}
+
+	return deployments;
 };
 
 const getRiffRaffYaml = (): RiffraffYaml => {
@@ -100,6 +125,7 @@ export interface Configuration {
 	branchName: string;
 	vcsURL: string;
 	revision: string;
+	deployments: Deployment[];
 	stagingDirInput?: string;
 }
 
@@ -121,6 +147,7 @@ export function getConfiguration(): Configuration {
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
+		deployments: getDeployments(),
 		stagingDirInput,
 	};
 }

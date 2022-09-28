@@ -1,138 +1,228 @@
-# actions-riff-raff
+# guardian/actions-riff-raff
 
-A language-agnostic Github Action to create and upload Riffraff artifacts. It will:
+A language-agnostic GitHub Action to create and upload Riff-Raff artifacts.
 
-- create your `riff-raff.yaml` and `build.json` files
-- package files into deployment directories
-- upload the above to Riffraff's S3 buckets ready to deploy
+It will:
+- Create the `build.json` file
+- Package files into deployment directories, and upload them to Riff-Raff's S3 buckets
 
 It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
 
 ## Example usage
+To use, add (something like) the following to your workflow file.
 
-To use, add (something like) the following to your workflow file:
+Note the additions for AWS credentials. For more info, see: https://github.com/aws-actions/configure-aws-credentials.
 
+```yaml
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Allow GitHub to request an OIDC JWT ID token, for exchange with `aws-actions/configure-aws-credentials`
+      # See https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services#updating-your-github-actions-workflow
+      id-token: write
+
+      # Required for `actions/checkout`
+      contents: read
+
+  steps:
+    - uses: actions/checkout@v3
+
+    # Your usual build steps here...
+
+    # Exchange OIDC JWT ID token for temporary AWS credentials to allow uploading to S3
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: eu-west-1
+        role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+
+    - uses: guardian/actions-riff-raff@v2
+      with:
+        app: foo
+        config: |
+          stacks:
+            - deploy
+          regions:
+            - eu-west-1
+          allowedStages:
+            - CODE
+            - PROD
+          deployments:
+            static-site-assets:
+              type: aws-s3
+              parameters:
+                bucket: aws-some-bucket
+                cacheControl: private
+                publicReadAcl: false
+        contentDirectories: |
+          static-site-assets:
+            - test-data
 ```
-- uses: guardian/actions-riff-raff@v1
+
+## Available inputs
+
+### `app`
+*Required* (unless setting `projectName`)
+
+The app name, used for the creating Riff-Raff project name with the format `stack::app`.
+Where `stack` is read from the provided `riff-raff.yaml` config.
+
+Note: If you have multiple stacks specified, use `projectName` instead.
+
+### `projectName`
+Used instead of `app` to override the default Riff-Raff project naming strategy.
+
+### `config`
+*Required* (unless setting `configPath`)
+
+The actual Riff-Raff configuration.
+
+Note: Inputs can only be strings in GitHub Actions so `|` is used to provide the
+config as a multiline string.
+
+```yaml
+- uses: guardian/actions-riff-raff@v2
   with:
     app: foo
-    config: |
+    config: | # <-- the pipe is important!
       stacks:
         - deploy
       regions:
         - eu-west-1
-      allowedStages:
-        - CODE
-        - PROD
-      deployments:
-        upload:
-          type: aws-s3
-          sources:
-            - test-data
-          parameters:
-            bucket: aws-some-bucket
-            cacheControl: private
-            publicReadAcl: false
 ```
 
-## Credentials
+### `configPath`
+*Required* (unless setting `config`)
 
-You will need to provide credentials to upload to S3. Typically, this involves
-adding the following in your workflow file:
+A path to a `riff-raff.yaml` file.
 
-(to your job)
+### `buildNumber`
+Used to override the default build number, for example, if you want to offset it.
 
-```
-permissions:
-  id-token: write
-  contents: read
-```
+### `contentDirectories`
+*Required*
 
-(to your steps)
+A mapping to describe which files should be uploaded for which package.
 
-```
-uses: aws-actions/configure-aws-credentials@v1
-with:
-  aws-region: eu-west-1
-  role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-```
+## Detailed example
+To illustrate, given the following file structure:
 
-For more info, see: https://github.com/aws-actions/configure-aws-credentials.
-
-## Available inputs
-
-### app (required, unless setting `projectName`)
-
-The app name. By default, `stack::app` will be used for the Riffraff project
-name. But note, if you have multiple stacks specified, use `projectName`
-instead.
-
-### config (required, unless setting `configPath`)
-
-The actual Riffraff configuration. This section is equivalent to the contents of
-a `riff-raff.yaml` file with an additional (optional) field per deployment
-called `sources` that can point to a list of files and directories, all of which
-will be included in the package for the deployment.
-
-Note, inputs can only be strings in Github Actions so `|` is used to provide the
-config as a multiline string.
-
-### projectName (alternative to `app`)
-
-Used instead of `app` to override the default Riffraff project naming strategy.
-Useful when your Riffraff configuration contains multiple stacks.
-
-### configPath (alternative to `config`)
-
-Can be used instead of `config` to point to a riff-raff.yaml file instead of
-storing the config directly in your workflow file.
-
-### buildNumber (optional)
-
-Used to override the default build number, for example, if you want to offset
-it.
-
-## Example - sources
-
-To illustrate, with the following file structure:
-
-```
-cfn/cloudformation-PROD.yaml
-cfn/cloudformation-CODE.yaml
-some-config.yaml
+```console
+.
+├── cdk
+│   └── cdk.out
+│       ├── Prism-CODE.template.json
+│       └── Prism-PROD.template.json
+├── static-site
+│   └── dist
+│       ├── app.js
+│       └── index.html
+└── target
+│   └── prism.deb
+└── riff-raff.yaml
 ```
 
-The following deployment:
+And the following `riff-raff.yaml`:
 
-```
-...
-my-deployment:
-  type: aws-s3
-  sources:
-    - cfn
-    - some-config.yaml
-  parameters: ...
+```yaml
+regions: [ eu-west-1 ]
+stacks: [ deploy ]
+deployments:
+  cloudformation: # <-- this is a package name
+    type: cloud-formation
+    app: prism
+    parameters:
+      templateStagePaths:
+        CODE: Prism-CODE.template.json
+        PROD: Prism-PROD.template.json
+      amiParameter: AMIPrism
+      amiEncrypted: true
+      amiTags:
+        Recipe: arm64-bionic-java11-deploy-infrastructure
+        AmigoStage: PROD
+        BuiltBy: amigo
+  prism: # <-- this is another package name
+    type: autoscaling
+    parameters:
+      bucketSsmLookup: true
+    dependencies:
+      - cloudformation
+  static-site-assets: # <-- this is a third package name
+    type: aws-s3
+    parameters:
+      bucket: aws-some-bucket
+      cacheControl: private
+      publicReadAcl: false
 ```
 
-will result in a Riffraff package like:
+And the following GitHub workflow:
 
-```
-riff-raff.yaml
-build.json
-my-deployment/
-  cloudformation-CODE.yaml
-  cloudformation-PROD.yaml
-  some-config.yaml
+```yaml
+configFile: riff-raff.yaml
+contentDirectories: |
+  cloudformation: # <-- this package name matches one found in riff-raff.yaml
+    - cdk/cdk.out/Prism-CODE.template.json
+    - cdk/cdk.out/Prism-CODE.template.json
+  prism: # <-- this package name matches one found in riff-raff.yaml
+    - target/prism.deb
+  static-site-assets: # <-- this package name matches one found in riff-raff.yaml
+    - static-site/dist
 ```
 
-Use the `dryRun` flag to print outputs rather than upload.
+Riff-Raff will receive a package like:
+
+```console
+.
+├── cloudformation
+│   ├── Prism-CODE.template.json
+│   └── Prism-PROD.template.json
+├── prism
+│   └── prism.deb
+├── static-site-assets
+│   ├── app.js
+│   └── index.html
+├── build.json # <-- generated by this action
+└── riff-raff.yaml
+```
+
+This can also be seen with the `dryRun` flag.
+When set, the package is not uploaded, instead, it is printed to stdout.
+
+### How Riff-Raff defines package names
+Riff-Raff doesn't always use the key as the package name. If you set `contentDirectory` on a deployment, that will win.
+
+For example in this `riff-raff.yaml`:
+
+```yaml
+regions: [ eu-west-1 ]
+stacks: [ deploy ]
+deployments:
+  my-cloudformation-deployment:
+    type: cloud-formation
+    app: prism
+    contentDirectory: cfn-templates
+    parameters:
+      templateStagePaths:
+        CODE: Prism-CODE.template.json
+        PROD: Prism-PROD.template.json
+      amiParameter: AMIPrism
+      amiEncrypted: true
+      amiTags:
+        Recipe: arm64-bionic-java11-deploy-infrastructure
+        AmigoStage: PROD
+        BuiltBy: amigo
+```
+
+The package name is "cfn-templates" rather than "my-cloudformation-deployment".
 
 ## Local development
 
 Edit the Typescript as usual and **remember to build** (`npm run build`) before
 committing to ensure `index.js` is updated.
 
-After merging into `main`, assuming it is not a breaking change (please avoid
-these for as long as possible!), write to the `v1` tag and also add a new
-`v1.x.x` tag as appropriate and create a release for that too.
+After merging into `main`, create a [new version](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md).
+
+> **Note**
+> Try to avoid creating new major versions for as long as possible as it requires explicit upgrades in consuming repositories.

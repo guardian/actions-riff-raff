@@ -3,7 +3,6 @@ import * as core from '@actions/core';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
-import { deleteRecursively } from './deleteRecursively';
 import { cp, printDir, write } from './file';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
@@ -22,22 +21,9 @@ export const main = async (): Promise<void> => {
 		branchName,
 		vcsURL,
 		revision,
+		deployments,
 		stagingDirInput,
 	} = config;
-
-	const deployments: Deployment[] = Object.entries(
-		riffRaffYaml.deployments,
-	).map(([name, { sources = [], ...rest }]) => {
-		return {
-			name: name,
-			sources: sources.map((source) => source.trim()),
-			data: rest,
-		};
-	});
-
-	// ensure sources doesn't end up in rrYaml as RiffRaff errors with unexpected fields
-	const rrObj = deleteRecursively(riffRaffYaml, 'sources');
-	const rrYaml = yaml.dump(rrObj);
 
 	const mfest = manifest(
 		projectName,
@@ -53,7 +39,7 @@ export const main = async (): Promise<void> => {
 	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
 
 	core.info('writting rr yaml...');
-	write(`${stagingDir}/riff-raff.yaml`, rrYaml);
+	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
 
 	deployments.forEach((deployment: Deployment) => {
 		cp(deployment.sources, `${stagingDir}/${deployment.name}`);

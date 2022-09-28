@@ -27,19 +27,12 @@ export const manifest = (
 export type Deployment = {
 	name: string;
 	sources: string[];
-	data: object;
 };
 
 export type RiffraffYaml = {
 	stacks: string[];
 	regions: string[];
-	deployments: Record<
-		string,
-		{
-			sources?: string[];
-			[name: string]: unknown;
-		}
-	>;
+	deployments: Record<string, Record<string, unknown>>;
 };
 
 export const riffraffPrefix = (m: Manifest): string => {
