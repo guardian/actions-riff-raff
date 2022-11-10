@@ -38,6 +38,10 @@ export const main = async (): Promise<void> => {
 	// same workflow (this has happened!).
 	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
 
+	await core.summary
+		.addTable([['Riff-raff build Number', buildNumber]])
+		.write()
+
 	core.info('writting rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
 

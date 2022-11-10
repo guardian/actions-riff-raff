@@ -38423,6 +38423,7 @@ var main = async () => {
   );
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
+  await core4.summary.addTable([["Riff-raff build Number", buildNumber]]).write();
   core4.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
