@@ -129,15 +129,31 @@ export interface Configuration {
 	stagingDirInput?: string;
 }
 
+const offsetBuildNumber = (buildNumber: string, offset: string | undefined): string => {
+	if(typeof offset === 'undefined') {
+		return buildNumber;
+	}
+	const intOffset = parseInt(offset);
+	const intBuildNumber = parseInt(buildNumber);
+	if(isNaN(intOffset) || isNaN(intBuildNumber)) {
+		return buildNumber;
+	} else {
+		return `${buildNumber + offsetBuildNumber}`;
+	}
+}
+
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
 	const dryRunInput = getInput('dryRun');
 	const buildNumberInput = getInput('buildNumber');
+	const buildNumberOffset = getInput('buildNumberOffset');
 	const stagingDirInput = getInput('stagingDir');
 
-	const buildNumber =
+	const baseBuildNumber =
 		buildNumberInput ?? envOrUndefined('GITHUB_RUN_NUMBER') ?? 'dev';
+
+	const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
 
 	return {
 		projectName,
