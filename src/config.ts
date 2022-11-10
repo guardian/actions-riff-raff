@@ -129,18 +129,21 @@ export interface Configuration {
 	stagingDirInput?: string;
 }
 
-const offsetBuildNumber = (buildNumber: string, offset: string | undefined): string => {
-	if(typeof offset === 'undefined') {
+const offsetBuildNumber = (
+	buildNumber: string,
+	offset: string | undefined,
+): string => {
+	if (typeof offset === 'undefined') {
 		return buildNumber;
 	}
 	const intOffset = parseInt(offset);
 	const intBuildNumber = parseInt(buildNumber);
-	if(isNaN(intOffset) || isNaN(intBuildNumber)) {
+	if (isNaN(intOffset) || isNaN(intBuildNumber)) {
 		return buildNumber;
 	} else {
 		return `${intBuildNumber + intOffset}`;
 	}
-}
+};
 
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
