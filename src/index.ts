@@ -40,7 +40,10 @@ export const main = async (): Promise<void> => {
 
 	await core.summary
 		.addHeading('Riff-Raff')
-		.addTable([['Build number', buildNumber]])
+		.addTable([
+			['Project name', projectName],
+			['Build number', buildNumber],
+		])
 		.write();
 
 	core.info('writting rr yaml...');

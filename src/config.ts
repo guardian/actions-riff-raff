@@ -129,13 +129,7 @@ export interface Configuration {
 	stagingDirInput?: string;
 }
 
-const offsetBuildNumber = (
-	buildNumber: string,
-	offset: string | undefined,
-): string => {
-	if (typeof offset === 'undefined') {
-		return buildNumber;
-	}
+const offsetBuildNumber = (buildNumber: string, offset: string): string => {
 	const intOffset = parseInt(offset);
 	const intBuildNumber = parseInt(buildNumber);
 	if (isNaN(intOffset) || isNaN(intBuildNumber)) {
@@ -150,7 +144,7 @@ export function getConfiguration(): Configuration {
 	const projectName = getProjectName(riffRaffYaml);
 	const dryRunInput = getInput('dryRun');
 	const buildNumberInput = getInput('buildNumber');
-	const buildNumberOffset = getInput('buildNumberOffset');
+	const buildNumberOffset = getInput('buildNumberOffset') ?? '0';
 	const stagingDirInput = getInput('stagingDir');
 
 	const baseBuildNumber =
