@@ -38345,7 +38345,7 @@ var offsetBuildNumber = (buildNumber, offset) => {
   if (isNaN(intOffset) || isNaN(intBuildNumber)) {
     return buildNumber;
   } else {
-    return `${buildNumber + intOffset}`;
+    return `${intBuildNumber + intOffset}`;
   }
 };
 function getConfiguration() {
