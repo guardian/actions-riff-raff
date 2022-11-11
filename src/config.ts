@@ -135,7 +135,7 @@ const offsetBuildNumber = (buildNumber: string, offset: string): string => {
 	if (isNaN(intOffset) || isNaN(intBuildNumber)) {
 		return buildNumber;
 	} else {
-		return `${intBuildNumber + intOffset}`;
+		return (intBuildNumber + intOffset).toString();
 	}
 };
 

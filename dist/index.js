@@ -38342,7 +38342,7 @@ var offsetBuildNumber = (buildNumber, offset) => {
   if (isNaN(intOffset) || isNaN(intBuildNumber)) {
     return buildNumber;
   } else {
-    return `${intBuildNumber + intOffset}`;
+    return (intBuildNumber + intOffset).toString();
   }
 };
 function getConfiguration() {
