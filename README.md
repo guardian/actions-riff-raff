@@ -160,7 +160,7 @@ deployments:
 And the following GitHub workflow:
 
 ```yaml
-configFile: riff-raff.yaml
+configPath: riff-raff.yaml
 contentDirectories: |
   cloudformation: # <-- this package name matches one found in riff-raff.yaml
     - cdk/cdk.out/Prism-CODE.template.json
