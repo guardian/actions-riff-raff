@@ -38336,13 +38336,24 @@ var vcsURL = () => {
   const repoFromEnv = envOrUndefined("GITHUB_REPOSITORY");
   return repoFromEnv ? `https://github.com/${repoFromEnv}` : void 0;
 };
+var offsetBuildNumber = (buildNumber, offset) => {
+  const intOffset = parseInt(offset);
+  const intBuildNumber = parseInt(buildNumber);
+  if (isNaN(intOffset) || isNaN(intBuildNumber)) {
+    return buildNumber;
+  } else {
+    return (intBuildNumber + intOffset).toString();
+  }
+};
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
   const projectName = getProjectName(riffRaffYaml);
   const dryRunInput = getInput2("dryRun");
   const buildNumberInput = getInput2("buildNumber");
+  const buildNumberOffset = getInput2("buildNumberOffset") ?? "0";
   const stagingDirInput = getInput2("stagingDir");
-  const buildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
+  const baseBuildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
+  const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
   return {
     projectName,
     riffRaffYaml,
@@ -38423,6 +38434,10 @@ var main = async () => {
   );
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
+  await core4.summary.addHeading("Riff-Raff").addTable([
+    ["Project name", projectName],
+    ["Build number", buildNumber]
+  ]).write();
   core4.info("writting rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {

@@ -101,6 +101,14 @@ A path to a `riff-raff.yaml` file.
 ### `buildNumber`
 Used to override the default build number, for example, if you want to offset it.
 
+### `buildNumberOffset`
+If provided, this should be a number which will be added to the
+`buildNumber`. This can be used, for example, when migrating from another build
+system, to force the build numbers produced by this action to continue after the
+last build from the previous build system. For example, if the last build from
+the previous system was build 45, setting this offset to 45 will mean that the
+first build produced by this action will be 46.
+
 ### `contentDirectories`
 *Required*
 

@@ -19,6 +19,9 @@ inputs:
   buildNumber:
     description: If set, will be used for the build number. (Typically this is read from process.env.GITHUB_RUN_NUMBER.)
     required: false
+  buildNumberOffset:
+    description: If set, will be added to the build number. (e.g. to offset builds to count from builds generated from a previous build tool)
+    required: false
   stagingDir:
     description: Used to set staging directory. You should not need to set this; it is intended for internal (testing) use only.
     required: false
