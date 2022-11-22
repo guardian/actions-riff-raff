@@ -33,7 +33,7 @@ export const write = (filePath: string, data: string): void => {
 
 // Copy file or (recursive copy of) directory.
 export const cp = (sources: string[], destDir: string): void => {
-	child_process.execSync(`mkdir -p ${destDir}`); // ensure destDir exists
+  child_process.execSync(`mkdir -p ${destDir}`); // ensure destDir exists
 
 	sources.forEach((src) => {
 		const info = fs.lstatSync(src);
