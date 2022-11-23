@@ -46,45 +46,52 @@ const getProjectName = ({ stacks }: RiffraffYaml): string => {
 type Sources = Record<string, string[]>;
 
 const isSources = (obj: unknown): obj is Sources => {
-  if (typeof obj === 'object'){
-    return Object.values(obj as object).every(source => Array.isArray(source))
-  }
+	if (typeof obj === 'object') {
+		return Object.values(obj as object).every((source) =>
+			Array.isArray(source),
+		);
+	}
 
-  return false;
-
-}
+	return false;
+};
 
 const getDeployments = (): Deployment[] => {
 	const input = getInput('contentDirectories', { required: true });
 
-	const contentDirectoriesInput = input
-		? (yaml.load(input))
-		: {};
+	const contentDirectoriesInput = input ? yaml.load(input) : {};
 
-  if (!isSources(contentDirectoriesInput)) {
-    throw new Error(`Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ''}`)
-  }
+	if (!isSources(contentDirectoriesInput)) {
+		throw new Error(
+			`Invalid contentDirectories. Each value must be a list of sources, but got: ${
+				input ?? ''
+			}`,
+		);
+	}
 
-  if (isSources(contentDirectoriesInput)) {
-    const deployments: Deployment[] = Object.entries(contentDirectoriesInput).map(
-      ([name, sources]) => ({ name, sources }),
-    );
+	if (isSources(contentDirectoriesInput)) {
+		const deployments: Deployment[] = Object.entries(
+			contentDirectoriesInput,
+		).map(([name, sources]) => ({ name, sources }));
 
-    const totalDeployments: number = deployments.reduce(
-      (acc, { sources }) => acc + sources.length,
-      0,
-    );
+		const totalDeployments: number = deployments.reduce(
+			(acc, { sources }) => acc + sources.length,
+			0,
+		);
 
-    if (totalDeployments === 0) {
-      throw new Error(
-        'Not configured with any deployment sources, no files will be uploaded to Riff-Raff.',
-      );
-    }
+		if (totalDeployments === 0) {
+			throw new Error(
+				'Not configured with any deployment sources, no files will be uploaded to Riff-Raff.',
+			);
+		}
 
-    return deployments;
-  }
+		return deployments;
+	}
 
-  throw new Error(`Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ''}`)
+	throw new Error(
+		`Invalid contentDirectories. Each value must be a list of sources, but got: ${
+			input ?? ''
+		}`,
+	);
 };
 
 const getRiffRaffYaml = (): RiffraffYaml => {

@@ -38297,7 +38297,9 @@ var getProjectName = ({ stacks }) => {
 };
 var isSources = (obj) => {
   if (typeof obj === "object") {
-    return Object.values(obj).every((source) => Array.isArray(source));
+    return Object.values(obj).every(
+      (source) => Array.isArray(source)
+    );
   }
   return false;
 };
@@ -38305,12 +38307,14 @@ var getDeployments = () => {
   const input = getInput2("contentDirectories", { required: true });
   const contentDirectoriesInput = input ? load(input) : {};
   if (!isSources(contentDirectoriesInput)) {
-    throw new Error(`Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`);
+    throw new Error(
+      `Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`
+    );
   }
   if (isSources(contentDirectoriesInput)) {
-    const deployments = Object.entries(contentDirectoriesInput).map(
-      ([name, sources]) => ({ name, sources })
-    );
+    const deployments = Object.entries(
+      contentDirectoriesInput
+    ).map(([name, sources]) => ({ name, sources }));
     const totalDeployments = deployments.reduce(
       (acc, { sources }) => acc + sources.length,
       0
@@ -38322,7 +38326,9 @@ var getDeployments = () => {
     }
     return deployments;
   }
-  throw new Error(`Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`);
+  throw new Error(
+    `Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`
+  );
 };
 var getRiffRaffYaml = () => {
   const configInput = getInput2("config");
