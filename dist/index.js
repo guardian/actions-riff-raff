@@ -38295,22 +38295,40 @@ var getProjectName = ({ stacks }) => {
     );
   }
 };
+var isSources = (obj) => {
+  if (typeof obj === "object") {
+    return Object.values(obj).every(
+      (source) => Array.isArray(source)
+    );
+  }
+  return false;
+};
 var getDeployments = () => {
   const input = getInput2("contentDirectories", { required: true });
   const contentDirectoriesInput = input ? load(input) : {};
-  const deployments = Object.entries(contentDirectoriesInput).map(
-    ([name, sources]) => ({ name, sources })
-  );
-  const totalDeployments = deployments.reduce(
-    (acc, { sources }) => acc + sources.length,
-    0
-  );
-  if (totalDeployments === 0) {
+  if (!isSources(contentDirectoriesInput)) {
     throw new Error(
-      "Not configured with any deployment sources, no files will be uploaded to Riff-Raff."
+      `Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`
     );
   }
-  return deployments;
+  if (isSources(contentDirectoriesInput)) {
+    const deployments = Object.entries(
+      contentDirectoriesInput
+    ).map(([name, sources]) => ({ name, sources }));
+    const totalDeployments = deployments.reduce(
+      (acc, { sources }) => acc + sources.length,
+      0
+    );
+    if (totalDeployments === 0) {
+      throw new Error(
+        "Not configured with any deployment sources, no files will be uploaded to Riff-Raff."
+      );
+    }
+    return deployments;
+  }
+  throw new Error(
+    `Invalid contentDirectories. Each value must be a list of sources, but got: ${input ?? ""}`
+  );
 };
 var getRiffRaffYaml = () => {
   const configInput = getInput2("config");
@@ -38438,7 +38456,7 @@ var main = async () => {
     ["Project name", projectName],
     ["Build number", buildNumber]
   ]).write();
-  core4.info("writting rr yaml...");
+  core4.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);

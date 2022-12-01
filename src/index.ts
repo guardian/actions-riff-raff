@@ -46,7 +46,7 @@ export const main = async (): Promise<void> => {
 		])
 		.write();
 
-	core.info('writting rr yaml...');
+	core.info('writing rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
 
 	deployments.forEach((deployment: Deployment) => {

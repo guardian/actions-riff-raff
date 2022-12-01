@@ -9,7 +9,8 @@
     "test": "jest",
     "tsc": "tsc --noEmit",
     "lint": "eslint src --ext .ts --no-error-on-unmatched-pattern",
-    "format": "prettier --check \"src/**/*.ts\""
+    "format": "prettier --check \"src/**/*.ts\"",
+    "format-fix": "prettier --write \"src/**/*.ts\""
   },
   "repository": {
     "type": "git",
