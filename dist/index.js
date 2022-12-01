@@ -38386,14 +38386,15 @@ function getConfiguration() {
 }
 
 // src/riffraff.ts
-var manifest = (projectName, buildNumber, branch, vcsURL2, revision) => {
+var manifest = (projectName, buildNumber, branch, vcsURL2, revision, buildTool) => {
   return {
     branch,
     vcsURL: vcsURL2,
     revision,
     buildNumber,
     projectName,
-    startTime: new Date()
+    startTime: new Date(),
+    buildTool
   };
 };
 var riffraffPrefix = (m) => {
@@ -38429,7 +38430,7 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 };
 
 // src/index.ts
-var main = async () => {
+var main = async (options) => {
   const config = getConfiguration();
   core4.debug(JSON.stringify(config, null, 2));
   const {
@@ -38448,14 +38449,17 @@ var main = async () => {
     buildNumber,
     branchName2,
     vcsURL2,
-    revision
+    revision,
+    "guardian/actions-riff-raff"
   );
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
-  await core4.summary.addHeading("Riff-Raff").addTable([
-    ["Project name", projectName],
-    ["Build number", buildNumber]
-  ]).write();
+  if (options.WithSummary) {
+    await core4.summary.addHeading("Riff-Raff").addTable([
+      ["Project name", projectName],
+      ["Build number", buildNumber]
+    ]).write();
+  }
   core4.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
@@ -38478,7 +38482,7 @@ var main = async () => {
   core4.info("Upload complete.");
 };
 if (require.main === module) {
-  main().catch((err) => {
+  main({ WithSummary: true }).catch((err) => {
     if (err instanceof Error) {
       core4.error(err);
       core4.setFailed(err.message);

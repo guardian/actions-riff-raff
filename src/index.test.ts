@@ -48,7 +48,7 @@ config: |
         publicReadAcl: false`;
 
 		readConfig(input);
-		await main();
+		await main({ WithSummary: false });
 
 		const got = walk(stagingDir, (path: string) => path);
 
