@@ -10,6 +10,7 @@ describe('riffraff', () => {
 			buildNumber: '10',
 			projectName: 'example',
 			startTime: new Date(),
+			buildTool: 'guardian/actions-riff-raff',
 		};
 
 		const got = riffraffPrefix(m);

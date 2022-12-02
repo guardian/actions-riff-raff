@@ -8,7 +8,11 @@ import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
 
-export const main = async (): Promise<void> => {
+interface Options {
+	WithSummary: boolean; // Use to disable summary when running locally.
+}
+
+export const main = async (options: Options): Promise<void> => {
 	const config = getConfiguration();
 
 	core.debug(JSON.stringify(config, null, 2));
@@ -31,6 +35,7 @@ export const main = async (): Promise<void> => {
 		branchName,
 		vcsURL,
 		revision,
+		'guardian/actions-riff-raff',
 	);
 	const manifestJSON = JSON.stringify(mfest);
 
@@ -38,13 +43,15 @@ export const main = async (): Promise<void> => {
 	// same workflow (this has happened!).
 	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
 
-	await core.summary
-		.addHeading('Riff-Raff')
-		.addTable([
-			['Project name', projectName],
-			['Build number', buildNumber],
-		])
-		.write();
+	if (options.WithSummary) {
+		await core.summary
+			.addHeading('Riff-Raff')
+			.addTable([
+				['Project name', projectName],
+				['Build number', buildNumber],
+			])
+			.write();
+	}
 
 	core.info('writing rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
@@ -79,7 +86,7 @@ export const main = async (): Promise<void> => {
 
 // execute only if invoked as main script (rather than test)
 if (require.main === module) {
-	main().catch((err) => {
+	main({ WithSummary: true }).catch((err) => {
 		if (err instanceof Error) {
 			core.error(err);
 			core.setFailed(err.message);

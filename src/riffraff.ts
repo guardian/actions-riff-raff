@@ -5,6 +5,7 @@ export type Manifest = {
 	buildNumber: string;
 	projectName: string;
 	startTime: Date;
+	buildTool: string;
 };
 
 export const manifest = (
@@ -13,6 +14,7 @@ export const manifest = (
 	branch: string,
 	vcsURL: string,
 	revision: string,
+	buildTool: string,
 ): Manifest => {
 	return {
 		branch,
@@ -21,6 +23,7 @@ export const manifest = (
 		buildNumber,
 		projectName,
 		startTime: new Date(),
+		buildTool,
 	};
 };
 
