@@ -33,7 +33,7 @@ jobs:
     # Your usual build steps here...
 
     # Exchange OIDC JWT ID token for temporary AWS credentials to allow uploading to S3
-    - uses: aws-actions/configure-aws-credentials@v1
+    - uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: eu-west-1
         role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
