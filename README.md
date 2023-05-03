@@ -27,38 +27,38 @@ jobs:
       # Required for `actions/checkout`
       contents: read
 
-  steps:
-    - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-    # Your usual build steps here...
+      # Your usual build steps here...
 
-    # Exchange OIDC JWT ID token for temporary AWS credentials to allow uploading to S3
-    - uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-region: eu-west-1
-        role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+      # Exchange OIDC JWT ID token for temporary AWS credentials to allow uploading to S3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: eu-west-1
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
 
-    - uses: guardian/actions-riff-raff@v2
-      with:
-        app: foo
-        config: |
-          stacks:
-            - deploy
-          regions:
-            - eu-west-1
-          allowedStages:
-            - CODE
-            - PROD
-          deployments:
+      - uses: guardian/actions-riff-raff@v2
+        with:
+          app: foo
+          config: |
+            stacks:
+              - deploy
+            regions:
+              - eu-west-1
+            allowedStages:
+              - CODE
+              - PROD
+            deployments:
+              static-site-assets:
+                type: aws-s3
+                parameters:
+                  bucket: aws-some-bucket
+                  cacheControl: private
+                  publicReadAcl: false
+          contentDirectories: |
             static-site-assets:
-              type: aws-s3
-              parameters:
-                bucket: aws-some-bucket
-                cacheControl: private
-                publicReadAcl: false
-        contentDirectories: |
-          static-site-assets:
-            - test-data
+              - test-data
 ```
 
 ## Available inputs
