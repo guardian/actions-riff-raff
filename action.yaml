@@ -1,5 +1,5 @@
-name: "guardian/actions-riff-raff"
-description: "Build and upload Riff Raff artifacts."
+name: 'guardian/actions-riff-raff'
+description: 'Build and upload Riff Raff artifacts.'
 inputs:
   app:
     description: Riff Raff app name. Either this or projectName should be set.
@@ -11,14 +11,15 @@ inputs:
     description: Use this to specify the path of a riff-raff.yaml file if you'd rather that than enter the config in your workflow file directly.
     required: false
   projectName:
-    description: "Determines Riffraff project name. Use this to override the default `stack::app` naming convention."
+    description: 'Determines Riffraff project name. Use this to override the default `stack::app` naming convention.'
     required: false
   dryRun:
     description: If set to true, logs the output but does not upload deployments to the Riff Raff S3 bucket.
     required: false
   buildNumber:
-    description: If set, will be used for the build number. (Typically this is read from process.env.GITHUB_RUN_NUMBER.)
+    description: DEPRECATED - prefer buildNumberOffset. If set, will be used for the build number. (Typically this is read from process.env.GITHUB_RUN_NUMBER.)
     required: false
+    deprecationMessage: This input is deprecated and should not be used! Prefer buildNumberOffset.
   buildNumberOffset:
     description: If set, will be added to the build number. (e.g. to offset builds to count from builds generated from a previous build tool)
     required: false
@@ -30,5 +31,5 @@ inputs:
     description: A list of files/directories to upload to Riff-Raff. An alternative to nesting `sources` inside the `config` input.
 
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: 'node16'
+  main: 'dist/index.js'

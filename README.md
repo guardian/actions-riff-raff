@@ -98,7 +98,9 @@ config as a multiline string.
 
 A path to a `riff-raff.yaml` file.
 
-### `buildNumber`
+### `buildNumber` (deprecated)
+**DEPRECATED: prefer `buildNumberOffset`.**
+
 Used to override the default build number, for example, if you want to offset it.
 
 ### `buildNumberOffset`
