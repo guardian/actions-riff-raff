@@ -27,7 +27,7 @@
   "devDependencies": {
     "@guardian/eslint-config-typescript": "^5.0.0",
     "@guardian/prettier": "^3.0.0",
-    "@guardian/tsconfig": "^0.1.4",
+    "@guardian/tsconfig": "^0.2.0",
     "@types/jest": "^27.4.1",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^17.0.23",
