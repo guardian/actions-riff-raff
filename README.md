@@ -170,12 +170,12 @@ And the following GitHub workflow:
 ```yaml
 configPath: riff-raff.yaml
 contentDirectories: |
-  cloudformation: # <-- this package name matches one found in riff-raff.yaml
+  cloudformation: # <-- this package name needs to match the one found in riff-raff.yaml
     - cdk/cdk.out/Prism-CODE.template.json
     - cdk/cdk.out/Prism-PROD.template.json
-  prism: # <-- this package name matches one found in riff-raff.yaml
+  prism: # <-- this package name needs to match the one found in riff-raff.yaml
     - target/prism.deb
-  static-site-assets: # <-- this package name matches one found in riff-raff.yaml
+  static-site-assets: # <-- this package name needs to match the one found in riff-raff.yaml
     - static-site/dist
 ```
 
