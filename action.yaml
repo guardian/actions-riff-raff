@@ -29,25 +29,6 @@ inputs:
     required: true
     description: A list of files/directories to upload to Riff-Raff. An alternative to nesting `sources` inside the `config` input.
 
-# When `actions/runner` supports Node 18 or higher, this could be a Javascript action.
-# See https://github.com/guardian/actions-riff-raff/issues/33
 runs:
-  using: composite
-  steps:
-    - name: Setup node
-      uses: actions/setup-node@v3
-      with:
-        node-version: "18.17.0"
-    - name: Action
-      run: node ${{ github.action_path }}/dist/index.js
-      shell: bash
-      env:
-        INPUT_APP: ${{ inputs.app }}
-        INPUT_CONFIG: ${{ inputs.config }}
-        INPUT_CONFIGPATH: ${{ inputs.configPath }}
-        INPUT_PROJECTNAME: ${{ inputs.projectName }}
-        INPUT_DRYRUN: ${{ inputs.dryRun }}
-        INPUT_BUILDNUMBER: ${{ inputs.buildNumber }}
-        INPUT_BUILDNUMBEROFFSET: ${{ inputs.buildNumberOffset }}
-        INPUT_STAGINGDIR: ${{ inputs.stagingDir }}
-        INPUT_CONTENTDIRECTORIES: ${{ inputs.contentDirectories }}
+  using: node20
+  main: "dist/index.js"
