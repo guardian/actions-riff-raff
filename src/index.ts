@@ -4,6 +4,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
 import { cp, printDir, write } from './file';
+import { commentOnPullRequest } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
@@ -27,6 +28,7 @@ export const main = async (options: Options): Promise<void> => {
 		revision,
 		deployments,
 		stagingDirInput,
+		pullRequestComment,
 	} = config;
 
 	const mfest = manifest(
@@ -82,6 +84,10 @@ export const main = async (options: Options): Promise<void> => {
 	);
 
 	core.info('Upload complete.');
+
+	if (pullRequestComment) {
+		await commentOnPullRequest(pullRequestComment);
+	}
 };
 
 // execute only if invoked as main script (rather than test)

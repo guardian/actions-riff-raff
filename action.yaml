@@ -28,7 +28,13 @@ inputs:
   contentDirectories:
     required: true
     description: A list of files/directories to upload to Riff-Raff. An alternative to nesting `sources` inside the `config` input.
-
+  githubToken:
+    required: true
+    description: The GitHub token scoped to allow pull request commenting.
+  commentingStage:
+    required: false
+    description: When commenting on a pull request, which stage should be used. Typically a pre-production stage.
+    default: CODE
 runs:
   using: node20
   main: "dist/index.js"
