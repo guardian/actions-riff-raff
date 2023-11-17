@@ -85,9 +85,7 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info('Upload complete.');
 
-	if (pullRequestComment) {
-		await commentOnPullRequest(pullRequestComment);
-	}
+	await commentOnPullRequest(pullRequestComment);
 };
 
 // execute only if invoked as main script (rather than test)

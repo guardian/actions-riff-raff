@@ -1,4 +1,4 @@
-import { debug } from '@actions/core';
+import { debug, info } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import type { PullRequestCommentConfig } from './config';
 
@@ -50,41 +50,46 @@ function getCommentMessage(config: PullRequestCommentConfig): string {
 }
 
 export async function commentOnPullRequest(config: PullRequestCommentConfig) {
-	const comment = getCommentMessage(config);
 	const { pull_request } = context.payload;
 
-	if (pull_request) {
-		const octokit = getOctokit(config.githubToken, {});
+	if (!pull_request) {
+		info(
+			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
+		);
+		return;
+	}
 
-		const comments = await octokit.rest.issues.listComments({
+	const comment = getCommentMessage(config);
+	const octokit = getOctokit(config.githubToken(), {});
+
+	const comments = await octokit.rest.issues.listComments({
+		...context.repo,
+		issue_number: pull_request.number,
+	});
+
+	debug(`Total comments: ${comments.data.length}`);
+
+	const previousComment = comments.data.find((comment) => {
+		const fromBot = comment.user?.login === 'github-actions[bot]';
+		const fromUs = comment.body?.includes(signature) ?? false;
+		return fromBot && fromUs;
+	});
+
+	if (previousComment) {
+		debug(
+			`Found a comment by github-actions[bot] (id: ${previousComment.id}). Updating it.`,
+		);
+		await octokit.rest.issues.updateComment({
+			...context.repo,
+			comment_id: previousComment.id,
+			body: comment,
+		});
+	} else {
+		debug(`No previous comment found. Creating one.`);
+		await octokit.rest.issues.createComment({
 			...context.repo,
 			issue_number: pull_request.number,
+			body: comment,
 		});
-
-		debug(`Total comments: ${comments.data.length}`);
-
-		const previousComment = comments.data.find((comment) => {
-			const fromBot = comment.user?.login === 'github-actions[bot]';
-			const fromUs = comment.body?.includes(signature) ?? false;
-			return fromBot && fromUs;
-		});
-
-		if (previousComment) {
-			debug(
-				`Found a comment by github-actions[bot] (id: ${previousComment.id}). Updating it.`,
-			);
-			await octokit.rest.issues.updateComment({
-				...context.repo,
-				comment_id: previousComment.id,
-				body: comment,
-			});
-		} else {
-			debug(`No previous comment found. Creating one.`);
-			await octokit.rest.issues.createComment({
-				...context.repo,
-				issue_number: pull_request.number,
-				body: comment,
-			});
-		}
 	}
 }

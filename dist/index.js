@@ -4369,18 +4369,18 @@ var require_webidl = __commonJS({
     webidl.errors.exception = function(message) {
       return new TypeError(`${message.header}: ${message.message}`);
     };
-    webidl.errors.conversionFailed = function(context3) {
-      const plural = context3.types.length === 1 ? "" : " one of";
-      const message = `${context3.argument} could not be converted to${plural}: ${context3.types.join(", ")}.`;
+    webidl.errors.conversionFailed = function(context2) {
+      const plural = context2.types.length === 1 ? "" : " one of";
+      const message = `${context2.argument} could not be converted to${plural}: ${context2.types.join(", ")}.`;
       return webidl.errors.exception({
-        header: context3.prefix,
+        header: context2.prefix,
         message
       });
     };
-    webidl.errors.invalidArgument = function(context3) {
+    webidl.errors.invalidArgument = function(context2) {
       return webidl.errors.exception({
-        header: context3.prefix,
-        message: `"${context3.value}" is an invalid ${context3.type}.`
+        header: context2.prefix,
+        message: `"${context2.value}" is an invalid ${context2.type}.`
       });
     };
     webidl.brandCheck = function(V, I, opts = void 0) {
@@ -9692,15 +9692,15 @@ var require_api_request = __commonJS({
         }
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context2) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context2;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { callback, opaque, abort, context: context3, responseHeaders, highWaterMark } = this;
+        const { callback, opaque, abort, context: context2, responseHeaders, highWaterMark } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9727,7 +9727,7 @@ var require_api_request = __commonJS({
               trailers: this.trailers,
               opaque,
               body,
-              context: context3
+              context: context2
             });
           }
         }
@@ -9846,15 +9846,15 @@ var require_api_stream = __commonJS({
         }
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context2) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context2;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { factory, opaque, context: context3, callback, responseHeaders } = this;
+        const { factory, opaque, context: context2, callback, responseHeaders } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9882,7 +9882,7 @@ var require_api_stream = __commonJS({
             statusCode,
             headers,
             opaque,
-            context: context3
+            context: context2
           });
           if (!res || typeof res.write !== "function" || typeof res.end !== "function" || typeof res.on !== "function") {
             throw new InvalidReturnValueError("expected Writable");
@@ -10074,17 +10074,17 @@ var require_api_pipeline = __commonJS({
         this.res = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context2) {
         const { ret, res } = this;
         assert(!res, "pipeline cannot be retried");
         if (ret.destroyed) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context2;
       }
       onHeaders(statusCode, rawHeaders, resume) {
-        const { opaque, handler, context: context3 } = this;
+        const { opaque, handler, context: context2 } = this;
         if (statusCode < 200) {
           if (this.onInfo) {
             const headers = this.responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
@@ -10102,7 +10102,7 @@ var require_api_pipeline = __commonJS({
             headers,
             opaque,
             body: this.res,
-            context: context3
+            context: context2
           });
         } catch (err) {
           this.res.on("error", util.nop);
@@ -10186,7 +10186,7 @@ var require_api_upgrade = __commonJS({
         this.context = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context2) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
@@ -10197,7 +10197,7 @@ var require_api_upgrade = __commonJS({
         throw new SocketError("bad upgrade", null);
       }
       onUpgrade(statusCode, rawHeaders, socket) {
-        const { callback, opaque, context: context3 } = this;
+        const { callback, opaque, context: context2 } = this;
         assert.strictEqual(statusCode, 101);
         removeSignal(this);
         this.callback = null;
@@ -10206,7 +10206,7 @@ var require_api_upgrade = __commonJS({
           headers,
           socket,
           opaque,
-          context: context3
+          context: context2
         });
       }
       onError(err) {
@@ -10274,18 +10274,18 @@ var require_api_connect = __commonJS({
         this.abort = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context2) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context2;
       }
       onHeaders() {
         throw new SocketError("bad connect", null);
       }
       onUpgrade(statusCode, rawHeaders, socket) {
-        const { callback, opaque, context: context3 } = this;
+        const { callback, opaque, context: context2 } = this;
         removeSignal(this);
         this.callback = null;
         let headers = rawHeaders;
@@ -10297,7 +10297,7 @@ var require_api_connect = __commonJS({
           headers,
           socket,
           opaque,
-          context: context3
+          context: context2
         });
       }
       onError(err) {
@@ -17384,12 +17384,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info3 = this._prepareRequest(verb, parsedUrl, headers);
+          let info4 = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info3, data);
+            response = yield this.requestRaw(info4, data);
             if (response && response.message && response.message.statusCode === HttpCodes.Unauthorized) {
               let authenticationHandler;
               for (const handler of this.handlers) {
@@ -17399,7 +17399,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info3, data);
+                return authenticationHandler.handleAuthentication(this, info4, data);
               } else {
                 return response;
               }
@@ -17422,8 +17422,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info3 = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info3, data);
+              info4 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info4, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes.includes(response.message.statusCode)) {
@@ -17452,7 +17452,7 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info3, data) {
+      requestRaw(info4, data) {
         return __awaiter4(this, void 0, void 0, function* () {
           return new Promise((resolve, reject) => {
             function callbackForResult(err, res) {
@@ -17464,7 +17464,7 @@ var require_lib = __commonJS({
                 resolve(res);
               }
             }
-            this.requestRawWithCallback(info3, data, callbackForResult);
+            this.requestRawWithCallback(info4, data, callbackForResult);
           });
         });
       }
@@ -17474,12 +17474,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info3, data, onResult) {
+      requestRawWithCallback(info4, data, onResult) {
         if (typeof data === "string") {
-          if (!info3.options.headers) {
-            info3.options.headers = {};
+          if (!info4.options.headers) {
+            info4.options.headers = {};
           }
-          info3.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info4.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -17488,7 +17488,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info3.httpModule.request(info3.options, (msg) => {
+        const req = info4.httpModule.request(info4.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -17500,7 +17500,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info3.options.path}`));
+          handleResult(new Error(`Request timeout: ${info4.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -17536,27 +17536,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info3 = {};
-        info3.parsedUrl = requestUrl;
-        const usingSsl = info3.parsedUrl.protocol === "https:";
-        info3.httpModule = usingSsl ? https : http;
+        const info4 = {};
+        info4.parsedUrl = requestUrl;
+        const usingSsl = info4.parsedUrl.protocol === "https:";
+        info4.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info3.options = {};
-        info3.options.host = info3.parsedUrl.hostname;
-        info3.options.port = info3.parsedUrl.port ? parseInt(info3.parsedUrl.port) : defaultPort;
-        info3.options.path = (info3.parsedUrl.pathname || "") + (info3.parsedUrl.search || "");
-        info3.options.method = method;
-        info3.options.headers = this._mergeHeaders(headers);
+        info4.options = {};
+        info4.options.host = info4.parsedUrl.hostname;
+        info4.options.port = info4.parsedUrl.port ? parseInt(info4.parsedUrl.port) : defaultPort;
+        info4.options.path = (info4.parsedUrl.pathname || "") + (info4.parsedUrl.search || "");
+        info4.options.method = method;
+        info4.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info3.options.headers["user-agent"] = this.userAgent;
+          info4.options.headers["user-agent"] = this.userAgent;
         }
-        info3.options.agent = this._getAgent(info3.parsedUrl);
+        info4.options.agent = this._getAgent(info4.parsedUrl);
         if (this.handlers) {
           for (const handler of this.handlers) {
-            handler.prepareRequest(info3.options);
+            handler.prepareRequest(info4.options);
           }
         }
-        return info3;
+        return info4;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -18420,10 +18420,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       command_1.issueCommand("notice", utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
     }
     exports.notice = notice;
-    function info3(message) {
+    function info4(message) {
       process.stdout.write(message + os.EOL);
     }
-    exports.info = info3;
+    exports.info = info4;
     function startGroup(name) {
       command_1.issue("group", name);
     }
@@ -18567,17 +18567,17 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
   var descriptor = descriptorIn || (target ? Object.getOwnPropertyDescriptor(target, contextIn.name) : {});
   var _, done = false;
   for (var i = decorators.length - 1; i >= 0; i--) {
-    var context3 = {};
+    var context2 = {};
     for (var p in contextIn)
-      context3[p] = p === "access" ? {} : contextIn[p];
+      context2[p] = p === "access" ? {} : contextIn[p];
     for (var p in contextIn.access)
-      context3.access[p] = contextIn.access[p];
-    context3.addInitializer = function(f) {
+      context2.access[p] = contextIn.access[p];
+    context2.addInitializer = function(f) {
       if (done)
         throw new TypeError("Cannot add initializers after decoration has completed");
       extraInitializers.push(accept(f || null));
     };
-    var result = (0, decorators[i])(kind === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context3);
+    var result = (0, decorators[i])(kind === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context2);
     if (kind === "accessor") {
       if (result === void 0)
         continue;
@@ -19873,14 +19873,14 @@ var require_loggerMiddleware = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getLoggerPlugin = exports.loggerMiddlewareOptions = exports.loggerMiddleware = void 0;
-    var loggerMiddleware = () => (next, context3) => async (args) => {
+    var loggerMiddleware = () => (next, context2) => async (args) => {
       var _a, _b;
       try {
         const response = await next(args);
-        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
+        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context2;
         const { overrideInputFilterSensitiveLog, overrideOutputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
-        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog !== null && overrideInputFilterSensitiveLog !== void 0 ? overrideInputFilterSensitiveLog : context3.inputFilterSensitiveLog;
-        const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog !== null && overrideOutputFilterSensitiveLog !== void 0 ? overrideOutputFilterSensitiveLog : context3.outputFilterSensitiveLog;
+        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog !== null && overrideInputFilterSensitiveLog !== void 0 ? overrideInputFilterSensitiveLog : context2.inputFilterSensitiveLog;
+        const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog !== null && overrideOutputFilterSensitiveLog !== void 0 ? overrideOutputFilterSensitiveLog : context2.outputFilterSensitiveLog;
         const { $metadata, ...outputWithoutMetadata } = response.output;
         (_a = logger === null || logger === void 0 ? void 0 : logger.info) === null || _a === void 0 ? void 0 : _a.call(logger, {
           clientName,
@@ -19891,9 +19891,9 @@ var require_loggerMiddleware = __commonJS({
         });
         return response;
       } catch (error2) {
-        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
+        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context2;
         const { overrideInputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
-        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog !== null && overrideInputFilterSensitiveLog !== void 0 ? overrideInputFilterSensitiveLog : context3.inputFilterSensitiveLog;
+        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog !== null && overrideInputFilterSensitiveLog !== void 0 ? overrideInputFilterSensitiveLog : context2.inputFilterSensitiveLog;
         (_b = logger === null || logger === void 0 ? void 0 : logger.error) === null || _b === void 0 ? void 0 : _b.call(logger, {
           clientName,
           commandName,
@@ -20249,9 +20249,9 @@ var require_MiddlewareStack = __commonJS({
             identifyOnResolve = toggle;
           return identifyOnResolve;
         },
-        resolve: (handler, context3) => {
+        resolve: (handler, context2) => {
           for (const middleware of getMiddlewareList().map((entry) => entry.middleware).reverse()) {
-            handler = middleware(handler, context3);
+            handler = middleware(handler, context2);
           }
           if (identifyOnResolve) {
             console.log(stack.identify());
@@ -21336,14 +21336,14 @@ var require_collect_stream_body = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.collectBody = void 0;
     var util_stream_1 = require_dist_cjs15();
-    var collectBody = async (streamBody = new Uint8Array(), context3) => {
+    var collectBody = async (streamBody = new Uint8Array(), context2) => {
       if (streamBody instanceof Uint8Array) {
         return util_stream_1.Uint8ArrayBlobAdapter.mutate(streamBody);
       }
       if (!streamBody) {
         return util_stream_1.Uint8ArrayBlobAdapter.mutate(new Uint8Array());
       }
-      const fromContext = context3.streamCollector(streamBody);
+      const fromContext = context2.streamCollector(streamBody);
       return util_stream_1.Uint8ArrayBlobAdapter.mutate(await fromContext);
     };
     exports.collectBody = collectBody;
@@ -22421,14 +22421,14 @@ var require_check_content_length_header = __commonJS({
     var smithy_client_1 = require_dist_cjs16();
     var CONTENT_LENGTH_HEADER = "content-length";
     function checkContentLengthHeader() {
-      return (next, context3) => async (args) => {
+      return (next, context2) => async (args) => {
         var _a;
         const { request } = args;
         if (protocol_http_1.HttpRequest.isInstance(request)) {
           if (!request.headers[CONTENT_LENGTH_HEADER]) {
             const message = `Are you using a Stream of unknown length as the Body of a PutObject request? Consider using Upload instead from @aws-sdk/lib-storage.`;
-            if (typeof ((_a = context3 === null || context3 === void 0 ? void 0 : context3.logger) === null || _a === void 0 ? void 0 : _a.warn) === "function" && !(context3.logger instanceof smithy_client_1.NoOpLogger)) {
-              context3.logger.warn(message);
+            if (typeof ((_a = context2 === null || context2 === void 0 ? void 0 : context2.logger) === null || _a === void 0 ? void 0 : _a.warn) === "function" && !(context2.logger instanceof smithy_client_1.NoOpLogger)) {
+              context2.logger.warn(message);
             } else {
               console.warn(message);
             }
@@ -22460,17 +22460,17 @@ var require_region_redirect_endpoint_middleware = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.regionRedirectEndpointMiddlewareOptions = exports.regionRedirectEndpointMiddleware = void 0;
     var regionRedirectEndpointMiddleware = (config) => {
-      return (next, context3) => async (args) => {
+      return (next, context2) => async (args) => {
         const originalRegion = await config.region();
         const regionProviderRef = config.region;
-        if (context3.__s3RegionRedirect) {
+        if (context2.__s3RegionRedirect) {
           config.region = async () => {
             config.region = regionProviderRef;
-            return context3.__s3RegionRedirect;
+            return context2.__s3RegionRedirect;
           };
         }
         const result = await next(args);
-        if (context3.__s3RegionRedirect) {
+        if (context2.__s3RegionRedirect) {
           const region = await config.region();
           if (originalRegion !== region) {
             throw new Error("Region was not restored following S3 region redirect.");
@@ -22498,7 +22498,7 @@ var require_region_redirect_middleware = __commonJS({
     exports.getRegionRedirectMiddlewarePlugin = exports.regionRedirectMiddlewareOptions = exports.regionRedirectMiddleware = void 0;
     var region_redirect_endpoint_middleware_1 = require_region_redirect_endpoint_middleware();
     function regionRedirectMiddleware(clientConfig) {
-      return (next, context3) => async (args) => {
+      return (next, context2) => async (args) => {
         var _a;
         try {
           return await next(args);
@@ -22506,8 +22506,8 @@ var require_region_redirect_middleware = __commonJS({
           if (clientConfig.followRegionRedirects && err.$metadata.httpStatusCode === 301) {
             try {
               const actualRegion = err.$response.headers["x-amz-bucket-region"];
-              (_a = context3.logger) === null || _a === void 0 ? void 0 : _a.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
-              context3.__s3RegionRedirect = actualRegion;
+              (_a = context2.logger) === null || _a === void 0 ? void 0 : _a.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
+              context2.__s3RegionRedirect = actualRegion;
             } catch (e) {
               throw new Error("Region redirect failed: " + e);
             }
@@ -22584,13 +22584,13 @@ var require_throw_200_exceptions = __commonJS({
       return result;
     };
     exports.throw200ExceptionsMiddleware = throw200ExceptionsMiddleware;
-    var collectBody = (streamBody = new Uint8Array(), context3) => {
+    var collectBody = (streamBody = new Uint8Array(), context2) => {
       if (streamBody instanceof Uint8Array) {
         return Promise.resolve(streamBody);
       }
-      return context3.streamCollector(streamBody) || Promise.resolve(new Uint8Array());
+      return context2.streamCollector(streamBody) || Promise.resolve(new Uint8Array());
     };
-    var collectBodyString = (streamBody, context3) => collectBody(streamBody, context3).then((body) => context3.utf8Encoder(body));
+    var collectBodyString = (streamBody, context2) => collectBody(streamBody, context2).then((body) => context2.utf8Encoder(body));
     exports.throw200ExceptionsMiddlewareOptions = {
       relation: "after",
       toMiddleware: "deserializerMiddleware",
@@ -24286,7 +24286,7 @@ var require_getSmithyContext = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getSmithyContext = void 0;
     var types_1 = require_dist_cjs();
-    var getSmithyContext = (context3) => context3[types_1.SMITHY_CONTEXT_KEY] || (context3[types_1.SMITHY_CONTEXT_KEY] = {});
+    var getSmithyContext = (context2) => context2[types_1.SMITHY_CONTEXT_KEY] || (context2[types_1.SMITHY_CONTEXT_KEY] = {});
     exports.getSmithyContext = getSmithyContext;
   }
 });
@@ -25009,19 +25009,19 @@ var require_awsAuthMiddleware = __commonJS({
     var protocol_http_1 = require_dist_cjs2();
     var getSkewCorrectedDate_1 = require_getSkewCorrectedDate();
     var getUpdatedSystemClockOffset_1 = require_getUpdatedSystemClockOffset();
-    var awsAuthMiddleware = (options) => (next, context3) => async function(args) {
+    var awsAuthMiddleware = (options) => (next, context2) => async function(args) {
       var _a, _b, _c, _d;
       if (!protocol_http_1.HttpRequest.isInstance(args.request))
         return next(args);
-      const authScheme = (_c = (_b = (_a = context3.endpointV2) === null || _a === void 0 ? void 0 : _a.properties) === null || _b === void 0 ? void 0 : _b.authSchemes) === null || _c === void 0 ? void 0 : _c[0];
+      const authScheme = (_c = (_b = (_a = context2.endpointV2) === null || _a === void 0 ? void 0 : _a.properties) === null || _b === void 0 ? void 0 : _b.authSchemes) === null || _c === void 0 ? void 0 : _c[0];
       const multiRegionOverride = (authScheme === null || authScheme === void 0 ? void 0 : authScheme.name) === "sigv4a" ? (_d = authScheme === null || authScheme === void 0 ? void 0 : authScheme.signingRegionSet) === null || _d === void 0 ? void 0 : _d.join(",") : void 0;
       const signer = await options.signer(authScheme);
       const output = await next({
         ...args,
         request: await signer.sign(args.request, {
           signingDate: (0, getSkewCorrectedDate_1.getSkewCorrectedDate)(options.systemClockOffset),
-          signingRegion: multiRegionOverride || context3["signing_region"],
-          signingService: context3["signing_service"]
+          signingRegion: multiRegionOverride || context2["signing_region"],
+          signingService: context2["signing_service"]
         })
       }).catch((error2) => {
         var _a2;
@@ -26406,13 +26406,13 @@ var require_user_agent_middleware = __commonJS({
     var util_endpoints_1 = require_dist_cjs27();
     var protocol_http_1 = require_dist_cjs2();
     var constants_1 = require_constants8();
-    var userAgentMiddleware = (options) => (next, context3) => async (args) => {
+    var userAgentMiddleware = (options) => (next, context2) => async (args) => {
       var _a, _b;
       const { request } = args;
       if (!protocol_http_1.HttpRequest.isInstance(request))
         return next(args);
       const { headers } = request;
-      const userAgent = ((_a = context3 === null || context3 === void 0 ? void 0 : context3.userAgent) === null || _a === void 0 ? void 0 : _a.map(escapeUserAgent)) || [];
+      const userAgent = ((_a = context2 === null || context2 === void 0 ? void 0 : context2.userAgent) === null || _a === void 0 ? void 0 : _a.map(escapeUserAgent)) || [];
       const defaultUserAgent = (await options.defaultUserAgentProvider()).map(escapeUserAgent);
       const customUserAgent = ((_b = options === null || options === void 0 ? void 0 : options.customUserAgent) === null || _b === void 0 ? void 0 : _b.map(escapeUserAgent)) || [];
       const prefix = (0, util_endpoints_1.getUserAgentPrefix)();
@@ -27601,7 +27601,7 @@ var require_getEndpointFromInstructions = __commonJS({
     var createConfigValueProvider_1 = require_createConfigValueProvider();
     var getEndpointFromConfig_1 = require_getEndpointFromConfig();
     var toEndpointV1_1 = require_toEndpointV1();
-    var getEndpointFromInstructions = async (commandInput, instructionsSupplier, clientConfig, context3) => {
+    var getEndpointFromInstructions = async (commandInput, instructionsSupplier, clientConfig, context2) => {
       if (!clientConfig.endpoint) {
         const endpointFromConfig = await (0, getEndpointFromConfig_1.getEndpointFromConfig)(clientConfig.serviceId || "");
         if (endpointFromConfig) {
@@ -27612,7 +27612,7 @@ var require_getEndpointFromInstructions = __commonJS({
       if (typeof clientConfig.endpointProvider !== "function") {
         throw new Error("config.endpointProvider is not set.");
       }
-      const endpoint = clientConfig.endpointProvider(endpointParams, context3);
+      const endpoint = clientConfig.endpointProvider(endpointParams, context2);
       return endpoint;
     };
     exports.getEndpointFromInstructions = getEndpointFromInstructions;
@@ -27667,19 +27667,19 @@ var require_endpointMiddleware = __commonJS({
     exports.endpointMiddleware = void 0;
     var getEndpointFromInstructions_1 = require_getEndpointFromInstructions();
     var endpointMiddleware = ({ config, instructions }) => {
-      return (next, context3) => async (args) => {
+      return (next, context2) => async (args) => {
         var _a, _b;
         const endpoint = await (0, getEndpointFromInstructions_1.getEndpointFromInstructions)(args.input, {
           getEndpointParameterInstructions() {
             return instructions;
           }
-        }, { ...config }, context3);
-        context3.endpointV2 = endpoint;
-        context3.authSchemes = (_a = endpoint.properties) === null || _a === void 0 ? void 0 : _a.authSchemes;
-        const authScheme = (_b = context3.authSchemes) === null || _b === void 0 ? void 0 : _b[0];
+        }, { ...config }, context2);
+        context2.endpointV2 = endpoint;
+        context2.authSchemes = (_a = endpoint.properties) === null || _a === void 0 ? void 0 : _a.authSchemes;
+        const authScheme = (_b = context2.authSchemes) === null || _b === void 0 ? void 0 : _b[0];
         if (authScheme) {
-          context3["signing_region"] = authScheme.signingRegion;
-          context3["signing_service"] = authScheme.signingName;
+          context2["signing_region"] = authScheme.signingRegion;
+          context2["signing_service"] = authScheme.signingName;
         }
         return next({
           ...args
@@ -27696,7 +27696,7 @@ var require_deserializerMiddleware = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.deserializerMiddleware = void 0;
-    var deserializerMiddleware = (options, deserializer) => (next, context3) => async (args) => {
+    var deserializerMiddleware = (options, deserializer) => (next, context2) => async (args) => {
       const { response } = await next(args);
       try {
         const parsed = await deserializer(response, options);
@@ -27725,9 +27725,9 @@ var require_serializerMiddleware = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.serializerMiddleware = void 0;
-    var serializerMiddleware = (options, serializer) => (next, context3) => async (args) => {
+    var serializerMiddleware = (options, serializer) => (next, context2) => async (args) => {
       var _a;
-      const endpoint = ((_a = context3.endpointV2) === null || _a === void 0 ? void 0 : _a.url) && options.urlParser ? async () => options.urlParser(context3.endpointV2.url) : options.endpoint;
+      const endpoint = ((_a = context2.endpointV2) === null || _a === void 0 ? void 0 : _a.url) && options.urlParser ? async () => options.urlParser(context2.endpointV2.url) : options.endpoint;
       if (!endpoint) {
         throw new Error("No valid endpoint provider available.");
       }
@@ -28600,12 +28600,12 @@ var require_retryMiddleware = __commonJS({
     var util_retry_1 = require_dist_cjs40();
     var uuid_1 = (init_esm_node(), __toCommonJS(esm_node_exports));
     var util_1 = require_util9();
-    var retryMiddleware = (options) => (next, context3) => async (args) => {
+    var retryMiddleware = (options) => (next, context2) => async (args) => {
       let retryStrategy = await options.retryStrategy();
       const maxAttempts = await options.maxAttempts();
       if (isRetryStrategyV2(retryStrategy)) {
         retryStrategy = retryStrategy;
-        let retryToken = await retryStrategy.acquireInitialRetryToken(context3["partition_id"]);
+        let retryToken = await retryStrategy.acquireInitialRetryToken(context2["partition_id"]);
         let lastError = new Error();
         let attempts = 0;
         let totalRetryDelay = 0;
@@ -28645,7 +28645,7 @@ var require_retryMiddleware = __commonJS({
       } else {
         retryStrategy = retryStrategy;
         if (retryStrategy === null || retryStrategy === void 0 ? void 0 : retryStrategy.mode)
-          context3.userAgent = [...context3.userAgent || [], ["cfg/retry-mode", retryStrategy.mode]];
+          context2.userAgent = [...context2.userAgent || [], ["cfg/retry-mode", retryStrategy.mode]];
         return retryStrategy.retry(next, args);
       }
     };
@@ -30881,101 +30881,101 @@ var require_Aws_query = __commonJS({
     var fast_xml_parser_1 = require_fxp();
     var models_0_1 = require_models_0();
     var STSServiceException_1 = require_STSServiceException();
-    var se_AssumeRoleCommand = async (input, context3) => {
+    var se_AssumeRoleCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleRequest(input, context3),
+        ...se_AssumeRoleRequest(input, context2),
         Action: "AssumeRole",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_AssumeRoleCommand = se_AssumeRoleCommand;
-    var se_AssumeRoleWithSAMLCommand = async (input, context3) => {
+    var se_AssumeRoleWithSAMLCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleWithSAMLRequest(input, context3),
+        ...se_AssumeRoleWithSAMLRequest(input, context2),
         Action: "AssumeRoleWithSAML",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_AssumeRoleWithSAMLCommand = se_AssumeRoleWithSAMLCommand;
-    var se_AssumeRoleWithWebIdentityCommand = async (input, context3) => {
+    var se_AssumeRoleWithWebIdentityCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleWithWebIdentityRequest(input, context3),
+        ...se_AssumeRoleWithWebIdentityRequest(input, context2),
         Action: "AssumeRoleWithWebIdentity",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_AssumeRoleWithWebIdentityCommand = se_AssumeRoleWithWebIdentityCommand;
-    var se_DecodeAuthorizationMessageCommand = async (input, context3) => {
+    var se_DecodeAuthorizationMessageCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_DecodeAuthorizationMessageRequest(input, context3),
+        ...se_DecodeAuthorizationMessageRequest(input, context2),
         Action: "DecodeAuthorizationMessage",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_DecodeAuthorizationMessageCommand = se_DecodeAuthorizationMessageCommand;
-    var se_GetAccessKeyInfoCommand = async (input, context3) => {
+    var se_GetAccessKeyInfoCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetAccessKeyInfoRequest(input, context3),
+        ...se_GetAccessKeyInfoRequest(input, context2),
         Action: "GetAccessKeyInfo",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_GetAccessKeyInfoCommand = se_GetAccessKeyInfoCommand;
-    var se_GetCallerIdentityCommand = async (input, context3) => {
+    var se_GetCallerIdentityCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetCallerIdentityRequest(input, context3),
+        ...se_GetCallerIdentityRequest(input, context2),
         Action: "GetCallerIdentity",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_GetCallerIdentityCommand = se_GetCallerIdentityCommand;
-    var se_GetFederationTokenCommand = async (input, context3) => {
+    var se_GetFederationTokenCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetFederationTokenRequest(input, context3),
+        ...se_GetFederationTokenRequest(input, context2),
         Action: "GetFederationToken",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_GetFederationTokenCommand = se_GetFederationTokenCommand;
-    var se_GetSessionTokenCommand = async (input, context3) => {
+    var se_GetSessionTokenCommand = async (input, context2) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetSessionTokenRequest(input, context3),
+        ...se_GetSessionTokenRequest(input, context2),
         Action: "GetSessionToken",
         Version: "2011-06-15"
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context2, headers, "/", void 0, body);
     };
     exports.se_GetSessionTokenCommand = se_GetSessionTokenCommand;
-    var de_AssumeRoleCommand = async (output, context3) => {
+    var de_AssumeRoleCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_AssumeRoleCommandError(output, context3);
+        return de_AssumeRoleCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_AssumeRoleResponse(data.AssumeRoleResult, context3);
+      contents = de_AssumeRoleResponse(data.AssumeRoleResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -30983,25 +30983,25 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_AssumeRoleCommand = de_AssumeRoleCommand;
-    var de_AssumeRoleCommandError = async (output, context3) => {
+    var de_AssumeRoleCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ExpiredTokenException":
         case "com.amazonaws.sts#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context2);
         case "MalformedPolicyDocument":
         case "com.amazonaws.sts#MalformedPolicyDocumentException":
-          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context3);
+          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context2);
         case "PackedPolicyTooLarge":
         case "com.amazonaws.sts#PackedPolicyTooLargeException":
-          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context3);
+          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context2);
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31011,13 +31011,13 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_AssumeRoleWithSAMLCommand = async (output, context3) => {
+    var de_AssumeRoleWithSAMLCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_AssumeRoleWithSAMLCommandError(output, context3);
+        return de_AssumeRoleWithSAMLCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_AssumeRoleWithSAMLResponse(data.AssumeRoleWithSAMLResult, context3);
+      contents = de_AssumeRoleWithSAMLResponse(data.AssumeRoleWithSAMLResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31025,31 +31025,31 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_AssumeRoleWithSAMLCommand = de_AssumeRoleWithSAMLCommand;
-    var de_AssumeRoleWithSAMLCommandError = async (output, context3) => {
+    var de_AssumeRoleWithSAMLCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ExpiredTokenException":
         case "com.amazonaws.sts#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context2);
         case "IDPRejectedClaim":
         case "com.amazonaws.sts#IDPRejectedClaimException":
-          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context3);
+          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context2);
         case "InvalidIdentityToken":
         case "com.amazonaws.sts#InvalidIdentityTokenException":
-          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context3);
+          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context2);
         case "MalformedPolicyDocument":
         case "com.amazonaws.sts#MalformedPolicyDocumentException":
-          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context3);
+          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context2);
         case "PackedPolicyTooLarge":
         case "com.amazonaws.sts#PackedPolicyTooLargeException":
-          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context3);
+          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context2);
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31059,13 +31059,13 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_AssumeRoleWithWebIdentityCommand = async (output, context3) => {
+    var de_AssumeRoleWithWebIdentityCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_AssumeRoleWithWebIdentityCommandError(output, context3);
+        return de_AssumeRoleWithWebIdentityCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_AssumeRoleWithWebIdentityResponse(data.AssumeRoleWithWebIdentityResult, context3);
+      contents = de_AssumeRoleWithWebIdentityResponse(data.AssumeRoleWithWebIdentityResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31073,34 +31073,34 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_AssumeRoleWithWebIdentityCommand = de_AssumeRoleWithWebIdentityCommand;
-    var de_AssumeRoleWithWebIdentityCommandError = async (output, context3) => {
+    var de_AssumeRoleWithWebIdentityCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ExpiredTokenException":
         case "com.amazonaws.sts#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context2);
         case "IDPCommunicationError":
         case "com.amazonaws.sts#IDPCommunicationErrorException":
-          throw await de_IDPCommunicationErrorExceptionRes(parsedOutput, context3);
+          throw await de_IDPCommunicationErrorExceptionRes(parsedOutput, context2);
         case "IDPRejectedClaim":
         case "com.amazonaws.sts#IDPRejectedClaimException":
-          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context3);
+          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context2);
         case "InvalidIdentityToken":
         case "com.amazonaws.sts#InvalidIdentityTokenException":
-          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context3);
+          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context2);
         case "MalformedPolicyDocument":
         case "com.amazonaws.sts#MalformedPolicyDocumentException":
-          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context3);
+          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context2);
         case "PackedPolicyTooLarge":
         case "com.amazonaws.sts#PackedPolicyTooLargeException":
-          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context3);
+          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context2);
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31110,13 +31110,13 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_DecodeAuthorizationMessageCommand = async (output, context3) => {
+    var de_DecodeAuthorizationMessageCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_DecodeAuthorizationMessageCommandError(output, context3);
+        return de_DecodeAuthorizationMessageCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_DecodeAuthorizationMessageResponse(data.DecodeAuthorizationMessageResult, context3);
+      contents = de_DecodeAuthorizationMessageResponse(data.DecodeAuthorizationMessageResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31124,16 +31124,16 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_DecodeAuthorizationMessageCommand = de_DecodeAuthorizationMessageCommand;
-    var de_DecodeAuthorizationMessageCommandError = async (output, context3) => {
+    var de_DecodeAuthorizationMessageCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidAuthorizationMessageException":
         case "com.amazonaws.sts#InvalidAuthorizationMessageException":
-          throw await de_InvalidAuthorizationMessageExceptionRes(parsedOutput, context3);
+          throw await de_InvalidAuthorizationMessageExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31143,13 +31143,13 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_GetAccessKeyInfoCommand = async (output, context3) => {
+    var de_GetAccessKeyInfoCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_GetAccessKeyInfoCommandError(output, context3);
+        return de_GetAccessKeyInfoCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_GetAccessKeyInfoResponse(data.GetAccessKeyInfoResult, context3);
+      contents = de_GetAccessKeyInfoResponse(data.GetAccessKeyInfoResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31157,10 +31157,10 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_GetAccessKeyInfoCommand = de_GetAccessKeyInfoCommand;
-    var de_GetAccessKeyInfoCommandError = async (output, context3) => {
+    var de_GetAccessKeyInfoCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -31170,13 +31170,13 @@ var require_Aws_query = __commonJS({
         errorCode
       });
     };
-    var de_GetCallerIdentityCommand = async (output, context3) => {
+    var de_GetCallerIdentityCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_GetCallerIdentityCommandError(output, context3);
+        return de_GetCallerIdentityCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_GetCallerIdentityResponse(data.GetCallerIdentityResult, context3);
+      contents = de_GetCallerIdentityResponse(data.GetCallerIdentityResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31184,10 +31184,10 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_GetCallerIdentityCommand = de_GetCallerIdentityCommand;
-    var de_GetCallerIdentityCommandError = async (output, context3) => {
+    var de_GetCallerIdentityCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -31197,13 +31197,13 @@ var require_Aws_query = __commonJS({
         errorCode
       });
     };
-    var de_GetFederationTokenCommand = async (output, context3) => {
+    var de_GetFederationTokenCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_GetFederationTokenCommandError(output, context3);
+        return de_GetFederationTokenCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_GetFederationTokenResponse(data.GetFederationTokenResult, context3);
+      contents = de_GetFederationTokenResponse(data.GetFederationTokenResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31211,22 +31211,22 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_GetFederationTokenCommand = de_GetFederationTokenCommand;
-    var de_GetFederationTokenCommandError = async (output, context3) => {
+    var de_GetFederationTokenCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "MalformedPolicyDocument":
         case "com.amazonaws.sts#MalformedPolicyDocumentException":
-          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context3);
+          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context2);
         case "PackedPolicyTooLarge":
         case "com.amazonaws.sts#PackedPolicyTooLargeException":
-          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context3);
+          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context2);
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31236,13 +31236,13 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_GetSessionTokenCommand = async (output, context3) => {
+    var de_GetSessionTokenCommand = async (output, context2) => {
       if (output.statusCode >= 300) {
-        return de_GetSessionTokenCommandError(output, context3);
+        return de_GetSessionTokenCommandError(output, context2);
       }
-      const data = await parseBody(output.body, context3);
+      const data = await parseBody(output.body, context2);
       let contents = {};
-      contents = de_GetSessionTokenResponse(data.GetSessionTokenResult, context3);
+      contents = de_GetSessionTokenResponse(data.GetSessionTokenResult, context2);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
@@ -31250,16 +31250,16 @@ var require_Aws_query = __commonJS({
       return response;
     };
     exports.de_GetSessionTokenCommand = de_GetSessionTokenCommand;
-    var de_GetSessionTokenCommandError = async (output, context3) => {
+    var de_GetSessionTokenCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -31269,79 +31269,79 @@ var require_Aws_query = __commonJS({
           });
       }
     };
-    var de_ExpiredTokenExceptionRes = async (parsedOutput, context3) => {
+    var de_ExpiredTokenExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_ExpiredTokenException(body.Error, context3);
+      const deserialized = de_ExpiredTokenException(body.Error, context2);
       const exception2 = new models_0_1.ExpiredTokenException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_IDPCommunicationErrorExceptionRes = async (parsedOutput, context3) => {
+    var de_IDPCommunicationErrorExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_IDPCommunicationErrorException(body.Error, context3);
+      const deserialized = de_IDPCommunicationErrorException(body.Error, context2);
       const exception2 = new models_0_1.IDPCommunicationErrorException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_IDPRejectedClaimExceptionRes = async (parsedOutput, context3) => {
+    var de_IDPRejectedClaimExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_IDPRejectedClaimException(body.Error, context3);
+      const deserialized = de_IDPRejectedClaimException(body.Error, context2);
       const exception2 = new models_0_1.IDPRejectedClaimException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_InvalidAuthorizationMessageExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidAuthorizationMessageExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_InvalidAuthorizationMessageException(body.Error, context3);
+      const deserialized = de_InvalidAuthorizationMessageException(body.Error, context2);
       const exception2 = new models_0_1.InvalidAuthorizationMessageException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_InvalidIdentityTokenExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidIdentityTokenExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_InvalidIdentityTokenException(body.Error, context3);
+      const deserialized = de_InvalidIdentityTokenException(body.Error, context2);
       const exception2 = new models_0_1.InvalidIdentityTokenException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_MalformedPolicyDocumentExceptionRes = async (parsedOutput, context3) => {
+    var de_MalformedPolicyDocumentExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_MalformedPolicyDocumentException(body.Error, context3);
+      const deserialized = de_MalformedPolicyDocumentException(body.Error, context2);
       const exception2 = new models_0_1.MalformedPolicyDocumentException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_PackedPolicyTooLargeExceptionRes = async (parsedOutput, context3) => {
+    var de_PackedPolicyTooLargeExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_PackedPolicyTooLargeException(body.Error, context3);
+      const deserialized = de_PackedPolicyTooLargeException(body.Error, context2);
       const exception2 = new models_0_1.PackedPolicyTooLargeException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var de_RegionDisabledExceptionRes = async (parsedOutput, context3) => {
+    var de_RegionDisabledExceptionRes = async (parsedOutput, context2) => {
       const body = parsedOutput.body;
-      const deserialized = de_RegionDisabledException(body.Error, context3);
+      const deserialized = de_RegionDisabledException(body.Error, context2);
       const exception2 = new models_0_1.RegionDisabledException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, body);
     };
-    var se_AssumeRoleRequest = (input, context3) => {
+    var se_AssumeRoleRequest = (input, context2) => {
       const entries = {};
       if (input.RoleArn != null) {
         entries["RoleArn"] = input.RoleArn;
@@ -31350,7 +31350,7 @@ var require_Aws_query = __commonJS({
         entries["RoleSessionName"] = input.RoleSessionName;
       }
       if (input.PolicyArns != null) {
-        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context3);
+        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context2);
         if (input.PolicyArns?.length === 0) {
           entries.PolicyArns = [];
         }
@@ -31366,7 +31366,7 @@ var require_Aws_query = __commonJS({
         entries["DurationSeconds"] = input.DurationSeconds;
       }
       if (input.Tags != null) {
-        const memberEntries = se_tagListType(input.Tags, context3);
+        const memberEntries = se_tagListType(input.Tags, context2);
         if (input.Tags?.length === 0) {
           entries.Tags = [];
         }
@@ -31376,7 +31376,7 @@ var require_Aws_query = __commonJS({
         });
       }
       if (input.TransitiveTagKeys != null) {
-        const memberEntries = se_tagKeyListType(input.TransitiveTagKeys, context3);
+        const memberEntries = se_tagKeyListType(input.TransitiveTagKeys, context2);
         if (input.TransitiveTagKeys?.length === 0) {
           entries.TransitiveTagKeys = [];
         }
@@ -31398,7 +31398,7 @@ var require_Aws_query = __commonJS({
         entries["SourceIdentity"] = input.SourceIdentity;
       }
       if (input.ProvidedContexts != null) {
-        const memberEntries = se_ProvidedContextsListType(input.ProvidedContexts, context3);
+        const memberEntries = se_ProvidedContextsListType(input.ProvidedContexts, context2);
         if (input.ProvidedContexts?.length === 0) {
           entries.ProvidedContexts = [];
         }
@@ -31409,7 +31409,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_AssumeRoleWithSAMLRequest = (input, context3) => {
+    var se_AssumeRoleWithSAMLRequest = (input, context2) => {
       const entries = {};
       if (input.RoleArn != null) {
         entries["RoleArn"] = input.RoleArn;
@@ -31421,7 +31421,7 @@ var require_Aws_query = __commonJS({
         entries["SAMLAssertion"] = input.SAMLAssertion;
       }
       if (input.PolicyArns != null) {
-        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context3);
+        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context2);
         if (input.PolicyArns?.length === 0) {
           entries.PolicyArns = [];
         }
@@ -31438,7 +31438,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_AssumeRoleWithWebIdentityRequest = (input, context3) => {
+    var se_AssumeRoleWithWebIdentityRequest = (input, context2) => {
       const entries = {};
       if (input.RoleArn != null) {
         entries["RoleArn"] = input.RoleArn;
@@ -31453,7 +31453,7 @@ var require_Aws_query = __commonJS({
         entries["ProviderId"] = input.ProviderId;
       }
       if (input.PolicyArns != null) {
-        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context3);
+        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context2);
         if (input.PolicyArns?.length === 0) {
           entries.PolicyArns = [];
         }
@@ -31470,25 +31470,25 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_DecodeAuthorizationMessageRequest = (input, context3) => {
+    var se_DecodeAuthorizationMessageRequest = (input, context2) => {
       const entries = {};
       if (input.EncodedMessage != null) {
         entries["EncodedMessage"] = input.EncodedMessage;
       }
       return entries;
     };
-    var se_GetAccessKeyInfoRequest = (input, context3) => {
+    var se_GetAccessKeyInfoRequest = (input, context2) => {
       const entries = {};
       if (input.AccessKeyId != null) {
         entries["AccessKeyId"] = input.AccessKeyId;
       }
       return entries;
     };
-    var se_GetCallerIdentityRequest = (input, context3) => {
+    var se_GetCallerIdentityRequest = (input, context2) => {
       const entries = {};
       return entries;
     };
-    var se_GetFederationTokenRequest = (input, context3) => {
+    var se_GetFederationTokenRequest = (input, context2) => {
       const entries = {};
       if (input.Name != null) {
         entries["Name"] = input.Name;
@@ -31497,7 +31497,7 @@ var require_Aws_query = __commonJS({
         entries["Policy"] = input.Policy;
       }
       if (input.PolicyArns != null) {
-        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context3);
+        const memberEntries = se_policyDescriptorListType(input.PolicyArns, context2);
         if (input.PolicyArns?.length === 0) {
           entries.PolicyArns = [];
         }
@@ -31510,7 +31510,7 @@ var require_Aws_query = __commonJS({
         entries["DurationSeconds"] = input.DurationSeconds;
       }
       if (input.Tags != null) {
-        const memberEntries = se_tagListType(input.Tags, context3);
+        const memberEntries = se_tagListType(input.Tags, context2);
         if (input.Tags?.length === 0) {
           entries.Tags = [];
         }
@@ -31521,7 +31521,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_GetSessionTokenRequest = (input, context3) => {
+    var se_GetSessionTokenRequest = (input, context2) => {
       const entries = {};
       if (input.DurationSeconds != null) {
         entries["DurationSeconds"] = input.DurationSeconds;
@@ -31534,14 +31534,14 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_policyDescriptorListType = (input, context3) => {
+    var se_policyDescriptorListType = (input, context2) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_PolicyDescriptorType(entry, context3);
+        const memberEntries = se_PolicyDescriptorType(entry, context2);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -31549,14 +31549,14 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_PolicyDescriptorType = (input, context3) => {
+    var se_PolicyDescriptorType = (input, context2) => {
       const entries = {};
       if (input.arn != null) {
         entries["arn"] = input.arn;
       }
       return entries;
     };
-    var se_ProvidedContext = (input, context3) => {
+    var se_ProvidedContext = (input, context2) => {
       const entries = {};
       if (input.ProviderArn != null) {
         entries["ProviderArn"] = input.ProviderArn;
@@ -31566,14 +31566,14 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_ProvidedContextsListType = (input, context3) => {
+    var se_ProvidedContextsListType = (input, context2) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_ProvidedContext(entry, context3);
+        const memberEntries = se_ProvidedContext(entry, context2);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -31581,7 +31581,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_Tag = (input, context3) => {
+    var se_Tag = (input, context2) => {
       const entries = {};
       if (input.Key != null) {
         entries["Key"] = input.Key;
@@ -31591,7 +31591,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_tagKeyListType = (input, context3) => {
+    var se_tagKeyListType = (input, context2) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
@@ -31603,14 +31603,14 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var se_tagListType = (input, context3) => {
+    var se_tagListType = (input, context2) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_Tag(entry, context3);
+        const memberEntries = se_Tag(entry, context2);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -31618,7 +31618,7 @@ var require_Aws_query = __commonJS({
       }
       return entries;
     };
-    var de_AssumedRoleUser = (output, context3) => {
+    var de_AssumedRoleUser = (output, context2) => {
       const contents = {};
       if (output["AssumedRoleId"] !== void 0) {
         contents.AssumedRoleId = (0, smithy_client_1.expectString)(output["AssumedRoleId"]);
@@ -31628,13 +31628,13 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_AssumeRoleResponse = (output, context3) => {
+    var de_AssumeRoleResponse = (output, context2) => {
       const contents = {};
       if (output["Credentials"] !== void 0) {
-        contents.Credentials = de_Credentials(output["Credentials"], context3);
+        contents.Credentials = de_Credentials(output["Credentials"], context2);
       }
       if (output["AssumedRoleUser"] !== void 0) {
-        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context3);
+        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context2);
       }
       if (output["PackedPolicySize"] !== void 0) {
         contents.PackedPolicySize = (0, smithy_client_1.strictParseInt32)(output["PackedPolicySize"]);
@@ -31644,13 +31644,13 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_AssumeRoleWithSAMLResponse = (output, context3) => {
+    var de_AssumeRoleWithSAMLResponse = (output, context2) => {
       const contents = {};
       if (output["Credentials"] !== void 0) {
-        contents.Credentials = de_Credentials(output["Credentials"], context3);
+        contents.Credentials = de_Credentials(output["Credentials"], context2);
       }
       if (output["AssumedRoleUser"] !== void 0) {
-        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context3);
+        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context2);
       }
       if (output["PackedPolicySize"] !== void 0) {
         contents.PackedPolicySize = (0, smithy_client_1.strictParseInt32)(output["PackedPolicySize"]);
@@ -31675,16 +31675,16 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_AssumeRoleWithWebIdentityResponse = (output, context3) => {
+    var de_AssumeRoleWithWebIdentityResponse = (output, context2) => {
       const contents = {};
       if (output["Credentials"] !== void 0) {
-        contents.Credentials = de_Credentials(output["Credentials"], context3);
+        contents.Credentials = de_Credentials(output["Credentials"], context2);
       }
       if (output["SubjectFromWebIdentityToken"] !== void 0) {
         contents.SubjectFromWebIdentityToken = (0, smithy_client_1.expectString)(output["SubjectFromWebIdentityToken"]);
       }
       if (output["AssumedRoleUser"] !== void 0) {
-        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context3);
+        contents.AssumedRoleUser = de_AssumedRoleUser(output["AssumedRoleUser"], context2);
       }
       if (output["PackedPolicySize"] !== void 0) {
         contents.PackedPolicySize = (0, smithy_client_1.strictParseInt32)(output["PackedPolicySize"]);
@@ -31700,7 +31700,7 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_Credentials = (output, context3) => {
+    var de_Credentials = (output, context2) => {
       const contents = {};
       if (output["AccessKeyId"] !== void 0) {
         contents.AccessKeyId = (0, smithy_client_1.expectString)(output["AccessKeyId"]);
@@ -31716,21 +31716,21 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_DecodeAuthorizationMessageResponse = (output, context3) => {
+    var de_DecodeAuthorizationMessageResponse = (output, context2) => {
       const contents = {};
       if (output["DecodedMessage"] !== void 0) {
         contents.DecodedMessage = (0, smithy_client_1.expectString)(output["DecodedMessage"]);
       }
       return contents;
     };
-    var de_ExpiredTokenException = (output, context3) => {
+    var de_ExpiredTokenException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_FederatedUser = (output, context3) => {
+    var de_FederatedUser = (output, context2) => {
       const contents = {};
       if (output["FederatedUserId"] !== void 0) {
         contents.FederatedUserId = (0, smithy_client_1.expectString)(output["FederatedUserId"]);
@@ -31740,14 +31740,14 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_GetAccessKeyInfoResponse = (output, context3) => {
+    var de_GetAccessKeyInfoResponse = (output, context2) => {
       const contents = {};
       if (output["Account"] !== void 0) {
         contents.Account = (0, smithy_client_1.expectString)(output["Account"]);
       }
       return contents;
     };
-    var de_GetCallerIdentityResponse = (output, context3) => {
+    var de_GetCallerIdentityResponse = (output, context2) => {
       const contents = {};
       if (output["UserId"] !== void 0) {
         contents.UserId = (0, smithy_client_1.expectString)(output["UserId"]);
@@ -31760,69 +31760,69 @@ var require_Aws_query = __commonJS({
       }
       return contents;
     };
-    var de_GetFederationTokenResponse = (output, context3) => {
+    var de_GetFederationTokenResponse = (output, context2) => {
       const contents = {};
       if (output["Credentials"] !== void 0) {
-        contents.Credentials = de_Credentials(output["Credentials"], context3);
+        contents.Credentials = de_Credentials(output["Credentials"], context2);
       }
       if (output["FederatedUser"] !== void 0) {
-        contents.FederatedUser = de_FederatedUser(output["FederatedUser"], context3);
+        contents.FederatedUser = de_FederatedUser(output["FederatedUser"], context2);
       }
       if (output["PackedPolicySize"] !== void 0) {
         contents.PackedPolicySize = (0, smithy_client_1.strictParseInt32)(output["PackedPolicySize"]);
       }
       return contents;
     };
-    var de_GetSessionTokenResponse = (output, context3) => {
+    var de_GetSessionTokenResponse = (output, context2) => {
       const contents = {};
       if (output["Credentials"] !== void 0) {
-        contents.Credentials = de_Credentials(output["Credentials"], context3);
+        contents.Credentials = de_Credentials(output["Credentials"], context2);
       }
       return contents;
     };
-    var de_IDPCommunicationErrorException = (output, context3) => {
+    var de_IDPCommunicationErrorException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_IDPRejectedClaimException = (output, context3) => {
+    var de_IDPRejectedClaimException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_InvalidAuthorizationMessageException = (output, context3) => {
+    var de_InvalidAuthorizationMessageException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_InvalidIdentityTokenException = (output, context3) => {
+    var de_InvalidIdentityTokenException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_MalformedPolicyDocumentException = (output, context3) => {
+    var de_MalformedPolicyDocumentException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_PackedPolicyTooLargeException = (output, context3) => {
+    var de_PackedPolicyTooLargeException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
       }
       return contents;
     };
-    var de_RegionDisabledException = (output, context3) => {
+    var de_RegionDisabledException = (output, context2) => {
       const contents = {};
       if (output["message"] !== void 0) {
         contents.message = (0, smithy_client_1.expectString)(output["message"]);
@@ -31835,10 +31835,10 @@ var require_Aws_query = __commonJS({
       extendedRequestId: output.headers["x-amz-id-2"],
       cfId: output.headers["x-amz-cf-id"]
     });
-    var collectBodyString = (streamBody, context3) => (0, smithy_client_1.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body));
+    var collectBodyString = (streamBody, context2) => (0, smithy_client_1.collectBody)(streamBody, context2).then((body) => context2.utf8Encoder(body));
     var throwDefaultError = (0, smithy_client_1.withBaseException)(STSServiceException_1.STSServiceException);
-    var buildHttpRpcRequest = async (context3, headers, path2, resolvedHostname, body) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var buildHttpRpcRequest = async (context2, headers, path2, resolvedHostname, body) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const contents = {
         protocol,
         hostname,
@@ -31858,7 +31858,7 @@ var require_Aws_query = __commonJS({
     var SHARED_HEADERS = {
       "content-type": "application/x-www-form-urlencoded"
     };
-    var parseBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    var parseBody = (streamBody, context2) => collectBodyString(streamBody, context2).then((encoded) => {
       if (encoded.length) {
         const parser = new fast_xml_parser_1.XMLParser({
           attributeNamePrefix: "",
@@ -31883,8 +31883,8 @@ var require_Aws_query = __commonJS({
       }
       return {};
     });
-    var parseErrorBody = async (errorBody, context3) => {
-      const value = await parseBody(errorBody, context3);
+    var parseErrorBody = async (errorBody, context2) => {
+      const value = await parseBody(errorBody, context2);
       if (value.Error) {
         value.Error.message = value.Error.message ?? value.Error.Message;
       }
@@ -31954,11 +31954,11 @@ var require_AssumeRoleCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_AssumeRoleCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_AssumeRoleCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_AssumeRoleCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_AssumeRoleCommand)(output, context2);
       }
     };
     exports.AssumeRoleCommand = AssumeRoleCommand;
@@ -32015,11 +32015,11 @@ var require_AssumeRoleWithWebIdentityCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_AssumeRoleWithWebIdentityCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_AssumeRoleWithWebIdentityCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_AssumeRoleWithWebIdentityCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_AssumeRoleWithWebIdentityCommand)(output, context2);
       }
     };
     exports.AssumeRoleWithWebIdentityCommand = AssumeRoleWithWebIdentityCommand;
@@ -33256,10 +33256,10 @@ var require_endpointResolver = __commonJS({
     exports.defaultEndpointResolver = void 0;
     var util_endpoints_1 = require_dist_cjs26();
     var ruleset_1 = require_ruleset();
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context2 = {}) => {
       return (0, util_endpoints_1.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context2.logger
       });
     };
     exports.defaultEndpointResolver = defaultEndpointResolver;
@@ -33790,8 +33790,8 @@ var require_Aws_restJson1 = __commonJS({
     var smithy_client_1 = require_dist_cjs16();
     var models_0_1 = require_models_02();
     var SSOServiceException_1 = require_SSOServiceException();
-    var se_GetRoleCredentialsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetRoleCredentialsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-sso_bearer_token": input.accessToken
       });
@@ -33813,8 +33813,8 @@ var require_Aws_restJson1 = __commonJS({
       });
     };
     exports.se_GetRoleCredentialsCommand = se_GetRoleCredentialsCommand;
-    var se_ListAccountRolesCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListAccountRolesCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-sso_bearer_token": input.accessToken
       });
@@ -33837,8 +33837,8 @@ var require_Aws_restJson1 = __commonJS({
       });
     };
     exports.se_ListAccountRolesCommand = se_ListAccountRolesCommand;
-    var se_ListAccountsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListAccountsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-sso_bearer_token": input.accessToken
       });
@@ -33860,8 +33860,8 @@ var require_Aws_restJson1 = __commonJS({
       });
     };
     exports.se_ListAccountsCommand = se_ListAccountsCommand;
-    var se_LogoutCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_LogoutCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-sso_bearer_token": input.accessToken
       });
@@ -33878,14 +33878,14 @@ var require_Aws_restJson1 = __commonJS({
       });
     };
     exports.se_LogoutCommand = se_LogoutCommand;
-    var de_GetRoleCredentialsCommand = async (output, context3) => {
+    var de_GetRoleCredentialsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetRoleCredentialsCommandError(output, context3);
+        return de_GetRoleCredentialsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_1.take)(data, {
         roleCredentials: smithy_client_1._json
       });
@@ -33893,25 +33893,25 @@ var require_Aws_restJson1 = __commonJS({
       return contents;
     };
     exports.de_GetRoleCredentialsCommand = de_GetRoleCredentialsCommand;
-    var de_GetRoleCredentialsCommandError = async (output, context3) => {
+    var de_GetRoleCredentialsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidRequestException":
         case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "ResourceNotFoundException":
         case "com.amazonaws.sso#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context3);
+          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context2);
         case "TooManyRequestsException":
         case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context2);
         case "UnauthorizedException":
         case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -33921,14 +33921,14 @@ var require_Aws_restJson1 = __commonJS({
           });
       }
     };
-    var de_ListAccountRolesCommand = async (output, context3) => {
+    var de_ListAccountRolesCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListAccountRolesCommandError(output, context3);
+        return de_ListAccountRolesCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_1.take)(data, {
         nextToken: smithy_client_1.expectString,
         roleList: smithy_client_1._json
@@ -33937,25 +33937,25 @@ var require_Aws_restJson1 = __commonJS({
       return contents;
     };
     exports.de_ListAccountRolesCommand = de_ListAccountRolesCommand;
-    var de_ListAccountRolesCommandError = async (output, context3) => {
+    var de_ListAccountRolesCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidRequestException":
         case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "ResourceNotFoundException":
         case "com.amazonaws.sso#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context3);
+          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context2);
         case "TooManyRequestsException":
         case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context2);
         case "UnauthorizedException":
         case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -33965,14 +33965,14 @@ var require_Aws_restJson1 = __commonJS({
           });
       }
     };
-    var de_ListAccountsCommand = async (output, context3) => {
+    var de_ListAccountsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListAccountsCommandError(output, context3);
+        return de_ListAccountsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_1.take)(data, {
         accountList: smithy_client_1._json,
         nextToken: smithy_client_1.expectString
@@ -33981,25 +33981,25 @@ var require_Aws_restJson1 = __commonJS({
       return contents;
     };
     exports.de_ListAccountsCommand = de_ListAccountsCommand;
-    var de_ListAccountsCommandError = async (output, context3) => {
+    var de_ListAccountsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidRequestException":
         case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "ResourceNotFoundException":
         case "com.amazonaws.sso#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context3);
+          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context2);
         case "TooManyRequestsException":
         case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context2);
         case "UnauthorizedException":
         case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -34009,33 +34009,33 @@ var require_Aws_restJson1 = __commonJS({
           });
       }
     };
-    var de_LogoutCommand = async (output, context3) => {
+    var de_LogoutCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_LogoutCommandError(output, context3);
+        return de_LogoutCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_LogoutCommand = de_LogoutCommand;
-    var de_LogoutCommandError = async (output, context3) => {
+    var de_LogoutCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidRequestException":
         case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "TooManyRequestsException":
         case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context2);
         case "UnauthorizedException":
         case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -34046,7 +34046,7 @@ var require_Aws_restJson1 = __commonJS({
       }
     };
     var throwDefaultError = (0, smithy_client_1.withBaseException)(SSOServiceException_1.SSOServiceException);
-    var de_InvalidRequestExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidRequestExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_1.take)(data, {
@@ -34059,7 +34059,7 @@ var require_Aws_restJson1 = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_ResourceNotFoundExceptionRes = async (parsedOutput, context3) => {
+    var de_ResourceNotFoundExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_1.take)(data, {
@@ -34072,7 +34072,7 @@ var require_Aws_restJson1 = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_TooManyRequestsExceptionRes = async (parsedOutput, context3) => {
+    var de_TooManyRequestsExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_1.take)(data, {
@@ -34085,7 +34085,7 @@ var require_Aws_restJson1 = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_UnauthorizedExceptionRes = async (parsedOutput, context3) => {
+    var de_UnauthorizedExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_1.take)(data, {
@@ -34104,16 +34104,16 @@ var require_Aws_restJson1 = __commonJS({
       extendedRequestId: output.headers["x-amz-id-2"],
       cfId: output.headers["x-amz-cf-id"]
     });
-    var collectBodyString = (streamBody, context3) => (0, smithy_client_1.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body));
+    var collectBodyString = (streamBody, context2) => (0, smithy_client_1.collectBody)(streamBody, context2).then((body) => context2.utf8Encoder(body));
     var isSerializableHeaderValue = (value) => value !== void 0 && value !== null && value !== "" && (!Object.getOwnPropertyNames(value).includes("length") || value.length != 0) && (!Object.getOwnPropertyNames(value).includes("size") || value.size != 0);
-    var parseBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    var parseBody = (streamBody, context2) => collectBodyString(streamBody, context2).then((encoded) => {
       if (encoded.length) {
         return JSON.parse(encoded);
       }
       return {};
     });
-    var parseErrorBody = async (errorBody, context3) => {
-      const value = await parseBody(errorBody, context3);
+    var parseErrorBody = async (errorBody, context2) => {
+      const value = await parseBody(errorBody, context2);
       value.message = value.message ?? value.Message;
       return value;
     };
@@ -34198,11 +34198,11 @@ var require_GetRoleCredentialsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restJson1_1.se_GetRoleCredentialsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restJson1_1.se_GetRoleCredentialsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restJson1_1.de_GetRoleCredentialsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restJson1_1.de_GetRoleCredentialsCommand)(output, context2);
       }
     };
     exports.GetRoleCredentialsCommand = GetRoleCredentialsCommand;
@@ -34258,11 +34258,11 @@ var require_ListAccountRolesCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restJson1_1.se_ListAccountRolesCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restJson1_1.se_ListAccountRolesCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restJson1_1.de_ListAccountRolesCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restJson1_1.de_ListAccountRolesCommand)(output, context2);
       }
     };
     exports.ListAccountRolesCommand = ListAccountRolesCommand;
@@ -34318,11 +34318,11 @@ var require_ListAccountsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restJson1_1.se_ListAccountsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restJson1_1.se_ListAccountsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restJson1_1.de_ListAccountsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restJson1_1.de_ListAccountsCommand)(output, context2);
       }
     };
     exports.ListAccountsCommand = ListAccountsCommand;
@@ -34378,11 +34378,11 @@ var require_LogoutCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restJson1_1.se_LogoutCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restJson1_1.se_LogoutCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restJson1_1.de_LogoutCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restJson1_1.de_LogoutCommand)(output, context2);
       }
     };
     exports.LogoutCommand = LogoutCommand;
@@ -34706,10 +34706,10 @@ var require_client_sso_oidc_node = __commonJS({
       ]
     };
     var ruleSet = _data;
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context2 = {}) => {
       return (0, util_endpoints_1.resolveEndpoint)(ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context2.logger
       });
     };
     var getRuntimeConfig = (config) => {
@@ -34991,8 +34991,8 @@ var require_client_sso_oidc_node = __commonJS({
         this.error_description = opts.error_description;
       }
     };
-    var se_CreateTokenCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_CreateTokenCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {
         "content-type": "application/json"
       };
@@ -35018,8 +35018,8 @@ var require_client_sso_oidc_node = __commonJS({
         body
       });
     };
-    var se_RegisterClientCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_RegisterClientCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {
         "content-type": "application/json"
       };
@@ -35040,8 +35040,8 @@ var require_client_sso_oidc_node = __commonJS({
         body
       });
     };
-    var se_StartDeviceAuthorizationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_StartDeviceAuthorizationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {
         "content-type": "application/json"
       };
@@ -35062,14 +35062,14 @@ var require_client_sso_oidc_node = __commonJS({
         body
       });
     };
-    var de_CreateTokenCommand = async (output, context3) => {
+    var de_CreateTokenCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CreateTokenCommandError(output, context3);
+        return de_CreateTokenCommandError(output, context2);
       }
       const contents = (0, smithy_client_8.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_8.take)(data, {
         accessToken: smithy_client_8.expectString,
         expiresIn: smithy_client_8.expectInt32,
@@ -35080,46 +35080,46 @@ var require_client_sso_oidc_node = __commonJS({
       Object.assign(contents, doc);
       return contents;
     };
-    var de_CreateTokenCommandError = async (output, context3) => {
+    var de_CreateTokenCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "AccessDeniedException":
         case "com.amazonaws.ssooidc#AccessDeniedException":
-          throw await de_AccessDeniedExceptionRes(parsedOutput, context3);
+          throw await de_AccessDeniedExceptionRes(parsedOutput, context2);
         case "AuthorizationPendingException":
         case "com.amazonaws.ssooidc#AuthorizationPendingException":
-          throw await de_AuthorizationPendingExceptionRes(parsedOutput, context3);
+          throw await de_AuthorizationPendingExceptionRes(parsedOutput, context2);
         case "ExpiredTokenException":
         case "com.amazonaws.ssooidc#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context2);
         case "InternalServerException":
         case "com.amazonaws.ssooidc#InternalServerException":
-          throw await de_InternalServerExceptionRes(parsedOutput, context3);
+          throw await de_InternalServerExceptionRes(parsedOutput, context2);
         case "InvalidClientException":
         case "com.amazonaws.ssooidc#InvalidClientException":
-          throw await de_InvalidClientExceptionRes(parsedOutput, context3);
+          throw await de_InvalidClientExceptionRes(parsedOutput, context2);
         case "InvalidGrantException":
         case "com.amazonaws.ssooidc#InvalidGrantException":
-          throw await de_InvalidGrantExceptionRes(parsedOutput, context3);
+          throw await de_InvalidGrantExceptionRes(parsedOutput, context2);
         case "InvalidRequestException":
         case "com.amazonaws.ssooidc#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "InvalidScopeException":
         case "com.amazonaws.ssooidc#InvalidScopeException":
-          throw await de_InvalidScopeExceptionRes(parsedOutput, context3);
+          throw await de_InvalidScopeExceptionRes(parsedOutput, context2);
         case "SlowDownException":
         case "com.amazonaws.ssooidc#SlowDownException":
-          throw await de_SlowDownExceptionRes(parsedOutput, context3);
+          throw await de_SlowDownExceptionRes(parsedOutput, context2);
         case "UnauthorizedClientException":
         case "com.amazonaws.ssooidc#UnauthorizedClientException":
-          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context2);
         case "UnsupportedGrantTypeException":
         case "com.amazonaws.ssooidc#UnsupportedGrantTypeException":
-          throw await de_UnsupportedGrantTypeExceptionRes(parsedOutput, context3);
+          throw await de_UnsupportedGrantTypeExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -35129,14 +35129,14 @@ var require_client_sso_oidc_node = __commonJS({
           });
       }
     };
-    var de_RegisterClientCommand = async (output, context3) => {
+    var de_RegisterClientCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_RegisterClientCommandError(output, context3);
+        return de_RegisterClientCommandError(output, context2);
       }
       const contents = (0, smithy_client_8.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_8.take)(data, {
         authorizationEndpoint: smithy_client_8.expectString,
         clientId: smithy_client_8.expectString,
@@ -35148,25 +35148,25 @@ var require_client_sso_oidc_node = __commonJS({
       Object.assign(contents, doc);
       return contents;
     };
-    var de_RegisterClientCommandError = async (output, context3) => {
+    var de_RegisterClientCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InternalServerException":
         case "com.amazonaws.ssooidc#InternalServerException":
-          throw await de_InternalServerExceptionRes(parsedOutput, context3);
+          throw await de_InternalServerExceptionRes(parsedOutput, context2);
         case "InvalidClientMetadataException":
         case "com.amazonaws.ssooidc#InvalidClientMetadataException":
-          throw await de_InvalidClientMetadataExceptionRes(parsedOutput, context3);
+          throw await de_InvalidClientMetadataExceptionRes(parsedOutput, context2);
         case "InvalidRequestException":
         case "com.amazonaws.ssooidc#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "InvalidScopeException":
         case "com.amazonaws.ssooidc#InvalidScopeException":
-          throw await de_InvalidScopeExceptionRes(parsedOutput, context3);
+          throw await de_InvalidScopeExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -35176,14 +35176,14 @@ var require_client_sso_oidc_node = __commonJS({
           });
       }
     };
-    var de_StartDeviceAuthorizationCommand = async (output, context3) => {
+    var de_StartDeviceAuthorizationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_StartDeviceAuthorizationCommandError(output, context3);
+        return de_StartDeviceAuthorizationCommandError(output, context2);
       }
       const contents = (0, smithy_client_8.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_8.expectNonNull)((0, smithy_client_8.expectObject)(await parseBody(output.body, context2)), "body");
       const doc = (0, smithy_client_8.take)(data, {
         deviceCode: smithy_client_8.expectString,
         expiresIn: smithy_client_8.expectInt32,
@@ -35195,28 +35195,28 @@ var require_client_sso_oidc_node = __commonJS({
       Object.assign(contents, doc);
       return contents;
     };
-    var de_StartDeviceAuthorizationCommandError = async (output, context3) => {
+    var de_StartDeviceAuthorizationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestJsonErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InternalServerException":
         case "com.amazonaws.ssooidc#InternalServerException":
-          throw await de_InternalServerExceptionRes(parsedOutput, context3);
+          throw await de_InternalServerExceptionRes(parsedOutput, context2);
         case "InvalidClientException":
         case "com.amazonaws.ssooidc#InvalidClientException":
-          throw await de_InvalidClientExceptionRes(parsedOutput, context3);
+          throw await de_InvalidClientExceptionRes(parsedOutput, context2);
         case "InvalidRequestException":
         case "com.amazonaws.ssooidc#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context2);
         case "SlowDownException":
         case "com.amazonaws.ssooidc#SlowDownException":
-          throw await de_SlowDownExceptionRes(parsedOutput, context3);
+          throw await de_SlowDownExceptionRes(parsedOutput, context2);
         case "UnauthorizedClientException":
         case "com.amazonaws.ssooidc#UnauthorizedClientException":
-          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -35227,7 +35227,7 @@ var require_client_sso_oidc_node = __commonJS({
       }
     };
     var throwDefaultError = (0, smithy_client_8.withBaseException)(SSOOIDCServiceException);
-    var de_AccessDeniedExceptionRes = async (parsedOutput, context3) => {
+    var de_AccessDeniedExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35241,7 +35241,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_AuthorizationPendingExceptionRes = async (parsedOutput, context3) => {
+    var de_AuthorizationPendingExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35255,7 +35255,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_ExpiredTokenExceptionRes = async (parsedOutput, context3) => {
+    var de_ExpiredTokenExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35269,7 +35269,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InternalServerExceptionRes = async (parsedOutput, context3) => {
+    var de_InternalServerExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35283,7 +35283,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidClientExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidClientExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35297,7 +35297,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidClientMetadataExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidClientMetadataExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35311,7 +35311,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidGrantExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidGrantExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35325,7 +35325,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidRequestExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidRequestExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35339,7 +35339,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidScopeExceptionRes = async (parsedOutput, context3) => {
+    var de_InvalidScopeExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35353,7 +35353,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_SlowDownExceptionRes = async (parsedOutput, context3) => {
+    var de_SlowDownExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35367,7 +35367,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_UnauthorizedClientExceptionRes = async (parsedOutput, context3) => {
+    var de_UnauthorizedClientExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35381,7 +35381,7 @@ var require_client_sso_oidc_node = __commonJS({
       });
       return (0, smithy_client_8.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_UnsupportedGrantTypeExceptionRes = async (parsedOutput, context3) => {
+    var de_UnsupportedGrantTypeExceptionRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_8.map)({});
       const data = parsedOutput.body;
       const doc = (0, smithy_client_8.take)(data, {
@@ -35404,16 +35404,16 @@ var require_client_sso_oidc_node = __commonJS({
         cfId: output.headers["x-amz-cf-id"]
       };
     };
-    var collectBodyString = (streamBody, context3) => (0, smithy_client_8.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body));
-    var parseBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    var collectBodyString = (streamBody, context2) => (0, smithy_client_8.collectBody)(streamBody, context2).then((body) => context2.utf8Encoder(body));
+    var parseBody = (streamBody, context2) => collectBodyString(streamBody, context2).then((encoded) => {
       if (encoded.length) {
         return JSON.parse(encoded);
       }
       return {};
     });
-    var parseErrorBody = async (errorBody, context3) => {
+    var parseErrorBody = async (errorBody, context2) => {
       var _a;
-      const value = await parseBody(errorBody, context3);
+      const value = await parseBody(errorBody, context2);
       value.message = (_a = value.message) !== null && _a !== void 0 ? _a : value.Message;
       return value;
     };
@@ -35480,11 +35480,11 @@ var require_client_sso_oidc_node = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return se_CreateTokenCommand(input, context3);
+      serialize(input, context2) {
+        return se_CreateTokenCommand(input, context2);
       }
-      deserialize(output, context3) {
-        return de_CreateTokenCommand(output, context3);
+      deserialize(output, context2) {
+        return de_CreateTokenCommand(output, context2);
       }
     };
     exports.CreateTokenCommand = CreateTokenCommand;
@@ -35526,11 +35526,11 @@ var require_client_sso_oidc_node = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return se_RegisterClientCommand(input, context3);
+      serialize(input, context2) {
+        return se_RegisterClientCommand(input, context2);
       }
-      deserialize(output, context3) {
-        return de_RegisterClientCommand(output, context3);
+      deserialize(output, context2) {
+        return de_RegisterClientCommand(output, context2);
       }
     };
     var middleware_endpoint_4 = require_dist_cjs38();
@@ -35571,11 +35571,11 @@ var require_client_sso_oidc_node = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return se_StartDeviceAuthorizationCommand(input, context3);
+      serialize(input, context2) {
+        return se_StartDeviceAuthorizationCommand(input, context2);
       }
-      deserialize(output, context3) {
-        return de_StartDeviceAuthorizationCommand(output, context3);
+      deserialize(output, context2) {
+        return de_StartDeviceAuthorizationCommand(output, context2);
       }
     };
     var commands = {
@@ -36285,10 +36285,10 @@ var require_endpointResolver2 = __commonJS({
     exports.defaultEndpointResolver = void 0;
     var util_endpoints_1 = require_dist_cjs26();
     var ruleset_1 = require_ruleset2();
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context2 = {}) => {
       return (0, util_endpoints_1.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context2.logger
       });
     };
     exports.defaultEndpointResolver = defaultEndpointResolver;
@@ -36507,11 +36507,11 @@ var require_AssumeRoleWithSAMLCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_AssumeRoleWithSAMLCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_AssumeRoleWithSAMLCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_AssumeRoleWithSAMLCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_AssumeRoleWithSAMLCommand)(output, context2);
       }
     };
     exports.AssumeRoleWithSAMLCommand = AssumeRoleWithSAMLCommand;
@@ -36569,11 +36569,11 @@ var require_DecodeAuthorizationMessageCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_DecodeAuthorizationMessageCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_DecodeAuthorizationMessageCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_DecodeAuthorizationMessageCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_DecodeAuthorizationMessageCommand)(output, context2);
       }
     };
     exports.DecodeAuthorizationMessageCommand = DecodeAuthorizationMessageCommand;
@@ -36631,11 +36631,11 @@ var require_GetAccessKeyInfoCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_GetAccessKeyInfoCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_GetAccessKeyInfoCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_GetAccessKeyInfoCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_GetAccessKeyInfoCommand)(output, context2);
       }
     };
     exports.GetAccessKeyInfoCommand = GetAccessKeyInfoCommand;
@@ -36693,11 +36693,11 @@ var require_GetCallerIdentityCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_GetCallerIdentityCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_GetCallerIdentityCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_GetCallerIdentityCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_GetCallerIdentityCommand)(output, context2);
       }
     };
     exports.GetCallerIdentityCommand = GetCallerIdentityCommand;
@@ -36756,11 +36756,11 @@ var require_GetFederationTokenCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_GetFederationTokenCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_GetFederationTokenCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_GetFederationTokenCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_GetFederationTokenCommand)(output, context2);
       }
     };
     exports.GetFederationTokenCommand = GetFederationTokenCommand;
@@ -36819,11 +36819,11 @@ var require_GetSessionTokenCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_query_1.se_GetSessionTokenCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_query_1.se_GetSessionTokenCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_query_1.de_GetSessionTokenCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_query_1.de_GetSessionTokenCommand)(output, context2);
       }
     };
     exports.GetSessionTokenCommand = GetSessionTokenCommand;
@@ -37261,7 +37261,7 @@ var require_bucketEndpointMiddleware = __commonJS({
     var util_arn_parser_1 = require_dist_cjs17();
     var protocol_http_1 = require_dist_cjs2();
     var bucketHostname_1 = require_bucketHostname();
-    var bucketEndpointMiddleware = (options) => (next, context3) => async (args) => {
+    var bucketEndpointMiddleware = (options) => (next, context2) => async (args) => {
       const { Bucket: bucketName } = args.input;
       let replaceBucketInPath = options.bucketEndpoint;
       const request = args.request;
@@ -37291,10 +37291,10 @@ var require_bucketEndpointMiddleware = __commonJS({
             disableMultiregionAccessPoints: await options.disableMultiregionAccessPoints()
           });
           if (modifiedSigningRegion && modifiedSigningRegion !== signingRegion) {
-            context3["signing_region"] = modifiedSigningRegion;
+            context2["signing_region"] = modifiedSigningRegion;
           }
           if (signingService && signingService !== "s3") {
-            context3["signing_service"] = signingService;
+            context2["signing_service"] = signingService;
           }
           request.hostname = hostname;
           replaceBucketInPath = bucketEndpoint;
@@ -38028,10 +38028,10 @@ var require_endpointResolver3 = __commonJS({
     exports.defaultEndpointResolver = void 0;
     var util_endpoints_1 = require_dist_cjs26();
     var ruleset_1 = require_ruleset3();
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context2 = {}) => {
       return (0, util_endpoints_1.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context2.logger
       });
     };
     exports.defaultEndpointResolver = defaultEndpointResolver;
@@ -39158,8 +39158,8 @@ var require_Aws_restXml = __commonJS({
     var models_0_1 = require_models_03();
     var models_1_1 = require_models_1();
     var S3ServiceException_1 = require_S3ServiceException();
-    var se_AbortMultipartUploadCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_AbortMultipartUploadCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -39184,8 +39184,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_AbortMultipartUploadCommand = se_AbortMultipartUploadCommand;
-    var se_CompleteMultipartUploadCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_CompleteMultipartUploadCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-checksum-crc32": input.ChecksumCRC32,
@@ -39207,11 +39207,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.MultipartUpload !== void 0) {
-        body = se_CompletedMultipartUpload(input.MultipartUpload, context3);
+        body = se_CompletedMultipartUpload(input.MultipartUpload, context2);
       }
       let contents;
       if (input.MultipartUpload !== void 0) {
-        contents = se_CompletedMultipartUpload(input.MultipartUpload, context3);
+        contents = se_CompletedMultipartUpload(input.MultipartUpload, context2);
         contents = contents.withName("CompleteMultipartUpload");
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -39229,8 +39229,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_CompleteMultipartUploadCommand = se_CompleteMultipartUploadCommand;
-    var se_CopyObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_CopyObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-acl": input.ACL,
         "cache-control": input.CacheControl,
@@ -39306,8 +39306,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_CopyObjectCommand = se_CopyObjectCommand;
-    var se_CreateBucketCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_CreateBucketCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-acl": input.ACL,
@@ -39326,11 +39326,11 @@ var require_Aws_restXml = __commonJS({
       resolvedPath = (0, smithy_client_1.resolvedPath)(resolvedPath, input, "Bucket", () => input.Bucket, "{Bucket}", false);
       let body;
       if (input.CreateBucketConfiguration !== void 0) {
-        body = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context3);
+        body = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context2);
       }
       let contents;
       if (input.CreateBucketConfiguration !== void 0) {
-        contents = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context3);
+        contents = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -39346,8 +39346,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_CreateBucketCommand = se_CreateBucketCommand;
-    var se_CreateMultipartUploadCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_CreateMultipartUploadCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-acl": input.ACL,
         "cache-control": input.CacheControl,
@@ -39407,8 +39407,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_CreateMultipartUploadCommand = se_CreateMultipartUploadCommand;
-    var se_DeleteBucketCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39426,8 +39426,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketCommand = se_DeleteBucketCommand;
-    var se_DeleteBucketAnalyticsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketAnalyticsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39450,8 +39450,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketAnalyticsConfigurationCommand = se_DeleteBucketAnalyticsConfigurationCommand;
-    var se_DeleteBucketCorsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketCorsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39473,8 +39473,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketCorsCommand = se_DeleteBucketCorsCommand;
-    var se_DeleteBucketEncryptionCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketEncryptionCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39496,8 +39496,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketEncryptionCommand = se_DeleteBucketEncryptionCommand;
-    var se_DeleteBucketIntelligentTieringConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketIntelligentTieringConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {};
       let resolvedPath = `${basePath?.endsWith("/") ? basePath.slice(0, -1) : basePath || ""}/`;
       resolvedPath = (0, smithy_client_1.resolvedPath)(resolvedPath, input, "Bucket", () => input.Bucket, "{Bucket}", false);
@@ -39518,8 +39518,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketIntelligentTieringConfigurationCommand = se_DeleteBucketIntelligentTieringConfigurationCommand;
-    var se_DeleteBucketInventoryConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketInventoryConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39542,8 +39542,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketInventoryConfigurationCommand = se_DeleteBucketInventoryConfigurationCommand;
-    var se_DeleteBucketLifecycleCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketLifecycleCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39565,8 +39565,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketLifecycleCommand = se_DeleteBucketLifecycleCommand;
-    var se_DeleteBucketMetricsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketMetricsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39589,8 +39589,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketMetricsConfigurationCommand = se_DeleteBucketMetricsConfigurationCommand;
-    var se_DeleteBucketOwnershipControlsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketOwnershipControlsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39612,8 +39612,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketOwnershipControlsCommand = se_DeleteBucketOwnershipControlsCommand;
-    var se_DeleteBucketPolicyCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketPolicyCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39635,8 +39635,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketPolicyCommand = se_DeleteBucketPolicyCommand;
-    var se_DeleteBucketReplicationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketReplicationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39658,8 +39658,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketReplicationCommand = se_DeleteBucketReplicationCommand;
-    var se_DeleteBucketTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39681,8 +39681,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketTaggingCommand = se_DeleteBucketTaggingCommand;
-    var se_DeleteBucketWebsiteCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteBucketWebsiteCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39704,8 +39704,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteBucketWebsiteCommand = se_DeleteBucketWebsiteCommand;
-    var se_DeleteObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-mfa": input.MFA,
         "x-amz-request-payer": input.RequestPayer,
@@ -39735,8 +39735,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteObjectCommand = se_DeleteObjectCommand;
-    var se_DeleteObjectsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteObjectsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-mfa": input.MFA,
@@ -39756,11 +39756,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.Delete !== void 0) {
-        body = se_Delete(input.Delete, context3);
+        body = se_Delete(input.Delete, context2);
       }
       let contents;
       if (input.Delete !== void 0) {
-        contents = se_Delete(input.Delete, context3);
+        contents = se_Delete(input.Delete, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -39777,8 +39777,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteObjectsCommand = se_DeleteObjectsCommand;
-    var se_DeleteObjectTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeleteObjectTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39802,8 +39802,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeleteObjectTaggingCommand = se_DeleteObjectTaggingCommand;
-    var se_DeletePublicAccessBlockCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_DeletePublicAccessBlockCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39825,8 +39825,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_DeletePublicAccessBlockCommand = se_DeletePublicAccessBlockCommand;
-    var se_GetBucketAccelerateConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketAccelerateConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
         "x-amz-request-payer": input.RequestPayer
@@ -39849,8 +39849,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketAccelerateConfigurationCommand = se_GetBucketAccelerateConfigurationCommand;
-    var se_GetBucketAclCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketAclCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39872,8 +39872,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketAclCommand = se_GetBucketAclCommand;
-    var se_GetBucketAnalyticsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketAnalyticsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39897,8 +39897,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketAnalyticsConfigurationCommand = se_GetBucketAnalyticsConfigurationCommand;
-    var se_GetBucketCorsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketCorsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39920,8 +39920,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketCorsCommand = se_GetBucketCorsCommand;
-    var se_GetBucketEncryptionCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketEncryptionCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39943,8 +39943,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketEncryptionCommand = se_GetBucketEncryptionCommand;
-    var se_GetBucketIntelligentTieringConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketIntelligentTieringConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {};
       let resolvedPath = `${basePath?.endsWith("/") ? basePath.slice(0, -1) : basePath || ""}/`;
       resolvedPath = (0, smithy_client_1.resolvedPath)(resolvedPath, input, "Bucket", () => input.Bucket, "{Bucket}", false);
@@ -39966,8 +39966,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketIntelligentTieringConfigurationCommand = se_GetBucketIntelligentTieringConfigurationCommand;
-    var se_GetBucketInventoryConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketInventoryConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -39991,8 +39991,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketInventoryConfigurationCommand = se_GetBucketInventoryConfigurationCommand;
-    var se_GetBucketLifecycleConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketLifecycleConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40014,8 +40014,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketLifecycleConfigurationCommand = se_GetBucketLifecycleConfigurationCommand;
-    var se_GetBucketLocationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketLocationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40037,8 +40037,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketLocationCommand = se_GetBucketLocationCommand;
-    var se_GetBucketLoggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketLoggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40060,8 +40060,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketLoggingCommand = se_GetBucketLoggingCommand;
-    var se_GetBucketMetricsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketMetricsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40085,8 +40085,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketMetricsConfigurationCommand = se_GetBucketMetricsConfigurationCommand;
-    var se_GetBucketNotificationConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketNotificationConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40108,8 +40108,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketNotificationConfigurationCommand = se_GetBucketNotificationConfigurationCommand;
-    var se_GetBucketOwnershipControlsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketOwnershipControlsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40131,8 +40131,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketOwnershipControlsCommand = se_GetBucketOwnershipControlsCommand;
-    var se_GetBucketPolicyCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketPolicyCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40154,8 +40154,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketPolicyCommand = se_GetBucketPolicyCommand;
-    var se_GetBucketPolicyStatusCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketPolicyStatusCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40177,8 +40177,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketPolicyStatusCommand = se_GetBucketPolicyStatusCommand;
-    var se_GetBucketReplicationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketReplicationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40200,8 +40200,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketReplicationCommand = se_GetBucketReplicationCommand;
-    var se_GetBucketRequestPaymentCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketRequestPaymentCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40223,8 +40223,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketRequestPaymentCommand = se_GetBucketRequestPaymentCommand;
-    var se_GetBucketTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40246,8 +40246,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketTaggingCommand = se_GetBucketTaggingCommand;
-    var se_GetBucketVersioningCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketVersioningCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40269,8 +40269,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketVersioningCommand = se_GetBucketVersioningCommand;
-    var se_GetBucketWebsiteCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetBucketWebsiteCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40292,8 +40292,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetBucketWebsiteCommand = se_GetBucketWebsiteCommand;
-    var se_GetObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "if-match": input.IfMatch,
         "if-modified-since": [
@@ -40343,8 +40343,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectCommand = se_GetObjectCommand;
-    var se_GetObjectAclCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectAclCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -40369,8 +40369,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectAclCommand = se_GetObjectAclCommand;
-    var se_GetObjectAttributesCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectAttributesCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-max-parts": [() => isSerializableHeaderValue(input.MaxParts), () => input.MaxParts.toString()],
         "x-amz-part-number-marker": input.PartNumberMarker,
@@ -40404,8 +40404,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectAttributesCommand = se_GetObjectAttributesCommand;
-    var se_GetObjectLegalHoldCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectLegalHoldCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -40430,8 +40430,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectLegalHoldCommand = se_GetObjectLegalHoldCommand;
-    var se_GetObjectLockConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectLockConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40453,8 +40453,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectLockConfigurationCommand = se_GetObjectLockConfigurationCommand;
-    var se_GetObjectRetentionCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectRetentionCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -40479,8 +40479,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectRetentionCommand = se_GetObjectRetentionCommand;
-    var se_GetObjectTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
         "x-amz-request-payer": input.RequestPayer
@@ -40505,8 +40505,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectTaggingCommand = se_GetObjectTaggingCommand;
-    var se_GetObjectTorrentCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetObjectTorrentCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -40530,8 +40530,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetObjectTorrentCommand = se_GetObjectTorrentCommand;
-    var se_GetPublicAccessBlockCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_GetPublicAccessBlockCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40553,8 +40553,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_GetPublicAccessBlockCommand = se_GetPublicAccessBlockCommand;
-    var se_HeadBucketCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_HeadBucketCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40572,8 +40572,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_HeadBucketCommand = se_HeadBucketCommand;
-    var se_HeadObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_HeadObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "if-match": input.IfMatch,
         "if-modified-since": [
@@ -40613,8 +40613,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_HeadObjectCommand = se_HeadObjectCommand;
-    var se_ListBucketAnalyticsConfigurationsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListBucketAnalyticsConfigurationsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40638,8 +40638,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListBucketAnalyticsConfigurationsCommand = se_ListBucketAnalyticsConfigurationsCommand;
-    var se_ListBucketIntelligentTieringConfigurationsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListBucketIntelligentTieringConfigurationsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {};
       let resolvedPath = `${basePath?.endsWith("/") ? basePath.slice(0, -1) : basePath || ""}/`;
       resolvedPath = (0, smithy_client_1.resolvedPath)(resolvedPath, input, "Bucket", () => input.Bucket, "{Bucket}", false);
@@ -40661,8 +40661,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListBucketIntelligentTieringConfigurationsCommand = se_ListBucketIntelligentTieringConfigurationsCommand;
-    var se_ListBucketInventoryConfigurationsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListBucketInventoryConfigurationsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40686,8 +40686,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListBucketInventoryConfigurationsCommand = se_ListBucketInventoryConfigurationsCommand;
-    var se_ListBucketMetricsConfigurationsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListBucketMetricsConfigurationsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
       });
@@ -40711,8 +40711,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListBucketMetricsConfigurationsCommand = se_ListBucketMetricsConfigurationsCommand;
-    var se_ListBucketsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListBucketsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {
         "content-type": "application/xml"
       };
@@ -40730,8 +40730,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListBucketsCommand = se_ListBucketsCommand;
-    var se_ListMultipartUploadsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListMultipartUploadsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
         "x-amz-request-payer": input.RequestPayer
@@ -40760,8 +40760,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListMultipartUploadsCommand = se_ListMultipartUploadsCommand;
-    var se_ListObjectsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListObjectsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
@@ -40792,8 +40792,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListObjectsCommand = se_ListObjectsCommand;
-    var se_ListObjectsV2Command = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListObjectsV2Command = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
@@ -40827,8 +40827,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListObjectsV2Command = se_ListObjectsV2Command;
-    var se_ListObjectVersionsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListObjectVersionsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
         "x-amz-request-payer": input.RequestPayer,
@@ -40861,8 +40861,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListObjectVersionsCommand = se_ListObjectVersionsCommand;
-    var se_ListPartsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_ListPartsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-request-payer": input.RequestPayer,
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
@@ -40892,8 +40892,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_ListPartsCommand = se_ListPartsCommand;
-    var se_PutBucketAccelerateConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketAccelerateConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
@@ -40906,11 +40906,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.AccelerateConfiguration !== void 0) {
-        body = se_AccelerateConfiguration(input.AccelerateConfiguration, context3);
+        body = se_AccelerateConfiguration(input.AccelerateConfiguration, context2);
       }
       let contents;
       if (input.AccelerateConfiguration !== void 0) {
-        contents = se_AccelerateConfiguration(input.AccelerateConfiguration, context3);
+        contents = se_AccelerateConfiguration(input.AccelerateConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -40927,8 +40927,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketAccelerateConfigurationCommand = se_PutBucketAccelerateConfigurationCommand;
-    var se_PutBucketAclCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketAclCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-acl": input.ACL,
@@ -40948,11 +40948,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.AccessControlPolicy !== void 0) {
-        body = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        body = se_AccessControlPolicy(input.AccessControlPolicy, context2);
       }
       let contents;
       if (input.AccessControlPolicy !== void 0) {
-        contents = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        contents = se_AccessControlPolicy(input.AccessControlPolicy, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -40969,8 +40969,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketAclCommand = se_PutBucketAclCommand;
-    var se_PutBucketAnalyticsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketAnalyticsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -40983,11 +40983,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.AnalyticsConfiguration !== void 0) {
-        body = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context3);
+        body = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context2);
       }
       let contents;
       if (input.AnalyticsConfiguration !== void 0) {
-        contents = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context3);
+        contents = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41004,8 +41004,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketAnalyticsConfigurationCommand = se_PutBucketAnalyticsConfigurationCommand;
-    var se_PutBucketCorsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketCorsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41019,11 +41019,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.CORSConfiguration !== void 0) {
-        body = se_CORSConfiguration(input.CORSConfiguration, context3);
+        body = se_CORSConfiguration(input.CORSConfiguration, context2);
       }
       let contents;
       if (input.CORSConfiguration !== void 0) {
-        contents = se_CORSConfiguration(input.CORSConfiguration, context3);
+        contents = se_CORSConfiguration(input.CORSConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41040,8 +41040,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketCorsCommand = se_PutBucketCorsCommand;
-    var se_PutBucketEncryptionCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketEncryptionCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41055,11 +41055,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.ServerSideEncryptionConfiguration !== void 0) {
-        body = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context3);
+        body = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context2);
       }
       let contents;
       if (input.ServerSideEncryptionConfiguration !== void 0) {
-        contents = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context3);
+        contents = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41076,8 +41076,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketEncryptionCommand = se_PutBucketEncryptionCommand;
-    var se_PutBucketIntelligentTieringConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketIntelligentTieringConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = {
         "content-type": "application/xml"
       };
@@ -41089,11 +41089,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.IntelligentTieringConfiguration !== void 0) {
-        body = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context3);
+        body = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context2);
       }
       let contents;
       if (input.IntelligentTieringConfiguration !== void 0) {
-        contents = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context3);
+        contents = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41110,8 +41110,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketIntelligentTieringConfigurationCommand = se_PutBucketIntelligentTieringConfigurationCommand;
-    var se_PutBucketInventoryConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketInventoryConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -41124,11 +41124,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.InventoryConfiguration !== void 0) {
-        body = se_InventoryConfiguration(input.InventoryConfiguration, context3);
+        body = se_InventoryConfiguration(input.InventoryConfiguration, context2);
       }
       let contents;
       if (input.InventoryConfiguration !== void 0) {
-        contents = se_InventoryConfiguration(input.InventoryConfiguration, context3);
+        contents = se_InventoryConfiguration(input.InventoryConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41145,8 +41145,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketInventoryConfigurationCommand = se_PutBucketInventoryConfigurationCommand;
-    var se_PutBucketLifecycleConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketLifecycleConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-sdk-checksum-algorithm": input.ChecksumAlgorithm,
@@ -41159,11 +41159,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.LifecycleConfiguration !== void 0) {
-        body = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context3);
+        body = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context2);
       }
       let contents;
       if (input.LifecycleConfiguration !== void 0) {
-        contents = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context3);
+        contents = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context2);
         contents = contents.withName("LifecycleConfiguration");
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -41181,8 +41181,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketLifecycleConfigurationCommand = se_PutBucketLifecycleConfigurationCommand;
-    var se_PutBucketLoggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketLoggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41196,11 +41196,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.BucketLoggingStatus !== void 0) {
-        body = se_BucketLoggingStatus(input.BucketLoggingStatus, context3);
+        body = se_BucketLoggingStatus(input.BucketLoggingStatus, context2);
       }
       let contents;
       if (input.BucketLoggingStatus !== void 0) {
-        contents = se_BucketLoggingStatus(input.BucketLoggingStatus, context3);
+        contents = se_BucketLoggingStatus(input.BucketLoggingStatus, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41217,8 +41217,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketLoggingCommand = se_PutBucketLoggingCommand;
-    var se_PutBucketMetricsConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketMetricsConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner
@@ -41231,11 +41231,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.MetricsConfiguration !== void 0) {
-        body = se_MetricsConfiguration(input.MetricsConfiguration, context3);
+        body = se_MetricsConfiguration(input.MetricsConfiguration, context2);
       }
       let contents;
       if (input.MetricsConfiguration !== void 0) {
-        contents = se_MetricsConfiguration(input.MetricsConfiguration, context3);
+        contents = se_MetricsConfiguration(input.MetricsConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41252,8 +41252,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketMetricsConfigurationCommand = se_PutBucketMetricsConfigurationCommand;
-    var se_PutBucketNotificationConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketNotificationConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-expected-bucket-owner": input.ExpectedBucketOwner,
@@ -41269,11 +41269,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.NotificationConfiguration !== void 0) {
-        body = se_NotificationConfiguration(input.NotificationConfiguration, context3);
+        body = se_NotificationConfiguration(input.NotificationConfiguration, context2);
       }
       let contents;
       if (input.NotificationConfiguration !== void 0) {
-        contents = se_NotificationConfiguration(input.NotificationConfiguration, context3);
+        contents = se_NotificationConfiguration(input.NotificationConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41290,8 +41290,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketNotificationConfigurationCommand = se_PutBucketNotificationConfigurationCommand;
-    var se_PutBucketOwnershipControlsCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketOwnershipControlsCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41304,11 +41304,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.OwnershipControls !== void 0) {
-        body = se_OwnershipControls(input.OwnershipControls, context3);
+        body = se_OwnershipControls(input.OwnershipControls, context2);
       }
       let contents;
       if (input.OwnershipControls !== void 0) {
-        contents = se_OwnershipControls(input.OwnershipControls, context3);
+        contents = se_OwnershipControls(input.OwnershipControls, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41325,8 +41325,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketOwnershipControlsCommand = se_PutBucketOwnershipControlsCommand;
-    var se_PutBucketPolicyCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketPolicyCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "text/plain",
         "content-md5": input.ContentMD5,
@@ -41363,8 +41363,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketPolicyCommand = se_PutBucketPolicyCommand;
-    var se_PutBucketReplicationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketReplicationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41379,11 +41379,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.ReplicationConfiguration !== void 0) {
-        body = se_ReplicationConfiguration(input.ReplicationConfiguration, context3);
+        body = se_ReplicationConfiguration(input.ReplicationConfiguration, context2);
       }
       let contents;
       if (input.ReplicationConfiguration !== void 0) {
-        contents = se_ReplicationConfiguration(input.ReplicationConfiguration, context3);
+        contents = se_ReplicationConfiguration(input.ReplicationConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41400,8 +41400,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketReplicationCommand = se_PutBucketReplicationCommand;
-    var se_PutBucketRequestPaymentCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketRequestPaymentCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41415,11 +41415,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.RequestPaymentConfiguration !== void 0) {
-        body = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context3);
+        body = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context2);
       }
       let contents;
       if (input.RequestPaymentConfiguration !== void 0) {
-        contents = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context3);
+        contents = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41436,8 +41436,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketRequestPaymentCommand = se_PutBucketRequestPaymentCommand;
-    var se_PutBucketTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41451,11 +41451,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.Tagging !== void 0) {
-        body = se_Tagging(input.Tagging, context3);
+        body = se_Tagging(input.Tagging, context2);
       }
       let contents;
       if (input.Tagging !== void 0) {
-        contents = se_Tagging(input.Tagging, context3);
+        contents = se_Tagging(input.Tagging, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41472,8 +41472,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketTaggingCommand = se_PutBucketTaggingCommand;
-    var se_PutBucketVersioningCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketVersioningCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41488,11 +41488,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.VersioningConfiguration !== void 0) {
-        body = se_VersioningConfiguration(input.VersioningConfiguration, context3);
+        body = se_VersioningConfiguration(input.VersioningConfiguration, context2);
       }
       let contents;
       if (input.VersioningConfiguration !== void 0) {
-        contents = se_VersioningConfiguration(input.VersioningConfiguration, context3);
+        contents = se_VersioningConfiguration(input.VersioningConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41509,8 +41509,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketVersioningCommand = se_PutBucketVersioningCommand;
-    var se_PutBucketWebsiteCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutBucketWebsiteCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41524,11 +41524,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.WebsiteConfiguration !== void 0) {
-        body = se_WebsiteConfiguration(input.WebsiteConfiguration, context3);
+        body = se_WebsiteConfiguration(input.WebsiteConfiguration, context2);
       }
       let contents;
       if (input.WebsiteConfiguration !== void 0) {
-        contents = se_WebsiteConfiguration(input.WebsiteConfiguration, context3);
+        contents = se_WebsiteConfiguration(input.WebsiteConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41545,8 +41545,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutBucketWebsiteCommand = se_PutBucketWebsiteCommand;
-    var se_PutObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": input.ContentType || "application/octet-stream",
         "x-amz-acl": input.ACL,
@@ -41619,8 +41619,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectCommand = se_PutObjectCommand;
-    var se_PutObjectAclCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectAclCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-acl": input.ACL,
@@ -41643,11 +41643,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.AccessControlPolicy !== void 0) {
-        body = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        body = se_AccessControlPolicy(input.AccessControlPolicy, context2);
       }
       let contents;
       if (input.AccessControlPolicy !== void 0) {
-        contents = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        contents = se_AccessControlPolicy(input.AccessControlPolicy, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41664,8 +41664,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectAclCommand = se_PutObjectAclCommand;
-    var se_PutObjectLegalHoldCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectLegalHoldCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-request-payer": input.RequestPayer,
@@ -41682,11 +41682,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.LegalHold !== void 0) {
-        body = se_ObjectLockLegalHold(input.LegalHold, context3);
+        body = se_ObjectLockLegalHold(input.LegalHold, context2);
       }
       let contents;
       if (input.LegalHold !== void 0) {
-        contents = se_ObjectLockLegalHold(input.LegalHold, context3);
+        contents = se_ObjectLockLegalHold(input.LegalHold, context2);
         contents = contents.withName("LegalHold");
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -41704,8 +41704,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectLegalHoldCommand = se_PutObjectLegalHoldCommand;
-    var se_PutObjectLockConfigurationCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectLockConfigurationCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-request-payer": input.RequestPayer,
@@ -41721,11 +41721,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.ObjectLockConfiguration !== void 0) {
-        body = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context3);
+        body = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context2);
       }
       let contents;
       if (input.ObjectLockConfiguration !== void 0) {
-        contents = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context3);
+        contents = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41742,8 +41742,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectLockConfigurationCommand = se_PutObjectLockConfigurationCommand;
-    var se_PutObjectRetentionCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectRetentionCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-request-payer": input.RequestPayer,
@@ -41764,11 +41764,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.Retention !== void 0) {
-        body = se_ObjectLockRetention(input.Retention, context3);
+        body = se_ObjectLockRetention(input.Retention, context2);
       }
       let contents;
       if (input.Retention !== void 0) {
-        contents = se_ObjectLockRetention(input.Retention, context3);
+        contents = se_ObjectLockRetention(input.Retention, context2);
         contents = contents.withName("Retention");
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -41786,8 +41786,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectRetentionCommand = se_PutObjectRetentionCommand;
-    var se_PutObjectTaggingCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutObjectTaggingCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41804,11 +41804,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.Tagging !== void 0) {
-        body = se_Tagging(input.Tagging, context3);
+        body = se_Tagging(input.Tagging, context2);
       }
       let contents;
       if (input.Tagging !== void 0) {
-        contents = se_Tagging(input.Tagging, context3);
+        contents = se_Tagging(input.Tagging, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41825,8 +41825,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutObjectTaggingCommand = se_PutObjectTaggingCommand;
-    var se_PutPublicAccessBlockCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_PutPublicAccessBlockCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "content-md5": input.ContentMD5,
@@ -41840,11 +41840,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.PublicAccessBlockConfiguration !== void 0) {
-        body = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context3);
+        body = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context2);
       }
       let contents;
       if (input.PublicAccessBlockConfiguration !== void 0) {
-        contents = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context3);
+        contents = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41861,8 +41861,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_PutPublicAccessBlockCommand = se_PutPublicAccessBlockCommand;
-    var se_RestoreObjectCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_RestoreObjectCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-request-payer": input.RequestPayer,
@@ -41879,11 +41879,11 @@ var require_Aws_restXml = __commonJS({
       });
       let body;
       if (input.RestoreRequest !== void 0) {
-        body = se_RestoreRequest(input.RestoreRequest, context3);
+        body = se_RestoreRequest(input.RestoreRequest, context2);
       }
       let contents;
       if (input.RestoreRequest !== void 0) {
-        contents = se_RestoreRequest(input.RestoreRequest, context3);
+        contents = se_RestoreRequest(input.RestoreRequest, context2);
         body = '<?xml version="1.0" encoding="UTF-8"?>';
         contents.addAttribute("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -41900,8 +41900,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_RestoreObjectCommand = se_RestoreObjectCommand;
-    var se_SelectObjectContentCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_SelectObjectContentCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/xml",
         "x-amz-server-side-encryption-customer-algorithm": input.SSECustomerAlgorithm,
@@ -41930,19 +41930,19 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.InputSerialization !== void 0) {
-        const node = se_InputSerialization(input.InputSerialization, context3).withName("InputSerialization");
+        const node = se_InputSerialization(input.InputSerialization, context2).withName("InputSerialization");
         bodyNode.addChildNode(node);
       }
       if (input.OutputSerialization !== void 0) {
-        const node = se_OutputSerialization(input.OutputSerialization, context3).withName("OutputSerialization");
+        const node = se_OutputSerialization(input.OutputSerialization, context2).withName("OutputSerialization");
         bodyNode.addChildNode(node);
       }
       if (input.RequestProgress !== void 0) {
-        const node = se_RequestProgress(input.RequestProgress, context3).withName("RequestProgress");
+        const node = se_RequestProgress(input.RequestProgress, context2).withName("RequestProgress");
         bodyNode.addChildNode(node);
       }
       if (input.ScanRange !== void 0) {
-        const node = se_ScanRange(input.ScanRange, context3).withName("ScanRange");
+        const node = se_ScanRange(input.ScanRange, context2).withName("ScanRange");
         bodyNode.addChildNode(node);
       }
       body += bodyNode.toString();
@@ -41958,8 +41958,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_SelectObjectContentCommand = se_SelectObjectContentCommand;
-    var se_UploadPartCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_UploadPartCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "content-type": "application/octet-stream",
         "content-length": [() => isSerializableHeaderValue(input.ContentLength), () => input.ContentLength.toString()],
@@ -42004,8 +42004,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_UploadPartCommand = se_UploadPartCommand;
-    var se_UploadPartCopyCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_UploadPartCopyCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-copy-source": input.CopySource,
         "x-amz-copy-source-if-match": input.CopySourceIfMatch,
@@ -42050,8 +42050,8 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_UploadPartCopyCommand = se_UploadPartCopyCommand;
-    var se_WriteGetObjectResponseCommand = async (input, context3) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var se_WriteGetObjectResponseCommand = async (input, context2) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context2.endpoint();
       const headers = (0, smithy_client_1.map)({}, isSerializableHeaderValue, {
         "x-amz-content-sha256": "UNSIGNED-PAYLOAD",
         "content-type": "application/octet-stream",
@@ -42135,8 +42135,8 @@ var require_Aws_restXml = __commonJS({
         contents = input.Body;
         body = contents;
       }
-      let { hostname: resolvedHostname } = await context3.endpoint();
-      if (context3.disableHostPrefix !== true) {
+      let { hostname: resolvedHostname } = await context2.endpoint();
+      if (context2.disableHostPrefix !== true) {
         resolvedHostname = "{RequestRoute}." + resolvedHostname;
         if (input.RequestRoute === void 0) {
           throw new Error("Empty value provided for input host prefix: RequestRoute.");
@@ -42158,28 +42158,28 @@ var require_Aws_restXml = __commonJS({
       });
     };
     exports.se_WriteGetObjectResponseCommand = se_WriteGetObjectResponseCommand;
-    var de_AbortMultipartUploadCommand = async (output, context3) => {
+    var de_AbortMultipartUploadCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_AbortMultipartUploadCommandError(output, context3);
+        return de_AbortMultipartUploadCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_AbortMultipartUploadCommand = de_AbortMultipartUploadCommand;
-    var de_AbortMultipartUploadCommandError = async (output, context3) => {
+    var de_AbortMultipartUploadCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchUpload":
         case "com.amazonaws.s3#NoSuchUpload":
-          throw await de_NoSuchUploadRes(parsedOutput, context3);
+          throw await de_NoSuchUploadRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -42189,9 +42189,9 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_CompleteMultipartUploadCommand = async (output, context3) => {
+    var de_CompleteMultipartUploadCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CompleteMultipartUploadCommandError(output, context3);
+        return de_CompleteMultipartUploadCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -42205,7 +42205,7 @@ var require_Aws_restXml = __commonJS({
         ],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Bucket"] !== void 0) {
         contents.Bucket = (0, smithy_client_1.expectString)(data["Bucket"]);
       }
@@ -42233,10 +42233,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_CompleteMultipartUploadCommand = de_CompleteMultipartUploadCommand;
-    var de_CompleteMultipartUploadCommandError = async (output, context3) => {
+    var de_CompleteMultipartUploadCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42246,9 +42246,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_CopyObjectCommand = async (output, context3) => {
+    var de_CopyObjectCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CopyObjectCommandError(output, context3);
+        return de_CopyObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -42266,21 +42266,21 @@ var require_Aws_restXml = __commonJS({
         ],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.CopyObjectResult = de_CopyObjectResult(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.CopyObjectResult = de_CopyObjectResult(data, context2);
       return contents;
     };
     exports.de_CopyObjectCommand = de_CopyObjectCommand;
-    var de_CopyObjectCommandError = async (output, context3) => {
+    var de_CopyObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ObjectNotInActiveTierError":
         case "com.amazonaws.s3#ObjectNotInActiveTierError":
-          throw await de_ObjectNotInActiveTierErrorRes(parsedOutput, context3);
+          throw await de_ObjectNotInActiveTierErrorRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -42290,31 +42290,31 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_CreateBucketCommand = async (output, context3) => {
+    var de_CreateBucketCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CreateBucketCommandError(output, context3);
+        return de_CreateBucketCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         Location: [, output.headers["location"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_CreateBucketCommand = de_CreateBucketCommand;
-    var de_CreateBucketCommandError = async (output, context3) => {
+    var de_CreateBucketCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "BucketAlreadyExists":
         case "com.amazonaws.s3#BucketAlreadyExists":
-          throw await de_BucketAlreadyExistsRes(parsedOutput, context3);
+          throw await de_BucketAlreadyExistsRes(parsedOutput, context2);
         case "BucketAlreadyOwnedByYou":
         case "com.amazonaws.s3#BucketAlreadyOwnedByYou":
-          throw await de_BucketAlreadyOwnedByYouRes(parsedOutput, context3);
+          throw await de_BucketAlreadyOwnedByYouRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -42324,9 +42324,9 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_CreateMultipartUploadCommand = async (output, context3) => {
+    var de_CreateMultipartUploadCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CreateMultipartUploadCommandError(output, context3);
+        return de_CreateMultipartUploadCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -42347,7 +42347,7 @@ var require_Aws_restXml = __commonJS({
         RequestCharged: [, output.headers["x-amz-request-charged"]],
         ChecksumAlgorithm: [, output.headers["x-amz-checksum-algorithm"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Bucket"] !== void 0) {
         contents.Bucket = (0, smithy_client_1.expectString)(data["Bucket"]);
       }
@@ -42360,10 +42360,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_CreateMultipartUploadCommand = de_CreateMultipartUploadCommand;
-    var de_CreateMultipartUploadCommandError = async (output, context3) => {
+    var de_CreateMultipartUploadCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42373,21 +42373,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketCommand = async (output, context3) => {
+    var de_DeleteBucketCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketCommandError(output, context3);
+        return de_DeleteBucketCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketCommand = de_DeleteBucketCommand;
-    var de_DeleteBucketCommandError = async (output, context3) => {
+    var de_DeleteBucketCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42397,21 +42397,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketAnalyticsConfigurationCommand = async (output, context3) => {
+    var de_DeleteBucketAnalyticsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketAnalyticsConfigurationCommandError(output, context3);
+        return de_DeleteBucketAnalyticsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketAnalyticsConfigurationCommand = de_DeleteBucketAnalyticsConfigurationCommand;
-    var de_DeleteBucketAnalyticsConfigurationCommandError = async (output, context3) => {
+    var de_DeleteBucketAnalyticsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42421,21 +42421,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketCorsCommand = async (output, context3) => {
+    var de_DeleteBucketCorsCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketCorsCommandError(output, context3);
+        return de_DeleteBucketCorsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketCorsCommand = de_DeleteBucketCorsCommand;
-    var de_DeleteBucketCorsCommandError = async (output, context3) => {
+    var de_DeleteBucketCorsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42445,21 +42445,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketEncryptionCommand = async (output, context3) => {
+    var de_DeleteBucketEncryptionCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketEncryptionCommandError(output, context3);
+        return de_DeleteBucketEncryptionCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketEncryptionCommand = de_DeleteBucketEncryptionCommand;
-    var de_DeleteBucketEncryptionCommandError = async (output, context3) => {
+    var de_DeleteBucketEncryptionCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42469,21 +42469,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketIntelligentTieringConfigurationCommand = async (output, context3) => {
+    var de_DeleteBucketIntelligentTieringConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketIntelligentTieringConfigurationCommandError(output, context3);
+        return de_DeleteBucketIntelligentTieringConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketIntelligentTieringConfigurationCommand = de_DeleteBucketIntelligentTieringConfigurationCommand;
-    var de_DeleteBucketIntelligentTieringConfigurationCommandError = async (output, context3) => {
+    var de_DeleteBucketIntelligentTieringConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42493,21 +42493,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketInventoryConfigurationCommand = async (output, context3) => {
+    var de_DeleteBucketInventoryConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketInventoryConfigurationCommandError(output, context3);
+        return de_DeleteBucketInventoryConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketInventoryConfigurationCommand = de_DeleteBucketInventoryConfigurationCommand;
-    var de_DeleteBucketInventoryConfigurationCommandError = async (output, context3) => {
+    var de_DeleteBucketInventoryConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42517,21 +42517,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketLifecycleCommand = async (output, context3) => {
+    var de_DeleteBucketLifecycleCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketLifecycleCommandError(output, context3);
+        return de_DeleteBucketLifecycleCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketLifecycleCommand = de_DeleteBucketLifecycleCommand;
-    var de_DeleteBucketLifecycleCommandError = async (output, context3) => {
+    var de_DeleteBucketLifecycleCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42541,21 +42541,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketMetricsConfigurationCommand = async (output, context3) => {
+    var de_DeleteBucketMetricsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketMetricsConfigurationCommandError(output, context3);
+        return de_DeleteBucketMetricsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketMetricsConfigurationCommand = de_DeleteBucketMetricsConfigurationCommand;
-    var de_DeleteBucketMetricsConfigurationCommandError = async (output, context3) => {
+    var de_DeleteBucketMetricsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42565,21 +42565,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketOwnershipControlsCommand = async (output, context3) => {
+    var de_DeleteBucketOwnershipControlsCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketOwnershipControlsCommandError(output, context3);
+        return de_DeleteBucketOwnershipControlsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketOwnershipControlsCommand = de_DeleteBucketOwnershipControlsCommand;
-    var de_DeleteBucketOwnershipControlsCommandError = async (output, context3) => {
+    var de_DeleteBucketOwnershipControlsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42589,21 +42589,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketPolicyCommand = async (output, context3) => {
+    var de_DeleteBucketPolicyCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketPolicyCommandError(output, context3);
+        return de_DeleteBucketPolicyCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketPolicyCommand = de_DeleteBucketPolicyCommand;
-    var de_DeleteBucketPolicyCommandError = async (output, context3) => {
+    var de_DeleteBucketPolicyCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42613,21 +42613,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketReplicationCommand = async (output, context3) => {
+    var de_DeleteBucketReplicationCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketReplicationCommandError(output, context3);
+        return de_DeleteBucketReplicationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketReplicationCommand = de_DeleteBucketReplicationCommand;
-    var de_DeleteBucketReplicationCommandError = async (output, context3) => {
+    var de_DeleteBucketReplicationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42637,21 +42637,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketTaggingCommand = async (output, context3) => {
+    var de_DeleteBucketTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketTaggingCommandError(output, context3);
+        return de_DeleteBucketTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketTaggingCommand = de_DeleteBucketTaggingCommand;
-    var de_DeleteBucketTaggingCommandError = async (output, context3) => {
+    var de_DeleteBucketTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42661,21 +42661,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteBucketWebsiteCommand = async (output, context3) => {
+    var de_DeleteBucketWebsiteCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteBucketWebsiteCommandError(output, context3);
+        return de_DeleteBucketWebsiteCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteBucketWebsiteCommand = de_DeleteBucketWebsiteCommand;
-    var de_DeleteBucketWebsiteCommandError = async (output, context3) => {
+    var de_DeleteBucketWebsiteCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42685,9 +42685,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteObjectCommand = async (output, context3) => {
+    var de_DeleteObjectCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteObjectCommandError(output, context3);
+        return de_DeleteObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -42698,14 +42698,14 @@ var require_Aws_restXml = __commonJS({
         VersionId: [, output.headers["x-amz-version-id"]],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteObjectCommand = de_DeleteObjectCommand;
-    var de_DeleteObjectCommandError = async (output, context3) => {
+    var de_DeleteObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42715,32 +42715,32 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteObjectsCommand = async (output, context3) => {
+    var de_DeleteObjectsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_DeleteObjectsCommandError(output, context3);
+        return de_DeleteObjectsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.Deleted === "") {
         contents.Deleted = [];
       } else if (data["Deleted"] !== void 0) {
-        contents.Deleted = de_DeletedObjects((0, smithy_client_1.getArrayIfSingleItem)(data["Deleted"]), context3);
+        contents.Deleted = de_DeletedObjects((0, smithy_client_1.getArrayIfSingleItem)(data["Deleted"]), context2);
       }
       if (data.Error === "") {
         contents.Errors = [];
       } else if (data["Error"] !== void 0) {
-        contents.Errors = de_Errors((0, smithy_client_1.getArrayIfSingleItem)(data["Error"]), context3);
+        contents.Errors = de_Errors((0, smithy_client_1.getArrayIfSingleItem)(data["Error"]), context2);
       }
       return contents;
     };
     exports.de_DeleteObjectsCommand = de_DeleteObjectsCommand;
-    var de_DeleteObjectsCommandError = async (output, context3) => {
+    var de_DeleteObjectsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42750,22 +42750,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeleteObjectTaggingCommand = async (output, context3) => {
+    var de_DeleteObjectTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeleteObjectTaggingCommandError(output, context3);
+        return de_DeleteObjectTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         VersionId: [, output.headers["x-amz-version-id"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeleteObjectTaggingCommand = de_DeleteObjectTaggingCommand;
-    var de_DeleteObjectTaggingCommandError = async (output, context3) => {
+    var de_DeleteObjectTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42775,21 +42775,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_DeletePublicAccessBlockCommand = async (output, context3) => {
+    var de_DeletePublicAccessBlockCommand = async (output, context2) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_DeletePublicAccessBlockCommandError(output, context3);
+        return de_DeletePublicAccessBlockCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_DeletePublicAccessBlockCommand = de_DeletePublicAccessBlockCommand;
-    var de_DeletePublicAccessBlockCommandError = async (output, context3) => {
+    var de_DeletePublicAccessBlockCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42799,25 +42799,25 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketAccelerateConfigurationCommand = async (output, context3) => {
+    var de_GetBucketAccelerateConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketAccelerateConfigurationCommandError(output, context3);
+        return de_GetBucketAccelerateConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(data["Status"]);
       }
       return contents;
     };
     exports.de_GetBucketAccelerateConfigurationCommand = de_GetBucketAccelerateConfigurationCommand;
-    var de_GetBucketAccelerateConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketAccelerateConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42827,29 +42827,29 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketAclCommand = async (output, context3) => {
+    var de_GetBucketAclCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketAclCommandError(output, context3);
+        return de_GetBucketAclCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.AccessControlList === "") {
         contents.Grants = [];
       } else if (data["AccessControlList"] !== void 0 && data["AccessControlList"]["Grant"] !== void 0) {
-        contents.Grants = de_Grants((0, smithy_client_1.getArrayIfSingleItem)(data["AccessControlList"]["Grant"]), context3);
+        contents.Grants = de_Grants((0, smithy_client_1.getArrayIfSingleItem)(data["AccessControlList"]["Grant"]), context2);
       }
       if (data["Owner"] !== void 0) {
-        contents.Owner = de_Owner(data["Owner"], context3);
+        contents.Owner = de_Owner(data["Owner"], context2);
       }
       return contents;
     };
     exports.de_GetBucketAclCommand = de_GetBucketAclCommand;
-    var de_GetBucketAclCommandError = async (output, context3) => {
+    var de_GetBucketAclCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42859,22 +42859,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketAnalyticsConfigurationCommand = async (output, context3) => {
+    var de_GetBucketAnalyticsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketAnalyticsConfigurationCommandError(output, context3);
+        return de_GetBucketAnalyticsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.AnalyticsConfiguration = de_AnalyticsConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.AnalyticsConfiguration = de_AnalyticsConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketAnalyticsConfigurationCommand = de_GetBucketAnalyticsConfigurationCommand;
-    var de_GetBucketAnalyticsConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketAnalyticsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42884,26 +42884,26 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketCorsCommand = async (output, context3) => {
+    var de_GetBucketCorsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketCorsCommandError(output, context3);
+        return de_GetBucketCorsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.CORSRule === "") {
         contents.CORSRules = [];
       } else if (data["CORSRule"] !== void 0) {
-        contents.CORSRules = de_CORSRules((0, smithy_client_1.getArrayIfSingleItem)(data["CORSRule"]), context3);
+        contents.CORSRules = de_CORSRules((0, smithy_client_1.getArrayIfSingleItem)(data["CORSRule"]), context2);
       }
       return contents;
     };
     exports.de_GetBucketCorsCommand = de_GetBucketCorsCommand;
-    var de_GetBucketCorsCommandError = async (output, context3) => {
+    var de_GetBucketCorsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42913,22 +42913,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketEncryptionCommand = async (output, context3) => {
+    var de_GetBucketEncryptionCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketEncryptionCommandError(output, context3);
+        return de_GetBucketEncryptionCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.ServerSideEncryptionConfiguration = de_ServerSideEncryptionConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.ServerSideEncryptionConfiguration = de_ServerSideEncryptionConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketEncryptionCommand = de_GetBucketEncryptionCommand;
-    var de_GetBucketEncryptionCommandError = async (output, context3) => {
+    var de_GetBucketEncryptionCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42938,22 +42938,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketIntelligentTieringConfigurationCommand = async (output, context3) => {
+    var de_GetBucketIntelligentTieringConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketIntelligentTieringConfigurationCommandError(output, context3);
+        return de_GetBucketIntelligentTieringConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.IntelligentTieringConfiguration = de_IntelligentTieringConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.IntelligentTieringConfiguration = de_IntelligentTieringConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketIntelligentTieringConfigurationCommand = de_GetBucketIntelligentTieringConfigurationCommand;
-    var de_GetBucketIntelligentTieringConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketIntelligentTieringConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42963,22 +42963,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketInventoryConfigurationCommand = async (output, context3) => {
+    var de_GetBucketInventoryConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketInventoryConfigurationCommandError(output, context3);
+        return de_GetBucketInventoryConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.InventoryConfiguration = de_InventoryConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.InventoryConfiguration = de_InventoryConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketInventoryConfigurationCommand = de_GetBucketInventoryConfigurationCommand;
-    var de_GetBucketInventoryConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketInventoryConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -42988,26 +42988,26 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketLifecycleConfigurationCommand = async (output, context3) => {
+    var de_GetBucketLifecycleConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketLifecycleConfigurationCommandError(output, context3);
+        return de_GetBucketLifecycleConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.Rule === "") {
         contents.Rules = [];
       } else if (data["Rule"] !== void 0) {
-        contents.Rules = de_LifecycleRules((0, smithy_client_1.getArrayIfSingleItem)(data["Rule"]), context3);
+        contents.Rules = de_LifecycleRules((0, smithy_client_1.getArrayIfSingleItem)(data["Rule"]), context2);
       }
       return contents;
     };
     exports.de_GetBucketLifecycleConfigurationCommand = de_GetBucketLifecycleConfigurationCommand;
-    var de_GetBucketLifecycleConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketLifecycleConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43017,24 +43017,24 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketLocationCommand = async (output, context3) => {
+    var de_GetBucketLocationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketLocationCommandError(output, context3);
+        return de_GetBucketLocationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["LocationConstraint"] !== void 0) {
         contents.LocationConstraint = (0, smithy_client_1.expectString)(data["LocationConstraint"]);
       }
       return contents;
     };
     exports.de_GetBucketLocationCommand = de_GetBucketLocationCommand;
-    var de_GetBucketLocationCommandError = async (output, context3) => {
+    var de_GetBucketLocationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43044,24 +43044,24 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketLoggingCommand = async (output, context3) => {
+    var de_GetBucketLoggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketLoggingCommandError(output, context3);
+        return de_GetBucketLoggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["LoggingEnabled"] !== void 0) {
-        contents.LoggingEnabled = de_LoggingEnabled(data["LoggingEnabled"], context3);
+        contents.LoggingEnabled = de_LoggingEnabled(data["LoggingEnabled"], context2);
       }
       return contents;
     };
     exports.de_GetBucketLoggingCommand = de_GetBucketLoggingCommand;
-    var de_GetBucketLoggingCommandError = async (output, context3) => {
+    var de_GetBucketLoggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43071,22 +43071,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketMetricsConfigurationCommand = async (output, context3) => {
+    var de_GetBucketMetricsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketMetricsConfigurationCommandError(output, context3);
+        return de_GetBucketMetricsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.MetricsConfiguration = de_MetricsConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.MetricsConfiguration = de_MetricsConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketMetricsConfigurationCommand = de_GetBucketMetricsConfigurationCommand;
-    var de_GetBucketMetricsConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketMetricsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43096,39 +43096,39 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketNotificationConfigurationCommand = async (output, context3) => {
+    var de_GetBucketNotificationConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketNotificationConfigurationCommandError(output, context3);
+        return de_GetBucketNotificationConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["EventBridgeConfiguration"] !== void 0) {
-        contents.EventBridgeConfiguration = de_EventBridgeConfiguration(data["EventBridgeConfiguration"], context3);
+        contents.EventBridgeConfiguration = de_EventBridgeConfiguration(data["EventBridgeConfiguration"], context2);
       }
       if (data.CloudFunctionConfiguration === "") {
         contents.LambdaFunctionConfigurations = [];
       } else if (data["CloudFunctionConfiguration"] !== void 0) {
-        contents.LambdaFunctionConfigurations = de_LambdaFunctionConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["CloudFunctionConfiguration"]), context3);
+        contents.LambdaFunctionConfigurations = de_LambdaFunctionConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["CloudFunctionConfiguration"]), context2);
       }
       if (data.QueueConfiguration === "") {
         contents.QueueConfigurations = [];
       } else if (data["QueueConfiguration"] !== void 0) {
-        contents.QueueConfigurations = de_QueueConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["QueueConfiguration"]), context3);
+        contents.QueueConfigurations = de_QueueConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["QueueConfiguration"]), context2);
       }
       if (data.TopicConfiguration === "") {
         contents.TopicConfigurations = [];
       } else if (data["TopicConfiguration"] !== void 0) {
-        contents.TopicConfigurations = de_TopicConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["TopicConfiguration"]), context3);
+        contents.TopicConfigurations = de_TopicConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["TopicConfiguration"]), context2);
       }
       return contents;
     };
     exports.de_GetBucketNotificationConfigurationCommand = de_GetBucketNotificationConfigurationCommand;
-    var de_GetBucketNotificationConfigurationCommandError = async (output, context3) => {
+    var de_GetBucketNotificationConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43138,22 +43138,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketOwnershipControlsCommand = async (output, context3) => {
+    var de_GetBucketOwnershipControlsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketOwnershipControlsCommandError(output, context3);
+        return de_GetBucketOwnershipControlsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.OwnershipControls = de_OwnershipControls(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.OwnershipControls = de_OwnershipControls(data, context2);
       return contents;
     };
     exports.de_GetBucketOwnershipControlsCommand = de_GetBucketOwnershipControlsCommand;
-    var de_GetBucketOwnershipControlsCommandError = async (output, context3) => {
+    var de_GetBucketOwnershipControlsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43163,22 +43163,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketPolicyCommand = async (output, context3) => {
+    var de_GetBucketPolicyCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketPolicyCommandError(output, context3);
+        return de_GetBucketPolicyCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = await collectBodyString(output.body, context3);
+      const data = await collectBodyString(output.body, context2);
       contents.Policy = (0, smithy_client_1.expectString)(data);
       return contents;
     };
     exports.de_GetBucketPolicyCommand = de_GetBucketPolicyCommand;
-    var de_GetBucketPolicyCommandError = async (output, context3) => {
+    var de_GetBucketPolicyCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43188,22 +43188,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketPolicyStatusCommand = async (output, context3) => {
+    var de_GetBucketPolicyStatusCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketPolicyStatusCommandError(output, context3);
+        return de_GetBucketPolicyStatusCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.PolicyStatus = de_PolicyStatus(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.PolicyStatus = de_PolicyStatus(data, context2);
       return contents;
     };
     exports.de_GetBucketPolicyStatusCommand = de_GetBucketPolicyStatusCommand;
-    var de_GetBucketPolicyStatusCommandError = async (output, context3) => {
+    var de_GetBucketPolicyStatusCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43213,22 +43213,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketReplicationCommand = async (output, context3) => {
+    var de_GetBucketReplicationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketReplicationCommandError(output, context3);
+        return de_GetBucketReplicationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.ReplicationConfiguration = de_ReplicationConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.ReplicationConfiguration = de_ReplicationConfiguration(data, context2);
       return contents;
     };
     exports.de_GetBucketReplicationCommand = de_GetBucketReplicationCommand;
-    var de_GetBucketReplicationCommandError = async (output, context3) => {
+    var de_GetBucketReplicationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43238,24 +43238,24 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketRequestPaymentCommand = async (output, context3) => {
+    var de_GetBucketRequestPaymentCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketRequestPaymentCommandError(output, context3);
+        return de_GetBucketRequestPaymentCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Payer"] !== void 0) {
         contents.Payer = (0, smithy_client_1.expectString)(data["Payer"]);
       }
       return contents;
     };
     exports.de_GetBucketRequestPaymentCommand = de_GetBucketRequestPaymentCommand;
-    var de_GetBucketRequestPaymentCommandError = async (output, context3) => {
+    var de_GetBucketRequestPaymentCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43265,26 +43265,26 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketTaggingCommand = async (output, context3) => {
+    var de_GetBucketTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketTaggingCommandError(output, context3);
+        return de_GetBucketTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.TagSet === "") {
         contents.TagSet = [];
       } else if (data["TagSet"] !== void 0 && data["TagSet"]["Tag"] !== void 0) {
-        contents.TagSet = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(data["TagSet"]["Tag"]), context3);
+        contents.TagSet = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(data["TagSet"]["Tag"]), context2);
       }
       return contents;
     };
     exports.de_GetBucketTaggingCommand = de_GetBucketTaggingCommand;
-    var de_GetBucketTaggingCommandError = async (output, context3) => {
+    var de_GetBucketTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43294,14 +43294,14 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketVersioningCommand = async (output, context3) => {
+    var de_GetBucketVersioningCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketVersioningCommandError(output, context3);
+        return de_GetBucketVersioningCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["MfaDelete"] !== void 0) {
         contents.MFADelete = (0, smithy_client_1.expectString)(data["MfaDelete"]);
       }
@@ -43311,10 +43311,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_GetBucketVersioningCommand = de_GetBucketVersioningCommand;
-    var de_GetBucketVersioningCommandError = async (output, context3) => {
+    var de_GetBucketVersioningCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43324,35 +43324,35 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetBucketWebsiteCommand = async (output, context3) => {
+    var de_GetBucketWebsiteCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetBucketWebsiteCommandError(output, context3);
+        return de_GetBucketWebsiteCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["ErrorDocument"] !== void 0) {
-        contents.ErrorDocument = de_ErrorDocument(data["ErrorDocument"], context3);
+        contents.ErrorDocument = de_ErrorDocument(data["ErrorDocument"], context2);
       }
       if (data["IndexDocument"] !== void 0) {
-        contents.IndexDocument = de_IndexDocument(data["IndexDocument"], context3);
+        contents.IndexDocument = de_IndexDocument(data["IndexDocument"], context2);
       }
       if (data["RedirectAllRequestsTo"] !== void 0) {
-        contents.RedirectAllRequestsTo = de_RedirectAllRequestsTo(data["RedirectAllRequestsTo"], context3);
+        contents.RedirectAllRequestsTo = de_RedirectAllRequestsTo(data["RedirectAllRequestsTo"], context2);
       }
       if (data.RoutingRules === "") {
         contents.RoutingRules = [];
       } else if (data["RoutingRules"] !== void 0 && data["RoutingRules"]["RoutingRule"] !== void 0) {
-        contents.RoutingRules = de_RoutingRules((0, smithy_client_1.getArrayIfSingleItem)(data["RoutingRules"]["RoutingRule"]), context3);
+        contents.RoutingRules = de_RoutingRules((0, smithy_client_1.getArrayIfSingleItem)(data["RoutingRules"]["RoutingRule"]), context2);
       }
       return contents;
     };
     exports.de_GetBucketWebsiteCommand = de_GetBucketWebsiteCommand;
-    var de_GetBucketWebsiteCommandError = async (output, context3) => {
+    var de_GetBucketWebsiteCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43362,9 +43362,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetObjectCommand = async (output, context3) => {
+    var de_GetObjectCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectCommandError(output, context3);
+        return de_GetObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -43438,24 +43438,24 @@ var require_Aws_restXml = __commonJS({
         ]
       });
       const data = output.body;
-      context3.sdkStreamMixin(data);
+      context2.sdkStreamMixin(data);
       contents.Body = data;
       return contents;
     };
     exports.de_GetObjectCommand = de_GetObjectCommand;
-    var de_GetObjectCommandError = async (output, context3) => {
+    var de_GetObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidObjectState":
         case "com.amazonaws.s3#InvalidObjectState":
-          throw await de_InvalidObjectStateRes(parsedOutput, context3);
+          throw await de_InvalidObjectStateRes(parsedOutput, context2);
         case "NoSuchKey":
         case "com.amazonaws.s3#NoSuchKey":
-          throw await de_NoSuchKeyRes(parsedOutput, context3);
+          throw await de_NoSuchKeyRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -43465,36 +43465,36 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_GetObjectAclCommand = async (output, context3) => {
+    var de_GetObjectAclCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectAclCommandError(output, context3);
+        return de_GetObjectAclCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.AccessControlList === "") {
         contents.Grants = [];
       } else if (data["AccessControlList"] !== void 0 && data["AccessControlList"]["Grant"] !== void 0) {
-        contents.Grants = de_Grants((0, smithy_client_1.getArrayIfSingleItem)(data["AccessControlList"]["Grant"]), context3);
+        contents.Grants = de_Grants((0, smithy_client_1.getArrayIfSingleItem)(data["AccessControlList"]["Grant"]), context2);
       }
       if (data["Owner"] !== void 0) {
-        contents.Owner = de_Owner(data["Owner"], context3);
+        contents.Owner = de_Owner(data["Owner"], context2);
       }
       return contents;
     };
     exports.de_GetObjectAclCommand = de_GetObjectAclCommand;
-    var de_GetObjectAclCommandError = async (output, context3) => {
+    var de_GetObjectAclCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchKey":
         case "com.amazonaws.s3#NoSuchKey":
-          throw await de_NoSuchKeyRes(parsedOutput, context3);
+          throw await de_NoSuchKeyRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -43504,9 +43504,9 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_GetObjectAttributesCommand = async (output, context3) => {
+    var de_GetObjectAttributesCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectAttributesCommandError(output, context3);
+        return de_GetObjectAttributesCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -43521,15 +43521,15 @@ var require_Aws_restXml = __commonJS({
         VersionId: [, output.headers["x-amz-version-id"]],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Checksum"] !== void 0) {
-        contents.Checksum = de_Checksum(data["Checksum"], context3);
+        contents.Checksum = de_Checksum(data["Checksum"], context2);
       }
       if (data["ETag"] !== void 0) {
         contents.ETag = (0, smithy_client_1.expectString)(data["ETag"]);
       }
       if (data["ObjectParts"] !== void 0) {
-        contents.ObjectParts = de_GetObjectAttributesParts(data["ObjectParts"], context3);
+        contents.ObjectParts = de_GetObjectAttributesParts(data["ObjectParts"], context2);
       }
       if (data["ObjectSize"] !== void 0) {
         contents.ObjectSize = (0, smithy_client_1.strictParseLong)(data["ObjectSize"]);
@@ -43540,16 +43540,16 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_GetObjectAttributesCommand = de_GetObjectAttributesCommand;
-    var de_GetObjectAttributesCommandError = async (output, context3) => {
+    var de_GetObjectAttributesCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchKey":
         case "com.amazonaws.s3#NoSuchKey":
-          throw await de_NoSuchKeyRes(parsedOutput, context3);
+          throw await de_NoSuchKeyRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -43559,22 +43559,22 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_GetObjectLegalHoldCommand = async (output, context3) => {
+    var de_GetObjectLegalHoldCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectLegalHoldCommandError(output, context3);
+        return de_GetObjectLegalHoldCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.LegalHold = de_ObjectLockLegalHold(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.LegalHold = de_ObjectLockLegalHold(data, context2);
       return contents;
     };
     exports.de_GetObjectLegalHoldCommand = de_GetObjectLegalHoldCommand;
-    var de_GetObjectLegalHoldCommandError = async (output, context3) => {
+    var de_GetObjectLegalHoldCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43584,22 +43584,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetObjectLockConfigurationCommand = async (output, context3) => {
+    var de_GetObjectLockConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectLockConfigurationCommandError(output, context3);
+        return de_GetObjectLockConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.ObjectLockConfiguration = de_ObjectLockConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.ObjectLockConfiguration = de_ObjectLockConfiguration(data, context2);
       return contents;
     };
     exports.de_GetObjectLockConfigurationCommand = de_GetObjectLockConfigurationCommand;
-    var de_GetObjectLockConfigurationCommandError = async (output, context3) => {
+    var de_GetObjectLockConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43609,22 +43609,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetObjectRetentionCommand = async (output, context3) => {
+    var de_GetObjectRetentionCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectRetentionCommandError(output, context3);
+        return de_GetObjectRetentionCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.Retention = de_ObjectLockRetention(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.Retention = de_ObjectLockRetention(data, context2);
       return contents;
     };
     exports.de_GetObjectRetentionCommand = de_GetObjectRetentionCommand;
-    var de_GetObjectRetentionCommandError = async (output, context3) => {
+    var de_GetObjectRetentionCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43634,27 +43634,27 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetObjectTaggingCommand = async (output, context3) => {
+    var de_GetObjectTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectTaggingCommandError(output, context3);
+        return de_GetObjectTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         VersionId: [, output.headers["x-amz-version-id"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.TagSet === "") {
         contents.TagSet = [];
       } else if (data["TagSet"] !== void 0 && data["TagSet"]["Tag"] !== void 0) {
-        contents.TagSet = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(data["TagSet"]["Tag"]), context3);
+        contents.TagSet = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(data["TagSet"]["Tag"]), context2);
       }
       return contents;
     };
     exports.de_GetObjectTaggingCommand = de_GetObjectTaggingCommand;
-    var de_GetObjectTaggingCommandError = async (output, context3) => {
+    var de_GetObjectTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43664,24 +43664,24 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetObjectTorrentCommand = async (output, context3) => {
+    var de_GetObjectTorrentCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetObjectTorrentCommandError(output, context3);
+        return de_GetObjectTorrentCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
       const data = output.body;
-      context3.sdkStreamMixin(data);
+      context2.sdkStreamMixin(data);
       contents.Body = data;
       return contents;
     };
     exports.de_GetObjectTorrentCommand = de_GetObjectTorrentCommand;
-    var de_GetObjectTorrentCommandError = async (output, context3) => {
+    var de_GetObjectTorrentCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43691,22 +43691,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_GetPublicAccessBlockCommand = async (output, context3) => {
+    var de_GetPublicAccessBlockCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_GetPublicAccessBlockCommandError(output, context3);
+        return de_GetPublicAccessBlockCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.PublicAccessBlockConfiguration = de_PublicAccessBlockConfiguration(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.PublicAccessBlockConfiguration = de_PublicAccessBlockConfiguration(data, context2);
       return contents;
     };
     exports.de_GetPublicAccessBlockCommand = de_GetPublicAccessBlockCommand;
-    var de_GetPublicAccessBlockCommandError = async (output, context3) => {
+    var de_GetPublicAccessBlockCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43716,27 +43716,27 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_HeadBucketCommand = async (output, context3) => {
+    var de_HeadBucketCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_HeadBucketCommandError(output, context3);
+        return de_HeadBucketCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_HeadBucketCommand = de_HeadBucketCommand;
-    var de_HeadBucketCommandError = async (output, context3) => {
+    var de_HeadBucketCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NotFound":
         case "com.amazonaws.s3#NotFound":
-          throw await de_NotFoundRes(parsedOutput, context3);
+          throw await de_NotFoundRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -43746,9 +43746,9 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_HeadObjectCommand = async (output, context3) => {
+    var de_HeadObjectCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_HeadObjectCommandError(output, context3);
+        return de_HeadObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -43817,20 +43817,20 @@ var require_Aws_restXml = __commonJS({
           }, {})
         ]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_HeadObjectCommand = de_HeadObjectCommand;
-    var de_HeadObjectCommandError = async (output, context3) => {
+    var de_HeadObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NotFound":
         case "com.amazonaws.s3#NotFound":
-          throw await de_NotFoundRes(parsedOutput, context3);
+          throw await de_NotFoundRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -43840,18 +43840,18 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_ListBucketAnalyticsConfigurationsCommand = async (output, context3) => {
+    var de_ListBucketAnalyticsConfigurationsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListBucketAnalyticsConfigurationsCommandError(output, context3);
+        return de_ListBucketAnalyticsConfigurationsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.AnalyticsConfiguration === "") {
         contents.AnalyticsConfigurationList = [];
       } else if (data["AnalyticsConfiguration"] !== void 0) {
-        contents.AnalyticsConfigurationList = de_AnalyticsConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["AnalyticsConfiguration"]), context3);
+        contents.AnalyticsConfigurationList = de_AnalyticsConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["AnalyticsConfiguration"]), context2);
       }
       if (data["ContinuationToken"] !== void 0) {
         contents.ContinuationToken = (0, smithy_client_1.expectString)(data["ContinuationToken"]);
@@ -43865,10 +43865,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListBucketAnalyticsConfigurationsCommand = de_ListBucketAnalyticsConfigurationsCommand;
-    var de_ListBucketAnalyticsConfigurationsCommandError = async (output, context3) => {
+    var de_ListBucketAnalyticsConfigurationsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43878,21 +43878,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListBucketIntelligentTieringConfigurationsCommand = async (output, context3) => {
+    var de_ListBucketIntelligentTieringConfigurationsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListBucketIntelligentTieringConfigurationsCommandError(output, context3);
+        return de_ListBucketIntelligentTieringConfigurationsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["ContinuationToken"] !== void 0) {
         contents.ContinuationToken = (0, smithy_client_1.expectString)(data["ContinuationToken"]);
       }
       if (data.IntelligentTieringConfiguration === "") {
         contents.IntelligentTieringConfigurationList = [];
       } else if (data["IntelligentTieringConfiguration"] !== void 0) {
-        contents.IntelligentTieringConfigurationList = de_IntelligentTieringConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["IntelligentTieringConfiguration"]), context3);
+        contents.IntelligentTieringConfigurationList = de_IntelligentTieringConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["IntelligentTieringConfiguration"]), context2);
       }
       if (data["IsTruncated"] !== void 0) {
         contents.IsTruncated = (0, smithy_client_1.parseBoolean)(data["IsTruncated"]);
@@ -43903,10 +43903,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListBucketIntelligentTieringConfigurationsCommand = de_ListBucketIntelligentTieringConfigurationsCommand;
-    var de_ListBucketIntelligentTieringConfigurationsCommandError = async (output, context3) => {
+    var de_ListBucketIntelligentTieringConfigurationsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43916,21 +43916,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListBucketInventoryConfigurationsCommand = async (output, context3) => {
+    var de_ListBucketInventoryConfigurationsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListBucketInventoryConfigurationsCommandError(output, context3);
+        return de_ListBucketInventoryConfigurationsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["ContinuationToken"] !== void 0) {
         contents.ContinuationToken = (0, smithy_client_1.expectString)(data["ContinuationToken"]);
       }
       if (data.InventoryConfiguration === "") {
         contents.InventoryConfigurationList = [];
       } else if (data["InventoryConfiguration"] !== void 0) {
-        contents.InventoryConfigurationList = de_InventoryConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["InventoryConfiguration"]), context3);
+        contents.InventoryConfigurationList = de_InventoryConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["InventoryConfiguration"]), context2);
       }
       if (data["IsTruncated"] !== void 0) {
         contents.IsTruncated = (0, smithy_client_1.parseBoolean)(data["IsTruncated"]);
@@ -43941,10 +43941,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListBucketInventoryConfigurationsCommand = de_ListBucketInventoryConfigurationsCommand;
-    var de_ListBucketInventoryConfigurationsCommandError = async (output, context3) => {
+    var de_ListBucketInventoryConfigurationsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43954,14 +43954,14 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListBucketMetricsConfigurationsCommand = async (output, context3) => {
+    var de_ListBucketMetricsConfigurationsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListBucketMetricsConfigurationsCommandError(output, context3);
+        return de_ListBucketMetricsConfigurationsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["ContinuationToken"] !== void 0) {
         contents.ContinuationToken = (0, smithy_client_1.expectString)(data["ContinuationToken"]);
       }
@@ -43971,7 +43971,7 @@ var require_Aws_restXml = __commonJS({
       if (data.MetricsConfiguration === "") {
         contents.MetricsConfigurationList = [];
       } else if (data["MetricsConfiguration"] !== void 0) {
-        contents.MetricsConfigurationList = de_MetricsConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["MetricsConfiguration"]), context3);
+        contents.MetricsConfigurationList = de_MetricsConfigurationList((0, smithy_client_1.getArrayIfSingleItem)(data["MetricsConfiguration"]), context2);
       }
       if (data["NextContinuationToken"] !== void 0) {
         contents.NextContinuationToken = (0, smithy_client_1.expectString)(data["NextContinuationToken"]);
@@ -43979,10 +43979,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListBucketMetricsConfigurationsCommand = de_ListBucketMetricsConfigurationsCommand;
-    var de_ListBucketMetricsConfigurationsCommandError = async (output, context3) => {
+    var de_ListBucketMetricsConfigurationsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -43992,29 +43992,29 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListBucketsCommand = async (output, context3) => {
+    var de_ListBucketsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListBucketsCommandError(output, context3);
+        return de_ListBucketsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.Buckets === "") {
         contents.Buckets = [];
       } else if (data["Buckets"] !== void 0 && data["Buckets"]["Bucket"] !== void 0) {
-        contents.Buckets = de_Buckets((0, smithy_client_1.getArrayIfSingleItem)(data["Buckets"]["Bucket"]), context3);
+        contents.Buckets = de_Buckets((0, smithy_client_1.getArrayIfSingleItem)(data["Buckets"]["Bucket"]), context2);
       }
       if (data["Owner"] !== void 0) {
-        contents.Owner = de_Owner(data["Owner"], context3);
+        contents.Owner = de_Owner(data["Owner"], context2);
       }
       return contents;
     };
     exports.de_ListBucketsCommand = de_ListBucketsCommand;
-    var de_ListBucketsCommandError = async (output, context3) => {
+    var de_ListBucketsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44024,22 +44024,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListMultipartUploadsCommand = async (output, context3) => {
+    var de_ListMultipartUploadsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListMultipartUploadsCommandError(output, context3);
+        return de_ListMultipartUploadsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Bucket"] !== void 0) {
         contents.Bucket = (0, smithy_client_1.expectString)(data["Bucket"]);
       }
       if (data.CommonPrefixes === "") {
         contents.CommonPrefixes = [];
       } else if (data["CommonPrefixes"] !== void 0) {
-        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context3);
+        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context2);
       }
       if (data["Delimiter"] !== void 0) {
         contents.Delimiter = (0, smithy_client_1.expectString)(data["Delimiter"]);
@@ -44071,15 +44071,15 @@ var require_Aws_restXml = __commonJS({
       if (data.Upload === "") {
         contents.Uploads = [];
       } else if (data["Upload"] !== void 0) {
-        contents.Uploads = de_MultipartUploadList((0, smithy_client_1.getArrayIfSingleItem)(data["Upload"]), context3);
+        contents.Uploads = de_MultipartUploadList((0, smithy_client_1.getArrayIfSingleItem)(data["Upload"]), context2);
       }
       return contents;
     };
     exports.de_ListMultipartUploadsCommand = de_ListMultipartUploadsCommand;
-    var de_ListMultipartUploadsCommandError = async (output, context3) => {
+    var de_ListMultipartUploadsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44089,24 +44089,24 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListObjectsCommand = async (output, context3) => {
+    var de_ListObjectsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListObjectsCommandError(output, context3);
+        return de_ListObjectsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.CommonPrefixes === "") {
         contents.CommonPrefixes = [];
       } else if (data["CommonPrefixes"] !== void 0) {
-        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context3);
+        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context2);
       }
       if (data.Contents === "") {
         contents.Contents = [];
       } else if (data["Contents"] !== void 0) {
-        contents.Contents = de_ObjectList((0, smithy_client_1.getArrayIfSingleItem)(data["Contents"]), context3);
+        contents.Contents = de_ObjectList((0, smithy_client_1.getArrayIfSingleItem)(data["Contents"]), context2);
       }
       if (data["Delimiter"] !== void 0) {
         contents.Delimiter = (0, smithy_client_1.expectString)(data["Delimiter"]);
@@ -44135,16 +44135,16 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListObjectsCommand = de_ListObjectsCommand;
-    var de_ListObjectsCommandError = async (output, context3) => {
+    var de_ListObjectsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchBucket":
         case "com.amazonaws.s3#NoSuchBucket":
-          throw await de_NoSuchBucketRes(parsedOutput, context3);
+          throw await de_NoSuchBucketRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -44154,24 +44154,24 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_ListObjectsV2Command = async (output, context3) => {
+    var de_ListObjectsV2Command = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListObjectsV2CommandError(output, context3);
+        return de_ListObjectsV2CommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.CommonPrefixes === "") {
         contents.CommonPrefixes = [];
       } else if (data["CommonPrefixes"] !== void 0) {
-        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context3);
+        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context2);
       }
       if (data.Contents === "") {
         contents.Contents = [];
       } else if (data["Contents"] !== void 0) {
-        contents.Contents = de_ObjectList((0, smithy_client_1.getArrayIfSingleItem)(data["Contents"]), context3);
+        contents.Contents = de_ObjectList((0, smithy_client_1.getArrayIfSingleItem)(data["Contents"]), context2);
       }
       if (data["ContinuationToken"] !== void 0) {
         contents.ContinuationToken = (0, smithy_client_1.expectString)(data["ContinuationToken"]);
@@ -44206,16 +44206,16 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListObjectsV2Command = de_ListObjectsV2Command;
-    var de_ListObjectsV2CommandError = async (output, context3) => {
+    var de_ListObjectsV2CommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchBucket":
         case "com.amazonaws.s3#NoSuchBucket":
-          throw await de_NoSuchBucketRes(parsedOutput, context3);
+          throw await de_NoSuchBucketRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -44225,24 +44225,24 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_ListObjectVersionsCommand = async (output, context3) => {
+    var de_ListObjectVersionsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListObjectVersionsCommandError(output, context3);
+        return de_ListObjectVersionsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data.CommonPrefixes === "") {
         contents.CommonPrefixes = [];
       } else if (data["CommonPrefixes"] !== void 0) {
-        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context3);
+        contents.CommonPrefixes = de_CommonPrefixList((0, smithy_client_1.getArrayIfSingleItem)(data["CommonPrefixes"]), context2);
       }
       if (data.DeleteMarker === "") {
         contents.DeleteMarkers = [];
       } else if (data["DeleteMarker"] !== void 0) {
-        contents.DeleteMarkers = de_DeleteMarkers((0, smithy_client_1.getArrayIfSingleItem)(data["DeleteMarker"]), context3);
+        contents.DeleteMarkers = de_DeleteMarkers((0, smithy_client_1.getArrayIfSingleItem)(data["DeleteMarker"]), context2);
       }
       if (data["Delimiter"] !== void 0) {
         contents.Delimiter = (0, smithy_client_1.expectString)(data["Delimiter"]);
@@ -44277,15 +44277,15 @@ var require_Aws_restXml = __commonJS({
       if (data.Version === "") {
         contents.Versions = [];
       } else if (data["Version"] !== void 0) {
-        contents.Versions = de_ObjectVersionList((0, smithy_client_1.getArrayIfSingleItem)(data["Version"]), context3);
+        contents.Versions = de_ObjectVersionList((0, smithy_client_1.getArrayIfSingleItem)(data["Version"]), context2);
       }
       return contents;
     };
     exports.de_ListObjectVersionsCommand = de_ListObjectVersionsCommand;
-    var de_ListObjectVersionsCommandError = async (output, context3) => {
+    var de_ListObjectVersionsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44295,9 +44295,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_ListPartsCommand = async (output, context3) => {
+    var de_ListPartsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_ListPartsCommandError(output, context3);
+        return de_ListPartsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -44308,7 +44308,7 @@ var require_Aws_restXml = __commonJS({
         AbortRuleId: [, output.headers["x-amz-abort-rule-id"]],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context3)), "body");
+      const data = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.expectObject)(await parseBody(output.body, context2)), "body");
       if (data["Bucket"] !== void 0) {
         contents.Bucket = (0, smithy_client_1.expectString)(data["Bucket"]);
       }
@@ -44316,7 +44316,7 @@ var require_Aws_restXml = __commonJS({
         contents.ChecksumAlgorithm = (0, smithy_client_1.expectString)(data["ChecksumAlgorithm"]);
       }
       if (data["Initiator"] !== void 0) {
-        contents.Initiator = de_Initiator(data["Initiator"], context3);
+        contents.Initiator = de_Initiator(data["Initiator"], context2);
       }
       if (data["IsTruncated"] !== void 0) {
         contents.IsTruncated = (0, smithy_client_1.parseBoolean)(data["IsTruncated"]);
@@ -44331,7 +44331,7 @@ var require_Aws_restXml = __commonJS({
         contents.NextPartNumberMarker = (0, smithy_client_1.expectString)(data["NextPartNumberMarker"]);
       }
       if (data["Owner"] !== void 0) {
-        contents.Owner = de_Owner(data["Owner"], context3);
+        contents.Owner = de_Owner(data["Owner"], context2);
       }
       if (data["PartNumberMarker"] !== void 0) {
         contents.PartNumberMarker = (0, smithy_client_1.expectString)(data["PartNumberMarker"]);
@@ -44339,7 +44339,7 @@ var require_Aws_restXml = __commonJS({
       if (data.Part === "") {
         contents.Parts = [];
       } else if (data["Part"] !== void 0) {
-        contents.Parts = de_Parts((0, smithy_client_1.getArrayIfSingleItem)(data["Part"]), context3);
+        contents.Parts = de_Parts((0, smithy_client_1.getArrayIfSingleItem)(data["Part"]), context2);
       }
       if (data["StorageClass"] !== void 0) {
         contents.StorageClass = (0, smithy_client_1.expectString)(data["StorageClass"]);
@@ -44350,10 +44350,10 @@ var require_Aws_restXml = __commonJS({
       return contents;
     };
     exports.de_ListPartsCommand = de_ListPartsCommand;
-    var de_ListPartsCommandError = async (output, context3) => {
+    var de_ListPartsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44363,21 +44363,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketAccelerateConfigurationCommand = async (output, context3) => {
+    var de_PutBucketAccelerateConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketAccelerateConfigurationCommandError(output, context3);
+        return de_PutBucketAccelerateConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketAccelerateConfigurationCommand = de_PutBucketAccelerateConfigurationCommand;
-    var de_PutBucketAccelerateConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketAccelerateConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44387,21 +44387,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketAclCommand = async (output, context3) => {
+    var de_PutBucketAclCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketAclCommandError(output, context3);
+        return de_PutBucketAclCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketAclCommand = de_PutBucketAclCommand;
-    var de_PutBucketAclCommandError = async (output, context3) => {
+    var de_PutBucketAclCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44411,21 +44411,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketAnalyticsConfigurationCommand = async (output, context3) => {
+    var de_PutBucketAnalyticsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketAnalyticsConfigurationCommandError(output, context3);
+        return de_PutBucketAnalyticsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketAnalyticsConfigurationCommand = de_PutBucketAnalyticsConfigurationCommand;
-    var de_PutBucketAnalyticsConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketAnalyticsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44435,21 +44435,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketCorsCommand = async (output, context3) => {
+    var de_PutBucketCorsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketCorsCommandError(output, context3);
+        return de_PutBucketCorsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketCorsCommand = de_PutBucketCorsCommand;
-    var de_PutBucketCorsCommandError = async (output, context3) => {
+    var de_PutBucketCorsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44459,21 +44459,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketEncryptionCommand = async (output, context3) => {
+    var de_PutBucketEncryptionCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketEncryptionCommandError(output, context3);
+        return de_PutBucketEncryptionCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketEncryptionCommand = de_PutBucketEncryptionCommand;
-    var de_PutBucketEncryptionCommandError = async (output, context3) => {
+    var de_PutBucketEncryptionCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44483,21 +44483,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketIntelligentTieringConfigurationCommand = async (output, context3) => {
+    var de_PutBucketIntelligentTieringConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketIntelligentTieringConfigurationCommandError(output, context3);
+        return de_PutBucketIntelligentTieringConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketIntelligentTieringConfigurationCommand = de_PutBucketIntelligentTieringConfigurationCommand;
-    var de_PutBucketIntelligentTieringConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketIntelligentTieringConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44507,21 +44507,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketInventoryConfigurationCommand = async (output, context3) => {
+    var de_PutBucketInventoryConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketInventoryConfigurationCommandError(output, context3);
+        return de_PutBucketInventoryConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketInventoryConfigurationCommand = de_PutBucketInventoryConfigurationCommand;
-    var de_PutBucketInventoryConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketInventoryConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44531,21 +44531,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketLifecycleConfigurationCommand = async (output, context3) => {
+    var de_PutBucketLifecycleConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketLifecycleConfigurationCommandError(output, context3);
+        return de_PutBucketLifecycleConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketLifecycleConfigurationCommand = de_PutBucketLifecycleConfigurationCommand;
-    var de_PutBucketLifecycleConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketLifecycleConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44555,21 +44555,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketLoggingCommand = async (output, context3) => {
+    var de_PutBucketLoggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketLoggingCommandError(output, context3);
+        return de_PutBucketLoggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketLoggingCommand = de_PutBucketLoggingCommand;
-    var de_PutBucketLoggingCommandError = async (output, context3) => {
+    var de_PutBucketLoggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44579,21 +44579,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketMetricsConfigurationCommand = async (output, context3) => {
+    var de_PutBucketMetricsConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketMetricsConfigurationCommandError(output, context3);
+        return de_PutBucketMetricsConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketMetricsConfigurationCommand = de_PutBucketMetricsConfigurationCommand;
-    var de_PutBucketMetricsConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketMetricsConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44603,21 +44603,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketNotificationConfigurationCommand = async (output, context3) => {
+    var de_PutBucketNotificationConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketNotificationConfigurationCommandError(output, context3);
+        return de_PutBucketNotificationConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketNotificationConfigurationCommand = de_PutBucketNotificationConfigurationCommand;
-    var de_PutBucketNotificationConfigurationCommandError = async (output, context3) => {
+    var de_PutBucketNotificationConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44627,21 +44627,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketOwnershipControlsCommand = async (output, context3) => {
+    var de_PutBucketOwnershipControlsCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketOwnershipControlsCommandError(output, context3);
+        return de_PutBucketOwnershipControlsCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketOwnershipControlsCommand = de_PutBucketOwnershipControlsCommand;
-    var de_PutBucketOwnershipControlsCommandError = async (output, context3) => {
+    var de_PutBucketOwnershipControlsCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44651,21 +44651,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketPolicyCommand = async (output, context3) => {
+    var de_PutBucketPolicyCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketPolicyCommandError(output, context3);
+        return de_PutBucketPolicyCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketPolicyCommand = de_PutBucketPolicyCommand;
-    var de_PutBucketPolicyCommandError = async (output, context3) => {
+    var de_PutBucketPolicyCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44675,21 +44675,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketReplicationCommand = async (output, context3) => {
+    var de_PutBucketReplicationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketReplicationCommandError(output, context3);
+        return de_PutBucketReplicationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketReplicationCommand = de_PutBucketReplicationCommand;
-    var de_PutBucketReplicationCommandError = async (output, context3) => {
+    var de_PutBucketReplicationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44699,21 +44699,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketRequestPaymentCommand = async (output, context3) => {
+    var de_PutBucketRequestPaymentCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketRequestPaymentCommandError(output, context3);
+        return de_PutBucketRequestPaymentCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketRequestPaymentCommand = de_PutBucketRequestPaymentCommand;
-    var de_PutBucketRequestPaymentCommandError = async (output, context3) => {
+    var de_PutBucketRequestPaymentCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44723,21 +44723,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketTaggingCommand = async (output, context3) => {
+    var de_PutBucketTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketTaggingCommandError(output, context3);
+        return de_PutBucketTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketTaggingCommand = de_PutBucketTaggingCommand;
-    var de_PutBucketTaggingCommandError = async (output, context3) => {
+    var de_PutBucketTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44747,21 +44747,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketVersioningCommand = async (output, context3) => {
+    var de_PutBucketVersioningCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketVersioningCommandError(output, context3);
+        return de_PutBucketVersioningCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketVersioningCommand = de_PutBucketVersioningCommand;
-    var de_PutBucketVersioningCommandError = async (output, context3) => {
+    var de_PutBucketVersioningCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44771,21 +44771,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutBucketWebsiteCommand = async (output, context3) => {
+    var de_PutBucketWebsiteCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutBucketWebsiteCommandError(output, context3);
+        return de_PutBucketWebsiteCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutBucketWebsiteCommand = de_PutBucketWebsiteCommand;
-    var de_PutBucketWebsiteCommandError = async (output, context3) => {
+    var de_PutBucketWebsiteCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44795,9 +44795,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutObjectCommand = async (output, context3) => {
+    var de_PutObjectCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectCommandError(output, context3);
+        return de_PutObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -44819,14 +44819,14 @@ var require_Aws_restXml = __commonJS({
         ],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectCommand = de_PutObjectCommand;
-    var de_PutObjectCommandError = async (output, context3) => {
+    var de_PutObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44836,28 +44836,28 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutObjectAclCommand = async (output, context3) => {
+    var de_PutObjectAclCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectAclCommandError(output, context3);
+        return de_PutObjectAclCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectAclCommand = de_PutObjectAclCommand;
-    var de_PutObjectAclCommandError = async (output, context3) => {
+    var de_PutObjectAclCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchKey":
         case "com.amazonaws.s3#NoSuchKey":
-          throw await de_NoSuchKeyRes(parsedOutput, context3);
+          throw await de_NoSuchKeyRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -44867,22 +44867,22 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_PutObjectLegalHoldCommand = async (output, context3) => {
+    var de_PutObjectLegalHoldCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectLegalHoldCommandError(output, context3);
+        return de_PutObjectLegalHoldCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectLegalHoldCommand = de_PutObjectLegalHoldCommand;
-    var de_PutObjectLegalHoldCommandError = async (output, context3) => {
+    var de_PutObjectLegalHoldCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44892,22 +44892,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutObjectLockConfigurationCommand = async (output, context3) => {
+    var de_PutObjectLockConfigurationCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectLockConfigurationCommandError(output, context3);
+        return de_PutObjectLockConfigurationCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectLockConfigurationCommand = de_PutObjectLockConfigurationCommand;
-    var de_PutObjectLockConfigurationCommandError = async (output, context3) => {
+    var de_PutObjectLockConfigurationCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44917,22 +44917,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutObjectRetentionCommand = async (output, context3) => {
+    var de_PutObjectRetentionCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectRetentionCommandError(output, context3);
+        return de_PutObjectRetentionCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectRetentionCommand = de_PutObjectRetentionCommand;
-    var de_PutObjectRetentionCommandError = async (output, context3) => {
+    var de_PutObjectRetentionCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44942,22 +44942,22 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutObjectTaggingCommand = async (output, context3) => {
+    var de_PutObjectTaggingCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutObjectTaggingCommandError(output, context3);
+        return de_PutObjectTaggingCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         VersionId: [, output.headers["x-amz-version-id"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutObjectTaggingCommand = de_PutObjectTaggingCommand;
-    var de_PutObjectTaggingCommandError = async (output, context3) => {
+    var de_PutObjectTaggingCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44967,21 +44967,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_PutPublicAccessBlockCommand = async (output, context3) => {
+    var de_PutPublicAccessBlockCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_PutPublicAccessBlockCommandError(output, context3);
+        return de_PutPublicAccessBlockCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_PutPublicAccessBlockCommand = de_PutPublicAccessBlockCommand;
-    var de_PutPublicAccessBlockCommandError = async (output, context3) => {
+    var de_PutPublicAccessBlockCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -44991,29 +44991,29 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_RestoreObjectCommand = async (output, context3) => {
+    var de_RestoreObjectCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_RestoreObjectCommandError(output, context3);
+        return de_RestoreObjectCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
         RequestCharged: [, output.headers["x-amz-request-charged"]],
         RestoreOutputPath: [, output.headers["x-amz-restore-output-path"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_RestoreObjectCommand = de_RestoreObjectCommand;
-    var de_RestoreObjectCommandError = async (output, context3) => {
+    var de_RestoreObjectCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ObjectAlreadyInActiveTierError":
         case "com.amazonaws.s3#ObjectAlreadyInActiveTierError":
-          throw await de_ObjectAlreadyInActiveTierErrorRes(parsedOutput, context3);
+          throw await de_ObjectAlreadyInActiveTierErrorRes(parsedOutput, context2);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -45023,22 +45023,22 @@ var require_Aws_restXml = __commonJS({
           });
       }
     };
-    var de_SelectObjectContentCommand = async (output, context3) => {
+    var de_SelectObjectContentCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_SelectObjectContentCommandError(output, context3);
+        return de_SelectObjectContentCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
       const data = output.body;
-      contents.Payload = de_SelectObjectContentEventStream(data, context3);
+      contents.Payload = de_SelectObjectContentEventStream(data, context2);
       return contents;
     };
     exports.de_SelectObjectContentCommand = de_SelectObjectContentCommand;
-    var de_SelectObjectContentCommandError = async (output, context3) => {
+    var de_SelectObjectContentCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -45048,9 +45048,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_UploadPartCommand = async (output, context3) => {
+    var de_UploadPartCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_UploadPartCommandError(output, context3);
+        return de_UploadPartCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -45069,14 +45069,14 @@ var require_Aws_restXml = __commonJS({
         ],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_UploadPartCommand = de_UploadPartCommand;
-    var de_UploadPartCommandError = async (output, context3) => {
+    var de_UploadPartCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -45086,9 +45086,9 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_UploadPartCopyCommand = async (output, context3) => {
+    var de_UploadPartCopyCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_UploadPartCopyCommandError(output, context3);
+        return de_UploadPartCopyCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output),
@@ -45103,15 +45103,15 @@ var require_Aws_restXml = __commonJS({
         ],
         RequestCharged: [, output.headers["x-amz-request-charged"]]
       });
-      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context3));
-      contents.CopyPartResult = de_CopyPartResult(data, context3);
+      const data = (0, smithy_client_1.expectObject)(await parseBody(output.body, context2));
+      contents.CopyPartResult = de_CopyPartResult(data, context2);
       return contents;
     };
     exports.de_UploadPartCopyCommand = de_UploadPartCopyCommand;
-    var de_UploadPartCopyCommandError = async (output, context3) => {
+    var de_UploadPartCopyCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -45121,21 +45121,21 @@ var require_Aws_restXml = __commonJS({
         errorCode
       });
     };
-    var de_WriteGetObjectResponseCommand = async (output, context3) => {
+    var de_WriteGetObjectResponseCommand = async (output, context2) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_WriteGetObjectResponseCommandError(output, context3);
+        return de_WriteGetObjectResponseCommandError(output, context2);
       }
       const contents = (0, smithy_client_1.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, smithy_client_1.collectBody)(output.body, context3);
+      await (0, smithy_client_1.collectBody)(output.body, context2);
       return contents;
     };
     exports.de_WriteGetObjectResponseCommand = de_WriteGetObjectResponseCommand;
-    var de_WriteGetObjectResponseCommandError = async (output, context3) => {
+    var de_WriteGetObjectResponseCommandError = async (output, context2) => {
       const parsedOutput = {
         ...output,
-        body: await parseErrorBody(output.body, context3)
+        body: await parseErrorBody(output.body, context2)
       };
       const errorCode = loadRestXmlErrorCode(output, parsedOutput.body);
       const parsedBody = parsedOutput.body;
@@ -45146,7 +45146,7 @@ var require_Aws_restXml = __commonJS({
       });
     };
     var throwDefaultError = (0, smithy_client_1.withBaseException)(S3ServiceException_1.S3ServiceException);
-    var de_BucketAlreadyExistsRes = async (parsedOutput, context3) => {
+    var de_BucketAlreadyExistsRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.BucketAlreadyExists({
@@ -45155,7 +45155,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_BucketAlreadyOwnedByYouRes = async (parsedOutput, context3) => {
+    var de_BucketAlreadyOwnedByYouRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.BucketAlreadyOwnedByYou({
@@ -45164,7 +45164,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_InvalidObjectStateRes = async (parsedOutput, context3) => {
+    var de_InvalidObjectStateRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       if (data["AccessTier"] !== void 0) {
@@ -45179,7 +45179,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_NoSuchBucketRes = async (parsedOutput, context3) => {
+    var de_NoSuchBucketRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.NoSuchBucket({
@@ -45188,7 +45188,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_NoSuchKeyRes = async (parsedOutput, context3) => {
+    var de_NoSuchKeyRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.NoSuchKey({
@@ -45197,7 +45197,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_NoSuchUploadRes = async (parsedOutput, context3) => {
+    var de_NoSuchUploadRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.NoSuchUpload({
@@ -45206,7 +45206,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_NotFoundRes = async (parsedOutput, context3) => {
+    var de_NotFoundRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.NotFound({
@@ -45215,7 +45215,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_ObjectAlreadyInActiveTierErrorRes = async (parsedOutput, context3) => {
+    var de_ObjectAlreadyInActiveTierErrorRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_1_1.ObjectAlreadyInActiveTierError({
@@ -45224,7 +45224,7 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_ObjectNotInActiveTierErrorRes = async (parsedOutput, context3) => {
+    var de_ObjectNotInActiveTierErrorRes = async (parsedOutput, context2) => {
       const contents = (0, smithy_client_1.map)({});
       const data = parsedOutput.body;
       const exception2 = new models_0_1.ObjectNotInActiveTierError({
@@ -45233,66 +45233,66 @@ var require_Aws_restXml = __commonJS({
       });
       return (0, smithy_client_1.decorateServiceException)(exception2, parsedOutput.body);
     };
-    var de_SelectObjectContentEventStream = (output, context3) => {
-      return context3.eventStreamMarshaller.deserialize(output, async (event) => {
+    var de_SelectObjectContentEventStream = (output, context2) => {
+      return context2.eventStreamMarshaller.deserialize(output, async (event) => {
         if (event["Records"] != null) {
           return {
-            Records: await de_RecordsEvent_event(event["Records"], context3)
+            Records: await de_RecordsEvent_event(event["Records"], context2)
           };
         }
         if (event["Stats"] != null) {
           return {
-            Stats: await de_StatsEvent_event(event["Stats"], context3)
+            Stats: await de_StatsEvent_event(event["Stats"], context2)
           };
         }
         if (event["Progress"] != null) {
           return {
-            Progress: await de_ProgressEvent_event(event["Progress"], context3)
+            Progress: await de_ProgressEvent_event(event["Progress"], context2)
           };
         }
         if (event["Cont"] != null) {
           return {
-            Cont: await de_ContinuationEvent_event(event["Cont"], context3)
+            Cont: await de_ContinuationEvent_event(event["Cont"], context2)
           };
         }
         if (event["End"] != null) {
           return {
-            End: await de_EndEvent_event(event["End"], context3)
+            End: await de_EndEvent_event(event["End"], context2)
           };
         }
         return { $unknown: output };
       });
     };
-    var de_ContinuationEvent_event = async (output, context3) => {
+    var de_ContinuationEvent_event = async (output, context2) => {
       const contents = {};
-      const data = await parseBody(output.body, context3);
-      Object.assign(contents, de_ContinuationEvent(data, context3));
+      const data = await parseBody(output.body, context2);
+      Object.assign(contents, de_ContinuationEvent(data, context2));
       return contents;
     };
-    var de_EndEvent_event = async (output, context3) => {
+    var de_EndEvent_event = async (output, context2) => {
       const contents = {};
-      const data = await parseBody(output.body, context3);
-      Object.assign(contents, de_EndEvent(data, context3));
+      const data = await parseBody(output.body, context2);
+      Object.assign(contents, de_EndEvent(data, context2));
       return contents;
     };
-    var de_ProgressEvent_event = async (output, context3) => {
+    var de_ProgressEvent_event = async (output, context2) => {
       const contents = {};
-      const data = await parseBody(output.body, context3);
-      contents.Details = de_Progress(data, context3);
+      const data = await parseBody(output.body, context2);
+      contents.Details = de_Progress(data, context2);
       return contents;
     };
-    var de_RecordsEvent_event = async (output, context3) => {
+    var de_RecordsEvent_event = async (output, context2) => {
       const contents = {};
       contents.Payload = output.body;
       return contents;
     };
-    var de_StatsEvent_event = async (output, context3) => {
+    var de_StatsEvent_event = async (output, context2) => {
       const contents = {};
-      const data = await parseBody(output.body, context3);
-      contents.Details = de_Stats(data, context3);
+      const data = await parseBody(output.body, context2);
+      contents.Details = de_Stats(data, context2);
       return contents;
     };
-    var se_AbortIncompleteMultipartUpload = (input, context3) => {
+    var se_AbortIncompleteMultipartUpload = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AbortIncompleteMultipartUpload");
       if (input.DaysAfterInitiation != null) {
         const node = xml_builder_1.XmlNode.of("DaysAfterInitiation", String(input.DaysAfterInitiation)).withName("DaysAfterInitiation");
@@ -45300,7 +45300,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_AccelerateConfiguration = (input, context3) => {
+    var se_AccelerateConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AccelerateConfiguration");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("BucketAccelerateStatus", input.Status).withName("Status");
@@ -45308,10 +45308,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_AccessControlPolicy = (input, context3) => {
+    var se_AccessControlPolicy = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AccessControlPolicy");
       if (input.Grants != null) {
-        const nodes = se_Grants(input.Grants, context3);
+        const nodes = se_Grants(input.Grants, context2);
         const containerNode = new xml_builder_1.XmlNode("AccessControlList");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -45319,12 +45319,12 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(containerNode);
       }
       if (input.Owner != null) {
-        const node = se_Owner(input.Owner, context3).withName("Owner");
+        const node = se_Owner(input.Owner, context2).withName("Owner");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_AccessControlTranslation = (input, context3) => {
+    var se_AccessControlTranslation = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AccessControlTranslation");
       if (input.Owner != null) {
         const node = xml_builder_1.XmlNode.of("OwnerOverride", input.Owner).withName("Owner");
@@ -45332,32 +45332,32 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_AllowedHeaders = (input, context3) => {
+    var se_AllowedHeaders = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("AllowedHeader", entry);
         return node.withName("member");
       });
     };
-    var se_AllowedMethods = (input, context3) => {
+    var se_AllowedMethods = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("AllowedMethod", entry);
         return node.withName("member");
       });
     };
-    var se_AllowedOrigins = (input, context3) => {
+    var se_AllowedOrigins = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("AllowedOrigin", entry);
         return node.withName("member");
       });
     };
-    var se_AnalyticsAndOperator = (input, context3) => {
+    var se_AnalyticsAndOperator = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AnalyticsAndOperator");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tags != null) {
-        const nodes = se_TagSet(input.Tags, context3);
+        const nodes = se_TagSet(input.Tags, context2);
         nodes.map((node) => {
           node = node.withName("Tag");
           bodyNode.addChildNode(node);
@@ -45365,31 +45365,31 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_AnalyticsConfiguration = (input, context3) => {
+    var se_AnalyticsConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AnalyticsConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("AnalyticsId", input.Id).withName("Id");
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_AnalyticsFilter(input.Filter, context3).withName("Filter");
+        const node = se_AnalyticsFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       if (input.StorageClassAnalysis != null) {
-        const node = se_StorageClassAnalysis(input.StorageClassAnalysis, context3).withName("StorageClassAnalysis");
+        const node = se_StorageClassAnalysis(input.StorageClassAnalysis, context2).withName("StorageClassAnalysis");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_AnalyticsExportDestination = (input, context3) => {
+    var se_AnalyticsExportDestination = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AnalyticsExportDestination");
       if (input.S3BucketDestination != null) {
-        const node = se_AnalyticsS3BucketDestination(input.S3BucketDestination, context3).withName("S3BucketDestination");
+        const node = se_AnalyticsS3BucketDestination(input.S3BucketDestination, context2).withName("S3BucketDestination");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_AnalyticsFilter = (input, context3) => {
+    var se_AnalyticsFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AnalyticsFilter");
       models_0_1.AnalyticsFilter.visit(input, {
         Prefix: (value) => {
@@ -45397,11 +45397,11 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         Tag: (value) => {
-          const node = se_Tag(value, context3).withName("Tag");
+          const node = se_Tag(value, context2).withName("Tag");
           bodyNode.addChildNode(node);
         },
         And: (value) => {
-          const node = se_AnalyticsAndOperator(value, context3).withName("And");
+          const node = se_AnalyticsAndOperator(value, context2).withName("And");
           bodyNode.addChildNode(node);
         },
         _: (name, value) => {
@@ -45413,7 +45413,7 @@ var require_Aws_restXml = __commonJS({
       });
       return bodyNode;
     };
-    var se_AnalyticsS3BucketDestination = (input, context3) => {
+    var se_AnalyticsS3BucketDestination = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("AnalyticsS3BucketDestination");
       if (input.Format != null) {
         const node = xml_builder_1.XmlNode.of("AnalyticsS3ExportFileFormat", input.Format).withName("Format");
@@ -45433,10 +45433,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_BucketLifecycleConfiguration = (input, context3) => {
+    var se_BucketLifecycleConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("BucketLifecycleConfiguration");
       if (input.Rules != null) {
-        const nodes = se_LifecycleRules(input.Rules, context3);
+        const nodes = se_LifecycleRules(input.Rules, context2);
         nodes.map((node) => {
           node = node.withName("Rule");
           bodyNode.addChildNode(node);
@@ -45444,18 +45444,18 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_BucketLoggingStatus = (input, context3) => {
+    var se_BucketLoggingStatus = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("BucketLoggingStatus");
       if (input.LoggingEnabled != null) {
-        const node = se_LoggingEnabled(input.LoggingEnabled, context3).withName("LoggingEnabled");
+        const node = se_LoggingEnabled(input.LoggingEnabled, context2).withName("LoggingEnabled");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_CompletedMultipartUpload = (input, context3) => {
+    var se_CompletedMultipartUpload = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CompletedMultipartUpload");
       if (input.Parts != null) {
-        const nodes = se_CompletedPartList(input.Parts, context3);
+        const nodes = se_CompletedPartList(input.Parts, context2);
         nodes.map((node) => {
           node = node.withName("Part");
           bodyNode.addChildNode(node);
@@ -45463,7 +45463,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CompletedPart = (input, context3) => {
+    var se_CompletedPart = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CompletedPart");
       if (input.ETag != null) {
         const node = xml_builder_1.XmlNode.of("ETag", input.ETag).withName("ETag");
@@ -45491,13 +45491,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CompletedPartList = (input, context3) => {
+    var se_CompletedPartList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_CompletedPart(entry, context3);
+        const node = se_CompletedPart(entry, context2);
         return node.withName("member");
       });
     };
-    var se_Condition = (input, context3) => {
+    var se_Condition = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Condition");
       if (input.HttpErrorCodeReturnedEquals != null) {
         const node = xml_builder_1.XmlNode.of("HttpErrorCodeReturnedEquals", input.HttpErrorCodeReturnedEquals).withName("HttpErrorCodeReturnedEquals");
@@ -45509,10 +45509,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CORSConfiguration = (input, context3) => {
+    var se_CORSConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CORSConfiguration");
       if (input.CORSRules != null) {
-        const nodes = se_CORSRules(input.CORSRules, context3);
+        const nodes = se_CORSRules(input.CORSRules, context2);
         nodes.map((node) => {
           node = node.withName("CORSRule");
           bodyNode.addChildNode(node);
@@ -45520,35 +45520,35 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CORSRule = (input, context3) => {
+    var se_CORSRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CORSRule");
       if (input.ID != null) {
         const node = xml_builder_1.XmlNode.of("ID", input.ID).withName("ID");
         bodyNode.addChildNode(node);
       }
       if (input.AllowedHeaders != null) {
-        const nodes = se_AllowedHeaders(input.AllowedHeaders, context3);
+        const nodes = se_AllowedHeaders(input.AllowedHeaders, context2);
         nodes.map((node) => {
           node = node.withName("AllowedHeader");
           bodyNode.addChildNode(node);
         });
       }
       if (input.AllowedMethods != null) {
-        const nodes = se_AllowedMethods(input.AllowedMethods, context3);
+        const nodes = se_AllowedMethods(input.AllowedMethods, context2);
         nodes.map((node) => {
           node = node.withName("AllowedMethod");
           bodyNode.addChildNode(node);
         });
       }
       if (input.AllowedOrigins != null) {
-        const nodes = se_AllowedOrigins(input.AllowedOrigins, context3);
+        const nodes = se_AllowedOrigins(input.AllowedOrigins, context2);
         nodes.map((node) => {
           node = node.withName("AllowedOrigin");
           bodyNode.addChildNode(node);
         });
       }
       if (input.ExposeHeaders != null) {
-        const nodes = se_ExposeHeaders(input.ExposeHeaders, context3);
+        const nodes = se_ExposeHeaders(input.ExposeHeaders, context2);
         nodes.map((node) => {
           node = node.withName("ExposeHeader");
           bodyNode.addChildNode(node);
@@ -45560,13 +45560,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CORSRules = (input, context3) => {
+    var se_CORSRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_CORSRule(entry, context3);
+        const node = se_CORSRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_CreateBucketConfiguration = (input, context3) => {
+    var se_CreateBucketConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CreateBucketConfiguration");
       if (input.LocationConstraint != null) {
         const node = xml_builder_1.XmlNode.of("BucketLocationConstraint", input.LocationConstraint).withName("LocationConstraint");
@@ -45574,7 +45574,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CSVInput = (input, context3) => {
+    var se_CSVInput = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CSVInput");
       if (input.FileHeaderInfo != null) {
         const node = xml_builder_1.XmlNode.of("FileHeaderInfo", input.FileHeaderInfo).withName("FileHeaderInfo");
@@ -45606,7 +45606,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_CSVOutput = (input, context3) => {
+    var se_CSVOutput = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("CSVOutput");
       if (input.QuoteFields != null) {
         const node = xml_builder_1.XmlNode.of("QuoteFields", input.QuoteFields).withName("QuoteFields");
@@ -45630,7 +45630,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_DefaultRetention = (input, context3) => {
+    var se_DefaultRetention = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("DefaultRetention");
       if (input.Mode != null) {
         const node = xml_builder_1.XmlNode.of("ObjectLockRetentionMode", input.Mode).withName("Mode");
@@ -45646,10 +45646,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Delete = (input, context3) => {
+    var se_Delete = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Delete");
       if (input.Objects != null) {
-        const nodes = se_ObjectIdentifierList(input.Objects, context3);
+        const nodes = se_ObjectIdentifierList(input.Objects, context2);
         nodes.map((node) => {
           node = node.withName("Object");
           bodyNode.addChildNode(node);
@@ -45661,7 +45661,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_DeleteMarkerReplication = (input, context3) => {
+    var se_DeleteMarkerReplication = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("DeleteMarkerReplication");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("DeleteMarkerReplicationStatus", input.Status).withName("Status");
@@ -45669,7 +45669,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Destination = (input, context3) => {
+    var se_Destination = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Destination");
       if (input.Bucket != null) {
         const node = xml_builder_1.XmlNode.of("BucketName", input.Bucket).withName("Bucket");
@@ -45684,24 +45684,24 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.AccessControlTranslation != null) {
-        const node = se_AccessControlTranslation(input.AccessControlTranslation, context3).withName("AccessControlTranslation");
+        const node = se_AccessControlTranslation(input.AccessControlTranslation, context2).withName("AccessControlTranslation");
         bodyNode.addChildNode(node);
       }
       if (input.EncryptionConfiguration != null) {
-        const node = se_EncryptionConfiguration(input.EncryptionConfiguration, context3).withName("EncryptionConfiguration");
+        const node = se_EncryptionConfiguration(input.EncryptionConfiguration, context2).withName("EncryptionConfiguration");
         bodyNode.addChildNode(node);
       }
       if (input.ReplicationTime != null) {
-        const node = se_ReplicationTime(input.ReplicationTime, context3).withName("ReplicationTime");
+        const node = se_ReplicationTime(input.ReplicationTime, context2).withName("ReplicationTime");
         bodyNode.addChildNode(node);
       }
       if (input.Metrics != null) {
-        const node = se_Metrics(input.Metrics, context3).withName("Metrics");
+        const node = se_Metrics(input.Metrics, context2).withName("Metrics");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_Encryption = (input, context3) => {
+    var se_Encryption = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Encryption");
       if (input.EncryptionType != null) {
         const node = xml_builder_1.XmlNode.of("ServerSideEncryption", input.EncryptionType).withName("EncryptionType");
@@ -45717,7 +45717,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_EncryptionConfiguration = (input, context3) => {
+    var se_EncryptionConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("EncryptionConfiguration");
       if (input.ReplicaKmsKeyID != null) {
         const node = xml_builder_1.XmlNode.of("ReplicaKmsKeyID", input.ReplicaKmsKeyID).withName("ReplicaKmsKeyID");
@@ -45725,7 +45725,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ErrorDocument = (input, context3) => {
+    var se_ErrorDocument = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ErrorDocument");
       if (input.Key != null) {
         const node = xml_builder_1.XmlNode.of("ObjectKey", input.Key).withName("Key");
@@ -45733,17 +45733,17 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_EventBridgeConfiguration = (input, context3) => {
+    var se_EventBridgeConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("EventBridgeConfiguration");
       return bodyNode;
     };
-    var se_EventList = (input, context3) => {
+    var se_EventList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("Event", entry);
         return node.withName("member");
       });
     };
-    var se_ExistingObjectReplication = (input, context3) => {
+    var se_ExistingObjectReplication = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ExistingObjectReplication");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("ExistingObjectReplicationStatus", input.Status).withName("Status");
@@ -45751,13 +45751,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ExposeHeaders = (input, context3) => {
+    var se_ExposeHeaders = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("ExposeHeader", entry);
         return node.withName("member");
       });
     };
-    var se_FilterRule = (input, context3) => {
+    var se_FilterRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("FilterRule");
       if (input.Name != null) {
         const node = xml_builder_1.XmlNode.of("FilterRuleName", input.Name).withName("Name");
@@ -45769,13 +45769,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_FilterRuleList = (input, context3) => {
+    var se_FilterRuleList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_FilterRule(entry, context3);
+        const node = se_FilterRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_GlacierJobParameters = (input, context3) => {
+    var se_GlacierJobParameters = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("GlacierJobParameters");
       if (input.Tier != null) {
         const node = xml_builder_1.XmlNode.of("Tier", input.Tier).withName("Tier");
@@ -45783,10 +45783,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Grant = (input, context3) => {
+    var se_Grant = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Grant");
       if (input.Grantee != null) {
-        const node = se_Grantee(input.Grantee, context3).withName("Grantee");
+        const node = se_Grantee(input.Grantee, context2).withName("Grantee");
         node.addAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         bodyNode.addChildNode(node);
       }
@@ -45796,7 +45796,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Grantee = (input, context3) => {
+    var se_Grantee = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Grantee");
       if (input.DisplayName != null) {
         const node = xml_builder_1.XmlNode.of("DisplayName", input.DisplayName).withName("DisplayName");
@@ -45819,13 +45819,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Grants = (input, context3) => {
+    var se_Grants = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_Grant(entry, context3);
+        const node = se_Grant(entry, context2);
         return node.withName("Grant");
       });
     };
-    var se_IndexDocument = (input, context3) => {
+    var se_IndexDocument = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("IndexDocument");
       if (input.Suffix != null) {
         const node = xml_builder_1.XmlNode.of("Suffix", input.Suffix).withName("Suffix");
@@ -45833,10 +45833,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_InputSerialization = (input, context3) => {
+    var se_InputSerialization = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InputSerialization");
       if (input.CSV != null) {
-        const node = se_CSVInput(input.CSV, context3).withName("CSV");
+        const node = se_CSVInput(input.CSV, context2).withName("CSV");
         bodyNode.addChildNode(node);
       }
       if (input.CompressionType != null) {
@@ -45844,23 +45844,23 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.JSON != null) {
-        const node = se_JSONInput(input.JSON, context3).withName("JSON");
+        const node = se_JSONInput(input.JSON, context2).withName("JSON");
         bodyNode.addChildNode(node);
       }
       if (input.Parquet != null) {
-        const node = se_ParquetInput(input.Parquet, context3).withName("Parquet");
+        const node = se_ParquetInput(input.Parquet, context2).withName("Parquet");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_IntelligentTieringAndOperator = (input, context3) => {
+    var se_IntelligentTieringAndOperator = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("IntelligentTieringAndOperator");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tags != null) {
-        const nodes = se_TagSet(input.Tags, context3);
+        const nodes = se_TagSet(input.Tags, context2);
         nodes.map((node) => {
           node = node.withName("Tag");
           bodyNode.addChildNode(node);
@@ -45868,14 +45868,14 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_IntelligentTieringConfiguration = (input, context3) => {
+    var se_IntelligentTieringConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("IntelligentTieringConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("IntelligentTieringId", input.Id).withName("Id");
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_IntelligentTieringFilter(input.Filter, context3).withName("Filter");
+        const node = se_IntelligentTieringFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       if (input.Status != null) {
@@ -45883,7 +45883,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Tierings != null) {
-        const nodes = se_TieringList(input.Tierings, context3);
+        const nodes = se_TieringList(input.Tierings, context2);
         nodes.map((node) => {
           node = node.withName("Tiering");
           bodyNode.addChildNode(node);
@@ -45891,26 +45891,26 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_IntelligentTieringFilter = (input, context3) => {
+    var se_IntelligentTieringFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("IntelligentTieringFilter");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tag != null) {
-        const node = se_Tag(input.Tag, context3).withName("Tag");
+        const node = se_Tag(input.Tag, context2).withName("Tag");
         bodyNode.addChildNode(node);
       }
       if (input.And != null) {
-        const node = se_IntelligentTieringAndOperator(input.And, context3).withName("And");
+        const node = se_IntelligentTieringAndOperator(input.And, context2).withName("And");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_InventoryConfiguration = (input, context3) => {
+    var se_InventoryConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventoryConfiguration");
       if (input.Destination != null) {
-        const node = se_InventoryDestination(input.Destination, context3).withName("Destination");
+        const node = se_InventoryDestination(input.Destination, context2).withName("Destination");
         bodyNode.addChildNode(node);
       }
       if (input.IsEnabled != null) {
@@ -45918,7 +45918,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_InventoryFilter(input.Filter, context3).withName("Filter");
+        const node = se_InventoryFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       if (input.Id != null) {
@@ -45930,7 +45930,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.OptionalFields != null) {
-        const nodes = se_InventoryOptionalFields(input.OptionalFields, context3);
+        const nodes = se_InventoryOptionalFields(input.OptionalFields, context2);
         const containerNode = new xml_builder_1.XmlNode("OptionalFields");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -45938,32 +45938,32 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(containerNode);
       }
       if (input.Schedule != null) {
-        const node = se_InventorySchedule(input.Schedule, context3).withName("Schedule");
+        const node = se_InventorySchedule(input.Schedule, context2).withName("Schedule");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_InventoryDestination = (input, context3) => {
+    var se_InventoryDestination = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventoryDestination");
       if (input.S3BucketDestination != null) {
-        const node = se_InventoryS3BucketDestination(input.S3BucketDestination, context3).withName("S3BucketDestination");
+        const node = se_InventoryS3BucketDestination(input.S3BucketDestination, context2).withName("S3BucketDestination");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_InventoryEncryption = (input, context3) => {
+    var se_InventoryEncryption = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventoryEncryption");
       if (input.SSES3 != null) {
-        const node = se_SSES3(input.SSES3, context3).withName("SSE-S3");
+        const node = se_SSES3(input.SSES3, context2).withName("SSE-S3");
         bodyNode.addChildNode(node);
       }
       if (input.SSEKMS != null) {
-        const node = se_SSEKMS(input.SSEKMS, context3).withName("SSE-KMS");
+        const node = se_SSEKMS(input.SSEKMS, context2).withName("SSE-KMS");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_InventoryFilter = (input, context3) => {
+    var se_InventoryFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventoryFilter");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
@@ -45971,13 +45971,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_InventoryOptionalFields = (input, context3) => {
+    var se_InventoryOptionalFields = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
         const node = xml_builder_1.XmlNode.of("InventoryOptionalField", entry);
         return node.withName("Field");
       });
     };
-    var se_InventoryS3BucketDestination = (input, context3) => {
+    var se_InventoryS3BucketDestination = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventoryS3BucketDestination");
       if (input.AccountId != null) {
         const node = xml_builder_1.XmlNode.of("AccountId", input.AccountId).withName("AccountId");
@@ -45996,12 +45996,12 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Encryption != null) {
-        const node = se_InventoryEncryption(input.Encryption, context3).withName("Encryption");
+        const node = se_InventoryEncryption(input.Encryption, context2).withName("Encryption");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_InventorySchedule = (input, context3) => {
+    var se_InventorySchedule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("InventorySchedule");
       if (input.Frequency != null) {
         const node = xml_builder_1.XmlNode.of("InventoryFrequency", input.Frequency).withName("Frequency");
@@ -46009,7 +46009,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_JSONInput = (input, context3) => {
+    var se_JSONInput = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("JSONInput");
       if (input.Type != null) {
         const node = xml_builder_1.XmlNode.of("JSONType", input.Type).withName("Type");
@@ -46017,7 +46017,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_JSONOutput = (input, context3) => {
+    var se_JSONOutput = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("JSONOutput");
       if (input.RecordDelimiter != null) {
         const node = xml_builder_1.XmlNode.of("RecordDelimiter", input.RecordDelimiter).withName("RecordDelimiter");
@@ -46025,7 +46025,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_LambdaFunctionConfiguration = (input, context3) => {
+    var se_LambdaFunctionConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LambdaFunctionConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("NotificationId", input.Id).withName("Id");
@@ -46036,25 +46036,25 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Events != null) {
-        const nodes = se_EventList(input.Events, context3);
+        const nodes = se_EventList(input.Events, context2);
         nodes.map((node) => {
           node = node.withName("Event");
           bodyNode.addChildNode(node);
         });
       }
       if (input.Filter != null) {
-        const node = se_NotificationConfigurationFilter(input.Filter, context3).withName("Filter");
+        const node = se_NotificationConfigurationFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_LambdaFunctionConfigurationList = (input, context3) => {
+    var se_LambdaFunctionConfigurationList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_LambdaFunctionConfiguration(entry, context3);
+        const node = se_LambdaFunctionConfiguration(entry, context2);
         return node.withName("member");
       });
     };
-    var se_LifecycleExpiration = (input, context3) => {
+    var se_LifecycleExpiration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LifecycleExpiration");
       if (input.Date != null) {
         const node = xml_builder_1.XmlNode.of("Date", (input.Date.toISOString().split(".")[0] + "Z").toString()).withName("Date");
@@ -46070,10 +46070,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_LifecycleRule = (input, context3) => {
+    var se_LifecycleRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LifecycleRule");
       if (input.Expiration != null) {
-        const node = se_LifecycleExpiration(input.Expiration, context3).withName("Expiration");
+        const node = se_LifecycleExpiration(input.Expiration, context2).withName("Expiration");
         bodyNode.addChildNode(node);
       }
       if (input.ID != null) {
@@ -46085,7 +46085,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_LifecycleRuleFilter(input.Filter, context3).withName("Filter");
+        const node = se_LifecycleRuleFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       if (input.Status != null) {
@@ -46093,37 +46093,37 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Transitions != null) {
-        const nodes = se_TransitionList(input.Transitions, context3);
+        const nodes = se_TransitionList(input.Transitions, context2);
         nodes.map((node) => {
           node = node.withName("Transition");
           bodyNode.addChildNode(node);
         });
       }
       if (input.NoncurrentVersionTransitions != null) {
-        const nodes = se_NoncurrentVersionTransitionList(input.NoncurrentVersionTransitions, context3);
+        const nodes = se_NoncurrentVersionTransitionList(input.NoncurrentVersionTransitions, context2);
         nodes.map((node) => {
           node = node.withName("NoncurrentVersionTransition");
           bodyNode.addChildNode(node);
         });
       }
       if (input.NoncurrentVersionExpiration != null) {
-        const node = se_NoncurrentVersionExpiration(input.NoncurrentVersionExpiration, context3).withName("NoncurrentVersionExpiration");
+        const node = se_NoncurrentVersionExpiration(input.NoncurrentVersionExpiration, context2).withName("NoncurrentVersionExpiration");
         bodyNode.addChildNode(node);
       }
       if (input.AbortIncompleteMultipartUpload != null) {
-        const node = se_AbortIncompleteMultipartUpload(input.AbortIncompleteMultipartUpload, context3).withName("AbortIncompleteMultipartUpload");
+        const node = se_AbortIncompleteMultipartUpload(input.AbortIncompleteMultipartUpload, context2).withName("AbortIncompleteMultipartUpload");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_LifecycleRuleAndOperator = (input, context3) => {
+    var se_LifecycleRuleAndOperator = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LifecycleRuleAndOperator");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tags != null) {
-        const nodes = se_TagSet(input.Tags, context3);
+        const nodes = se_TagSet(input.Tags, context2);
         nodes.map((node) => {
           node = node.withName("Tag");
           bodyNode.addChildNode(node);
@@ -46139,7 +46139,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_LifecycleRuleFilter = (input, context3) => {
+    var se_LifecycleRuleFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LifecycleRuleFilter");
       models_0_1.LifecycleRuleFilter.visit(input, {
         Prefix: (value) => {
@@ -46147,7 +46147,7 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         Tag: (value) => {
-          const node = se_Tag(value, context3).withName("Tag");
+          const node = se_Tag(value, context2).withName("Tag");
           bodyNode.addChildNode(node);
         },
         ObjectSizeGreaterThan: (value) => {
@@ -46159,7 +46159,7 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         And: (value) => {
-          const node = se_LifecycleRuleAndOperator(value, context3).withName("And");
+          const node = se_LifecycleRuleAndOperator(value, context2).withName("And");
           bodyNode.addChildNode(node);
         },
         _: (name, value) => {
@@ -46171,20 +46171,20 @@ var require_Aws_restXml = __commonJS({
       });
       return bodyNode;
     };
-    var se_LifecycleRules = (input, context3) => {
+    var se_LifecycleRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_LifecycleRule(entry, context3);
+        const node = se_LifecycleRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_LoggingEnabled = (input, context3) => {
+    var se_LoggingEnabled = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("LoggingEnabled");
       if (input.TargetBucket != null) {
         const node = xml_builder_1.XmlNode.of("TargetBucket", input.TargetBucket).withName("TargetBucket");
         bodyNode.addChildNode(node);
       }
       if (input.TargetGrants != null) {
-        const nodes = se_TargetGrants(input.TargetGrants, context3);
+        const nodes = se_TargetGrants(input.TargetGrants, context2);
         const containerNode = new xml_builder_1.XmlNode("TargetGrants");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -46197,7 +46197,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_MetadataEntry = (input, context3) => {
+    var se_MetadataEntry = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("MetadataEntry");
       if (input.Name != null) {
         const node = xml_builder_1.XmlNode.of("MetadataKey", input.Name).withName("Name");
@@ -46209,26 +46209,26 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Metrics = (input, context3) => {
+    var se_Metrics = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Metrics");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("MetricsStatus", input.Status).withName("Status");
         bodyNode.addChildNode(node);
       }
       if (input.EventThreshold != null) {
-        const node = se_ReplicationTimeValue(input.EventThreshold, context3).withName("EventThreshold");
+        const node = se_ReplicationTimeValue(input.EventThreshold, context2).withName("EventThreshold");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_MetricsAndOperator = (input, context3) => {
+    var se_MetricsAndOperator = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("MetricsAndOperator");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tags != null) {
-        const nodes = se_TagSet(input.Tags, context3);
+        const nodes = se_TagSet(input.Tags, context2);
         nodes.map((node) => {
           node = node.withName("Tag");
           bodyNode.addChildNode(node);
@@ -46240,19 +46240,19 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_MetricsConfiguration = (input, context3) => {
+    var se_MetricsConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("MetricsConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("MetricsId", input.Id).withName("Id");
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_MetricsFilter(input.Filter, context3).withName("Filter");
+        const node = se_MetricsFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_MetricsFilter = (input, context3) => {
+    var se_MetricsFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("MetricsFilter");
       models_0_1.MetricsFilter.visit(input, {
         Prefix: (value) => {
@@ -46260,7 +46260,7 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         Tag: (value) => {
-          const node = se_Tag(value, context3).withName("Tag");
+          const node = se_Tag(value, context2).withName("Tag");
           bodyNode.addChildNode(node);
         },
         AccessPointArn: (value) => {
@@ -46268,7 +46268,7 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         And: (value) => {
-          const node = se_MetricsAndOperator(value, context3).withName("And");
+          const node = se_MetricsAndOperator(value, context2).withName("And");
           bodyNode.addChildNode(node);
         },
         _: (name, value) => {
@@ -46280,7 +46280,7 @@ var require_Aws_restXml = __commonJS({
       });
       return bodyNode;
     };
-    var se_NoncurrentVersionExpiration = (input, context3) => {
+    var se_NoncurrentVersionExpiration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("NoncurrentVersionExpiration");
       if (input.NoncurrentDays != null) {
         const node = xml_builder_1.XmlNode.of("Days", String(input.NoncurrentDays)).withName("NoncurrentDays");
@@ -46292,7 +46292,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_NoncurrentVersionTransition = (input, context3) => {
+    var se_NoncurrentVersionTransition = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("NoncurrentVersionTransition");
       if (input.NoncurrentDays != null) {
         const node = xml_builder_1.XmlNode.of("Days", String(input.NoncurrentDays)).withName("NoncurrentDays");
@@ -46308,50 +46308,50 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_NoncurrentVersionTransitionList = (input, context3) => {
+    var se_NoncurrentVersionTransitionList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_NoncurrentVersionTransition(entry, context3);
+        const node = se_NoncurrentVersionTransition(entry, context2);
         return node.withName("member");
       });
     };
-    var se_NotificationConfiguration = (input, context3) => {
+    var se_NotificationConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("NotificationConfiguration");
       if (input.TopicConfigurations != null) {
-        const nodes = se_TopicConfigurationList(input.TopicConfigurations, context3);
+        const nodes = se_TopicConfigurationList(input.TopicConfigurations, context2);
         nodes.map((node) => {
           node = node.withName("TopicConfiguration");
           bodyNode.addChildNode(node);
         });
       }
       if (input.QueueConfigurations != null) {
-        const nodes = se_QueueConfigurationList(input.QueueConfigurations, context3);
+        const nodes = se_QueueConfigurationList(input.QueueConfigurations, context2);
         nodes.map((node) => {
           node = node.withName("QueueConfiguration");
           bodyNode.addChildNode(node);
         });
       }
       if (input.LambdaFunctionConfigurations != null) {
-        const nodes = se_LambdaFunctionConfigurationList(input.LambdaFunctionConfigurations, context3);
+        const nodes = se_LambdaFunctionConfigurationList(input.LambdaFunctionConfigurations, context2);
         nodes.map((node) => {
           node = node.withName("CloudFunctionConfiguration");
           bodyNode.addChildNode(node);
         });
       }
       if (input.EventBridgeConfiguration != null) {
-        const node = se_EventBridgeConfiguration(input.EventBridgeConfiguration, context3).withName("EventBridgeConfiguration");
+        const node = se_EventBridgeConfiguration(input.EventBridgeConfiguration, context2).withName("EventBridgeConfiguration");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_NotificationConfigurationFilter = (input, context3) => {
+    var se_NotificationConfigurationFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("NotificationConfigurationFilter");
       if (input.Key != null) {
-        const node = se_S3KeyFilter(input.Key, context3).withName("S3Key");
+        const node = se_S3KeyFilter(input.Key, context2).withName("S3Key");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_ObjectIdentifier = (input, context3) => {
+    var se_ObjectIdentifier = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ObjectIdentifier");
       if (input.Key != null) {
         const node = xml_builder_1.XmlNode.of("ObjectKey", input.Key).withName("Key");
@@ -46363,25 +46363,25 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ObjectIdentifierList = (input, context3) => {
+    var se_ObjectIdentifierList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_ObjectIdentifier(entry, context3);
+        const node = se_ObjectIdentifier(entry, context2);
         return node.withName("member");
       });
     };
-    var se_ObjectLockConfiguration = (input, context3) => {
+    var se_ObjectLockConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ObjectLockConfiguration");
       if (input.ObjectLockEnabled != null) {
         const node = xml_builder_1.XmlNode.of("ObjectLockEnabled", input.ObjectLockEnabled).withName("ObjectLockEnabled");
         bodyNode.addChildNode(node);
       }
       if (input.Rule != null) {
-        const node = se_ObjectLockRule(input.Rule, context3).withName("Rule");
+        const node = se_ObjectLockRule(input.Rule, context2).withName("Rule");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_ObjectLockLegalHold = (input, context3) => {
+    var se_ObjectLockLegalHold = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ObjectLockLegalHold");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("ObjectLockLegalHoldStatus", input.Status).withName("Status");
@@ -46389,7 +46389,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ObjectLockRetention = (input, context3) => {
+    var se_ObjectLockRetention = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ObjectLockRetention");
       if (input.Mode != null) {
         const node = xml_builder_1.XmlNode.of("ObjectLockRetentionMode", input.Mode).withName("Mode");
@@ -46401,35 +46401,35 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ObjectLockRule = (input, context3) => {
+    var se_ObjectLockRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ObjectLockRule");
       if (input.DefaultRetention != null) {
-        const node = se_DefaultRetention(input.DefaultRetention, context3).withName("DefaultRetention");
+        const node = se_DefaultRetention(input.DefaultRetention, context2).withName("DefaultRetention");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_OutputLocation = (input, context3) => {
+    var se_OutputLocation = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("OutputLocation");
       if (input.S3 != null) {
-        const node = se_S3Location(input.S3, context3).withName("S3");
+        const node = se_S3Location(input.S3, context2).withName("S3");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_OutputSerialization = (input, context3) => {
+    var se_OutputSerialization = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("OutputSerialization");
       if (input.CSV != null) {
-        const node = se_CSVOutput(input.CSV, context3).withName("CSV");
+        const node = se_CSVOutput(input.CSV, context2).withName("CSV");
         bodyNode.addChildNode(node);
       }
       if (input.JSON != null) {
-        const node = se_JSONOutput(input.JSON, context3).withName("JSON");
+        const node = se_JSONOutput(input.JSON, context2).withName("JSON");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_Owner = (input, context3) => {
+    var se_Owner = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Owner");
       if (input.DisplayName != null) {
         const node = xml_builder_1.XmlNode.of("DisplayName", input.DisplayName).withName("DisplayName");
@@ -46441,10 +46441,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_OwnershipControls = (input, context3) => {
+    var se_OwnershipControls = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("OwnershipControls");
       if (input.Rules != null) {
-        const nodes = se_OwnershipControlsRules(input.Rules, context3);
+        const nodes = se_OwnershipControlsRules(input.Rules, context2);
         nodes.map((node) => {
           node = node.withName("Rule");
           bodyNode.addChildNode(node);
@@ -46452,7 +46452,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_OwnershipControlsRule = (input, context3) => {
+    var se_OwnershipControlsRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("OwnershipControlsRule");
       if (input.ObjectOwnership != null) {
         const node = xml_builder_1.XmlNode.of("ObjectOwnership", input.ObjectOwnership).withName("ObjectOwnership");
@@ -46460,17 +46460,17 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_OwnershipControlsRules = (input, context3) => {
+    var se_OwnershipControlsRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_OwnershipControlsRule(entry, context3);
+        const node = se_OwnershipControlsRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_ParquetInput = (input, context3) => {
+    var se_ParquetInput = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ParquetInput");
       return bodyNode;
     };
-    var se_PublicAccessBlockConfiguration = (input, context3) => {
+    var se_PublicAccessBlockConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("PublicAccessBlockConfiguration");
       if (input.BlockPublicAcls != null) {
         const node = xml_builder_1.XmlNode.of("Setting", String(input.BlockPublicAcls)).withName("BlockPublicAcls");
@@ -46490,7 +46490,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_QueueConfiguration = (input, context3) => {
+    var se_QueueConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("QueueConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("NotificationId", input.Id).withName("Id");
@@ -46501,25 +46501,25 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Events != null) {
-        const nodes = se_EventList(input.Events, context3);
+        const nodes = se_EventList(input.Events, context2);
         nodes.map((node) => {
           node = node.withName("Event");
           bodyNode.addChildNode(node);
         });
       }
       if (input.Filter != null) {
-        const node = se_NotificationConfigurationFilter(input.Filter, context3).withName("Filter");
+        const node = se_NotificationConfigurationFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_QueueConfigurationList = (input, context3) => {
+    var se_QueueConfigurationList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_QueueConfiguration(entry, context3);
+        const node = se_QueueConfiguration(entry, context2);
         return node.withName("member");
       });
     };
-    var se_Redirect = (input, context3) => {
+    var se_Redirect = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Redirect");
       if (input.HostName != null) {
         const node = xml_builder_1.XmlNode.of("HostName", input.HostName).withName("HostName");
@@ -46543,7 +46543,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_RedirectAllRequestsTo = (input, context3) => {
+    var se_RedirectAllRequestsTo = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("RedirectAllRequestsTo");
       if (input.HostName != null) {
         const node = xml_builder_1.XmlNode.of("HostName", input.HostName).withName("HostName");
@@ -46555,7 +46555,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ReplicaModifications = (input, context3) => {
+    var se_ReplicaModifications = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicaModifications");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("ReplicaModificationsStatus", input.Status).withName("Status");
@@ -46563,14 +46563,14 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ReplicationConfiguration = (input, context3) => {
+    var se_ReplicationConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationConfiguration");
       if (input.Role != null) {
         const node = xml_builder_1.XmlNode.of("Role", input.Role).withName("Role");
         bodyNode.addChildNode(node);
       }
       if (input.Rules != null) {
-        const nodes = se_ReplicationRules(input.Rules, context3);
+        const nodes = se_ReplicationRules(input.Rules, context2);
         nodes.map((node) => {
           node = node.withName("Rule");
           bodyNode.addChildNode(node);
@@ -46578,7 +46578,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ReplicationRule = (input, context3) => {
+    var se_ReplicationRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationRule");
       if (input.ID != null) {
         const node = xml_builder_1.XmlNode.of("ID", input.ID).withName("ID");
@@ -46593,7 +46593,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Filter != null) {
-        const node = se_ReplicationRuleFilter(input.Filter, context3).withName("Filter");
+        const node = se_ReplicationRuleFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       if (input.Status != null) {
@@ -46601,31 +46601,31 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.SourceSelectionCriteria != null) {
-        const node = se_SourceSelectionCriteria(input.SourceSelectionCriteria, context3).withName("SourceSelectionCriteria");
+        const node = se_SourceSelectionCriteria(input.SourceSelectionCriteria, context2).withName("SourceSelectionCriteria");
         bodyNode.addChildNode(node);
       }
       if (input.ExistingObjectReplication != null) {
-        const node = se_ExistingObjectReplication(input.ExistingObjectReplication, context3).withName("ExistingObjectReplication");
+        const node = se_ExistingObjectReplication(input.ExistingObjectReplication, context2).withName("ExistingObjectReplication");
         bodyNode.addChildNode(node);
       }
       if (input.Destination != null) {
-        const node = se_Destination(input.Destination, context3).withName("Destination");
+        const node = se_Destination(input.Destination, context2).withName("Destination");
         bodyNode.addChildNode(node);
       }
       if (input.DeleteMarkerReplication != null) {
-        const node = se_DeleteMarkerReplication(input.DeleteMarkerReplication, context3).withName("DeleteMarkerReplication");
+        const node = se_DeleteMarkerReplication(input.DeleteMarkerReplication, context2).withName("DeleteMarkerReplication");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_ReplicationRuleAndOperator = (input, context3) => {
+    var se_ReplicationRuleAndOperator = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationRuleAndOperator");
       if (input.Prefix != null) {
         const node = xml_builder_1.XmlNode.of("Prefix", input.Prefix).withName("Prefix");
         bodyNode.addChildNode(node);
       }
       if (input.Tags != null) {
-        const nodes = se_TagSet(input.Tags, context3);
+        const nodes = se_TagSet(input.Tags, context2);
         nodes.map((node) => {
           node = node.withName("Tag");
           bodyNode.addChildNode(node);
@@ -46633,7 +46633,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ReplicationRuleFilter = (input, context3) => {
+    var se_ReplicationRuleFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationRuleFilter");
       models_0_1.ReplicationRuleFilter.visit(input, {
         Prefix: (value) => {
@@ -46641,11 +46641,11 @@ var require_Aws_restXml = __commonJS({
           bodyNode.addChildNode(node);
         },
         Tag: (value) => {
-          const node = se_Tag(value, context3).withName("Tag");
+          const node = se_Tag(value, context2).withName("Tag");
           bodyNode.addChildNode(node);
         },
         And: (value) => {
-          const node = se_ReplicationRuleAndOperator(value, context3).withName("And");
+          const node = se_ReplicationRuleAndOperator(value, context2).withName("And");
           bodyNode.addChildNode(node);
         },
         _: (name, value) => {
@@ -46657,25 +46657,25 @@ var require_Aws_restXml = __commonJS({
       });
       return bodyNode;
     };
-    var se_ReplicationRules = (input, context3) => {
+    var se_ReplicationRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_ReplicationRule(entry, context3);
+        const node = se_ReplicationRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_ReplicationTime = (input, context3) => {
+    var se_ReplicationTime = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationTime");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("ReplicationTimeStatus", input.Status).withName("Status");
         bodyNode.addChildNode(node);
       }
       if (input.Time != null) {
-        const node = se_ReplicationTimeValue(input.Time, context3).withName("Time");
+        const node = se_ReplicationTimeValue(input.Time, context2).withName("Time");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_ReplicationTimeValue = (input, context3) => {
+    var se_ReplicationTimeValue = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ReplicationTimeValue");
       if (input.Minutes != null) {
         const node = xml_builder_1.XmlNode.of("Minutes", String(input.Minutes)).withName("Minutes");
@@ -46683,7 +46683,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_RequestPaymentConfiguration = (input, context3) => {
+    var se_RequestPaymentConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("RequestPaymentConfiguration");
       if (input.Payer != null) {
         const node = xml_builder_1.XmlNode.of("Payer", input.Payer).withName("Payer");
@@ -46691,7 +46691,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_RequestProgress = (input, context3) => {
+    var se_RequestProgress = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("RequestProgress");
       if (input.Enabled != null) {
         const node = xml_builder_1.XmlNode.of("EnableRequestProgress", String(input.Enabled)).withName("Enabled");
@@ -46699,14 +46699,14 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_RestoreRequest = (input, context3) => {
+    var se_RestoreRequest = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("RestoreRequest");
       if (input.Days != null) {
         const node = xml_builder_1.XmlNode.of("Days", String(input.Days)).withName("Days");
         bodyNode.addChildNode(node);
       }
       if (input.GlacierJobParameters != null) {
-        const node = se_GlacierJobParameters(input.GlacierJobParameters, context3).withName("GlacierJobParameters");
+        const node = se_GlacierJobParameters(input.GlacierJobParameters, context2).withName("GlacierJobParameters");
         bodyNode.addChildNode(node);
       }
       if (input.Type != null) {
@@ -46722,37 +46722,37 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.SelectParameters != null) {
-        const node = se_SelectParameters(input.SelectParameters, context3).withName("SelectParameters");
+        const node = se_SelectParameters(input.SelectParameters, context2).withName("SelectParameters");
         bodyNode.addChildNode(node);
       }
       if (input.OutputLocation != null) {
-        const node = se_OutputLocation(input.OutputLocation, context3).withName("OutputLocation");
+        const node = se_OutputLocation(input.OutputLocation, context2).withName("OutputLocation");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_RoutingRule = (input, context3) => {
+    var se_RoutingRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("RoutingRule");
       if (input.Condition != null) {
-        const node = se_Condition(input.Condition, context3).withName("Condition");
+        const node = se_Condition(input.Condition, context2).withName("Condition");
         bodyNode.addChildNode(node);
       }
       if (input.Redirect != null) {
-        const node = se_Redirect(input.Redirect, context3).withName("Redirect");
+        const node = se_Redirect(input.Redirect, context2).withName("Redirect");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_RoutingRules = (input, context3) => {
+    var se_RoutingRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_RoutingRule(entry, context3);
+        const node = se_RoutingRule(entry, context2);
         return node.withName("RoutingRule");
       });
     };
-    var se_S3KeyFilter = (input, context3) => {
+    var se_S3KeyFilter = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("S3KeyFilter");
       if (input.FilterRules != null) {
-        const nodes = se_FilterRuleList(input.FilterRules, context3);
+        const nodes = se_FilterRuleList(input.FilterRules, context2);
         nodes.map((node) => {
           node = node.withName("FilterRule");
           bodyNode.addChildNode(node);
@@ -46760,7 +46760,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_S3Location = (input, context3) => {
+    var se_S3Location = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("S3Location");
       if (input.BucketName != null) {
         const node = xml_builder_1.XmlNode.of("BucketName", input.BucketName).withName("BucketName");
@@ -46771,7 +46771,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Encryption != null) {
-        const node = se_Encryption(input.Encryption, context3).withName("Encryption");
+        const node = se_Encryption(input.Encryption, context2).withName("Encryption");
         bodyNode.addChildNode(node);
       }
       if (input.CannedACL != null) {
@@ -46779,7 +46779,7 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.AccessControlList != null) {
-        const nodes = se_Grants(input.AccessControlList, context3);
+        const nodes = se_Grants(input.AccessControlList, context2);
         const containerNode = new xml_builder_1.XmlNode("AccessControlList");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -46787,11 +46787,11 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(containerNode);
       }
       if (input.Tagging != null) {
-        const node = se_Tagging(input.Tagging, context3).withName("Tagging");
+        const node = se_Tagging(input.Tagging, context2).withName("Tagging");
         bodyNode.addChildNode(node);
       }
       if (input.UserMetadata != null) {
-        const nodes = se_UserMetadata(input.UserMetadata, context3);
+        const nodes = se_UserMetadata(input.UserMetadata, context2);
         const containerNode = new xml_builder_1.XmlNode("UserMetadata");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -46804,7 +46804,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ScanRange = (input, context3) => {
+    var se_ScanRange = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ScanRange");
       if (input.Start != null) {
         const node = xml_builder_1.XmlNode.of("Start", String(input.Start)).withName("Start");
@@ -46816,10 +46816,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_SelectParameters = (input, context3) => {
+    var se_SelectParameters = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("SelectParameters");
       if (input.InputSerialization != null) {
-        const node = se_InputSerialization(input.InputSerialization, context3).withName("InputSerialization");
+        const node = se_InputSerialization(input.InputSerialization, context2).withName("InputSerialization");
         bodyNode.addChildNode(node);
       }
       if (input.ExpressionType != null) {
@@ -46831,12 +46831,12 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.OutputSerialization != null) {
-        const node = se_OutputSerialization(input.OutputSerialization, context3).withName("OutputSerialization");
+        const node = se_OutputSerialization(input.OutputSerialization, context2).withName("OutputSerialization");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_ServerSideEncryptionByDefault = (input, context3) => {
+    var se_ServerSideEncryptionByDefault = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ServerSideEncryptionByDefault");
       if (input.SSEAlgorithm != null) {
         const node = xml_builder_1.XmlNode.of("ServerSideEncryption", input.SSEAlgorithm).withName("SSEAlgorithm");
@@ -46848,10 +46848,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ServerSideEncryptionConfiguration = (input, context3) => {
+    var se_ServerSideEncryptionConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ServerSideEncryptionConfiguration");
       if (input.Rules != null) {
-        const nodes = se_ServerSideEncryptionRules(input.Rules, context3);
+        const nodes = se_ServerSideEncryptionRules(input.Rules, context2);
         nodes.map((node) => {
           node = node.withName("Rule");
           bodyNode.addChildNode(node);
@@ -46859,10 +46859,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ServerSideEncryptionRule = (input, context3) => {
+    var se_ServerSideEncryptionRule = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("ServerSideEncryptionRule");
       if (input.ApplyServerSideEncryptionByDefault != null) {
-        const node = se_ServerSideEncryptionByDefault(input.ApplyServerSideEncryptionByDefault, context3).withName("ApplyServerSideEncryptionByDefault");
+        const node = se_ServerSideEncryptionByDefault(input.ApplyServerSideEncryptionByDefault, context2).withName("ApplyServerSideEncryptionByDefault");
         bodyNode.addChildNode(node);
       }
       if (input.BucketKeyEnabled != null) {
@@ -46871,25 +46871,25 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_ServerSideEncryptionRules = (input, context3) => {
+    var se_ServerSideEncryptionRules = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_ServerSideEncryptionRule(entry, context3);
+        const node = se_ServerSideEncryptionRule(entry, context2);
         return node.withName("member");
       });
     };
-    var se_SourceSelectionCriteria = (input, context3) => {
+    var se_SourceSelectionCriteria = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("SourceSelectionCriteria");
       if (input.SseKmsEncryptedObjects != null) {
-        const node = se_SseKmsEncryptedObjects(input.SseKmsEncryptedObjects, context3).withName("SseKmsEncryptedObjects");
+        const node = se_SseKmsEncryptedObjects(input.SseKmsEncryptedObjects, context2).withName("SseKmsEncryptedObjects");
         bodyNode.addChildNode(node);
       }
       if (input.ReplicaModifications != null) {
-        const node = se_ReplicaModifications(input.ReplicaModifications, context3).withName("ReplicaModifications");
+        const node = se_ReplicaModifications(input.ReplicaModifications, context2).withName("ReplicaModifications");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_SSEKMS = (input, context3) => {
+    var se_SSEKMS = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("SSE-KMS");
       if (input.KeyId != null) {
         const node = xml_builder_1.XmlNode.of("SSEKMSKeyId", input.KeyId).withName("KeyId");
@@ -46897,7 +46897,7 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_SseKmsEncryptedObjects = (input, context3) => {
+    var se_SseKmsEncryptedObjects = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("SseKmsEncryptedObjects");
       if (input.Status != null) {
         const node = xml_builder_1.XmlNode.of("SseKmsEncryptedObjectsStatus", input.Status).withName("Status");
@@ -46905,31 +46905,31 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_SSES3 = (input, context3) => {
+    var se_SSES3 = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("SSE-S3");
       return bodyNode;
     };
-    var se_StorageClassAnalysis = (input, context3) => {
+    var se_StorageClassAnalysis = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("StorageClassAnalysis");
       if (input.DataExport != null) {
-        const node = se_StorageClassAnalysisDataExport(input.DataExport, context3).withName("DataExport");
+        const node = se_StorageClassAnalysisDataExport(input.DataExport, context2).withName("DataExport");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_StorageClassAnalysisDataExport = (input, context3) => {
+    var se_StorageClassAnalysisDataExport = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("StorageClassAnalysisDataExport");
       if (input.OutputSchemaVersion != null) {
         const node = xml_builder_1.XmlNode.of("StorageClassAnalysisSchemaVersion", input.OutputSchemaVersion).withName("OutputSchemaVersion");
         bodyNode.addChildNode(node);
       }
       if (input.Destination != null) {
-        const node = se_AnalyticsExportDestination(input.Destination, context3).withName("Destination");
+        const node = se_AnalyticsExportDestination(input.Destination, context2).withName("Destination");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_Tag = (input, context3) => {
+    var se_Tag = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Tag");
       if (input.Key != null) {
         const node = xml_builder_1.XmlNode.of("ObjectKey", input.Key).withName("Key");
@@ -46941,10 +46941,10 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_Tagging = (input, context3) => {
+    var se_Tagging = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Tagging");
       if (input.TagSet != null) {
-        const nodes = se_TagSet(input.TagSet, context3);
+        const nodes = se_TagSet(input.TagSet, context2);
         const containerNode = new xml_builder_1.XmlNode("TagSet");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -46953,16 +46953,16 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_TagSet = (input, context3) => {
+    var se_TagSet = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_Tag(entry, context3);
+        const node = se_Tag(entry, context2);
         return node.withName("Tag");
       });
     };
-    var se_TargetGrant = (input, context3) => {
+    var se_TargetGrant = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("TargetGrant");
       if (input.Grantee != null) {
-        const node = se_Grantee(input.Grantee, context3).withName("Grantee");
+        const node = se_Grantee(input.Grantee, context2).withName("Grantee");
         node.addAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         bodyNode.addChildNode(node);
       }
@@ -46972,13 +46972,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_TargetGrants = (input, context3) => {
+    var se_TargetGrants = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_TargetGrant(entry, context3);
+        const node = se_TargetGrant(entry, context2);
         return node.withName("Grant");
       });
     };
-    var se_Tiering = (input, context3) => {
+    var se_Tiering = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Tiering");
       if (input.Days != null) {
         const node = xml_builder_1.XmlNode.of("IntelligentTieringDays", String(input.Days)).withName("Days");
@@ -46990,13 +46990,13 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_TieringList = (input, context3) => {
+    var se_TieringList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_Tiering(entry, context3);
+        const node = se_Tiering(entry, context2);
         return node.withName("member");
       });
     };
-    var se_TopicConfiguration = (input, context3) => {
+    var se_TopicConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("TopicConfiguration");
       if (input.Id != null) {
         const node = xml_builder_1.XmlNode.of("NotificationId", input.Id).withName("Id");
@@ -47007,25 +47007,25 @@ var require_Aws_restXml = __commonJS({
         bodyNode.addChildNode(node);
       }
       if (input.Events != null) {
-        const nodes = se_EventList(input.Events, context3);
+        const nodes = se_EventList(input.Events, context2);
         nodes.map((node) => {
           node = node.withName("Event");
           bodyNode.addChildNode(node);
         });
       }
       if (input.Filter != null) {
-        const node = se_NotificationConfigurationFilter(input.Filter, context3).withName("Filter");
+        const node = se_NotificationConfigurationFilter(input.Filter, context2).withName("Filter");
         bodyNode.addChildNode(node);
       }
       return bodyNode;
     };
-    var se_TopicConfigurationList = (input, context3) => {
+    var se_TopicConfigurationList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_TopicConfiguration(entry, context3);
+        const node = se_TopicConfiguration(entry, context2);
         return node.withName("member");
       });
     };
-    var se_Transition = (input, context3) => {
+    var se_Transition = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("Transition");
       if (input.Date != null) {
         const node = xml_builder_1.XmlNode.of("Date", (input.Date.toISOString().split(".")[0] + "Z").toString()).withName("Date");
@@ -47041,19 +47041,19 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_TransitionList = (input, context3) => {
+    var se_TransitionList = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_Transition(entry, context3);
+        const node = se_Transition(entry, context2);
         return node.withName("member");
       });
     };
-    var se_UserMetadata = (input, context3) => {
+    var se_UserMetadata = (input, context2) => {
       return input.filter((e) => e != null).map((entry) => {
-        const node = se_MetadataEntry(entry, context3);
+        const node = se_MetadataEntry(entry, context2);
         return node.withName("MetadataEntry");
       });
     };
-    var se_VersioningConfiguration = (input, context3) => {
+    var se_VersioningConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("VersioningConfiguration");
       if (input.MFADelete != null) {
         const node = xml_builder_1.XmlNode.of("MFADelete", input.MFADelete).withName("MfaDelete");
@@ -47065,22 +47065,22 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var se_WebsiteConfiguration = (input, context3) => {
+    var se_WebsiteConfiguration = (input, context2) => {
       const bodyNode = new xml_builder_1.XmlNode("WebsiteConfiguration");
       if (input.ErrorDocument != null) {
-        const node = se_ErrorDocument(input.ErrorDocument, context3).withName("ErrorDocument");
+        const node = se_ErrorDocument(input.ErrorDocument, context2).withName("ErrorDocument");
         bodyNode.addChildNode(node);
       }
       if (input.IndexDocument != null) {
-        const node = se_IndexDocument(input.IndexDocument, context3).withName("IndexDocument");
+        const node = se_IndexDocument(input.IndexDocument, context2).withName("IndexDocument");
         bodyNode.addChildNode(node);
       }
       if (input.RedirectAllRequestsTo != null) {
-        const node = se_RedirectAllRequestsTo(input.RedirectAllRequestsTo, context3).withName("RedirectAllRequestsTo");
+        const node = se_RedirectAllRequestsTo(input.RedirectAllRequestsTo, context2).withName("RedirectAllRequestsTo");
         bodyNode.addChildNode(node);
       }
       if (input.RoutingRules != null) {
-        const nodes = se_RoutingRules(input.RoutingRules, context3);
+        const nodes = se_RoutingRules(input.RoutingRules, context2);
         const containerNode = new xml_builder_1.XmlNode("RoutingRules");
         nodes.map((node) => {
           containerNode.addChildNode(node);
@@ -47089,36 +47089,36 @@ var require_Aws_restXml = __commonJS({
       }
       return bodyNode;
     };
-    var de_AbortIncompleteMultipartUpload = (output, context3) => {
+    var de_AbortIncompleteMultipartUpload = (output, context2) => {
       const contents = {};
       if (output["DaysAfterInitiation"] !== void 0) {
         contents.DaysAfterInitiation = (0, smithy_client_1.strictParseInt32)(output["DaysAfterInitiation"]);
       }
       return contents;
     };
-    var de_AccessControlTranslation = (output, context3) => {
+    var de_AccessControlTranslation = (output, context2) => {
       const contents = {};
       if (output["Owner"] !== void 0) {
         contents.Owner = (0, smithy_client_1.expectString)(output["Owner"]);
       }
       return contents;
     };
-    var de_AllowedHeaders = (output, context3) => {
+    var de_AllowedHeaders = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_AllowedMethods = (output, context3) => {
+    var de_AllowedMethods = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_AllowedOrigins = (output, context3) => {
+    var de_AllowedOrigins = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_AnalyticsAndOperator = (output, context3) => {
+    var de_AnalyticsAndOperator = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
@@ -47126,37 +47126,37 @@ var require_Aws_restXml = __commonJS({
       if (output.Tag === "") {
         contents.Tags = [];
       } else if (output["Tag"] !== void 0) {
-        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context3);
+        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context2);
       }
       return contents;
     };
-    var de_AnalyticsConfiguration = (output, context3) => {
+    var de_AnalyticsConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
       }
       if (output.Filter === "") {
       } else if (output["Filter"] !== void 0) {
-        contents.Filter = de_AnalyticsFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context3);
+        contents.Filter = de_AnalyticsFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context2);
       }
       if (output["StorageClassAnalysis"] !== void 0) {
-        contents.StorageClassAnalysis = de_StorageClassAnalysis(output["StorageClassAnalysis"], context3);
+        contents.StorageClassAnalysis = de_StorageClassAnalysis(output["StorageClassAnalysis"], context2);
       }
       return contents;
     };
-    var de_AnalyticsConfigurationList = (output, context3) => {
+    var de_AnalyticsConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_AnalyticsConfiguration(entry, context3);
+        return de_AnalyticsConfiguration(entry, context2);
       });
     };
-    var de_AnalyticsExportDestination = (output, context3) => {
+    var de_AnalyticsExportDestination = (output, context2) => {
       const contents = {};
       if (output["S3BucketDestination"] !== void 0) {
-        contents.S3BucketDestination = de_AnalyticsS3BucketDestination(output["S3BucketDestination"], context3);
+        contents.S3BucketDestination = de_AnalyticsS3BucketDestination(output["S3BucketDestination"], context2);
       }
       return contents;
     };
-    var de_AnalyticsFilter = (output, context3) => {
+    var de_AnalyticsFilter = (output, context2) => {
       if (output["Prefix"] !== void 0) {
         return {
           Prefix: (0, smithy_client_1.expectString)(output["Prefix"])
@@ -47164,17 +47164,17 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["Tag"] !== void 0) {
         return {
-          Tag: de_Tag(output["Tag"], context3)
+          Tag: de_Tag(output["Tag"], context2)
         };
       }
       if (output["And"] !== void 0) {
         return {
-          And: de_AnalyticsAndOperator(output["And"], context3)
+          And: de_AnalyticsAndOperator(output["And"], context2)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     };
-    var de_AnalyticsS3BucketDestination = (output, context3) => {
+    var de_AnalyticsS3BucketDestination = (output, context2) => {
       const contents = {};
       if (output["Format"] !== void 0) {
         contents.Format = (0, smithy_client_1.expectString)(output["Format"]);
@@ -47190,7 +47190,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_Bucket = (output, context3) => {
+    var de_Bucket = (output, context2) => {
       const contents = {};
       if (output["Name"] !== void 0) {
         contents.Name = (0, smithy_client_1.expectString)(output["Name"]);
@@ -47200,12 +47200,12 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_Buckets = (output, context3) => {
+    var de_Buckets = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Bucket(entry, context3);
+        return de_Bucket(entry, context2);
       });
     };
-    var de_Checksum = (output, context3) => {
+    var de_Checksum = (output, context2) => {
       const contents = {};
       if (output["ChecksumCRC32"] !== void 0) {
         contents.ChecksumCRC32 = (0, smithy_client_1.expectString)(output["ChecksumCRC32"]);
@@ -47221,24 +47221,24 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ChecksumAlgorithmList = (output, context3) => {
+    var de_ChecksumAlgorithmList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_CommonPrefix = (output, context3) => {
+    var de_CommonPrefix = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
       }
       return contents;
     };
-    var de_CommonPrefixList = (output, context3) => {
+    var de_CommonPrefixList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_CommonPrefix(entry, context3);
+        return de_CommonPrefix(entry, context2);
       });
     };
-    var de_Condition = (output, context3) => {
+    var de_Condition = (output, context2) => {
       const contents = {};
       if (output["HttpErrorCodeReturnedEquals"] !== void 0) {
         contents.HttpErrorCodeReturnedEquals = (0, smithy_client_1.expectString)(output["HttpErrorCodeReturnedEquals"]);
@@ -47248,33 +47248,11 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ContinuationEvent = (output, context3) => {
+    var de_ContinuationEvent = (output, context2) => {
       const contents = {};
       return contents;
     };
-    var de_CopyObjectResult = (output, context3) => {
-      const contents = {};
-      if (output["ETag"] !== void 0) {
-        contents.ETag = (0, smithy_client_1.expectString)(output["ETag"]);
-      }
-      if (output["LastModified"] !== void 0) {
-        contents.LastModified = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.parseRfc3339DateTimeWithOffset)(output["LastModified"]));
-      }
-      if (output["ChecksumCRC32"] !== void 0) {
-        contents.ChecksumCRC32 = (0, smithy_client_1.expectString)(output["ChecksumCRC32"]);
-      }
-      if (output["ChecksumCRC32C"] !== void 0) {
-        contents.ChecksumCRC32C = (0, smithy_client_1.expectString)(output["ChecksumCRC32C"]);
-      }
-      if (output["ChecksumSHA1"] !== void 0) {
-        contents.ChecksumSHA1 = (0, smithy_client_1.expectString)(output["ChecksumSHA1"]);
-      }
-      if (output["ChecksumSHA256"] !== void 0) {
-        contents.ChecksumSHA256 = (0, smithy_client_1.expectString)(output["ChecksumSHA256"]);
-      }
-      return contents;
-    };
-    var de_CopyPartResult = (output, context3) => {
+    var de_CopyObjectResult = (output, context2) => {
       const contents = {};
       if (output["ETag"] !== void 0) {
         contents.ETag = (0, smithy_client_1.expectString)(output["ETag"]);
@@ -47296,7 +47274,29 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_CORSRule = (output, context3) => {
+    var de_CopyPartResult = (output, context2) => {
+      const contents = {};
+      if (output["ETag"] !== void 0) {
+        contents.ETag = (0, smithy_client_1.expectString)(output["ETag"]);
+      }
+      if (output["LastModified"] !== void 0) {
+        contents.LastModified = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.parseRfc3339DateTimeWithOffset)(output["LastModified"]));
+      }
+      if (output["ChecksumCRC32"] !== void 0) {
+        contents.ChecksumCRC32 = (0, smithy_client_1.expectString)(output["ChecksumCRC32"]);
+      }
+      if (output["ChecksumCRC32C"] !== void 0) {
+        contents.ChecksumCRC32C = (0, smithy_client_1.expectString)(output["ChecksumCRC32C"]);
+      }
+      if (output["ChecksumSHA1"] !== void 0) {
+        contents.ChecksumSHA1 = (0, smithy_client_1.expectString)(output["ChecksumSHA1"]);
+      }
+      if (output["ChecksumSHA256"] !== void 0) {
+        contents.ChecksumSHA256 = (0, smithy_client_1.expectString)(output["ChecksumSHA256"]);
+      }
+      return contents;
+    };
+    var de_CORSRule = (output, context2) => {
       const contents = {};
       if (output["ID"] !== void 0) {
         contents.ID = (0, smithy_client_1.expectString)(output["ID"]);
@@ -47304,34 +47304,34 @@ var require_Aws_restXml = __commonJS({
       if (output.AllowedHeader === "") {
         contents.AllowedHeaders = [];
       } else if (output["AllowedHeader"] !== void 0) {
-        contents.AllowedHeaders = de_AllowedHeaders((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedHeader"]), context3);
+        contents.AllowedHeaders = de_AllowedHeaders((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedHeader"]), context2);
       }
       if (output.AllowedMethod === "") {
         contents.AllowedMethods = [];
       } else if (output["AllowedMethod"] !== void 0) {
-        contents.AllowedMethods = de_AllowedMethods((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedMethod"]), context3);
+        contents.AllowedMethods = de_AllowedMethods((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedMethod"]), context2);
       }
       if (output.AllowedOrigin === "") {
         contents.AllowedOrigins = [];
       } else if (output["AllowedOrigin"] !== void 0) {
-        contents.AllowedOrigins = de_AllowedOrigins((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedOrigin"]), context3);
+        contents.AllowedOrigins = de_AllowedOrigins((0, smithy_client_1.getArrayIfSingleItem)(output["AllowedOrigin"]), context2);
       }
       if (output.ExposeHeader === "") {
         contents.ExposeHeaders = [];
       } else if (output["ExposeHeader"] !== void 0) {
-        contents.ExposeHeaders = de_ExposeHeaders((0, smithy_client_1.getArrayIfSingleItem)(output["ExposeHeader"]), context3);
+        contents.ExposeHeaders = de_ExposeHeaders((0, smithy_client_1.getArrayIfSingleItem)(output["ExposeHeader"]), context2);
       }
       if (output["MaxAgeSeconds"] !== void 0) {
         contents.MaxAgeSeconds = (0, smithy_client_1.strictParseInt32)(output["MaxAgeSeconds"]);
       }
       return contents;
     };
-    var de_CORSRules = (output, context3) => {
+    var de_CORSRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_CORSRule(entry, context3);
+        return de_CORSRule(entry, context2);
       });
     };
-    var de_DefaultRetention = (output, context3) => {
+    var de_DefaultRetention = (output, context2) => {
       const contents = {};
       if (output["Mode"] !== void 0) {
         contents.Mode = (0, smithy_client_1.expectString)(output["Mode"]);
@@ -47344,7 +47344,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_DeletedObject = (output, context3) => {
+    var de_DeletedObject = (output, context2) => {
       const contents = {};
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
@@ -47360,15 +47360,15 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_DeletedObjects = (output, context3) => {
+    var de_DeletedObjects = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_DeletedObject(entry, context3);
+        return de_DeletedObject(entry, context2);
       });
     };
-    var de_DeleteMarkerEntry = (output, context3) => {
+    var de_DeleteMarkerEntry = (output, context2) => {
       const contents = {};
       if (output["Owner"] !== void 0) {
-        contents.Owner = de_Owner(output["Owner"], context3);
+        contents.Owner = de_Owner(output["Owner"], context2);
       }
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
@@ -47384,19 +47384,19 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_DeleteMarkerReplication = (output, context3) => {
+    var de_DeleteMarkerReplication = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       return contents;
     };
-    var de_DeleteMarkers = (output, context3) => {
+    var de_DeleteMarkers = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_DeleteMarkerEntry(entry, context3);
+        return de_DeleteMarkerEntry(entry, context2);
       });
     };
-    var de_Destination = (output, context3) => {
+    var de_Destination = (output, context2) => {
       const contents = {};
       if (output["Bucket"] !== void 0) {
         contents.Bucket = (0, smithy_client_1.expectString)(output["Bucket"]);
@@ -47408,31 +47408,31 @@ var require_Aws_restXml = __commonJS({
         contents.StorageClass = (0, smithy_client_1.expectString)(output["StorageClass"]);
       }
       if (output["AccessControlTranslation"] !== void 0) {
-        contents.AccessControlTranslation = de_AccessControlTranslation(output["AccessControlTranslation"], context3);
+        contents.AccessControlTranslation = de_AccessControlTranslation(output["AccessControlTranslation"], context2);
       }
       if (output["EncryptionConfiguration"] !== void 0) {
-        contents.EncryptionConfiguration = de_EncryptionConfiguration(output["EncryptionConfiguration"], context3);
+        contents.EncryptionConfiguration = de_EncryptionConfiguration(output["EncryptionConfiguration"], context2);
       }
       if (output["ReplicationTime"] !== void 0) {
-        contents.ReplicationTime = de_ReplicationTime(output["ReplicationTime"], context3);
+        contents.ReplicationTime = de_ReplicationTime(output["ReplicationTime"], context2);
       }
       if (output["Metrics"] !== void 0) {
-        contents.Metrics = de_Metrics(output["Metrics"], context3);
+        contents.Metrics = de_Metrics(output["Metrics"], context2);
       }
       return contents;
     };
-    var de_EncryptionConfiguration = (output, context3) => {
+    var de_EncryptionConfiguration = (output, context2) => {
       const contents = {};
       if (output["ReplicaKmsKeyID"] !== void 0) {
         contents.ReplicaKmsKeyID = (0, smithy_client_1.expectString)(output["ReplicaKmsKeyID"]);
       }
       return contents;
     };
-    var de_EndEvent = (output, context3) => {
+    var de_EndEvent = (output, context2) => {
       const contents = {};
       return contents;
     };
-    var de__Error = (output, context3) => {
+    var de__Error = (output, context2) => {
       const contents = {};
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
@@ -47448,40 +47448,40 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ErrorDocument = (output, context3) => {
+    var de_ErrorDocument = (output, context2) => {
       const contents = {};
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
       }
       return contents;
     };
-    var de_Errors = (output, context3) => {
+    var de_Errors = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de__Error(entry, context3);
+        return de__Error(entry, context2);
       });
     };
-    var de_EventBridgeConfiguration = (output, context3) => {
+    var de_EventBridgeConfiguration = (output, context2) => {
       const contents = {};
       return contents;
     };
-    var de_EventList = (output, context3) => {
+    var de_EventList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_ExistingObjectReplication = (output, context3) => {
+    var de_ExistingObjectReplication = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       return contents;
     };
-    var de_ExposeHeaders = (output, context3) => {
+    var de_ExposeHeaders = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_FilterRule = (output, context3) => {
+    var de_FilterRule = (output, context2) => {
       const contents = {};
       if (output["Name"] !== void 0) {
         contents.Name = (0, smithy_client_1.expectString)(output["Name"]);
@@ -47491,12 +47491,12 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_FilterRuleList = (output, context3) => {
+    var de_FilterRuleList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_FilterRule(entry, context3);
+        return de_FilterRule(entry, context2);
       });
     };
-    var de_GetObjectAttributesParts = (output, context3) => {
+    var de_GetObjectAttributesParts = (output, context2) => {
       const contents = {};
       if (output["PartsCount"] !== void 0) {
         contents.TotalPartsCount = (0, smithy_client_1.strictParseInt32)(output["PartsCount"]);
@@ -47516,21 +47516,21 @@ var require_Aws_restXml = __commonJS({
       if (output.Part === "") {
         contents.Parts = [];
       } else if (output["Part"] !== void 0) {
-        contents.Parts = de_PartsList((0, smithy_client_1.getArrayIfSingleItem)(output["Part"]), context3);
+        contents.Parts = de_PartsList((0, smithy_client_1.getArrayIfSingleItem)(output["Part"]), context2);
       }
       return contents;
     };
-    var de_Grant = (output, context3) => {
+    var de_Grant = (output, context2) => {
       const contents = {};
       if (output["Grantee"] !== void 0) {
-        contents.Grantee = de_Grantee(output["Grantee"], context3);
+        contents.Grantee = de_Grantee(output["Grantee"], context2);
       }
       if (output["Permission"] !== void 0) {
         contents.Permission = (0, smithy_client_1.expectString)(output["Permission"]);
       }
       return contents;
     };
-    var de_Grantee = (output, context3) => {
+    var de_Grantee = (output, context2) => {
       const contents = {};
       if (output["DisplayName"] !== void 0) {
         contents.DisplayName = (0, smithy_client_1.expectString)(output["DisplayName"]);
@@ -47549,19 +47549,19 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_Grants = (output, context3) => {
+    var de_Grants = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Grant(entry, context3);
+        return de_Grant(entry, context2);
       });
     };
-    var de_IndexDocument = (output, context3) => {
+    var de_IndexDocument = (output, context2) => {
       const contents = {};
       if (output["Suffix"] !== void 0) {
         contents.Suffix = (0, smithy_client_1.expectString)(output["Suffix"]);
       }
       return contents;
     };
-    var de_Initiator = (output, context3) => {
+    var de_Initiator = (output, context2) => {
       const contents = {};
       if (output["ID"] !== void 0) {
         contents.ID = (0, smithy_client_1.expectString)(output["ID"]);
@@ -47571,7 +47571,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_IntelligentTieringAndOperator = (output, context3) => {
+    var de_IntelligentTieringAndOperator = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
@@ -47579,17 +47579,17 @@ var require_Aws_restXml = __commonJS({
       if (output.Tag === "") {
         contents.Tags = [];
       } else if (output["Tag"] !== void 0) {
-        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context3);
+        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context2);
       }
       return contents;
     };
-    var de_IntelligentTieringConfiguration = (output, context3) => {
+    var de_IntelligentTieringConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
       }
       if (output["Filter"] !== void 0) {
-        contents.Filter = de_IntelligentTieringFilter(output["Filter"], context3);
+        contents.Filter = de_IntelligentTieringFilter(output["Filter"], context2);
       }
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
@@ -47597,38 +47597,38 @@ var require_Aws_restXml = __commonJS({
       if (output.Tiering === "") {
         contents.Tierings = [];
       } else if (output["Tiering"] !== void 0) {
-        contents.Tierings = de_TieringList((0, smithy_client_1.getArrayIfSingleItem)(output["Tiering"]), context3);
+        contents.Tierings = de_TieringList((0, smithy_client_1.getArrayIfSingleItem)(output["Tiering"]), context2);
       }
       return contents;
     };
-    var de_IntelligentTieringConfigurationList = (output, context3) => {
+    var de_IntelligentTieringConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_IntelligentTieringConfiguration(entry, context3);
+        return de_IntelligentTieringConfiguration(entry, context2);
       });
     };
-    var de_IntelligentTieringFilter = (output, context3) => {
+    var de_IntelligentTieringFilter = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
       }
       if (output["Tag"] !== void 0) {
-        contents.Tag = de_Tag(output["Tag"], context3);
+        contents.Tag = de_Tag(output["Tag"], context2);
       }
       if (output["And"] !== void 0) {
-        contents.And = de_IntelligentTieringAndOperator(output["And"], context3);
+        contents.And = de_IntelligentTieringAndOperator(output["And"], context2);
       }
       return contents;
     };
-    var de_InventoryConfiguration = (output, context3) => {
+    var de_InventoryConfiguration = (output, context2) => {
       const contents = {};
       if (output["Destination"] !== void 0) {
-        contents.Destination = de_InventoryDestination(output["Destination"], context3);
+        contents.Destination = de_InventoryDestination(output["Destination"], context2);
       }
       if (output["IsEnabled"] !== void 0) {
         contents.IsEnabled = (0, smithy_client_1.parseBoolean)(output["IsEnabled"]);
       }
       if (output["Filter"] !== void 0) {
-        contents.Filter = de_InventoryFilter(output["Filter"], context3);
+        contents.Filter = de_InventoryFilter(output["Filter"], context2);
       }
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
@@ -47639,48 +47639,48 @@ var require_Aws_restXml = __commonJS({
       if (output.OptionalFields === "") {
         contents.OptionalFields = [];
       } else if (output["OptionalFields"] !== void 0 && output["OptionalFields"]["Field"] !== void 0) {
-        contents.OptionalFields = de_InventoryOptionalFields((0, smithy_client_1.getArrayIfSingleItem)(output["OptionalFields"]["Field"]), context3);
+        contents.OptionalFields = de_InventoryOptionalFields((0, smithy_client_1.getArrayIfSingleItem)(output["OptionalFields"]["Field"]), context2);
       }
       if (output["Schedule"] !== void 0) {
-        contents.Schedule = de_InventorySchedule(output["Schedule"], context3);
+        contents.Schedule = de_InventorySchedule(output["Schedule"], context2);
       }
       return contents;
     };
-    var de_InventoryConfigurationList = (output, context3) => {
+    var de_InventoryConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_InventoryConfiguration(entry, context3);
+        return de_InventoryConfiguration(entry, context2);
       });
     };
-    var de_InventoryDestination = (output, context3) => {
+    var de_InventoryDestination = (output, context2) => {
       const contents = {};
       if (output["S3BucketDestination"] !== void 0) {
-        contents.S3BucketDestination = de_InventoryS3BucketDestination(output["S3BucketDestination"], context3);
+        contents.S3BucketDestination = de_InventoryS3BucketDestination(output["S3BucketDestination"], context2);
       }
       return contents;
     };
-    var de_InventoryEncryption = (output, context3) => {
+    var de_InventoryEncryption = (output, context2) => {
       const contents = {};
       if (output["SSE-S3"] !== void 0) {
-        contents.SSES3 = de_SSES3(output["SSE-S3"], context3);
+        contents.SSES3 = de_SSES3(output["SSE-S3"], context2);
       }
       if (output["SSE-KMS"] !== void 0) {
-        contents.SSEKMS = de_SSEKMS(output["SSE-KMS"], context3);
+        contents.SSEKMS = de_SSEKMS(output["SSE-KMS"], context2);
       }
       return contents;
     };
-    var de_InventoryFilter = (output, context3) => {
+    var de_InventoryFilter = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
       }
       return contents;
     };
-    var de_InventoryOptionalFields = (output, context3) => {
+    var de_InventoryOptionalFields = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, smithy_client_1.expectString)(entry);
       });
     };
-    var de_InventoryS3BucketDestination = (output, context3) => {
+    var de_InventoryS3BucketDestination = (output, context2) => {
       const contents = {};
       if (output["AccountId"] !== void 0) {
         contents.AccountId = (0, smithy_client_1.expectString)(output["AccountId"]);
@@ -47695,18 +47695,18 @@ var require_Aws_restXml = __commonJS({
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
       }
       if (output["Encryption"] !== void 0) {
-        contents.Encryption = de_InventoryEncryption(output["Encryption"], context3);
+        contents.Encryption = de_InventoryEncryption(output["Encryption"], context2);
       }
       return contents;
     };
-    var de_InventorySchedule = (output, context3) => {
+    var de_InventorySchedule = (output, context2) => {
       const contents = {};
       if (output["Frequency"] !== void 0) {
         contents.Frequency = (0, smithy_client_1.expectString)(output["Frequency"]);
       }
       return contents;
     };
-    var de_LambdaFunctionConfiguration = (output, context3) => {
+    var de_LambdaFunctionConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
@@ -47717,19 +47717,19 @@ var require_Aws_restXml = __commonJS({
       if (output.Event === "") {
         contents.Events = [];
       } else if (output["Event"] !== void 0) {
-        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context3);
+        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context2);
       }
       if (output["Filter"] !== void 0) {
-        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context3);
+        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context2);
       }
       return contents;
     };
-    var de_LambdaFunctionConfigurationList = (output, context3) => {
+    var de_LambdaFunctionConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_LambdaFunctionConfiguration(entry, context3);
+        return de_LambdaFunctionConfiguration(entry, context2);
       });
     };
-    var de_LifecycleExpiration = (output, context3) => {
+    var de_LifecycleExpiration = (output, context2) => {
       const contents = {};
       if (output["Date"] !== void 0) {
         contents.Date = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.parseRfc3339DateTimeWithOffset)(output["Date"]));
@@ -47742,10 +47742,10 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_LifecycleRule = (output, context3) => {
+    var de_LifecycleRule = (output, context2) => {
       const contents = {};
       if (output["Expiration"] !== void 0) {
-        contents.Expiration = de_LifecycleExpiration(output["Expiration"], context3);
+        contents.Expiration = de_LifecycleExpiration(output["Expiration"], context2);
       }
       if (output["ID"] !== void 0) {
         contents.ID = (0, smithy_client_1.expectString)(output["ID"]);
@@ -47755,7 +47755,7 @@ var require_Aws_restXml = __commonJS({
       }
       if (output.Filter === "") {
       } else if (output["Filter"] !== void 0) {
-        contents.Filter = de_LifecycleRuleFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context3);
+        contents.Filter = de_LifecycleRuleFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context2);
       }
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
@@ -47763,22 +47763,22 @@ var require_Aws_restXml = __commonJS({
       if (output.Transition === "") {
         contents.Transitions = [];
       } else if (output["Transition"] !== void 0) {
-        contents.Transitions = de_TransitionList((0, smithy_client_1.getArrayIfSingleItem)(output["Transition"]), context3);
+        contents.Transitions = de_TransitionList((0, smithy_client_1.getArrayIfSingleItem)(output["Transition"]), context2);
       }
       if (output.NoncurrentVersionTransition === "") {
         contents.NoncurrentVersionTransitions = [];
       } else if (output["NoncurrentVersionTransition"] !== void 0) {
-        contents.NoncurrentVersionTransitions = de_NoncurrentVersionTransitionList((0, smithy_client_1.getArrayIfSingleItem)(output["NoncurrentVersionTransition"]), context3);
+        contents.NoncurrentVersionTransitions = de_NoncurrentVersionTransitionList((0, smithy_client_1.getArrayIfSingleItem)(output["NoncurrentVersionTransition"]), context2);
       }
       if (output["NoncurrentVersionExpiration"] !== void 0) {
-        contents.NoncurrentVersionExpiration = de_NoncurrentVersionExpiration(output["NoncurrentVersionExpiration"], context3);
+        contents.NoncurrentVersionExpiration = de_NoncurrentVersionExpiration(output["NoncurrentVersionExpiration"], context2);
       }
       if (output["AbortIncompleteMultipartUpload"] !== void 0) {
-        contents.AbortIncompleteMultipartUpload = de_AbortIncompleteMultipartUpload(output["AbortIncompleteMultipartUpload"], context3);
+        contents.AbortIncompleteMultipartUpload = de_AbortIncompleteMultipartUpload(output["AbortIncompleteMultipartUpload"], context2);
       }
       return contents;
     };
-    var de_LifecycleRuleAndOperator = (output, context3) => {
+    var de_LifecycleRuleAndOperator = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
@@ -47786,7 +47786,7 @@ var require_Aws_restXml = __commonJS({
       if (output.Tag === "") {
         contents.Tags = [];
       } else if (output["Tag"] !== void 0) {
-        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context3);
+        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context2);
       }
       if (output["ObjectSizeGreaterThan"] !== void 0) {
         contents.ObjectSizeGreaterThan = (0, smithy_client_1.strictParseLong)(output["ObjectSizeGreaterThan"]);
@@ -47796,7 +47796,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_LifecycleRuleFilter = (output, context3) => {
+    var de_LifecycleRuleFilter = (output, context2) => {
       if (output["Prefix"] !== void 0) {
         return {
           Prefix: (0, smithy_client_1.expectString)(output["Prefix"])
@@ -47804,7 +47804,7 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["Tag"] !== void 0) {
         return {
-          Tag: de_Tag(output["Tag"], context3)
+          Tag: de_Tag(output["Tag"], context2)
         };
       }
       if (output["ObjectSizeGreaterThan"] !== void 0) {
@@ -47819,17 +47819,17 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["And"] !== void 0) {
         return {
-          And: de_LifecycleRuleAndOperator(output["And"], context3)
+          And: de_LifecycleRuleAndOperator(output["And"], context2)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     };
-    var de_LifecycleRules = (output, context3) => {
+    var de_LifecycleRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_LifecycleRule(entry, context3);
+        return de_LifecycleRule(entry, context2);
       });
     };
-    var de_LoggingEnabled = (output, context3) => {
+    var de_LoggingEnabled = (output, context2) => {
       const contents = {};
       if (output["TargetBucket"] !== void 0) {
         contents.TargetBucket = (0, smithy_client_1.expectString)(output["TargetBucket"]);
@@ -47837,24 +47837,24 @@ var require_Aws_restXml = __commonJS({
       if (output.TargetGrants === "") {
         contents.TargetGrants = [];
       } else if (output["TargetGrants"] !== void 0 && output["TargetGrants"]["Grant"] !== void 0) {
-        contents.TargetGrants = de_TargetGrants((0, smithy_client_1.getArrayIfSingleItem)(output["TargetGrants"]["Grant"]), context3);
+        contents.TargetGrants = de_TargetGrants((0, smithy_client_1.getArrayIfSingleItem)(output["TargetGrants"]["Grant"]), context2);
       }
       if (output["TargetPrefix"] !== void 0) {
         contents.TargetPrefix = (0, smithy_client_1.expectString)(output["TargetPrefix"]);
       }
       return contents;
     };
-    var de_Metrics = (output, context3) => {
+    var de_Metrics = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       if (output["EventThreshold"] !== void 0) {
-        contents.EventThreshold = de_ReplicationTimeValue(output["EventThreshold"], context3);
+        contents.EventThreshold = de_ReplicationTimeValue(output["EventThreshold"], context2);
       }
       return contents;
     };
-    var de_MetricsAndOperator = (output, context3) => {
+    var de_MetricsAndOperator = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
@@ -47862,30 +47862,30 @@ var require_Aws_restXml = __commonJS({
       if (output.Tag === "") {
         contents.Tags = [];
       } else if (output["Tag"] !== void 0) {
-        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context3);
+        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context2);
       }
       if (output["AccessPointArn"] !== void 0) {
         contents.AccessPointArn = (0, smithy_client_1.expectString)(output["AccessPointArn"]);
       }
       return contents;
     };
-    var de_MetricsConfiguration = (output, context3) => {
+    var de_MetricsConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
       }
       if (output.Filter === "") {
       } else if (output["Filter"] !== void 0) {
-        contents.Filter = de_MetricsFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context3);
+        contents.Filter = de_MetricsFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context2);
       }
       return contents;
     };
-    var de_MetricsConfigurationList = (output, context3) => {
+    var de_MetricsConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_MetricsConfiguration(entry, context3);
+        return de_MetricsConfiguration(entry, context2);
       });
     };
-    var de_MetricsFilter = (output, context3) => {
+    var de_MetricsFilter = (output, context2) => {
       if (output["Prefix"] !== void 0) {
         return {
           Prefix: (0, smithy_client_1.expectString)(output["Prefix"])
@@ -47893,7 +47893,7 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["Tag"] !== void 0) {
         return {
-          Tag: de_Tag(output["Tag"], context3)
+          Tag: de_Tag(output["Tag"], context2)
         };
       }
       if (output["AccessPointArn"] !== void 0) {
@@ -47903,12 +47903,12 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["And"] !== void 0) {
         return {
-          And: de_MetricsAndOperator(output["And"], context3)
+          And: de_MetricsAndOperator(output["And"], context2)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     };
-    var de_MultipartUpload = (output, context3) => {
+    var de_MultipartUpload = (output, context2) => {
       const contents = {};
       if (output["UploadId"] !== void 0) {
         contents.UploadId = (0, smithy_client_1.expectString)(output["UploadId"]);
@@ -47923,22 +47923,22 @@ var require_Aws_restXml = __commonJS({
         contents.StorageClass = (0, smithy_client_1.expectString)(output["StorageClass"]);
       }
       if (output["Owner"] !== void 0) {
-        contents.Owner = de_Owner(output["Owner"], context3);
+        contents.Owner = de_Owner(output["Owner"], context2);
       }
       if (output["Initiator"] !== void 0) {
-        contents.Initiator = de_Initiator(output["Initiator"], context3);
+        contents.Initiator = de_Initiator(output["Initiator"], context2);
       }
       if (output["ChecksumAlgorithm"] !== void 0) {
         contents.ChecksumAlgorithm = (0, smithy_client_1.expectString)(output["ChecksumAlgorithm"]);
       }
       return contents;
     };
-    var de_MultipartUploadList = (output, context3) => {
+    var de_MultipartUploadList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_MultipartUpload(entry, context3);
+        return de_MultipartUpload(entry, context2);
       });
     };
-    var de_NoncurrentVersionExpiration = (output, context3) => {
+    var de_NoncurrentVersionExpiration = (output, context2) => {
       const contents = {};
       if (output["NoncurrentDays"] !== void 0) {
         contents.NoncurrentDays = (0, smithy_client_1.strictParseInt32)(output["NoncurrentDays"]);
@@ -47948,7 +47948,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_NoncurrentVersionTransition = (output, context3) => {
+    var de_NoncurrentVersionTransition = (output, context2) => {
       const contents = {};
       if (output["NoncurrentDays"] !== void 0) {
         contents.NoncurrentDays = (0, smithy_client_1.strictParseInt32)(output["NoncurrentDays"]);
@@ -47961,19 +47961,19 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_NoncurrentVersionTransitionList = (output, context3) => {
+    var de_NoncurrentVersionTransitionList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_NoncurrentVersionTransition(entry, context3);
+        return de_NoncurrentVersionTransition(entry, context2);
       });
     };
-    var de_NotificationConfigurationFilter = (output, context3) => {
+    var de_NotificationConfigurationFilter = (output, context2) => {
       const contents = {};
       if (output["S3Key"] !== void 0) {
-        contents.Key = de_S3KeyFilter(output["S3Key"], context3);
+        contents.Key = de_S3KeyFilter(output["S3Key"], context2);
       }
       return contents;
     };
-    var de__Object = (output, context3) => {
+    var de__Object = (output, context2) => {
       const contents = {};
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
@@ -47987,7 +47987,7 @@ var require_Aws_restXml = __commonJS({
       if (output.ChecksumAlgorithm === "") {
         contents.ChecksumAlgorithm = [];
       } else if (output["ChecksumAlgorithm"] !== void 0) {
-        contents.ChecksumAlgorithm = de_ChecksumAlgorithmList((0, smithy_client_1.getArrayIfSingleItem)(output["ChecksumAlgorithm"]), context3);
+        contents.ChecksumAlgorithm = de_ChecksumAlgorithmList((0, smithy_client_1.getArrayIfSingleItem)(output["ChecksumAlgorithm"]), context2);
       }
       if (output["Size"] !== void 0) {
         contents.Size = (0, smithy_client_1.strictParseLong)(output["Size"]);
@@ -47996,36 +47996,36 @@ var require_Aws_restXml = __commonJS({
         contents.StorageClass = (0, smithy_client_1.expectString)(output["StorageClass"]);
       }
       if (output["Owner"] !== void 0) {
-        contents.Owner = de_Owner(output["Owner"], context3);
+        contents.Owner = de_Owner(output["Owner"], context2);
       }
       if (output["RestoreStatus"] !== void 0) {
-        contents.RestoreStatus = de_RestoreStatus(output["RestoreStatus"], context3);
+        contents.RestoreStatus = de_RestoreStatus(output["RestoreStatus"], context2);
       }
       return contents;
     };
-    var de_ObjectList = (output, context3) => {
+    var de_ObjectList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de__Object(entry, context3);
+        return de__Object(entry, context2);
       });
     };
-    var de_ObjectLockConfiguration = (output, context3) => {
+    var de_ObjectLockConfiguration = (output, context2) => {
       const contents = {};
       if (output["ObjectLockEnabled"] !== void 0) {
         contents.ObjectLockEnabled = (0, smithy_client_1.expectString)(output["ObjectLockEnabled"]);
       }
       if (output["Rule"] !== void 0) {
-        contents.Rule = de_ObjectLockRule(output["Rule"], context3);
+        contents.Rule = de_ObjectLockRule(output["Rule"], context2);
       }
       return contents;
     };
-    var de_ObjectLockLegalHold = (output, context3) => {
+    var de_ObjectLockLegalHold = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       return contents;
     };
-    var de_ObjectLockRetention = (output, context3) => {
+    var de_ObjectLockRetention = (output, context2) => {
       const contents = {};
       if (output["Mode"] !== void 0) {
         contents.Mode = (0, smithy_client_1.expectString)(output["Mode"]);
@@ -48035,14 +48035,14 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ObjectLockRule = (output, context3) => {
+    var de_ObjectLockRule = (output, context2) => {
       const contents = {};
       if (output["DefaultRetention"] !== void 0) {
-        contents.DefaultRetention = de_DefaultRetention(output["DefaultRetention"], context3);
+        contents.DefaultRetention = de_DefaultRetention(output["DefaultRetention"], context2);
       }
       return contents;
     };
-    var de_ObjectPart = (output, context3) => {
+    var de_ObjectPart = (output, context2) => {
       const contents = {};
       if (output["PartNumber"] !== void 0) {
         contents.PartNumber = (0, smithy_client_1.strictParseInt32)(output["PartNumber"]);
@@ -48064,7 +48064,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ObjectVersion = (output, context3) => {
+    var de_ObjectVersion = (output, context2) => {
       const contents = {};
       if (output["ETag"] !== void 0) {
         contents.ETag = (0, smithy_client_1.expectString)(output["ETag"]);
@@ -48072,7 +48072,7 @@ var require_Aws_restXml = __commonJS({
       if (output.ChecksumAlgorithm === "") {
         contents.ChecksumAlgorithm = [];
       } else if (output["ChecksumAlgorithm"] !== void 0) {
-        contents.ChecksumAlgorithm = de_ChecksumAlgorithmList((0, smithy_client_1.getArrayIfSingleItem)(output["ChecksumAlgorithm"]), context3);
+        contents.ChecksumAlgorithm = de_ChecksumAlgorithmList((0, smithy_client_1.getArrayIfSingleItem)(output["ChecksumAlgorithm"]), context2);
       }
       if (output["Size"] !== void 0) {
         contents.Size = (0, smithy_client_1.strictParseLong)(output["Size"]);
@@ -48093,19 +48093,19 @@ var require_Aws_restXml = __commonJS({
         contents.LastModified = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.parseRfc3339DateTimeWithOffset)(output["LastModified"]));
       }
       if (output["Owner"] !== void 0) {
-        contents.Owner = de_Owner(output["Owner"], context3);
+        contents.Owner = de_Owner(output["Owner"], context2);
       }
       if (output["RestoreStatus"] !== void 0) {
-        contents.RestoreStatus = de_RestoreStatus(output["RestoreStatus"], context3);
+        contents.RestoreStatus = de_RestoreStatus(output["RestoreStatus"], context2);
       }
       return contents;
     };
-    var de_ObjectVersionList = (output, context3) => {
+    var de_ObjectVersionList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ObjectVersion(entry, context3);
+        return de_ObjectVersion(entry, context2);
       });
     };
-    var de_Owner = (output, context3) => {
+    var de_Owner = (output, context2) => {
       const contents = {};
       if (output["DisplayName"] !== void 0) {
         contents.DisplayName = (0, smithy_client_1.expectString)(output["DisplayName"]);
@@ -48115,28 +48115,28 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_OwnershipControls = (output, context3) => {
+    var de_OwnershipControls = (output, context2) => {
       const contents = {};
       if (output.Rule === "") {
         contents.Rules = [];
       } else if (output["Rule"] !== void 0) {
-        contents.Rules = de_OwnershipControlsRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context3);
+        contents.Rules = de_OwnershipControlsRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context2);
       }
       return contents;
     };
-    var de_OwnershipControlsRule = (output, context3) => {
+    var de_OwnershipControlsRule = (output, context2) => {
       const contents = {};
       if (output["ObjectOwnership"] !== void 0) {
         contents.ObjectOwnership = (0, smithy_client_1.expectString)(output["ObjectOwnership"]);
       }
       return contents;
     };
-    var de_OwnershipControlsRules = (output, context3) => {
+    var de_OwnershipControlsRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_OwnershipControlsRule(entry, context3);
+        return de_OwnershipControlsRule(entry, context2);
       });
     };
-    var de_Part = (output, context3) => {
+    var de_Part = (output, context2) => {
       const contents = {};
       if (output["PartNumber"] !== void 0) {
         contents.PartNumber = (0, smithy_client_1.strictParseInt32)(output["PartNumber"]);
@@ -48164,24 +48164,24 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_Parts = (output, context3) => {
+    var de_Parts = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Part(entry, context3);
+        return de_Part(entry, context2);
       });
     };
-    var de_PartsList = (output, context3) => {
+    var de_PartsList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ObjectPart(entry, context3);
+        return de_ObjectPart(entry, context2);
       });
     };
-    var de_PolicyStatus = (output, context3) => {
+    var de_PolicyStatus = (output, context2) => {
       const contents = {};
       if (output["IsPublic"] !== void 0) {
         contents.IsPublic = (0, smithy_client_1.parseBoolean)(output["IsPublic"]);
       }
       return contents;
     };
-    var de_Progress = (output, context3) => {
+    var de_Progress = (output, context2) => {
       const contents = {};
       if (output["BytesScanned"] !== void 0) {
         contents.BytesScanned = (0, smithy_client_1.strictParseLong)(output["BytesScanned"]);
@@ -48194,7 +48194,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_PublicAccessBlockConfiguration = (output, context3) => {
+    var de_PublicAccessBlockConfiguration = (output, context2) => {
       const contents = {};
       if (output["BlockPublicAcls"] !== void 0) {
         contents.BlockPublicAcls = (0, smithy_client_1.parseBoolean)(output["BlockPublicAcls"]);
@@ -48210,7 +48210,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_QueueConfiguration = (output, context3) => {
+    var de_QueueConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
@@ -48221,19 +48221,19 @@ var require_Aws_restXml = __commonJS({
       if (output.Event === "") {
         contents.Events = [];
       } else if (output["Event"] !== void 0) {
-        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context3);
+        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context2);
       }
       if (output["Filter"] !== void 0) {
-        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context3);
+        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context2);
       }
       return contents;
     };
-    var de_QueueConfigurationList = (output, context3) => {
+    var de_QueueConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_QueueConfiguration(entry, context3);
+        return de_QueueConfiguration(entry, context2);
       });
     };
-    var de_Redirect = (output, context3) => {
+    var de_Redirect = (output, context2) => {
       const contents = {};
       if (output["HostName"] !== void 0) {
         contents.HostName = (0, smithy_client_1.expectString)(output["HostName"]);
@@ -48252,7 +48252,7 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_RedirectAllRequestsTo = (output, context3) => {
+    var de_RedirectAllRequestsTo = (output, context2) => {
       const contents = {};
       if (output["HostName"] !== void 0) {
         contents.HostName = (0, smithy_client_1.expectString)(output["HostName"]);
@@ -48262,14 +48262,14 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ReplicaModifications = (output, context3) => {
+    var de_ReplicaModifications = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       return contents;
     };
-    var de_ReplicationConfiguration = (output, context3) => {
+    var de_ReplicationConfiguration = (output, context2) => {
       const contents = {};
       if (output["Role"] !== void 0) {
         contents.Role = (0, smithy_client_1.expectString)(output["Role"]);
@@ -48277,11 +48277,11 @@ var require_Aws_restXml = __commonJS({
       if (output.Rule === "") {
         contents.Rules = [];
       } else if (output["Rule"] !== void 0) {
-        contents.Rules = de_ReplicationRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context3);
+        contents.Rules = de_ReplicationRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context2);
       }
       return contents;
     };
-    var de_ReplicationRule = (output, context3) => {
+    var de_ReplicationRule = (output, context2) => {
       const contents = {};
       if (output["ID"] !== void 0) {
         contents.ID = (0, smithy_client_1.expectString)(output["ID"]);
@@ -48294,26 +48294,26 @@ var require_Aws_restXml = __commonJS({
       }
       if (output.Filter === "") {
       } else if (output["Filter"] !== void 0) {
-        contents.Filter = de_ReplicationRuleFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context3);
+        contents.Filter = de_ReplicationRuleFilter((0, smithy_client_1.expectUnion)(output["Filter"]), context2);
       }
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       if (output["SourceSelectionCriteria"] !== void 0) {
-        contents.SourceSelectionCriteria = de_SourceSelectionCriteria(output["SourceSelectionCriteria"], context3);
+        contents.SourceSelectionCriteria = de_SourceSelectionCriteria(output["SourceSelectionCriteria"], context2);
       }
       if (output["ExistingObjectReplication"] !== void 0) {
-        contents.ExistingObjectReplication = de_ExistingObjectReplication(output["ExistingObjectReplication"], context3);
+        contents.ExistingObjectReplication = de_ExistingObjectReplication(output["ExistingObjectReplication"], context2);
       }
       if (output["Destination"] !== void 0) {
-        contents.Destination = de_Destination(output["Destination"], context3);
+        contents.Destination = de_Destination(output["Destination"], context2);
       }
       if (output["DeleteMarkerReplication"] !== void 0) {
-        contents.DeleteMarkerReplication = de_DeleteMarkerReplication(output["DeleteMarkerReplication"], context3);
+        contents.DeleteMarkerReplication = de_DeleteMarkerReplication(output["DeleteMarkerReplication"], context2);
       }
       return contents;
     };
-    var de_ReplicationRuleAndOperator = (output, context3) => {
+    var de_ReplicationRuleAndOperator = (output, context2) => {
       const contents = {};
       if (output["Prefix"] !== void 0) {
         contents.Prefix = (0, smithy_client_1.expectString)(output["Prefix"]);
@@ -48321,11 +48321,11 @@ var require_Aws_restXml = __commonJS({
       if (output.Tag === "") {
         contents.Tags = [];
       } else if (output["Tag"] !== void 0) {
-        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context3);
+        contents.Tags = de_TagSet((0, smithy_client_1.getArrayIfSingleItem)(output["Tag"]), context2);
       }
       return contents;
     };
-    var de_ReplicationRuleFilter = (output, context3) => {
+    var de_ReplicationRuleFilter = (output, context2) => {
       if (output["Prefix"] !== void 0) {
         return {
           Prefix: (0, smithy_client_1.expectString)(output["Prefix"])
@@ -48333,39 +48333,39 @@ var require_Aws_restXml = __commonJS({
       }
       if (output["Tag"] !== void 0) {
         return {
-          Tag: de_Tag(output["Tag"], context3)
+          Tag: de_Tag(output["Tag"], context2)
         };
       }
       if (output["And"] !== void 0) {
         return {
-          And: de_ReplicationRuleAndOperator(output["And"], context3)
+          And: de_ReplicationRuleAndOperator(output["And"], context2)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     };
-    var de_ReplicationRules = (output, context3) => {
+    var de_ReplicationRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ReplicationRule(entry, context3);
+        return de_ReplicationRule(entry, context2);
       });
     };
-    var de_ReplicationTime = (output, context3) => {
+    var de_ReplicationTime = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       if (output["Time"] !== void 0) {
-        contents.Time = de_ReplicationTimeValue(output["Time"], context3);
+        contents.Time = de_ReplicationTimeValue(output["Time"], context2);
       }
       return contents;
     };
-    var de_ReplicationTimeValue = (output, context3) => {
+    var de_ReplicationTimeValue = (output, context2) => {
       const contents = {};
       if (output["Minutes"] !== void 0) {
         contents.Minutes = (0, smithy_client_1.strictParseInt32)(output["Minutes"]);
       }
       return contents;
     };
-    var de_RestoreStatus = (output, context3) => {
+    var de_RestoreStatus = (output, context2) => {
       const contents = {};
       if (output["IsRestoreInProgress"] !== void 0) {
         contents.IsRestoreInProgress = (0, smithy_client_1.parseBoolean)(output["IsRestoreInProgress"]);
@@ -48375,31 +48375,31 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_RoutingRule = (output, context3) => {
+    var de_RoutingRule = (output, context2) => {
       const contents = {};
       if (output["Condition"] !== void 0) {
-        contents.Condition = de_Condition(output["Condition"], context3);
+        contents.Condition = de_Condition(output["Condition"], context2);
       }
       if (output["Redirect"] !== void 0) {
-        contents.Redirect = de_Redirect(output["Redirect"], context3);
+        contents.Redirect = de_Redirect(output["Redirect"], context2);
       }
       return contents;
     };
-    var de_RoutingRules = (output, context3) => {
+    var de_RoutingRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_RoutingRule(entry, context3);
+        return de_RoutingRule(entry, context2);
       });
     };
-    var de_S3KeyFilter = (output, context3) => {
+    var de_S3KeyFilter = (output, context2) => {
       const contents = {};
       if (output.FilterRule === "") {
         contents.FilterRules = [];
       } else if (output["FilterRule"] !== void 0) {
-        contents.FilterRules = de_FilterRuleList((0, smithy_client_1.getArrayIfSingleItem)(output["FilterRule"]), context3);
+        contents.FilterRules = de_FilterRuleList((0, smithy_client_1.getArrayIfSingleItem)(output["FilterRule"]), context2);
       }
       return contents;
     };
-    var de_ServerSideEncryptionByDefault = (output, context3) => {
+    var de_ServerSideEncryptionByDefault = (output, context2) => {
       const contents = {};
       if (output["SSEAlgorithm"] !== void 0) {
         contents.SSEAlgorithm = (0, smithy_client_1.expectString)(output["SSEAlgorithm"]);
@@ -48409,59 +48409,59 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_ServerSideEncryptionConfiguration = (output, context3) => {
+    var de_ServerSideEncryptionConfiguration = (output, context2) => {
       const contents = {};
       if (output.Rule === "") {
         contents.Rules = [];
       } else if (output["Rule"] !== void 0) {
-        contents.Rules = de_ServerSideEncryptionRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context3);
+        contents.Rules = de_ServerSideEncryptionRules((0, smithy_client_1.getArrayIfSingleItem)(output["Rule"]), context2);
       }
       return contents;
     };
-    var de_ServerSideEncryptionRule = (output, context3) => {
+    var de_ServerSideEncryptionRule = (output, context2) => {
       const contents = {};
       if (output["ApplyServerSideEncryptionByDefault"] !== void 0) {
-        contents.ApplyServerSideEncryptionByDefault = de_ServerSideEncryptionByDefault(output["ApplyServerSideEncryptionByDefault"], context3);
+        contents.ApplyServerSideEncryptionByDefault = de_ServerSideEncryptionByDefault(output["ApplyServerSideEncryptionByDefault"], context2);
       }
       if (output["BucketKeyEnabled"] !== void 0) {
         contents.BucketKeyEnabled = (0, smithy_client_1.parseBoolean)(output["BucketKeyEnabled"]);
       }
       return contents;
     };
-    var de_ServerSideEncryptionRules = (output, context3) => {
+    var de_ServerSideEncryptionRules = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ServerSideEncryptionRule(entry, context3);
+        return de_ServerSideEncryptionRule(entry, context2);
       });
     };
-    var de_SourceSelectionCriteria = (output, context3) => {
+    var de_SourceSelectionCriteria = (output, context2) => {
       const contents = {};
       if (output["SseKmsEncryptedObjects"] !== void 0) {
-        contents.SseKmsEncryptedObjects = de_SseKmsEncryptedObjects(output["SseKmsEncryptedObjects"], context3);
+        contents.SseKmsEncryptedObjects = de_SseKmsEncryptedObjects(output["SseKmsEncryptedObjects"], context2);
       }
       if (output["ReplicaModifications"] !== void 0) {
-        contents.ReplicaModifications = de_ReplicaModifications(output["ReplicaModifications"], context3);
+        contents.ReplicaModifications = de_ReplicaModifications(output["ReplicaModifications"], context2);
       }
       return contents;
     };
-    var de_SSEKMS = (output, context3) => {
+    var de_SSEKMS = (output, context2) => {
       const contents = {};
       if (output["KeyId"] !== void 0) {
         contents.KeyId = (0, smithy_client_1.expectString)(output["KeyId"]);
       }
       return contents;
     };
-    var de_SseKmsEncryptedObjects = (output, context3) => {
+    var de_SseKmsEncryptedObjects = (output, context2) => {
       const contents = {};
       if (output["Status"] !== void 0) {
         contents.Status = (0, smithy_client_1.expectString)(output["Status"]);
       }
       return contents;
     };
-    var de_SSES3 = (output, context3) => {
+    var de_SSES3 = (output, context2) => {
       const contents = {};
       return contents;
     };
-    var de_Stats = (output, context3) => {
+    var de_Stats = (output, context2) => {
       const contents = {};
       if (output["BytesScanned"] !== void 0) {
         contents.BytesScanned = (0, smithy_client_1.strictParseLong)(output["BytesScanned"]);
@@ -48474,24 +48474,24 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_StorageClassAnalysis = (output, context3) => {
+    var de_StorageClassAnalysis = (output, context2) => {
       const contents = {};
       if (output["DataExport"] !== void 0) {
-        contents.DataExport = de_StorageClassAnalysisDataExport(output["DataExport"], context3);
+        contents.DataExport = de_StorageClassAnalysisDataExport(output["DataExport"], context2);
       }
       return contents;
     };
-    var de_StorageClassAnalysisDataExport = (output, context3) => {
+    var de_StorageClassAnalysisDataExport = (output, context2) => {
       const contents = {};
       if (output["OutputSchemaVersion"] !== void 0) {
         contents.OutputSchemaVersion = (0, smithy_client_1.expectString)(output["OutputSchemaVersion"]);
       }
       if (output["Destination"] !== void 0) {
-        contents.Destination = de_AnalyticsExportDestination(output["Destination"], context3);
+        contents.Destination = de_AnalyticsExportDestination(output["Destination"], context2);
       }
       return contents;
     };
-    var de_Tag = (output, context3) => {
+    var de_Tag = (output, context2) => {
       const contents = {};
       if (output["Key"] !== void 0) {
         contents.Key = (0, smithy_client_1.expectString)(output["Key"]);
@@ -48501,27 +48501,27 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_TagSet = (output, context3) => {
+    var de_TagSet = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Tag(entry, context3);
+        return de_Tag(entry, context2);
       });
     };
-    var de_TargetGrant = (output, context3) => {
+    var de_TargetGrant = (output, context2) => {
       const contents = {};
       if (output["Grantee"] !== void 0) {
-        contents.Grantee = de_Grantee(output["Grantee"], context3);
+        contents.Grantee = de_Grantee(output["Grantee"], context2);
       }
       if (output["Permission"] !== void 0) {
         contents.Permission = (0, smithy_client_1.expectString)(output["Permission"]);
       }
       return contents;
     };
-    var de_TargetGrants = (output, context3) => {
+    var de_TargetGrants = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_TargetGrant(entry, context3);
+        return de_TargetGrant(entry, context2);
       });
     };
-    var de_Tiering = (output, context3) => {
+    var de_Tiering = (output, context2) => {
       const contents = {};
       if (output["Days"] !== void 0) {
         contents.Days = (0, smithy_client_1.strictParseInt32)(output["Days"]);
@@ -48531,12 +48531,12 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_TieringList = (output, context3) => {
+    var de_TieringList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Tiering(entry, context3);
+        return de_Tiering(entry, context2);
       });
     };
-    var de_TopicConfiguration = (output, context3) => {
+    var de_TopicConfiguration = (output, context2) => {
       const contents = {};
       if (output["Id"] !== void 0) {
         contents.Id = (0, smithy_client_1.expectString)(output["Id"]);
@@ -48547,19 +48547,19 @@ var require_Aws_restXml = __commonJS({
       if (output.Event === "") {
         contents.Events = [];
       } else if (output["Event"] !== void 0) {
-        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context3);
+        contents.Events = de_EventList((0, smithy_client_1.getArrayIfSingleItem)(output["Event"]), context2);
       }
       if (output["Filter"] !== void 0) {
-        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context3);
+        contents.Filter = de_NotificationConfigurationFilter(output["Filter"], context2);
       }
       return contents;
     };
-    var de_TopicConfigurationList = (output, context3) => {
+    var de_TopicConfigurationList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_TopicConfiguration(entry, context3);
+        return de_TopicConfiguration(entry, context2);
       });
     };
-    var de_Transition = (output, context3) => {
+    var de_Transition = (output, context2) => {
       const contents = {};
       if (output["Date"] !== void 0) {
         contents.Date = (0, smithy_client_1.expectNonNull)((0, smithy_client_1.parseRfc3339DateTimeWithOffset)(output["Date"]));
@@ -48572,9 +48572,9 @@ var require_Aws_restXml = __commonJS({
       }
       return contents;
     };
-    var de_TransitionList = (output, context3) => {
+    var de_TransitionList = (output, context2) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Transition(entry, context3);
+        return de_Transition(entry, context2);
       });
     };
     var deserializeMetadata = (output) => ({
@@ -48583,9 +48583,9 @@ var require_Aws_restXml = __commonJS({
       extendedRequestId: output.headers["x-amz-id-2"],
       cfId: output.headers["x-amz-cf-id"]
     });
-    var collectBodyString = (streamBody, context3) => (0, smithy_client_1.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body));
+    var collectBodyString = (streamBody, context2) => (0, smithy_client_1.collectBody)(streamBody, context2).then((body) => context2.utf8Encoder(body));
     var isSerializableHeaderValue = (value) => value !== void 0 && value !== null && value !== "" && (!Object.getOwnPropertyNames(value).includes("length") || value.length != 0) && (!Object.getOwnPropertyNames(value).includes("size") || value.size != 0);
-    var parseBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    var parseBody = (streamBody, context2) => collectBodyString(streamBody, context2).then((encoded) => {
       if (encoded.length) {
         const parser = new fast_xml_parser_1.XMLParser({
           attributeNamePrefix: "",
@@ -48610,8 +48610,8 @@ var require_Aws_restXml = __commonJS({
       }
       return {};
     });
-    var parseErrorBody = async (errorBody, context3) => {
-      const value = await parseBody(errorBody, context3);
+    var parseErrorBody = async (errorBody, context2) => {
+      const value = await parseBody(errorBody, context2);
       if (value.Error) {
         value.Error.message = value.Error.message ?? value.Error.Message;
       }
@@ -48682,11 +48682,11 @@ var require_AbortMultipartUploadCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_AbortMultipartUploadCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_AbortMultipartUploadCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_AbortMultipartUploadCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_AbortMultipartUploadCommand)(output, context2);
       }
     };
     exports.AbortMultipartUploadCommand = AbortMultipartUploadCommand;
@@ -48807,11 +48807,11 @@ var require_CompleteMultipartUploadCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_CompleteMultipartUploadCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_CompleteMultipartUploadCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_CompleteMultipartUploadCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_CompleteMultipartUploadCommand)(output, context2);
       }
     };
     exports.CompleteMultipartUploadCommand = CompleteMultipartUploadCommand;
@@ -48877,11 +48877,11 @@ var require_CopyObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_CopyObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_CopyObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_CopyObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_CopyObjectCommand)(output, context2);
       }
     };
     exports.CopyObjectCommand = CopyObjectCommand;
@@ -48983,11 +48983,11 @@ var require_CreateBucketCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_CreateBucketCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_CreateBucketCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_CreateBucketCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_CreateBucketCommand)(output, context2);
       }
     };
     exports.CreateBucketCommand = CreateBucketCommand;
@@ -49051,11 +49051,11 @@ var require_CreateMultipartUploadCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_CreateMultipartUploadCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_CreateMultipartUploadCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_CreateMultipartUploadCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_CreateMultipartUploadCommand)(output, context2);
       }
     };
     exports.CreateMultipartUploadCommand = CreateMultipartUploadCommand;
@@ -49116,11 +49116,11 @@ var require_DeleteBucketAnalyticsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketAnalyticsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketAnalyticsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketAnalyticsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketAnalyticsConfigurationCommand)(output, context2);
       }
     };
     exports.DeleteBucketAnalyticsConfigurationCommand = DeleteBucketAnalyticsConfigurationCommand;
@@ -49181,11 +49181,11 @@ var require_DeleteBucketCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketCommand)(output, context2);
       }
     };
     exports.DeleteBucketCommand = DeleteBucketCommand;
@@ -49246,11 +49246,11 @@ var require_DeleteBucketCorsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketCorsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketCorsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketCorsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketCorsCommand)(output, context2);
       }
     };
     exports.DeleteBucketCorsCommand = DeleteBucketCorsCommand;
@@ -49311,11 +49311,11 @@ var require_DeleteBucketEncryptionCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketEncryptionCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketEncryptionCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketEncryptionCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketEncryptionCommand)(output, context2);
       }
     };
     exports.DeleteBucketEncryptionCommand = DeleteBucketEncryptionCommand;
@@ -49376,11 +49376,11 @@ var require_DeleteBucketIntelligentTieringConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketIntelligentTieringConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketIntelligentTieringConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketIntelligentTieringConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketIntelligentTieringConfigurationCommand)(output, context2);
       }
     };
     exports.DeleteBucketIntelligentTieringConfigurationCommand = DeleteBucketIntelligentTieringConfigurationCommand;
@@ -49441,11 +49441,11 @@ var require_DeleteBucketInventoryConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketInventoryConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketInventoryConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketInventoryConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketInventoryConfigurationCommand)(output, context2);
       }
     };
     exports.DeleteBucketInventoryConfigurationCommand = DeleteBucketInventoryConfigurationCommand;
@@ -49506,11 +49506,11 @@ var require_DeleteBucketLifecycleCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketLifecycleCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketLifecycleCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketLifecycleCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketLifecycleCommand)(output, context2);
       }
     };
     exports.DeleteBucketLifecycleCommand = DeleteBucketLifecycleCommand;
@@ -49571,11 +49571,11 @@ var require_DeleteBucketMetricsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketMetricsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketMetricsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketMetricsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketMetricsConfigurationCommand)(output, context2);
       }
     };
     exports.DeleteBucketMetricsConfigurationCommand = DeleteBucketMetricsConfigurationCommand;
@@ -49636,11 +49636,11 @@ var require_DeleteBucketOwnershipControlsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketOwnershipControlsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketOwnershipControlsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketOwnershipControlsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketOwnershipControlsCommand)(output, context2);
       }
     };
     exports.DeleteBucketOwnershipControlsCommand = DeleteBucketOwnershipControlsCommand;
@@ -49701,11 +49701,11 @@ var require_DeleteBucketPolicyCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketPolicyCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketPolicyCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketPolicyCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketPolicyCommand)(output, context2);
       }
     };
     exports.DeleteBucketPolicyCommand = DeleteBucketPolicyCommand;
@@ -49766,11 +49766,11 @@ var require_DeleteBucketReplicationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketReplicationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketReplicationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketReplicationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketReplicationCommand)(output, context2);
       }
     };
     exports.DeleteBucketReplicationCommand = DeleteBucketReplicationCommand;
@@ -49831,11 +49831,11 @@ var require_DeleteBucketTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketTaggingCommand)(output, context2);
       }
     };
     exports.DeleteBucketTaggingCommand = DeleteBucketTaggingCommand;
@@ -49896,11 +49896,11 @@ var require_DeleteBucketWebsiteCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteBucketWebsiteCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteBucketWebsiteCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteBucketWebsiteCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteBucketWebsiteCommand)(output, context2);
       }
     };
     exports.DeleteBucketWebsiteCommand = DeleteBucketWebsiteCommand;
@@ -49961,11 +49961,11 @@ var require_DeleteObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteObjectCommand)(output, context2);
       }
     };
     exports.DeleteObjectCommand = DeleteObjectCommand;
@@ -51031,7 +51031,7 @@ var require_flexibleChecksumsResponseMiddleware = __commonJS({
       tags: ["BODY_CHECKSUM"],
       override: true
     };
-    var flexibleChecksumsResponseMiddleware = (config, middlewareConfig) => (next, context3) => async (args) => {
+    var flexibleChecksumsResponseMiddleware = (config, middlewareConfig) => (next, context2) => async (args) => {
       if (!protocol_http_1.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
@@ -51041,7 +51041,7 @@ var require_flexibleChecksumsResponseMiddleware = __commonJS({
       let collectedStream = void 0;
       const { requestValidationModeMember, responseAlgorithms } = middlewareConfig;
       if (requestValidationModeMember && input[requestValidationModeMember] === "ENABLED") {
-        const { clientName, commandName } = context3;
+        const { clientName, commandName } = context2;
         const isS3WholeObjectMultipartGetResponseChecksum = clientName === "S3Client" && commandName === "GetObjectCommand" && (0, getChecksumAlgorithmListForResponse_1.getChecksumAlgorithmListForResponse)(responseAlgorithms).every((algorithm) => {
           const responseHeader = (0, getChecksumLocationName_1.getChecksumLocationName)(algorithm);
           const checksumFromResponse = response.headers[responseHeader];
@@ -51159,11 +51159,11 @@ var require_DeleteObjectsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteObjectsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteObjectsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteObjectsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteObjectsCommand)(output, context2);
       }
     };
     exports.DeleteObjectsCommand = DeleteObjectsCommand;
@@ -51224,11 +51224,11 @@ var require_DeleteObjectTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeleteObjectTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeleteObjectTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeleteObjectTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeleteObjectTaggingCommand)(output, context2);
       }
     };
     exports.DeleteObjectTaggingCommand = DeleteObjectTaggingCommand;
@@ -51289,11 +51289,11 @@ var require_DeletePublicAccessBlockCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_DeletePublicAccessBlockCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_DeletePublicAccessBlockCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_DeletePublicAccessBlockCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_DeletePublicAccessBlockCommand)(output, context2);
       }
     };
     exports.DeletePublicAccessBlockCommand = DeletePublicAccessBlockCommand;
@@ -51354,11 +51354,11 @@ var require_GetBucketAccelerateConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketAccelerateConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketAccelerateConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketAccelerateConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketAccelerateConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketAccelerateConfigurationCommand = GetBucketAccelerateConfigurationCommand;
@@ -51419,11 +51419,11 @@ var require_GetBucketAclCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketAclCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketAclCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketAclCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketAclCommand)(output, context2);
       }
     };
     exports.GetBucketAclCommand = GetBucketAclCommand;
@@ -51484,11 +51484,11 @@ var require_GetBucketAnalyticsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketAnalyticsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketAnalyticsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketAnalyticsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketAnalyticsConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketAnalyticsConfigurationCommand = GetBucketAnalyticsConfigurationCommand;
@@ -51549,11 +51549,11 @@ var require_GetBucketCorsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketCorsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketCorsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketCorsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketCorsCommand)(output, context2);
       }
     };
     exports.GetBucketCorsCommand = GetBucketCorsCommand;
@@ -51615,11 +51615,11 @@ var require_GetBucketEncryptionCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketEncryptionCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketEncryptionCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketEncryptionCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketEncryptionCommand)(output, context2);
       }
     };
     exports.GetBucketEncryptionCommand = GetBucketEncryptionCommand;
@@ -51680,11 +51680,11 @@ var require_GetBucketIntelligentTieringConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketIntelligentTieringConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketIntelligentTieringConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketIntelligentTieringConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketIntelligentTieringConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketIntelligentTieringConfigurationCommand = GetBucketIntelligentTieringConfigurationCommand;
@@ -51746,11 +51746,11 @@ var require_GetBucketInventoryConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketInventoryConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketInventoryConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketInventoryConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketInventoryConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketInventoryConfigurationCommand = GetBucketInventoryConfigurationCommand;
@@ -51811,11 +51811,11 @@ var require_GetBucketLifecycleConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketLifecycleConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketLifecycleConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketLifecycleConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketLifecycleConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketLifecycleConfigurationCommand = GetBucketLifecycleConfigurationCommand;
@@ -51876,11 +51876,11 @@ var require_GetBucketLocationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketLocationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketLocationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketLocationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketLocationCommand)(output, context2);
       }
     };
     exports.GetBucketLocationCommand = GetBucketLocationCommand;
@@ -51941,11 +51941,11 @@ var require_GetBucketLoggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketLoggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketLoggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketLoggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketLoggingCommand)(output, context2);
       }
     };
     exports.GetBucketLoggingCommand = GetBucketLoggingCommand;
@@ -52006,11 +52006,11 @@ var require_GetBucketMetricsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketMetricsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketMetricsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketMetricsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketMetricsConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketMetricsConfigurationCommand = GetBucketMetricsConfigurationCommand;
@@ -52071,11 +52071,11 @@ var require_GetBucketNotificationConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketNotificationConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketNotificationConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketNotificationConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketNotificationConfigurationCommand)(output, context2);
       }
     };
     exports.GetBucketNotificationConfigurationCommand = GetBucketNotificationConfigurationCommand;
@@ -52136,11 +52136,11 @@ var require_GetBucketOwnershipControlsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketOwnershipControlsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketOwnershipControlsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketOwnershipControlsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketOwnershipControlsCommand)(output, context2);
       }
     };
     exports.GetBucketOwnershipControlsCommand = GetBucketOwnershipControlsCommand;
@@ -52201,11 +52201,11 @@ var require_GetBucketPolicyCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketPolicyCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketPolicyCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketPolicyCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketPolicyCommand)(output, context2);
       }
     };
     exports.GetBucketPolicyCommand = GetBucketPolicyCommand;
@@ -52266,11 +52266,11 @@ var require_GetBucketPolicyStatusCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketPolicyStatusCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketPolicyStatusCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketPolicyStatusCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketPolicyStatusCommand)(output, context2);
       }
     };
     exports.GetBucketPolicyStatusCommand = GetBucketPolicyStatusCommand;
@@ -52331,11 +52331,11 @@ var require_GetBucketReplicationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketReplicationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketReplicationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketReplicationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketReplicationCommand)(output, context2);
       }
     };
     exports.GetBucketReplicationCommand = GetBucketReplicationCommand;
@@ -52396,11 +52396,11 @@ var require_GetBucketRequestPaymentCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketRequestPaymentCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketRequestPaymentCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketRequestPaymentCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketRequestPaymentCommand)(output, context2);
       }
     };
     exports.GetBucketRequestPaymentCommand = GetBucketRequestPaymentCommand;
@@ -52461,11 +52461,11 @@ var require_GetBucketTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketTaggingCommand)(output, context2);
       }
     };
     exports.GetBucketTaggingCommand = GetBucketTaggingCommand;
@@ -52526,11 +52526,11 @@ var require_GetBucketVersioningCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketVersioningCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketVersioningCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketVersioningCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketVersioningCommand)(output, context2);
       }
     };
     exports.GetBucketVersioningCommand = GetBucketVersioningCommand;
@@ -52591,11 +52591,11 @@ var require_GetBucketWebsiteCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetBucketWebsiteCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetBucketWebsiteCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetBucketWebsiteCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetBucketWebsiteCommand)(output, context2);
       }
     };
     exports.GetBucketWebsiteCommand = GetBucketWebsiteCommand;
@@ -52656,11 +52656,11 @@ var require_GetObjectAclCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectAclCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectAclCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectAclCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectAclCommand)(output, context2);
       }
     };
     exports.GetObjectAclCommand = GetObjectAclCommand;
@@ -52724,11 +52724,11 @@ var require_GetObjectAttributesCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectAttributesCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectAttributesCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectAttributesCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectAttributesCommand)(output, context2);
       }
     };
     exports.GetObjectAttributesCommand = GetObjectAttributesCommand;
@@ -52799,11 +52799,11 @@ var require_GetObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectCommand)(output, context2);
       }
     };
     exports.GetObjectCommand = GetObjectCommand;
@@ -52864,11 +52864,11 @@ var require_GetObjectLegalHoldCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectLegalHoldCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectLegalHoldCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectLegalHoldCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectLegalHoldCommand)(output, context2);
       }
     };
     exports.GetObjectLegalHoldCommand = GetObjectLegalHoldCommand;
@@ -52929,11 +52929,11 @@ var require_GetObjectLockConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectLockConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectLockConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectLockConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectLockConfigurationCommand)(output, context2);
       }
     };
     exports.GetObjectLockConfigurationCommand = GetObjectLockConfigurationCommand;
@@ -52994,11 +52994,11 @@ var require_GetObjectRetentionCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectRetentionCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectRetentionCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectRetentionCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectRetentionCommand)(output, context2);
       }
     };
     exports.GetObjectRetentionCommand = GetObjectRetentionCommand;
@@ -53059,11 +53059,11 @@ var require_GetObjectTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectTaggingCommand)(output, context2);
       }
     };
     exports.GetObjectTaggingCommand = GetObjectTaggingCommand;
@@ -53125,11 +53125,11 @@ var require_GetObjectTorrentCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetObjectTorrentCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetObjectTorrentCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetObjectTorrentCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetObjectTorrentCommand)(output, context2);
       }
     };
     exports.GetObjectTorrentCommand = GetObjectTorrentCommand;
@@ -53190,11 +53190,11 @@ var require_GetPublicAccessBlockCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_GetPublicAccessBlockCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_GetPublicAccessBlockCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_GetPublicAccessBlockCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_GetPublicAccessBlockCommand)(output, context2);
       }
     };
     exports.GetPublicAccessBlockCommand = GetPublicAccessBlockCommand;
@@ -53255,11 +53255,11 @@ var require_HeadBucketCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_HeadBucketCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_HeadBucketCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_HeadBucketCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_HeadBucketCommand)(output, context2);
       }
     };
     exports.HeadBucketCommand = HeadBucketCommand;
@@ -53323,11 +53323,11 @@ var require_HeadObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_HeadObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_HeadObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_HeadObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_HeadObjectCommand)(output, context2);
       }
     };
     exports.HeadObjectCommand = HeadObjectCommand;
@@ -53388,11 +53388,11 @@ var require_ListBucketAnalyticsConfigurationsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListBucketAnalyticsConfigurationsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListBucketAnalyticsConfigurationsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListBucketAnalyticsConfigurationsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListBucketAnalyticsConfigurationsCommand)(output, context2);
       }
     };
     exports.ListBucketAnalyticsConfigurationsCommand = ListBucketAnalyticsConfigurationsCommand;
@@ -53453,11 +53453,11 @@ var require_ListBucketIntelligentTieringConfigurationsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListBucketIntelligentTieringConfigurationsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListBucketIntelligentTieringConfigurationsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListBucketIntelligentTieringConfigurationsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListBucketIntelligentTieringConfigurationsCommand)(output, context2);
       }
     };
     exports.ListBucketIntelligentTieringConfigurationsCommand = ListBucketIntelligentTieringConfigurationsCommand;
@@ -53519,11 +53519,11 @@ var require_ListBucketInventoryConfigurationsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListBucketInventoryConfigurationsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListBucketInventoryConfigurationsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListBucketInventoryConfigurationsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListBucketInventoryConfigurationsCommand)(output, context2);
       }
     };
     exports.ListBucketInventoryConfigurationsCommand = ListBucketInventoryConfigurationsCommand;
@@ -53584,11 +53584,11 @@ var require_ListBucketMetricsConfigurationsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListBucketMetricsConfigurationsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListBucketMetricsConfigurationsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListBucketMetricsConfigurationsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListBucketMetricsConfigurationsCommand)(output, context2);
       }
     };
     exports.ListBucketMetricsConfigurationsCommand = ListBucketMetricsConfigurationsCommand;
@@ -53648,11 +53648,11 @@ var require_ListBucketsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListBucketsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListBucketsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListBucketsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListBucketsCommand)(output, context2);
       }
     };
     exports.ListBucketsCommand = ListBucketsCommand;
@@ -53713,11 +53713,11 @@ var require_ListMultipartUploadsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListMultipartUploadsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListMultipartUploadsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListMultipartUploadsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListMultipartUploadsCommand)(output, context2);
       }
     };
     exports.ListMultipartUploadsCommand = ListMultipartUploadsCommand;
@@ -53778,11 +53778,11 @@ var require_ListObjectsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListObjectsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListObjectsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListObjectsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListObjectsCommand)(output, context2);
       }
     };
     exports.ListObjectsCommand = ListObjectsCommand;
@@ -53843,11 +53843,11 @@ var require_ListObjectsV2Command = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListObjectsV2Command)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListObjectsV2Command)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListObjectsV2Command)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListObjectsV2Command)(output, context2);
       }
     };
     exports.ListObjectsV2Command = ListObjectsV2Command;
@@ -53908,11 +53908,11 @@ var require_ListObjectVersionsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListObjectVersionsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListObjectVersionsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListObjectVersionsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListObjectVersionsCommand)(output, context2);
       }
     };
     exports.ListObjectVersionsCommand = ListObjectVersionsCommand;
@@ -53976,11 +53976,11 @@ var require_ListPartsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_ListPartsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_ListPartsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_ListPartsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_ListPartsCommand)(output, context2);
       }
     };
     exports.ListPartsCommand = ListPartsCommand;
@@ -54047,11 +54047,11 @@ var require_PutBucketAccelerateConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketAccelerateConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketAccelerateConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketAccelerateConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketAccelerateConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketAccelerateConfigurationCommand = PutBucketAccelerateConfigurationCommand;
@@ -54118,11 +54118,11 @@ var require_PutBucketAclCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketAclCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketAclCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketAclCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketAclCommand)(output, context2);
       }
     };
     exports.PutBucketAclCommand = PutBucketAclCommand;
@@ -54183,11 +54183,11 @@ var require_PutBucketAnalyticsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketAnalyticsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketAnalyticsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketAnalyticsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketAnalyticsConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketAnalyticsConfigurationCommand = PutBucketAnalyticsConfigurationCommand;
@@ -54254,11 +54254,11 @@ var require_PutBucketCorsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketCorsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketCorsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketCorsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketCorsCommand)(output, context2);
       }
     };
     exports.PutBucketCorsCommand = PutBucketCorsCommand;
@@ -54326,11 +54326,11 @@ var require_PutBucketEncryptionCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketEncryptionCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketEncryptionCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketEncryptionCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketEncryptionCommand)(output, context2);
       }
     };
     exports.PutBucketEncryptionCommand = PutBucketEncryptionCommand;
@@ -54391,11 +54391,11 @@ var require_PutBucketIntelligentTieringConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketIntelligentTieringConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketIntelligentTieringConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketIntelligentTieringConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketIntelligentTieringConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketIntelligentTieringConfigurationCommand = PutBucketIntelligentTieringConfigurationCommand;
@@ -54457,11 +54457,11 @@ var require_PutBucketInventoryConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketInventoryConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketInventoryConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketInventoryConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketInventoryConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketInventoryConfigurationCommand = PutBucketInventoryConfigurationCommand;
@@ -54528,11 +54528,11 @@ var require_PutBucketLifecycleConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketLifecycleConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketLifecycleConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketLifecycleConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketLifecycleConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketLifecycleConfigurationCommand = PutBucketLifecycleConfigurationCommand;
@@ -54599,11 +54599,11 @@ var require_PutBucketLoggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketLoggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketLoggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketLoggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketLoggingCommand)(output, context2);
       }
     };
     exports.PutBucketLoggingCommand = PutBucketLoggingCommand;
@@ -54664,11 +54664,11 @@ var require_PutBucketMetricsConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketMetricsConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketMetricsConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketMetricsConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketMetricsConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketMetricsConfigurationCommand = PutBucketMetricsConfigurationCommand;
@@ -54729,11 +54729,11 @@ var require_PutBucketNotificationConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketNotificationConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketNotificationConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketNotificationConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketNotificationConfigurationCommand)(output, context2);
       }
     };
     exports.PutBucketNotificationConfigurationCommand = PutBucketNotificationConfigurationCommand;
@@ -54796,11 +54796,11 @@ var require_PutBucketOwnershipControlsCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketOwnershipControlsCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketOwnershipControlsCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketOwnershipControlsCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketOwnershipControlsCommand)(output, context2);
       }
     };
     exports.PutBucketOwnershipControlsCommand = PutBucketOwnershipControlsCommand;
@@ -54867,11 +54867,11 @@ var require_PutBucketPolicyCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketPolicyCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketPolicyCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketPolicyCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketPolicyCommand)(output, context2);
       }
     };
     exports.PutBucketPolicyCommand = PutBucketPolicyCommand;
@@ -54938,11 +54938,11 @@ var require_PutBucketReplicationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketReplicationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketReplicationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketReplicationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketReplicationCommand)(output, context2);
       }
     };
     exports.PutBucketReplicationCommand = PutBucketReplicationCommand;
@@ -55009,11 +55009,11 @@ var require_PutBucketRequestPaymentCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketRequestPaymentCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketRequestPaymentCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketRequestPaymentCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketRequestPaymentCommand)(output, context2);
       }
     };
     exports.PutBucketRequestPaymentCommand = PutBucketRequestPaymentCommand;
@@ -55080,11 +55080,11 @@ var require_PutBucketTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketTaggingCommand)(output, context2);
       }
     };
     exports.PutBucketTaggingCommand = PutBucketTaggingCommand;
@@ -55151,11 +55151,11 @@ var require_PutBucketVersioningCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketVersioningCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketVersioningCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketVersioningCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketVersioningCommand)(output, context2);
       }
     };
     exports.PutBucketVersioningCommand = PutBucketVersioningCommand;
@@ -55222,11 +55222,11 @@ var require_PutBucketWebsiteCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutBucketWebsiteCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutBucketWebsiteCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutBucketWebsiteCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutBucketWebsiteCommand)(output, context2);
       }
     };
     exports.PutBucketWebsiteCommand = PutBucketWebsiteCommand;
@@ -55293,11 +55293,11 @@ var require_PutObjectAclCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectAclCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectAclCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectAclCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectAclCommand)(output, context2);
       }
     };
     exports.PutObjectAclCommand = PutObjectAclCommand;
@@ -55369,11 +55369,11 @@ var require_PutObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectCommand)(output, context2);
       }
     };
     exports.PutObjectCommand = PutObjectCommand2;
@@ -55440,11 +55440,11 @@ var require_PutObjectLegalHoldCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectLegalHoldCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectLegalHoldCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectLegalHoldCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectLegalHoldCommand)(output, context2);
       }
     };
     exports.PutObjectLegalHoldCommand = PutObjectLegalHoldCommand;
@@ -55511,11 +55511,11 @@ var require_PutObjectLockConfigurationCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectLockConfigurationCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectLockConfigurationCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectLockConfigurationCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectLockConfigurationCommand)(output, context2);
       }
     };
     exports.PutObjectLockConfigurationCommand = PutObjectLockConfigurationCommand;
@@ -55582,11 +55582,11 @@ var require_PutObjectRetentionCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectRetentionCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectRetentionCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectRetentionCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectRetentionCommand)(output, context2);
       }
     };
     exports.PutObjectRetentionCommand = PutObjectRetentionCommand;
@@ -55653,11 +55653,11 @@ var require_PutObjectTaggingCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutObjectTaggingCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutObjectTaggingCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutObjectTaggingCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutObjectTaggingCommand)(output, context2);
       }
     };
     exports.PutObjectTaggingCommand = PutObjectTaggingCommand;
@@ -55724,11 +55724,11 @@ var require_PutPublicAccessBlockCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_PutPublicAccessBlockCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_PutPublicAccessBlockCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_PutPublicAccessBlockCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_PutPublicAccessBlockCommand)(output, context2);
       }
     };
     exports.PutPublicAccessBlockCommand = PutPublicAccessBlockCommand;
@@ -55796,11 +55796,11 @@ var require_RestoreObjectCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_RestoreObjectCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_RestoreObjectCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_RestoreObjectCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_RestoreObjectCommand)(output, context2);
       }
     };
     exports.RestoreObjectCommand = RestoreObjectCommand;
@@ -55864,11 +55864,11 @@ var require_SelectObjectContentCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_SelectObjectContentCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_SelectObjectContentCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_SelectObjectContentCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_SelectObjectContentCommand)(output, context2);
       }
     };
     exports.SelectObjectContentCommand = SelectObjectContentCommand;
@@ -55938,11 +55938,11 @@ var require_UploadPartCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_UploadPartCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_UploadPartCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_UploadPartCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_UploadPartCommand)(output, context2);
       }
     };
     exports.UploadPartCommand = UploadPartCommand;
@@ -56008,11 +56008,11 @@ var require_UploadPartCopyCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_UploadPartCopyCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_UploadPartCopyCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_UploadPartCopyCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_UploadPartCopyCommand)(output, context2);
       }
     };
     exports.UploadPartCopyCommand = UploadPartCopyCommand;
@@ -56074,11 +56074,11 @@ var require_WriteGetObjectResponseCommand = __commonJS({
         const { requestHandler } = configuration;
         return stack.resolve((request) => requestHandler.handle(request.request, options || {}), handlerExecutionContext);
       }
-      serialize(input, context3) {
-        return (0, Aws_restXml_1.se_WriteGetObjectResponseCommand)(input, context3);
+      serialize(input, context2) {
+        return (0, Aws_restXml_1.se_WriteGetObjectResponseCommand)(input, context2);
       }
-      deserialize(output, context3) {
-        return (0, Aws_restXml_1.de_WriteGetObjectResponseCommand)(output, context3);
+      deserialize(output, context2) {
+        return (0, Aws_restXml_1.de_WriteGetObjectResponseCommand)(output, context2);
       }
     };
     exports.WriteGetObjectResponseCommand = WriteGetObjectResponseCommand;
@@ -57339,8 +57339,8 @@ var require_dist_node2 = __commonJS({
     function isKeyOperator(operator) {
       return operator === ";" || operator === "&" || operator === "?";
     }
-    function getValues(context3, operator, key, modifier) {
-      var value = context3[key], result = [];
+    function getValues(context2, operator, key, modifier) {
+      var value = context2[key], result = [];
       if (isDefined(value) && value !== "") {
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
           value = value.toString();
@@ -57404,7 +57404,7 @@ var require_dist_node2 = __commonJS({
         expand: expand.bind(null, template)
       };
     }
-    function expand(template, context3) {
+    function expand(template, context2) {
       var operators = ["+", "#", ".", "/", ";", "?", "&"];
       template = template.replace(
         /\{([^\{\}]+)\}|([^\{\}]+)/g,
@@ -57418,7 +57418,7 @@ var require_dist_node2 = __commonJS({
             }
             expression.split(/,/g).forEach(function(variable) {
               var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
-              values.push(getValues(context3, operator, tmp[1], tmp[2] || tmp[3]));
+              values.push(getValues(context2, operator, tmp[1], tmp[2] || tmp[3]));
             });
             if (operator && operator !== "+") {
               var separator = ",";
@@ -63526,18 +63526,17 @@ var safeDump = renamed("safeDump", "dump");
 
 // src/config.ts
 var core2 = __toESM(require_core());
-var import_github = __toESM(require_github());
 
 // src/file.ts
 var child_process = __toESM(require("child_process"));
 var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
 var walk = (path2, fn) => {
-  const info3 = fs.lstatSync(path2);
-  if (info3.isFile()) {
+  const info4 = fs.lstatSync(path2);
+  if (info4.isFile()) {
     return [fn(path2)];
   }
-  if (info3.isDirectory()) {
+  if (info4.isDirectory()) {
     const children = fs.readdirSync(path2).flatMap((p) => walk(`${path2}/${p}`, fn));
     return new Array().concat(children);
   }
@@ -63554,10 +63553,10 @@ var write = (filePath, data) => {
 var cp = (sources, destDir) => {
   child_process.execSync(`mkdir -p ${destDir}`);
   sources.forEach((src) => {
-    const info3 = fs.lstatSync(src);
-    if (info3.isDirectory()) {
+    const info4 = fs.lstatSync(src);
+    if (info4.isDirectory()) {
       child_process.execSync(`cp -r ${src}/* ${destDir}`);
-    } else if (info3.isFile()) {
+    } else if (info4.isFile()) {
       child_process.execSync(`cp ${src} ${destDir}`);
     } else {
       throw new Error(`source is neither file not directory: '${src}'`);
@@ -63689,33 +63688,28 @@ function getConfiguration() {
   const baseBuildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
   const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
   const commentingStage = getInput2("commentingStage") ?? "CODE";
-  const dryRun = dryRunInput === "true";
-  const isPR = import_github.context.eventName === "pull_request";
-  const shouldAddComment = !dryRun && isPR;
   return {
     projectName,
     riffRaffYaml,
-    dryRun,
+    dryRun: dryRunInput === "true",
     buildNumber,
     branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
     deployments: getDeployments(),
     stagingDirInput,
-    ...shouldAddComment && {
-      pullRequestComment: {
-        projectName,
-        buildNumber,
-        commentingStage,
-        githubToken: githubToken()
-      }
+    pullRequestComment: {
+      projectName,
+      buildNumber,
+      commentingStage,
+      githubToken
     }
   };
 }
 
 // src/pr-comment.ts
 var import_core = __toESM(require_core());
-var import_github2 = __toESM(require_github());
+var import_github = __toESM(require_github());
 function getDeployUrl(config) {
   const url = new URL("https://riffraff.gutools.co.uk/deployment/deployAgain");
   url.searchParams.set("project", config.projectName);
@@ -63753,37 +63747,41 @@ function getCommentMessage(config) {
   ].join("\n");
 }
 async function commentOnPullRequest(config) {
+  const { pull_request } = import_github.context.payload;
+  if (!pull_request) {
+    (0, import_core.info)(
+      `Not a pull request, so cannot add a comment. Event is ${import_github.context.eventName}`
+    );
+    return;
+  }
   const comment = getCommentMessage(config);
-  const { pull_request } = import_github2.context.payload;
-  if (pull_request) {
-    const octokit = (0, import_github2.getOctokit)(config.githubToken, {});
-    const comments = await octokit.rest.issues.listComments({
-      ...import_github2.context.repo,
-      issue_number: pull_request.number
+  const octokit = (0, import_github.getOctokit)(config.githubToken(), {});
+  const comments = await octokit.rest.issues.listComments({
+    ...import_github.context.repo,
+    issue_number: pull_request.number
+  });
+  (0, import_core.debug)(`Total comments: ${comments.data.length}`);
+  const previousComment = comments.data.find((comment2) => {
+    const fromBot = comment2.user?.login === "github-actions[bot]";
+    const fromUs = comment2.body?.includes(signature) ?? false;
+    return fromBot && fromUs;
+  });
+  if (previousComment) {
+    (0, import_core.debug)(
+      `Found a comment by github-actions[bot] (id: ${previousComment.id}). Updating it.`
+    );
+    await octokit.rest.issues.updateComment({
+      ...import_github.context.repo,
+      comment_id: previousComment.id,
+      body: comment
     });
-    (0, import_core.debug)(`Total comments: ${comments.data.length}`);
-    const previousComment = comments.data.find((comment2) => {
-      const fromBot = comment2.user?.login === "github-actions[bot]";
-      const fromUs = comment2.body?.includes(signature) ?? false;
-      return fromBot && fromUs;
+  } else {
+    (0, import_core.debug)(`No previous comment found. Creating one.`);
+    await octokit.rest.issues.createComment({
+      ...import_github.context.repo,
+      issue_number: pull_request.number,
+      body: comment
     });
-    if (previousComment) {
-      (0, import_core.debug)(
-        `Found a comment by github-actions[bot] (id: ${previousComment.id}). Updating it.`
-      );
-      await octokit.rest.issues.updateComment({
-        ...import_github2.context.repo,
-        comment_id: previousComment.id,
-        body: comment
-      });
-    } else {
-      (0, import_core.debug)(`No previous comment found. Creating one.`);
-      await octokit.rest.issues.createComment({
-        ...import_github2.context.repo,
-        issue_number: pull_request.number,
-        body: comment
-      });
-    }
   }
 }
 
@@ -63883,9 +63881,7 @@ var main = async (options) => {
     keyPrefix + "/build.json"
   );
   core4.info("Upload complete.");
-  if (pullRequestComment) {
-    await commentOnPullRequest(pullRequestComment);
-  }
+  await commentOnPullRequest(pullRequestComment);
 };
 if (require.main === module) {
   main({ WithSummary: true }).catch((err) => {
