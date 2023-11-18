@@ -65,8 +65,8 @@ export async function commentOnPullRequest(
 
 	const previousComment = comments.data.find((comment) => {
 		const fromBot = comment.user?.login === 'github-actions[bot]';
-		const fromUs = comment.body?.includes(signature) ?? false;
-		return fromBot && fromUs;
+		const fromMe = comment.body?.includes(signature) ?? false;
+		return fromBot && fromMe;
 	});
 
 	if (previousComment) {

@@ -63758,8 +63758,8 @@ async function commentOnPullRequest(pullRequestNumber, config) {
   (0, import_core.debug)(`Total comments: ${comments.data.length}`);
   const previousComment = comments.data.find((comment2) => {
     const fromBot = comment2.user?.login === "github-actions[bot]";
-    const fromUs = comment2.body?.includes(signature) ?? false;
-    return fromBot && fromUs;
+    const fromMe = comment2.body?.includes(signature) ?? false;
+    return fromBot && fromMe;
   });
   if (previousComment) {
     (0, import_core.debug)(
