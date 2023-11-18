@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import { info } from '@actions/core';
 import { context } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
@@ -90,10 +89,10 @@ export const main = async (options: Options): Promise<void> => {
 	const { pull_request } = context.payload;
 
 	if (pull_request) {
-		info(`Commenting on PR ${pull_request.number}`);
+		core.info(`Commenting on PR ${pull_request.number}`);
 		await commentOnPullRequest(pull_request.number, pullRequestComment);
 	} else {
-		info(
+		core.info(
 			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
 		);
 	}

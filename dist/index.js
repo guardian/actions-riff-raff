@@ -17384,12 +17384,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info4 = this._prepareRequest(verb, parsedUrl, headers);
+          let info3 = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info4, data);
+            response = yield this.requestRaw(info3, data);
             if (response && response.message && response.message.statusCode === HttpCodes.Unauthorized) {
               let authenticationHandler;
               for (const handler of this.handlers) {
@@ -17399,7 +17399,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info4, data);
+                return authenticationHandler.handleAuthentication(this, info3, data);
               } else {
                 return response;
               }
@@ -17422,8 +17422,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info4 = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info4, data);
+              info3 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info3, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes.includes(response.message.statusCode)) {
@@ -17452,7 +17452,7 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info4, data) {
+      requestRaw(info3, data) {
         return __awaiter4(this, void 0, void 0, function* () {
           return new Promise((resolve, reject) => {
             function callbackForResult(err, res) {
@@ -17464,7 +17464,7 @@ var require_lib = __commonJS({
                 resolve(res);
               }
             }
-            this.requestRawWithCallback(info4, data, callbackForResult);
+            this.requestRawWithCallback(info3, data, callbackForResult);
           });
         });
       }
@@ -17474,12 +17474,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info4, data, onResult) {
+      requestRawWithCallback(info3, data, onResult) {
         if (typeof data === "string") {
-          if (!info4.options.headers) {
-            info4.options.headers = {};
+          if (!info3.options.headers) {
+            info3.options.headers = {};
           }
-          info4.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info3.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -17488,7 +17488,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info4.httpModule.request(info4.options, (msg) => {
+        const req = info3.httpModule.request(info3.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -17500,7 +17500,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info4.options.path}`));
+          handleResult(new Error(`Request timeout: ${info3.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -17536,27 +17536,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info4 = {};
-        info4.parsedUrl = requestUrl;
-        const usingSsl = info4.parsedUrl.protocol === "https:";
-        info4.httpModule = usingSsl ? https : http;
+        const info3 = {};
+        info3.parsedUrl = requestUrl;
+        const usingSsl = info3.parsedUrl.protocol === "https:";
+        info3.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info4.options = {};
-        info4.options.host = info4.parsedUrl.hostname;
-        info4.options.port = info4.parsedUrl.port ? parseInt(info4.parsedUrl.port) : defaultPort;
-        info4.options.path = (info4.parsedUrl.pathname || "") + (info4.parsedUrl.search || "");
-        info4.options.method = method;
-        info4.options.headers = this._mergeHeaders(headers);
+        info3.options = {};
+        info3.options.host = info3.parsedUrl.hostname;
+        info3.options.port = info3.parsedUrl.port ? parseInt(info3.parsedUrl.port) : defaultPort;
+        info3.options.path = (info3.parsedUrl.pathname || "") + (info3.parsedUrl.search || "");
+        info3.options.method = method;
+        info3.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info4.options.headers["user-agent"] = this.userAgent;
+          info3.options.headers["user-agent"] = this.userAgent;
         }
-        info4.options.agent = this._getAgent(info4.parsedUrl);
+        info3.options.agent = this._getAgent(info3.parsedUrl);
         if (this.handlers) {
           for (const handler of this.handlers) {
-            handler.prepareRequest(info4.options);
+            handler.prepareRequest(info3.options);
           }
         }
-        return info4;
+        return info3;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -18420,10 +18420,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       command_1.issueCommand("notice", utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
     }
     exports.notice = notice;
-    function info4(message) {
+    function info3(message) {
       process.stdout.write(message + os.EOL);
     }
-    exports.info = info4;
+    exports.info = info3;
     function startGroup(name) {
       command_1.issue("group", name);
     }
@@ -60865,7 +60865,6 @@ __export(src_exports, {
 module.exports = __toCommonJS(src_exports);
 var fs3 = __toESM(require("fs"));
 var core4 = __toESM(require_core());
-var import_core2 = __toESM(require_core());
 var import_github2 = __toESM(require_github());
 var import_client_s32 = __toESM(require_dist_cjs69());
 
@@ -63534,11 +63533,11 @@ var child_process = __toESM(require("child_process"));
 var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
 var walk = (path2, fn) => {
-  const info4 = fs.lstatSync(path2);
-  if (info4.isFile()) {
+  const info3 = fs.lstatSync(path2);
+  if (info3.isFile()) {
     return [fn(path2)];
   }
-  if (info4.isDirectory()) {
+  if (info3.isDirectory()) {
     const children = fs.readdirSync(path2).flatMap((p) => walk(`${path2}/${p}`, fn));
     return new Array().concat(children);
   }
@@ -63555,10 +63554,10 @@ var write = (filePath, data) => {
 var cp = (sources, destDir) => {
   child_process.execSync(`mkdir -p ${destDir}`);
   sources.forEach((src) => {
-    const info4 = fs.lstatSync(src);
-    if (info4.isDirectory()) {
+    const info3 = fs.lstatSync(src);
+    if (info3.isDirectory()) {
       child_process.execSync(`cp -r ${src}/* ${destDir}`);
-    } else if (info4.isFile()) {
+    } else if (info3.isFile()) {
       child_process.execSync(`cp ${src} ${destDir}`);
     } else {
       throw new Error(`source is neither file not directory: '${src}'`);
@@ -63878,10 +63877,10 @@ var main = async (options) => {
   core4.info("Upload complete.");
   const { pull_request } = import_github2.context.payload;
   if (pull_request) {
-    (0, import_core2.info)(`Commenting on PR ${pull_request.number}`);
+    core4.info(`Commenting on PR ${pull_request.number}`);
     await commentOnPullRequest(pull_request.number, pullRequestComment);
   } else {
-    (0, import_core2.info)(
+    core4.info(
       `Not a pull request, so cannot add a comment. Event is ${import_github2.context.eventName}`
     );
   }
