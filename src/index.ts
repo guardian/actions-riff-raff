@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
+import { info } from '@actions/core';
+import { context } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
@@ -85,7 +87,16 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info('Upload complete.');
 
-	await commentOnPullRequest(pullRequestComment);
+	const { pull_request } = context.payload;
+
+	if (pull_request) {
+		info(`Commenting on PR ${pull_request.number}`);
+		await commentOnPullRequest(pull_request.number, pullRequestComment);
+	} else {
+		info(
+			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
+		);
+	}
 };
 
 // execute only if invoked as main script (rather than test)

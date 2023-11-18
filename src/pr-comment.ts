@@ -1,4 +1,4 @@
-import { debug, info } from '@actions/core';
+import { debug } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import type { PullRequestCommentConfig } from './config';
 
@@ -49,22 +49,16 @@ function getCommentMessage(config: PullRequestCommentConfig): string {
 	].join('\n');
 }
 
-export async function commentOnPullRequest(config: PullRequestCommentConfig) {
-	const { pull_request } = context.payload;
-
-	if (!pull_request) {
-		info(
-			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
-		);
-		return;
-	}
-
+export async function commentOnPullRequest(
+	pullRequestNumber: number,
+	config: PullRequestCommentConfig,
+) {
 	const comment = getCommentMessage(config);
 	const octokit = getOctokit(config.githubToken(), {});
 
 	const comments = await octokit.rest.issues.listComments({
 		...context.repo,
-		issue_number: pull_request.number,
+		issue_number: pullRequestNumber,
 	});
 
 	debug(`Total comments: ${comments.data.length}`);
@@ -88,7 +82,7 @@ export async function commentOnPullRequest(config: PullRequestCommentConfig) {
 		debug(`No previous comment found. Creating one.`);
 		await octokit.rest.issues.createComment({
 			...context.repo,
-			issue_number: pull_request.number,
+			issue_number: pullRequestNumber,
 			body: comment,
 		});
 	}
