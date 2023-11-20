@@ -27,6 +27,9 @@ jobs:
       # Required for `actions/checkout`
       contents: read
 
+      # Required to comment on a pull request
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v3
 
@@ -38,9 +41,10 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
 
-      - uses: guardian/actions-riff-raff@v2
+      - uses: guardian/actions-riff-raff@v3
         with:
           app: foo
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           config: |
             stacks:
               - deploy
@@ -113,6 +117,16 @@ first build produced by this action will be 46.
 *Required*
 
 A mapping to describe which files should be uploaded for which package.
+
+### `githubToken`
+*Required*
+
+A GitHub token scoped to allow pull request commenting.
+
+### `commentingStage`
+_Default: CODE_
+
+When commenting on a pull request, which stage should be used. Typically a pre-production stage.
 
 ## Detailed example
 To illustrate, given the following file structure:

@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 import * as yaml from 'js-yaml';
 import { read } from './file';
 import type { Deployment, RiffraffYaml } from './riffraff';
-
 // getInput is like core.getInput but returns undefined for the empty string.
 const getInput = (
 	name: string,
@@ -143,6 +142,13 @@ const vcsURL = (): string | undefined => {
 	return repoFromEnv ? `https://github.com/${repoFromEnv}` : undefined;
 };
 
+export interface PullRequestCommentConfig {
+	projectName: string;
+	buildNumber: string;
+	commentingStage: string;
+	githubToken: string;
+}
+
 export interface Configuration {
 	projectName: string;
 	riffRaffYaml: RiffraffYaml;
@@ -153,6 +159,7 @@ export interface Configuration {
 	revision: string;
 	deployments: Deployment[];
 	stagingDirInput?: string;
+	pullRequestComment: PullRequestCommentConfig;
 }
 
 const offsetBuildNumber = (buildNumber: string, offset: string): string => {
@@ -163,6 +170,14 @@ const offsetBuildNumber = (buildNumber: string, offset: string): string => {
 	} else {
 		return (intBuildNumber + intOffset).toString();
 	}
+};
+
+const githubToken = (): string => {
+	const token = getInput('githubToken', { required: true });
+	if (!token) {
+		throw new Error('githubToken not supplied');
+	}
+	return token;
 };
 
 export function getConfiguration(): Configuration {
@@ -177,6 +192,7 @@ export function getConfiguration(): Configuration {
 		buildNumberInput ?? envOrUndefined('GITHUB_RUN_NUMBER') ?? 'dev';
 
 	const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
+	const commentingStage = getInput('commentingStage') ?? 'CODE';
 
 	return {
 		projectName,
@@ -188,5 +204,11 @@ export function getConfiguration(): Configuration {
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
 		deployments: getDeployments(),
 		stagingDirInput,
+		pullRequestComment: {
+			projectName,
+			buildNumber,
+			commentingStage,
+			githubToken: githubToken(),
+		},
 	};
 }

@@ -1,9 +1,11 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
+import { context } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
 import { cp, printDir, write } from './file';
+import { commentOnPullRequest } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
@@ -27,6 +29,7 @@ export const main = async (options: Options): Promise<void> => {
 		revision,
 		deployments,
 		stagingDirInput,
+		pullRequestComment,
 	} = config;
 
 	const mfest = manifest(
@@ -82,6 +85,17 @@ export const main = async (options: Options): Promise<void> => {
 	);
 
 	core.info('Upload complete.');
+
+	const { pull_request } = context.payload;
+
+	if (pull_request) {
+		core.info(`Commenting on PR ${pull_request.number}`);
+		await commentOnPullRequest(pull_request.number, pullRequestComment);
+	} else {
+		core.info(
+			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
+		);
+	}
 };
 
 // execute only if invoked as main script (rather than test)
