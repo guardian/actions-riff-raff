@@ -41,7 +41,7 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
 
-      - uses: guardian/actions-riff-raff@v2
+      - uses: guardian/actions-riff-raff@v3
         with:
           app: foo
           githubToken: ${{ secrets.GITHUB_TOKEN }}
