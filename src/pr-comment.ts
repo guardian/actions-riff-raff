@@ -54,7 +54,7 @@ export async function commentOnPullRequest(
 	config: PullRequestCommentConfig,
 ) {
 	const comment = getCommentMessage(config);
-	const octokit = getOctokit(config.githubToken());
+	const octokit = getOctokit(config.githubToken);
 
 	const comments = await octokit.rest.issues.listComments({
 		...context.repo,

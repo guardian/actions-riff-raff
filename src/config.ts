@@ -146,7 +146,7 @@ export interface PullRequestCommentConfig {
 	projectName: string;
 	buildNumber: string;
 	commentingStage: string;
-	githubToken: () => string;
+	githubToken: string;
 }
 
 export interface Configuration {
@@ -208,7 +208,7 @@ export function getConfiguration(): Configuration {
 			projectName,
 			buildNumber,
 			commentingStage,
-			githubToken,
+			githubToken: githubToken(),
 		},
 	};
 }

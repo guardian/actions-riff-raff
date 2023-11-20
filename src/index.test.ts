@@ -30,6 +30,7 @@ describe('action', () => {
 
 		const input = `dryRun: true
 app: foo
+githubToken: ${process.env['GITHUB_SECRET'] ?? 'dev'}
 stagingDir: staging
 contentDirectories: |
   upload:

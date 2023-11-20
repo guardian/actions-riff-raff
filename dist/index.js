@@ -63703,7 +63703,7 @@ function getConfiguration() {
       projectName,
       buildNumber,
       commentingStage,
-      githubToken
+      githubToken: githubToken()
     }
   };
 }
@@ -63749,7 +63749,7 @@ function getCommentMessage(config) {
 }
 async function commentOnPullRequest(pullRequestNumber, config) {
   const comment = getCommentMessage(config);
-  const octokit = (0, import_github.getOctokit)(config.githubToken());
+  const octokit = (0, import_github.getOctokit)(config.githubToken);
   const comments = await octokit.rest.issues.listComments({
     ...import_github.context.repo,
     issue_number: pullRequestNumber
