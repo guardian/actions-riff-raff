@@ -63673,7 +63673,7 @@ var offsetBuildNumber = (buildNumber, offset) => {
   }
 };
 var githubToken = () => {
-  const token = getInput2("githubToken");
+  const token = getInput2("githubToken", { required: true });
   if (!token) {
     throw new Error("githubToken not supplied");
   }

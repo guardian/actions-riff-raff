@@ -173,7 +173,7 @@ const offsetBuildNumber = (buildNumber: string, offset: string): string => {
 };
 
 const githubToken = (): string => {
-	const token = getInput('githubToken');
+	const token = getInput('githubToken', { required: true });
 	if (!token) {
 		throw new Error('githubToken not supplied');
 	}
