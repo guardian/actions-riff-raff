@@ -14,8 +14,31 @@ interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
 }
 
+class RiffRaffUploadError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'RiffRaffUploadError';
+	}
+}
+
+function validateTopics(topics: string[]): void {
+	const deployableTopics = ['production', 'hackday', 'prototype', 'learning'];
+	const hasValidTopic = topics.some((topic) =>
+		deployableTopics.includes(topic),
+	);
+	if (!hasValidTopic) {
+		const topicList = deployableTopics.join(', ');
+		throw new RiffRaffUploadError(
+			`No valid repository topic found. Add one of ${topicList}`,
+		);
+	} else {
+		core.info('Valid topic found');
+	}
+}
+
 export const main = async (options: Options): Promise<void> => {
 	const config = getConfiguration();
+	validateTopics(context.payload.repository?.topics as string[]);
 
 	core.debug(JSON.stringify(config, null, 2));
 
