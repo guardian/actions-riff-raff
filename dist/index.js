@@ -63824,9 +63824,24 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 };
 
 // src/index.ts
+var RiffRaffUploadError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "RiffRaffUploadError";
+  }
+};
+function validateTopics(topics) {
+  const validTopicsForDeployment = ["production", "hackday", "prototype", "learning"];
+  const hasValidTopic = topics.some((topic) => validTopicsForDeployment.includes(topic));
+  if (!hasValidTopic) {
+    throw new RiffRaffUploadError(`No valid topic found in topics: ${topics}`);
+  } else {
+    core4.info("Valid topic found");
+  }
+}
 var main = async (options) => {
   const config = getConfiguration();
-  core4.info(JSON.stringify(import_github2.context.payload.repository.topics, null, 2));
+  validateTopics(import_github2.context.payload.repository.topics);
   core4.debug(JSON.stringify(config, null, 2));
   const {
     riffRaffYaml,
