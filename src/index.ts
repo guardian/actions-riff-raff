@@ -9,7 +9,6 @@ import { commentOnPullRequest } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
-import {PayloadRepository} from "@actions/github/lib/interfaces";
 
 interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
@@ -26,15 +25,14 @@ function validateTopics(topics: string[]): void {
   const validTopicsForDeployment = ['production', 'hackday', 'prototype', 'learning']
   const hasValidTopic = topics.some((topic) => validTopicsForDeployment.includes(topic))
   if (!hasValidTopic) {
-    throw new RiffRaffUploadError(`No valid topic found in topics: ${topics}`)
+    throw new RiffRaffUploadError(`No valid repository topic found. Please add one of ${validTopicsForDeployment.join(', ')}`)
   }
   else {core.info('Valid topic found')}
 }
 
 export const main = async (options: Options): Promise<void> => {
 	const config = getConfiguration();
-
-  validateTopics(context.payload.repository!.topics);
+  validateTopics(context.payload.repository?.topics as string[]);
 
 	core.debug(JSON.stringify(config, null, 2));
 
