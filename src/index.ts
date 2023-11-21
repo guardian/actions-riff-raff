@@ -9,6 +9,7 @@ import { commentOnPullRequest } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
+import {PayloadRepository} from "@actions/github/lib/interfaces";
 
 interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
@@ -16,6 +17,9 @@ interface Options {
 
 export const main = async (options: Options): Promise<void> => {
 	const config = getConfiguration();
+
+  core.info(JSON.stringify(context.payload.repository!.topics, null, 2));
+
 
 	core.debug(JSON.stringify(config, null, 2));
 

@@ -63826,6 +63826,7 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 // src/index.ts
 var main = async (options) => {
   const config = getConfiguration();
+  core4.info(JSON.stringify(import_github2.context.payload.repository.topics, null, 2));
   core4.debug(JSON.stringify(config, null, 2));
   const {
     riffRaffYaml,
