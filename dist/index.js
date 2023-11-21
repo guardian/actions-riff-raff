@@ -63831,10 +63831,15 @@ var RiffRaffUploadError = class extends Error {
   }
 };
 function validateTopics(topics) {
-  const validTopicsForDeployment = ["production", "hackday", "prototype", "learning"];
-  const hasValidTopic = topics.some((topic) => validTopicsForDeployment.includes(topic));
+  const deployableTopics = ["production", "hackday", "prototype", "learning"];
+  const hasValidTopic = topics.some(
+    (topic) => deployableTopics.includes(topic)
+  );
   if (!hasValidTopic) {
-    throw new RiffRaffUploadError(`No valid repository topic found. Please add one of ${validTopicsForDeployment.join(", ")}`);
+    const topicList = deployableTopics.join(", ");
+    throw new RiffRaffUploadError(
+      `No valid repository topic found. Add one of ${topicList}`
+    );
   } else {
     core4.info("Valid topic found");
   }

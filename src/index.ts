@@ -15,24 +15,30 @@ interface Options {
 }
 
 class RiffRaffUploadError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'RiffRaffUploadError';
-  }
+	constructor(message: string) {
+		super(message);
+		this.name = 'RiffRaffUploadError';
+	}
 }
 
 function validateTopics(topics: string[]): void {
-  const validTopicsForDeployment = ['production', 'hackday', 'prototype', 'learning']
-  const hasValidTopic = topics.some((topic) => validTopicsForDeployment.includes(topic))
-  if (!hasValidTopic) {
-    throw new RiffRaffUploadError(`No valid repository topic found. Please add one of ${validTopicsForDeployment.join(', ')}`)
-  }
-  else {core.info('Valid topic found')}
+	const deployableTopics = ['production', 'hackday', 'prototype', 'learning'];
+	const hasValidTopic = topics.some((topic) =>
+		deployableTopics.includes(topic),
+	);
+	if (!hasValidTopic) {
+		const topicList = deployableTopics.join(', ');
+		throw new RiffRaffUploadError(
+			`No valid repository topic found. Add one of ${topicList}`,
+		);
+	} else {
+		core.info('Valid topic found');
+	}
 }
 
 export const main = async (options: Options): Promise<void> => {
 	const config = getConfiguration();
-  validateTopics(context.payload.repository?.topics as string[]);
+	validateTopics(context.payload.repository?.topics as string[]);
 
 	core.debug(JSON.stringify(config, null, 2));
 
