@@ -28739,8 +28739,8 @@ var require_SignatureV4 = __commonJS({
           signingService,
           priorSignature: signableMessage.priorSignature
         });
-        return promise.then((signature2) => {
-          return { message: signableMessage.message, signature: signature2 };
+        return promise.then((signature) => {
+          return { message: signableMessage.message, signature };
         });
       }
       async signString(stringToSign, { signingDate = /* @__PURE__ */ new Date(), signingRegion, signingService } = {}) {
@@ -28768,8 +28768,8 @@ var require_SignatureV4 = __commonJS({
           request.headers[constants_1.SHA256_HEADER] = payloadHash;
         }
         const canonicalHeaders = (0, getCanonicalHeaders_1.getCanonicalHeaders)(request, unsignableHeaders, signableHeaders);
-        const signature2 = await this.getSignature(longDate, scope, this.getSigningKey(credentials, region, shortDate, signingService), this.createCanonicalRequest(request, canonicalHeaders, payloadHash));
-        request.headers[constants_1.AUTH_HEADER] = `${constants_1.ALGORITHM_IDENTIFIER} Credential=${credentials.accessKeyId}/${scope}, SignedHeaders=${getCanonicalHeaderList(canonicalHeaders)}, Signature=${signature2}`;
+        const signature = await this.getSignature(longDate, scope, this.getSigningKey(credentials, region, shortDate, signingService), this.createCanonicalRequest(request, canonicalHeaders, payloadHash));
+        request.headers[constants_1.AUTH_HEADER] = `${constants_1.ALGORITHM_IDENTIFIER} Credential=${credentials.accessKeyId}/${scope}, SignedHeaders=${getCanonicalHeaderList(canonicalHeaders)}, Signature=${signature}`;
         return request;
       }
       createCanonicalRequest(request, canonicalHeaders, payloadHash) {
@@ -63728,12 +63728,14 @@ function getPreviewUrl(config) {
   url.searchParams.set("updateStrategy", "MostlyHarmless");
   return url;
 }
-var signature = "_From [guardian/actions-riff-raff](https://github.com/guardian/actions-riff-raff)._";
+var marker = (projectName) => {
+  return `<!-- guardian/actions-riff-raff for ${projectName} -->`;
+};
 function getCommentMessage(config) {
-  const { buildNumber, commentingStage } = config;
+  const { buildNumber, commentingStage, projectName } = config;
   const deployUrl = getDeployUrl(config).toString();
   const previewUrl = getPreviewUrl(config).toString();
-  const mainMessage = `[Deploy build ${buildNumber} to ${commentingStage}](${deployUrl})`;
+  const mainMessage = `[Deploy build ${buildNumber} of \`${projectName}\` to ${commentingStage}](${deployUrl})`;
   return [
     `### ${mainMessage}`,
     "<details>",
@@ -63744,7 +63746,8 @@ function getCommentMessage(config) {
     "</details>",
     "",
     "---",
-    signature
+    "_From [guardian/actions-riff-raff](https://github.com/guardian/actions-riff-raff)._",
+    marker(projectName)
   ].join("\n");
 }
 async function commentOnPullRequest(pullRequestNumber, config) {
@@ -63757,7 +63760,7 @@ async function commentOnPullRequest(pullRequestNumber, config) {
   (0, import_core.debug)(`Total comments: ${comments.data.length}`);
   const previousComment = comments.data.find((comment2) => {
     const fromBot = comment2.user?.login === "github-actions[bot]";
-    const fromMe = comment2.body?.includes(signature) ?? false;
+    const fromMe = comment2.body?.includes(marker(config.projectName)) ?? false;
     return fromBot && fromMe;
   });
   if (previousComment) {

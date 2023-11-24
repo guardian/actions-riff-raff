@@ -25,15 +25,16 @@ function getPreviewUrl(config: PullRequestCommentConfig): URL {
 	return url;
 }
 
-const signature =
-	'_From [guardian/actions-riff-raff](https://github.com/guardian/actions-riff-raff)._';
+const marker = (projectName: string) => {
+	return `<!-- guardian/actions-riff-raff for ${projectName} -->`;
+};
 
 function getCommentMessage(config: PullRequestCommentConfig): string {
-	const { buildNumber, commentingStage } = config;
+	const { buildNumber, commentingStage, projectName } = config;
 	const deployUrl = getDeployUrl(config).toString();
 	const previewUrl = getPreviewUrl(config).toString();
 
-	const mainMessage = `[Deploy build ${buildNumber} to ${commentingStage}](${deployUrl})`;
+	const mainMessage = `[Deploy build ${buildNumber} of \`${projectName}\` to ${commentingStage}](${deployUrl})`;
 
 	return [
 		`### ${mainMessage}`,
@@ -45,7 +46,8 @@ function getCommentMessage(config: PullRequestCommentConfig): string {
 		'</details>',
 		'',
 		'---',
-		signature,
+		'_From [guardian/actions-riff-raff](https://github.com/guardian/actions-riff-raff)._',
+		marker(projectName),
 	].join('\n');
 }
 
@@ -65,7 +67,7 @@ export async function commentOnPullRequest(
 
 	const previousComment = comments.data.find((comment) => {
 		const fromBot = comment.user?.login === 'github-actions[bot]';
-		const fromMe = comment.body?.includes(signature) ?? false;
+		const fromMe = comment.body?.includes(marker(config.projectName)) ?? false;
 		return fromBot && fromMe;
 	});
 
