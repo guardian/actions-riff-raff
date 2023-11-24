@@ -63735,7 +63735,7 @@ function getCommentMessage(config) {
   const { buildNumber, commentingStage, projectName } = config;
   const deployUrl = getDeployUrl(config).toString();
   const previewUrl = getPreviewUrl(config).toString();
-  const mainMessage = `[Deploy build ${buildNumber} of ${projectName} to ${commentingStage}](${deployUrl})`;
+  const mainMessage = `[Deploy build ${buildNumber} of \`${projectName}\` to ${commentingStage}](${deployUrl})`;
   return [
     `### ${mainMessage}`,
     "<details>",
