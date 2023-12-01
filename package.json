@@ -30,7 +30,7 @@
     "@guardian/prettier": "^5.0.0",
     "@guardian/tsconfig": "^0.2.0",
     "@types/jest": "^27.4.1",
-    "@types/js-yaml": "^4.0.8",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "20.10.1",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4",
