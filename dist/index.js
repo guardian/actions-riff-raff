@@ -63728,6 +63728,12 @@ function getPreviewUrl(config) {
   url.searchParams.set("updateStrategy", "MostlyHarmless");
   return url;
 }
+function getWhatsOnUrl(config) {
+  const url = new URL("https://riffraff.gutools.co.uk/deployment/history");
+  url.searchParams.set("projectName", config.projectName);
+  url.searchParams.set("stage", config.commentingStage);
+  return url;
+}
 var marker = (projectName) => {
   return `<!-- guardian/actions-riff-raff for ${projectName} -->`;
 };
@@ -63735,6 +63741,7 @@ function getCommentMessage(config) {
   const { buildNumber, commentingStage, projectName } = config;
   const deployUrl = getDeployUrl(config).toString();
   const previewUrl = getPreviewUrl(config).toString();
+  const whatsOnUrl = getWhatsOnUrl(config).toString();
   const mainMessage = `[Deploy build ${buildNumber} of \`${projectName}\` to ${commentingStage}](${deployUrl})`;
   return [
     `### ${mainMessage}`,
@@ -63743,6 +63750,7 @@ function getCommentMessage(config) {
     "",
     `- ${mainMessage}`,
     `- [Deploy parts of build ${buildNumber} to ${commentingStage} by previewing it first](${previewUrl})`,
+    `- [What's on ${commentingStage} right now?](${whatsOnUrl})`,
     "</details>",
     "",
     "---",
