@@ -5,7 +5,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
 import { cp, printDir, write } from './file';
-import { commentOnPullRequest } from './pr-comment';
+import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
@@ -37,6 +37,13 @@ function validateTopics(topics: string[]): void {
 }
 
 export const main = async (options: Options): Promise<void> => {
+	/*
+  Print the context early.
+  This is useful for debugging.
+  See https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/enabling-debug-logging.
+   */
+	core.debug(JSON.stringify(context, null, 2));
+
 	const config = getConfiguration();
 	validateTopics(context.payload.repository?.topics as string[]);
 
@@ -109,14 +116,13 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info('Upload complete.');
 
-	const { pull_request } = context.payload;
-
-	if (pull_request) {
-		core.info(`Commenting on PR ${pull_request.number}`);
-		await commentOnPullRequest(pull_request.number, pullRequestComment);
+	const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+	if (pullRequestNumber) {
+		core.info(`Commenting on PR ${pullRequestNumber}`);
+		await commentOnPullRequest(pullRequestNumber, pullRequestComment);
 	} else {
 		core.info(
-			`Not a pull request, so cannot add a comment. Event is ${context.eventName}`,
+			`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
 		);
 	}
 };

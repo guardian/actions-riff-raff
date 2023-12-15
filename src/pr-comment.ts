@@ -100,3 +100,44 @@ export async function commentOnPullRequest(
 		});
 	}
 }
+
+export async function getPullRequestNumber(
+	config: PullRequestCommentConfig,
+): Promise<number | undefined> {
+	const { eventName } = context;
+	const { pull_request } = context.payload;
+
+	if (pull_request) {
+		debug(
+			`Identified PR number as ${pull_request.number} from payload. Trigger was ${eventName}.`,
+		);
+		return Promise.resolve(pull_request.number);
+	}
+
+	debug(`Attempting to get PR number from commit ${context.sha}`);
+
+	const octokit = getOctokit(config.githubToken);
+
+	const result = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+		...context.repo,
+		commit_sha: context.sha,
+	});
+
+	const openPrs = result.data.filter(({ state }) => state === 'open');
+	const pr =
+		openPrs.find((_) => context.ref === `refs/heads/${_.head.ref}`) ??
+		openPrs.at(0);
+
+	if (!pr) {
+		debug(
+			`Failed to identify PR number from commit. Trigger was ${eventName}.`,
+		);
+		return undefined;
+	}
+
+	debug(
+		`Identified PR number as ${pr.number} from commit. Trigger was ${eventName}.`,
+	);
+	debug(JSON.stringify(pr, null, 2));
+	return pr.number;
+}
