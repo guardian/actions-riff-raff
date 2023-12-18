@@ -76,21 +76,25 @@ export async function commentOnPullRequest(
 
 	debug(`Total comments: ${comments.data.length}`);
 
-	const previousComment = comments.data.find((comment) => {
+	const previousComments = comments.data.filter((comment) => {
 		const fromBot = comment.user?.login === 'github-actions[bot]';
 		const fromMe = comment.body?.includes(marker(config.projectName)) ?? false;
 		return fromBot && fromMe;
 	});
 
-	if (previousComment) {
-		debug(
-			`Found a comment by github-actions[bot] (id: ${previousComment.id}). Updating it.`,
+	if (previousComments.length > 0) {
+		debug(`Found ${previousComments.length} comments by github-actions[bot]`);
+
+		await Promise.all(
+			previousComments.map(async (previousComment) => {
+				debug(`Updating comment with id: ${previousComment.id}.`);
+				await octokit.rest.issues.updateComment({
+					...context.repo,
+					comment_id: previousComment.id,
+					body: comment,
+				});
+			}),
 		);
-		await octokit.rest.issues.updateComment({
-			...context.repo,
-			comment_id: previousComment.id,
-			body: comment,
-		});
 	} else {
 		debug(`No previous comment found. Creating one.`);
 		await octokit.rest.issues.createComment({
