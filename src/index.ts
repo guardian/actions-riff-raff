@@ -9,6 +9,7 @@ import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
+import { attestArtifacts } from './sigstore';
 
 interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
@@ -105,6 +106,12 @@ export const main = async (options: Options): Promise<void> => {
 	core.info(`S3 prefix: ${keyPrefix}`);
 
 	await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
+
+  await store.put(
+		Buffer.from(JSON.stringify(await attestArtifacts(stagingDir, manifestJSON)), 'utf8'),
+		'riffraff-builds',
+		keyPrefix + '/sigstore-hashes.json',
+	);
 
 	// Do this bit last to avoid any race conditions, as this is the file that
 	// triggers RR CD.

@@ -23,7 +23,8 @@
     "@actions/github": "^6.0.0",
     "@aws-sdk/client-s3": "^3.484.0",
     "esbuild": "^0.19.11",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "sigstore": "^2.1.0"
   },
   "devDependencies": {
     "@guardian/eslint-config-typescript": "^5.0.0",
