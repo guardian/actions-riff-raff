@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 import { context } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
+import { fromWebToken } from '@aws-sdk/credential-providers';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
 import { cp, printDir, write } from './file';
@@ -9,6 +10,11 @@ import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
+
+/**
+ * Amazon STS expects OIDC tokens with the `aud` (audience) field set to `sts.amazonaws.com`
+ */
+const GITHUB_OIDC_AUDIENCE = 'sts.amazonaws.com';
 
 interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
@@ -99,7 +105,15 @@ export const main = async (options: Options): Promise<void> => {
 		return;
 	}
 
-	const store = new S3Store(new S3Client({ region: 'eu-west-1' }));
+	const store = new S3Store(
+		new S3Client({
+			region: 'eu-west-1',
+			credentials: fromWebToken({
+				roleArn: core.getInput('roleArn', { required: true }),
+				webIdentityToken: await core.getIDToken(GITHUB_OIDC_AUDIENCE),
+			}),
+		}),
+	);
 	const keyPrefix = riffraffPrefix(mfest);
 
 	core.info(`S3 prefix: ${keyPrefix}`);

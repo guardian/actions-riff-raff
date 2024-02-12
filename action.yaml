@@ -4,6 +4,9 @@ inputs:
   app:
     description: Riff Raff app name. Either this or projectName should be set.
     required: false
+  roleArn:
+    description: Role to assume using AssumeRoleWithWebIdentity with Github OIDC token to upload files to RiffRaff S3 bucket.
+    required: true
   config:
     description: Riff Raff configuration (what would normally go in a riff-raff.yaml file). Use `|` to provide a multiline string here.
     required: false
