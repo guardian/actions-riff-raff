@@ -36,6 +36,7 @@ jobs:
         with:
           dryRun: true
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          roleArn: superSecretRole
           app: foo
           contentDirectories: |
             upload:
