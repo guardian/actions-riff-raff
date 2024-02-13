@@ -181,12 +181,18 @@ const githubToken = (): string => {
 	return token;
 };
 
+const getRoleArn = (): string => {
+	const roleArn = getInput('roleArn', { required: true });
+	if (!roleArn) {
+		throw new Error('roleArn not supplied');
+	}
+	return roleArn;
+};
+
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
-	const roleArn = getInput('roleArn', {
-		required: true,
-	}) as string;
+	const roleArn = getRoleArn();
 	const dryRunInput = getInput('dryRun');
 	const buildNumberInput = getInput('buildNumber');
 	const buildNumberOffset = getInput('buildNumberOffset') ?? '0';
