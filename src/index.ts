@@ -51,7 +51,6 @@ export const main = async (options: Options): Promise<void> => {
 	core.debug(JSON.stringify(context, null, 2));
 
 	const config = getConfiguration();
-	const idToken = await core.getIDToken(GITHUB_OIDC_AUDIENCE);
 	validateTopics(context.payload.repository?.topics as string[]);
 
 	core.debug(JSON.stringify(config, null, 2));
@@ -106,6 +105,8 @@ export const main = async (options: Options): Promise<void> => {
 		core.info(printDir(stagingDir));
 		return;
 	}
+
+	const idToken = await core.getIDToken(GITHUB_OIDC_AUDIENCE);
 
 	const store = new S3Store(
 		new S3Client({

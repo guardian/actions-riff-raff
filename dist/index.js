@@ -70797,7 +70797,6 @@ function validateTopics(topics) {
 var main = async (options) => {
   core4.debug(JSON.stringify(import_github2.context, null, 2));
   const config = getConfiguration();
-  const idToken = await core4.getIDToken(GITHUB_OIDC_AUDIENCE);
   validateTopics(import_github2.context.payload.repository?.topics);
   core4.debug(JSON.stringify(config, null, 2));
   const {
@@ -70839,6 +70838,7 @@ var main = async (options) => {
     core4.info(printDir(stagingDir));
     return;
   }
+  const idToken = await core4.getIDToken(GITHUB_OIDC_AUDIENCE);
   const store = new S3Store(
     new import_client_s32.S3Client({
       region: "eu-west-1",

@@ -32,6 +32,7 @@ describe('action', () => {
 app: foo
 githubToken: ${process.env['GITHUB_SECRET'] ?? 'dev'}
 stagingDir: staging
+roleArn: superSeekritRole
 contentDirectories: |
   upload:
     - test-data
