@@ -51,12 +51,14 @@ export const main = async (options: Options): Promise<void> => {
 	core.debug(JSON.stringify(context, null, 2));
 
 	const config = getConfiguration();
+	const idToken = await core.getIDToken(GITHUB_OIDC_AUDIENCE);
 	validateTopics(context.payload.repository?.topics as string[]);
 
 	core.debug(JSON.stringify(config, null, 2));
 
 	const {
 		riffRaffYaml,
+		roleArn,
 		projectName,
 		dryRun,
 		buildNumber,
@@ -109,8 +111,8 @@ export const main = async (options: Options): Promise<void> => {
 		new S3Client({
 			region: 'eu-west-1',
 			credentials: fromWebToken({
-				roleArn: core.getInput('roleArn', { required: true }),
-				webIdentityToken: await core.getIDToken(GITHUB_OIDC_AUDIENCE),
+				roleArn: roleArn,
+				webIdentityToken: idToken,
 			}),
 		}),
 	);

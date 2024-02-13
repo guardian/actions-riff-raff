@@ -151,6 +151,7 @@ export interface PullRequestCommentConfig {
 
 export interface Configuration {
 	projectName: string;
+	roleArn: string;
 	riffRaffYaml: RiffraffYaml;
 	dryRun: boolean;
 	buildNumber: string;
@@ -183,6 +184,9 @@ const githubToken = (): string => {
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
+	const roleArn = getInput('roleArn', {
+		required: true,
+	}) as string;
 	const dryRunInput = getInput('dryRun');
 	const buildNumberInput = getInput('buildNumber');
 	const buildNumberOffset = getInput('buildNumberOffset') ?? '0';
@@ -196,6 +200,7 @@ export function getConfiguration(): Configuration {
 
 	return {
 		projectName,
+		roleArn,
 		riffRaffYaml,
 		dryRun: dryRunInput === 'true',
 		buildNumber,

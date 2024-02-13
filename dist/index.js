@@ -18351,7 +18351,7 @@ var require_core = __commonJS({
       process.env["PATH"] = `${inputPath}${path2.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
-    function getInput4(name, options) {
+    function getInput3(name, options) {
       const val2 = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val2) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -18361,9 +18361,9 @@ var require_core = __commonJS({
       }
       return val2.trim();
     }
-    exports2.getInput = getInput4;
+    exports2.getInput = getInput3;
     function getMultilineInput(name, options) {
-      const inputs = getInput4(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput3(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -18373,7 +18373,7 @@ var require_core = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val2 = getInput4(name, options);
+      const val2 = getInput3(name, options);
       if (trueValue.includes(val2))
         return true;
       if (falseValue.includes(val2))
@@ -67768,6 +67768,7 @@ var fs3 = __toESM(require("fs"));
 var core4 = __toESM(require_core());
 var import_github2 = __toESM(require_github());
 var import_client_s32 = __toESM(require_dist_cjs71());
+var import_credential_providers = __toESM(require_dist_cjs114());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -70583,6 +70584,9 @@ var githubToken = () => {
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
   const projectName = getProjectName(riffRaffYaml);
+  const roleArn = getInput2("roleArn", {
+    required: true
+  });
   const dryRunInput = getInput2("dryRun");
   const buildNumberInput = getInput2("buildNumber");
   const buildNumberOffset = getInput2("buildNumberOffset") ?? "0";
@@ -70592,6 +70596,7 @@ function getConfiguration() {
   const commentingStage = getInput2("commentingStage") ?? "CODE";
   return {
     projectName,
+    roleArn,
     riffRaffYaml,
     dryRun: dryRunInput === "true",
     buildNumber,
@@ -70768,7 +70773,6 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 };
 
 // src/index.ts
-var import_credential_providers = __toESM(require_dist_cjs114());
 var GITHUB_OIDC_AUDIENCE = "sts.amazonaws.com";
 var RiffRaffUploadError = class extends Error {
   constructor(message) {
@@ -70793,10 +70797,12 @@ function validateTopics(topics) {
 var main = async (options) => {
   core4.debug(JSON.stringify(import_github2.context, null, 2));
   const config = getConfiguration();
+  const idToken = await core4.getIDToken(GITHUB_OIDC_AUDIENCE);
   validateTopics(import_github2.context.payload.repository?.topics);
   core4.debug(JSON.stringify(config, null, 2));
   const {
     riffRaffYaml,
+    roleArn,
     projectName,
     dryRun,
     buildNumber,
@@ -70833,10 +70839,15 @@ var main = async (options) => {
     core4.info(printDir(stagingDir));
     return;
   }
-  const store = new S3Store(new import_client_s32.S3Client({ region: "eu-west-1", credentials: (0, import_credential_providers.fromWebToken)({
-    roleArn: core4.getInput("roleArn", { required: true }),
-    webIdentityToken: await core4.getIDToken(GITHUB_OIDC_AUDIENCE)
-  }) }));
+  const store = new S3Store(
+    new import_client_s32.S3Client({
+      region: "eu-west-1",
+      credentials: (0, import_credential_providers.fromWebToken)({
+        roleArn,
+        webIdentityToken: idToken
+      })
+    })
+  );
   const keyPrefix = riffraffPrefix(mfest);
   core4.info(`S3 prefix: ${keyPrefix}`);
   await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
