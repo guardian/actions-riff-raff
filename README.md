@@ -10,9 +10,8 @@ It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
 
 ## Example usage
-To use, add (something like) the following to your workflow file.
 
-Note the additions for AWS credentials. For more info, see: https://github.com/aws-actions/configure-aws-credentials.
+To use, add (something like) the following to your workflow file.
 
 ```yaml
 jobs:
@@ -20,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      # Allow GitHub to request an OIDC JWT ID token, for exchange with `aws-actions/configure-aws-credentials`
+      # Allow GitHub to request an OIDC JWT ID token, for exchange with AWS Security Token Service (STS)
       # See https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services#updating-your-github-actions-workflow
       id-token: write
 
@@ -35,15 +34,10 @@ jobs:
 
       # Your usual build steps here...
 
-      # Exchange OIDC JWT ID token for temporary AWS credentials to allow uploading to S3
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-region: eu-west-1
-          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-
-      - uses: guardian/actions-riff-raff@v3
+      - uses: guardian/actions-riff-raff@v4
         with:
           app: foo
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           config: |
             stacks:
@@ -74,6 +68,12 @@ The app name, used for the creating Riff-Raff project name with the format `stac
 Where `stack` is read from the provided `riff-raff.yaml` config.
 
 Note: If you have multiple stacks specified, use `projectName` instead.
+
+### `roleArn`
+
+_Required_
+
+The ARN for a role that the action assumes using AssumeRoleWithWebIdentity. This is required to upload artifacts to the Riff-Raff bucket.
 
 ### `projectName`
 Used instead of `app` to override the default Riff-Raff project naming strategy.
@@ -248,3 +248,24 @@ After merging into `main`, create a [new version](https://github.com/actions/too
 
 > **Note**
 > Try to avoid creating new major versions for as long as possible as it requires explicit upgrades in consuming repositories.
+
+## Migrating from v3 to v4
+
+Prior to v4, workflows that used this action were required to assume the role necessary to upload artifacts to Riff-Raff, via `configure-aws-credentials`. This is no longer required, as this action does it for you. This has the benefit of hardening your workflows, as intermediate steps no longer have access to AWS credentials.
+
+To migrate:
+
+1. Bump `guardian/actions-riff-raff@v3` to `guardian/actions-riff-raff@v4` in your workflow file.
+
+2. Add the required `roleArn` property under the `with` section of the `guardian/actions-riff-raff@v4` action. This is typically stored as a secret that can be accessed via `${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}`.
+
+3. Remove the `configure-aws-credentials` step from your workflow, as it's no longer required.
+
+> [!NOTE]
+> For the action to successfully assume the Riff-Raff role, you still need to include the following permission:
+>
+> ```yaml
+> permissions:
+>   id-token: write
+>   # ...
+> ```
