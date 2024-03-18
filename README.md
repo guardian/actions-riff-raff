@@ -9,6 +9,9 @@ It will:
 It is loosely modelled on, and is a logical extension of,
 https://github.com/guardian/node-riffraff-artifact.
 
+> [!IMPORTANT]
+> Ensure your project has been added to https://github.com/guardian/riffraff-platform too.
+
 ## Example usage
 
 To use, add (something like) the following to your workflow file.
