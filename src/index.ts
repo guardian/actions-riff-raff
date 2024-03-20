@@ -9,7 +9,7 @@ import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
-import { S3Store, sync } from './s3';
+import { S3Store } from './s3';
 
 /**
  * Amazon STS expects OIDC tokens with the `aud` (audience) field set to `sts.amazonaws.com`
@@ -121,14 +121,14 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 
-	await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
+	await store.putDirectory('riffraff-artifact', keyPrefix, stagingDir);
 
 	// Do this bit last to avoid any race conditions, as this is the file that
 	// triggers RR CD.
-	await store.put(
-		Buffer.from(manifestJSON, 'utf8'),
+	await store.putObject(
 		'riffraff-builds',
 		keyPrefix + '/build.json',
+		Buffer.from(manifestJSON, 'utf8'),
 	);
 
 	core.info('Upload complete.');
