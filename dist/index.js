@@ -58777,20 +58777,28 @@ var S3Store = class {
   constructor(client) {
     this.client = client;
   }
-  async putObject(bucket, key, data) {
+  async putObject(props) {
+    const { bucket, key, content, tags } = props;
     const cmd = new import_client_s3.PutObjectCommand({
-      Body: data,
+      Body: content,
       Key: key,
-      Bucket: bucket
+      Bucket: bucket,
+      Tagging: new URLSearchParams(tags).toString()
     });
     await this.client.send(cmd);
   }
-  async putDirectory(bucket, keyPrefix, localDir) {
+  async putDirectory(props) {
+    const { bucket, keyPrefix, localDir, tags } = props;
     const responses = walk(localDir, (filePath) => {
       const data = fs2.readFileSync(filePath);
       const key = keyPrefix + filePath.substring(localDir.length);
       core3.info(`s3 sync: ${filePath} -> ${key}`);
-      return this.putObject(bucket, key, data);
+      return this.putObject({
+        bucket,
+        key,
+        content: data,
+        tags
+      });
     });
     await Promise.all(responses);
   }
@@ -58874,12 +58882,22 @@ var main = async (options) => {
   );
   const keyPrefix = riffraffPrefix(mfest);
   core4.info(`S3 prefix: ${keyPrefix}`);
-  await store.putDirectory("riffraff-artifact", keyPrefix, stagingDir);
-  await store.putObject(
-    "riffraff-builds",
-    keyPrefix + "/build.json",
-    Buffer.from(manifestJSON, "utf8")
-  );
+  const s3ObjectTags = {
+    "gu:for-github-repository": vcsURL2,
+    "gu:for-riffraff-project": projectName
+  };
+  await store.putDirectory({
+    bucket: "riffraff-artifact",
+    keyPrefix,
+    localDir: stagingDir,
+    tags: s3ObjectTags
+  });
+  await store.putObject({
+    bucket: "riffraff-builds",
+    key: `${keyPrefix}/build.json`,
+    content: Buffer.from(manifestJSON, "utf8"),
+    tags: s3ObjectTags
+  });
   core4.info("Upload complete.");
   const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
   if (pullRequestNumber) {

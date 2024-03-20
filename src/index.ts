@@ -121,15 +121,26 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 
-	await store.putDirectory('riffraff-artifact', keyPrefix, stagingDir);
+	const s3ObjectTags: Record<string, string> = {
+		'gu:for-github-repository': vcsURL,
+		'gu:for-riffraff-project': projectName,
+	};
+
+	await store.putDirectory({
+		bucket: 'riffraff-artifact',
+		keyPrefix,
+		localDir: stagingDir,
+		tags: s3ObjectTags,
+	});
 
 	// Do this bit last to avoid any race conditions, as this is the file that
 	// triggers RR CD.
-	await store.putObject(
-		'riffraff-builds',
-		keyPrefix + '/build.json',
-		Buffer.from(manifestJSON, 'utf8'),
-	);
+	await store.putObject({
+		bucket: 'riffraff-builds',
+		key: `${keyPrefix}/build.json`,
+		content: Buffer.from(manifestJSON, 'utf8'),
+		tags: s3ObjectTags,
+	});
 
 	core.info('Upload complete.');
 
