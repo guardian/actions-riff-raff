@@ -58772,37 +58772,31 @@ var riffraffPrefix = (m) => {
 var fs2 = __toESM(require("fs"));
 var core3 = __toESM(require_core());
 var import_client_s3 = __toESM(require_dist_cjs71());
-var S3Store = class {
-  client;
-  constructor(client) {
-    this.client = client;
-  }
-  async putObject(props) {
-    const { bucket, key, content, tags } = props;
-    const cmd = new import_client_s3.PutObjectCommand({
-      Body: content,
-      Key: key,
-      Bucket: bucket,
-      Tagging: new URLSearchParams(tags).toString()
+async function putObject(client, props) {
+  const { bucket, key, content, tags } = props;
+  const cmd = new import_client_s3.PutObjectCommand({
+    Body: content,
+    Key: key,
+    Bucket: bucket,
+    Tagging: new URLSearchParams(tags).toString()
+  });
+  await client.send(cmd);
+}
+async function putDirectory(client, props) {
+  const { bucket, keyPrefix, localDir, tags } = props;
+  const responses = walk(localDir, (filePath) => {
+    const data = fs2.readFileSync(filePath);
+    const key = keyPrefix + filePath.substring(localDir.length);
+    core3.info(`s3 sync: ${filePath} -> ${key}`);
+    return putObject(client, {
+      bucket,
+      key,
+      content: data,
+      tags
     });
-    await this.client.send(cmd);
-  }
-  async putDirectory(props) {
-    const { bucket, keyPrefix, localDir, tags } = props;
-    const responses = walk(localDir, (filePath) => {
-      const data = fs2.readFileSync(filePath);
-      const key = keyPrefix + filePath.substring(localDir.length);
-      core3.info(`s3 sync: ${filePath} -> ${key}`);
-      return this.putObject({
-        bucket,
-        key,
-        content: data,
-        tags
-      });
-    });
-    await Promise.all(responses);
-  }
-};
+  });
+  await Promise.all(responses);
+}
 
 // src/index.ts
 var GITHUB_OIDC_AUDIENCE = "sts.amazonaws.com";
@@ -58871,28 +58865,26 @@ var main = async (options) => {
     return;
   }
   const idToken = await core4.getIDToken(GITHUB_OIDC_AUDIENCE);
-  const store = new S3Store(
-    new import_client_s32.S3Client({
-      region: "eu-west-1",
-      credentials: (0, import_credential_providers.fromWebToken)({
-        roleArn,
-        webIdentityToken: idToken
-      })
+  const s3Client = new import_client_s32.S3Client({
+    region: "eu-west-1",
+    credentials: (0, import_credential_providers.fromWebToken)({
+      roleArn,
+      webIdentityToken: idToken
     })
-  );
+  });
   const keyPrefix = riffraffPrefix(mfest);
   core4.info(`S3 prefix: ${keyPrefix}`);
   const s3ObjectTags = {
     "gu:for-github-repository": vcsURL2,
     "gu:for-riffraff-project": projectName
   };
-  await store.putDirectory({
+  await putDirectory(s3Client, {
     bucket: "riffraff-artifact",
     keyPrefix,
     localDir: stagingDir,
     tags: s3ObjectTags
   });
-  await store.putObject({
+  await putObject(s3Client, {
     bucket: "riffraff-builds",
     key: `${keyPrefix}/build.json`,
     content: Buffer.from(manifestJSON, "utf8"),
