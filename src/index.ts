@@ -9,7 +9,7 @@ import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
-import { S3Store, sync } from './s3';
+import { putDirectory, putObject } from './s3';
 
 /**
  * Amazon STS expects OIDC tokens with the `aud` (audience) field set to `sts.amazonaws.com`
@@ -108,28 +108,37 @@ export const main = async (options: Options): Promise<void> => {
 
 	const idToken = await core.getIDToken(GITHUB_OIDC_AUDIENCE);
 
-	const store = new S3Store(
-		new S3Client({
-			region: 'eu-west-1',
-			credentials: fromWebToken({
-				roleArn: roleArn,
-				webIdentityToken: idToken,
-			}),
+	const s3Client = new S3Client({
+		region: 'eu-west-1',
+		credentials: fromWebToken({
+			roleArn: roleArn,
+			webIdentityToken: idToken,
 		}),
-	);
-	const keyPrefix = riffraffPrefix(mfest);
+	});
 
+	const keyPrefix = riffraffPrefix(mfest);
 	core.info(`S3 prefix: ${keyPrefix}`);
 
-	await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
+	const s3ObjectTags: Record<string, string> = {
+		'gu:for-github-repository': vcsURL,
+		'gu:for-riffraff-project': projectName,
+	};
+
+	await putDirectory(s3Client, {
+		bucket: 'riffraff-artifact',
+		keyPrefix,
+		localDir: stagingDir,
+		tags: s3ObjectTags,
+	});
 
 	// Do this bit last to avoid any race conditions, as this is the file that
 	// triggers RR CD.
-	await store.put(
-		Buffer.from(manifestJSON, 'utf8'),
-		'riffraff-builds',
-		keyPrefix + '/build.json',
-	);
+	await putObject(s3Client, {
+		bucket: 'riffraff-builds',
+		key: `${keyPrefix}/build.json`,
+		content: Buffer.from(manifestJSON, 'utf8'),
+		tags: s3ObjectTags,
+	});
 
 	core.info('Upload complete.');
 
