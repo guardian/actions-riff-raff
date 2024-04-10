@@ -124,7 +124,13 @@ A mapping to describe which files should be uploaded for which package.
 ### `githubToken`
 *Required*
 
-A GitHub token scoped to allow pull request commenting.
+Set this to the token provided by GitHub Actions - `${{ secrets.GITHUB_TOKEN }}` - and make sure your job has permission to comment on PRs.
+```yaml
+jobs:
+  my_ci_build:
+    permissions:
+      pull-requests: write
+```
 
 ### `commentingStage`
 _Default: CODE_
