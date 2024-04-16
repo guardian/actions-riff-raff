@@ -35,7 +35,7 @@ function validateTopics(topics: string[]): void {
 	if (!hasValidTopic) {
 		const topicList = deployableTopics.join(', ');
 		throw new RiffRaffUploadError(
-			`No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics.`,
+			`No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`,
 		);
 	} else {
 		core.info('Valid topic found');
