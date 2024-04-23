@@ -121,26 +121,39 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 
-	await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
+	try {
+		await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
 
-	// Do this bit last to avoid any race conditions, as this is the file that
-	// triggers RR CD.
-	await store.put(
-		Buffer.from(manifestJSON, 'utf8'),
-		'riffraff-builds',
-		keyPrefix + '/build.json',
-	);
-
-	core.info('Upload complete.');
-
-	const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
-	if (pullRequestNumber) {
-		core.info(`Commenting on PR ${pullRequestNumber}`);
-		await commentOnPullRequest(pullRequestNumber, pullRequestComment);
-	} else {
-		core.info(
-			`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
+		// Do this bit last to avoid any race conditions, as this is the file that
+		// triggers RR CD.
+		await store.put(
+			Buffer.from(manifestJSON, 'utf8'),
+			'riffraff-builds',
+			keyPrefix + '/build.json',
 		);
+
+		core.info('Upload complete.');
+
+		const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+		if (pullRequestNumber) {
+			core.info(`Commenting on PR ${pullRequestNumber}`);
+			await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+		} else {
+			core.info(
+				`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
+			);
+		}
+	} catch (err) {
+		core.error(
+			'Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform',
+		);
+
+		/*
+    We've caught every exception, not just AWS credential errors.
+    Re-throw it so that GHA can handle it.
+    TODO: Catch a more specific error type.
+     */
+		throw err;
 	}
 };
 
