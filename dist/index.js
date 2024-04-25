@@ -59071,6 +59071,13 @@ var main = async (options) => {
       keyPrefix + "/build.json"
     );
     core4.info("Upload complete.");
+  } catch (err) {
+    core4.error(
+      "Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform"
+    );
+    throw err;
+  }
+  try {
     const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
     if (pullRequestNumber) {
       core4.info(`Commenting on PR ${pullRequestNumber}`);
@@ -59081,9 +59088,7 @@ var main = async (options) => {
       );
     }
   } catch (err) {
-    core4.error(
-      "Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform"
-    );
+    core4.error("Error commenting on PR. Do you have the correct permissions?");
     throw err;
   }
 };

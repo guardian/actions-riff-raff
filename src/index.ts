@@ -133,7 +133,16 @@ export const main = async (options: Options): Promise<void> => {
 		);
 
 		core.info('Upload complete.');
+	} catch (err) {
+		core.error(
+			'Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform',
+		);
 
+		// throw to fail the action
+		throw err;
+	}
+
+	try {
 		const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
 		if (pullRequestNumber) {
 			core.info(`Commenting on PR ${pullRequestNumber}`);
@@ -144,15 +153,9 @@ export const main = async (options: Options): Promise<void> => {
 			);
 		}
 	} catch (err) {
-		core.error(
-			'Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform',
-		);
+		core.error('Error commenting on PR. Do you have the correct permissions?');
 
-		/*
-    We've caught every exception, not just AWS credential errors.
-    Re-throw it so that GHA can handle it.
-    TODO: Catch a more specific error type.
-     */
+		// throw to fail the action
 		throw err;
 	}
 };
