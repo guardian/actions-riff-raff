@@ -59338,26 +59338,12 @@ var readConfigFile = (path2) => {
   const data = read(path2);
   return load(data);
 };
-var getProjectName = ({ stacks }) => {
-  const appInput = getInput2("app");
-  const projectNameInput = getInput2("projectName");
-  if (!appInput && !projectNameInput) {
-    throw new Error("Must specify either app or projectName.");
+var getProjectName = () => {
+  const projectNameInput = getInput2("projectName", { required: true });
+  if (!projectNameInput) {
+    throw new Error("projectName not supplied");
   }
-  if (projectNameInput) {
-    return projectNameInput;
-  }
-  const numberOfStacks = stacks.length;
-  if (numberOfStacks === 1 && appInput) {
-    const stack = stacks[0];
-    return `${stack}::${appInput}`;
-  } else {
-    throw new Error(
-      `Unable to generate a project name as multiple stacks detected (${stacks.join(
-        ","
-      )}).`
-    );
-  }
+  return projectNameInput;
 };
 var isSources = (obj) => {
   if (typeof obj === "object") {
@@ -59449,7 +59435,7 @@ var getRoleArn = () => {
 };
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
-  const projectName = getProjectName(riffRaffYaml);
+  const projectName = getProjectName();
   const roleArn = getRoleArn();
   const dryRunInput = getInput2("dryRun");
   const buildNumberInput = getInput2("buildNumber");

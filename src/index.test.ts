@@ -29,7 +29,7 @@ describe('action', () => {
 		child_process.execSync(`touch ${artifactDir}/image.jpg`);
 
 		const input = `dryRun: true
-app: foo
+projectName: deploy::foo
 githubToken: ${process.env['GITHUB_SECRET'] ?? 'dev'}
 stagingDir: staging
 roleArn: superSecretRole

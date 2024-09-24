@@ -16,30 +16,14 @@ const readConfigFile = (path: string): object => {
 	return yaml.load(data) as object;
 };
 
-const getProjectName = ({ stacks }: RiffraffYaml): string => {
-	const appInput = getInput('app');
-	const projectNameInput = getInput('projectName');
+const getProjectName = (): string => {
+	const projectNameInput = getInput('projectName', { required: true });
 
-	if (!appInput && !projectNameInput) {
-		throw new Error('Must specify either app or projectName.');
+	if (!projectNameInput) {
+		throw new Error('projectName not supplied');
 	}
 
-	if (projectNameInput) {
-		return projectNameInput;
-	}
-
-	const numberOfStacks = stacks.length;
-
-	if (numberOfStacks === 1 && appInput) {
-		const stack = stacks[0] as string;
-		return `${stack}::${appInput}`;
-	} else {
-		throw new Error(
-			`Unable to generate a project name as multiple stacks detected (${stacks.join(
-				',',
-			)}).`,
-		);
-	}
+	return projectNameInput;
 };
 
 type Sources = Record<string, string[]>;
@@ -191,7 +175,7 @@ const getRoleArn = (): string => {
 
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
-	const projectName = getProjectName(riffRaffYaml);
+	const projectName = getProjectName();
 	const roleArn = getRoleArn();
 	const dryRunInput = getInput('dryRun');
 	const buildNumberInput = getInput('buildNumber');

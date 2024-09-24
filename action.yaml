@@ -1,9 +1,6 @@
 name: "guardian/actions-riff-raff"
 description: "Build and upload Riff Raff artifacts."
 inputs:
-  app:
-    description: Riff Raff app name. Either this or projectName should be set.
-    required: false
   roleArn:
     description: Role to assume using AssumeRoleWithWebIdentity with Github OIDC token to upload files to RiffRaff S3 bucket.
     required: true
@@ -14,8 +11,8 @@ inputs:
     description: Use this to specify the path of a riff-raff.yaml file if you'd rather that than enter the config in your workflow file directly.
     required: false
   projectName:
-    description: "Determines Riffraff project name. Use this to override the default `stack::app` naming convention."
-    required: false
+    description: The Riff-Raff project the artifacts are for.
+    required: true
   dryRun:
     description: If set to true, logs the output but does not upload deployments to the Riff Raff S3 bucket.
     required: false
