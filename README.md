@@ -39,7 +39,7 @@ jobs:
 
       - uses: guardian/actions-riff-raff@v4
         with:
-          app: foo
+          projectName: deploy::foo
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           config: |
@@ -64,14 +64,6 @@ jobs:
 
 ## Available inputs
 
-### `app`
-*Required* (unless setting `projectName`)
-
-The app name, used for the creating Riff-Raff project name with the format `stack::app`.
-Where `stack` is read from the provided `riff-raff.yaml` config.
-
-Note: If you have multiple stacks specified, use `projectName` instead.
-
 ### `roleArn`
 
 _Required_
@@ -79,7 +71,7 @@ _Required_
 The ARN for a role that the action assumes using AssumeRoleWithWebIdentity. This is required to upload artifacts to the Riff-Raff bucket.
 
 ### `projectName`
-Used instead of `app` to override the default Riff-Raff project naming strategy.
+The Riff-Raff project name to upload files for.
 
 ### `config`
 *Required* (unless setting `configPath`)
@@ -92,7 +84,7 @@ config as a multiline string.
 ```yaml
 - uses: guardian/actions-riff-raff@v2
   with:
-    app: foo
+    projectName: deploy::foo
     config: | # <-- the pipe is important!
       stacks:
         - deploy
@@ -163,7 +155,7 @@ stacks: [ deploy ]
 deployments:
   cloudformation: # <-- this is a package name
     type: cloud-formation
-    app: prism
+    projectName: deploy::prism
     parameters:
       templateStagePaths:
         CODE: Prism-CODE.template.json
@@ -232,7 +224,7 @@ stacks: [ deploy ]
 deployments:
   my-cloudformation-deployment:
     type: cloud-formation
-    app: prism
+    projectName: deploy::prism
     contentDirectory: cfn-templates
     parameters:
       templateStagePaths:
