@@ -39,5 +39,5 @@ inputs:
     description: When commenting on a pull request, which stage should be used. Typically a pre-production stage.
     default: CODE
 runs:
-  using: node20
+  using: node22
   main: "dist/index.js"
