@@ -25174,13 +25174,17 @@ var require_dist_cjs12 = __commonJS({
       }
       return transformedHeaders;
     }, "getTransformedHeaders");
+    var timing = {
+      setTimeout,
+      clearTimeout
+    };
     var DEFER_EVENT_LISTENER_TIME = 1e3;
     var setConnectionTimeout = /* @__PURE__ */ __name((request, reject, timeoutInMs = 0) => {
       if (!timeoutInMs) {
         return -1;
       }
       const registerTimeout = /* @__PURE__ */ __name((offset) => {
-        const timeoutId = setTimeout(() => {
+        const timeoutId = timing.setTimeout(() => {
           request.destroy();
           reject(
             Object.assign(new Error(`Socket timed out without establishing a connection within ${timeoutInMs} ms`), {
@@ -25191,10 +25195,10 @@ var require_dist_cjs12 = __commonJS({
         const doWithSocket = /* @__PURE__ */ __name((socket) => {
           if (socket == null ? void 0 : socket.connecting) {
             socket.on("connect", () => {
-              clearTimeout(timeoutId);
+              timing.clearTimeout(timeoutId);
             });
           } else {
-            clearTimeout(timeoutId);
+            timing.clearTimeout(timeoutId);
           }
         }, "doWithSocket");
         if (request.socket) {
@@ -25207,7 +25211,7 @@ var require_dist_cjs12 = __commonJS({
         registerTimeout(0);
         return 0;
       }
-      return setTimeout(registerTimeout.bind(null, DEFER_EVENT_LISTENER_TIME), DEFER_EVENT_LISTENER_TIME);
+      return timing.setTimeout(registerTimeout.bind(null, DEFER_EVENT_LISTENER_TIME), DEFER_EVENT_LISTENER_TIME);
     }, "setConnectionTimeout");
     var DEFER_EVENT_LISTENER_TIME2 = 3e3;
     var setSocketKeepAlive = /* @__PURE__ */ __name((request, { keepAlive, keepAliveMsecs }, deferTimeMs = DEFER_EVENT_LISTENER_TIME2) => {
@@ -25227,7 +25231,7 @@ var require_dist_cjs12 = __commonJS({
         registerListener();
         return 0;
       }
-      return setTimeout(registerListener, deferTimeMs);
+      return timing.setTimeout(registerListener, deferTimeMs);
     }, "setSocketKeepAlive");
     var DEFER_EVENT_LISTENER_TIME3 = 3e3;
     var setSocketTimeout = /* @__PURE__ */ __name((request, reject, timeoutInMs = 0) => {
@@ -25241,7 +25245,7 @@ var require_dist_cjs12 = __commonJS({
         registerTimeout(0);
         return 0;
       }
-      return setTimeout(
+      return timing.setTimeout(
         registerTimeout.bind(null, timeoutInMs === 0 ? 0 : DEFER_EVENT_LISTENER_TIME3),
         DEFER_EVENT_LISTENER_TIME3
       );
@@ -25256,16 +25260,16 @@ var require_dist_cjs12 = __commonJS({
       if (expect === "100-continue") {
         await Promise.race([
           new Promise((resolve) => {
-            timeoutId = Number(setTimeout(resolve, Math.max(MIN_WAIT_TIME, maxContinueTimeoutMs)));
+            timeoutId = Number(timing.setTimeout(resolve, Math.max(MIN_WAIT_TIME, maxContinueTimeoutMs)));
           }),
           new Promise((resolve) => {
             httpRequest.on("continue", () => {
-              clearTimeout(timeoutId);
+              timing.clearTimeout(timeoutId);
               resolve();
             });
             httpRequest.on("error", () => {
               hasError = true;
-              clearTimeout(timeoutId);
+              timing.clearTimeout(timeoutId);
               resolve();
             });
           })
@@ -25393,12 +25397,12 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           const timeouts = [];
           const resolve = /* @__PURE__ */ __name(async (arg) => {
             await writeRequestBodyPromise;
-            timeouts.forEach(clearTimeout);
+            timeouts.forEach(timing.clearTimeout);
             _resolve(arg);
           }, "resolve");
           const reject = /* @__PURE__ */ __name(async (arg) => {
             await writeRequestBodyPromise;
-            timeouts.forEach(clearTimeout);
+            timeouts.forEach(timing.clearTimeout);
             _reject(arg);
           }, "reject");
           if (!this.config) {
@@ -25413,7 +25417,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           const isSSL = request.protocol === "https:";
           const agent = isSSL ? this.config.httpsAgent : this.config.httpAgent;
           timeouts.push(
-            setTimeout(
+            timing.setTimeout(
               () => {
                 this.socketWarningTimestamp = _NodeHttpHandler2.checkSocketUsage(
                   agent,
@@ -25499,7 +25503,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
             );
           }
           writeRequestBodyPromise = writeRequestBody(req, request, this.config.requestTimeout).catch((e) => {
-            timeouts.forEach(clearTimeout);
+            timeouts.forEach(timing.clearTimeout);
             return _reject(e);
           });
         });
@@ -25632,7 +25636,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         }
       }
       setMaxConcurrentStreams(maxConcurrentStreams) {
-        if (this.config.maxConcurrency && this.config.maxConcurrency <= 0) {
+        if (maxConcurrentStreams && maxConcurrentStreams <= 0) {
           throw new RangeError("maxConcurrentStreams must be greater than zero.");
         }
         this.config.maxConcurrency = maxConcurrentStreams;
@@ -25872,9 +25876,9 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
   }
 });
 
-// node_modules/@smithy/util-stream/node_modules/@smithy/fetch-http-handler/dist-cjs/index.js
+// node_modules/@smithy/fetch-http-handler/dist-cjs/index.js
 var require_dist_cjs13 = __commonJS({
-  "node_modules/@smithy/util-stream/node_modules/@smithy/fetch-http-handler/dist-cjs/index.js"(exports2, module2) {
+  "node_modules/@smithy/fetch-http-handler/dist-cjs/index.js"(exports2, module2) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -25902,6 +25906,10 @@ var require_dist_cjs13 = __commonJS({
     module2.exports = __toCommonJS2(src_exports2);
     var import_protocol_http8 = require_dist_cjs2();
     var import_querystring_builder = require_dist_cjs11();
+    function createRequest(url, requestOptions) {
+      return new Request(url, requestOptions);
+    }
+    __name(createRequest, "createRequest");
     function requestTimeout(timeoutInMs = 0) {
       return new Promise((resolve, reject) => {
         if (timeoutInMs) {
@@ -25937,7 +25945,7 @@ var require_dist_cjs13 = __commonJS({
         }
         if (keepAliveSupport.supported === void 0) {
           keepAliveSupport.supported = Boolean(
-            typeof Request !== "undefined" && "keepalive" in new Request("https://[::1]")
+            typeof Request !== "undefined" && "keepalive" in createRequest("https://[::1]")
           );
         }
       }
@@ -25996,7 +26004,7 @@ var require_dist_cjs13 = __commonJS({
         }
         let removeSignalEventListener = /* @__PURE__ */ __name(() => {
         }, "removeSignalEventListener");
-        const fetchRequest = new Request(url, requestOptions);
+        const fetchRequest = createRequest(url, requestOptions);
         const raceOfPromises = [
           fetch(fetchRequest).then((response) => {
             const fetchHeaders = response.headers;
@@ -26060,7 +26068,8 @@ var require_dist_cjs13 = __commonJS({
     __name(_FetchHttpHandler, "FetchHttpHandler");
     var FetchHttpHandler = _FetchHttpHandler;
     var streamCollector = /* @__PURE__ */ __name(async (stream) => {
-      if (typeof Blob === "function" && stream instanceof Blob) {
+      var _a;
+      if (typeof Blob === "function" && stream instanceof Blob || ((_a = stream.constructor) == null ? void 0 : _a.name) === "Blob") {
         return new Uint8Array(await stream.arrayBuffer());
       }
       return collectStream(stream);
@@ -26159,12 +26168,17 @@ var require_stream_type_check = __commonJS({
   "node_modules/@smithy/util-stream/dist-cjs/stream-type-check.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isReadableStream = void 0;
+    exports2.isBlob = exports2.isReadableStream = void 0;
     var isReadableStream2 = (stream) => {
       var _a;
       return typeof ReadableStream === "function" && (((_a = stream === null || stream === void 0 ? void 0 : stream.constructor) === null || _a === void 0 ? void 0 : _a.name) === ReadableStream.name || stream instanceof ReadableStream);
     };
     exports2.isReadableStream = isReadableStream2;
+    var isBlob2 = (blob) => {
+      var _a;
+      return typeof Blob === "function" && (((_a = blob === null || blob === void 0 ? void 0 : blob.constructor) === null || _a === void 0 ? void 0 : _a.name) === Blob.name || blob instanceof Blob);
+    };
+    exports2.isBlob = isBlob2;
   }
 });
 
@@ -26245,7 +26259,6 @@ var require_sdk_stream_mixin = __commonJS({
     var node_http_handler_1 = require_dist_cjs12();
     var util_buffer_from_1 = require_dist_cjs7();
     var stream_1 = require("stream");
-    var util_1 = require("util");
     var sdk_stream_mixin_browser_1 = require_sdk_stream_mixin_browser();
     var ERR_MSG_STREAM_HAS_BEEN_TRANSFORMED = "The stream has already been transformed.";
     var sdkStreamMixin2 = (stream) => {
@@ -26273,7 +26286,7 @@ var require_sdk_stream_mixin = __commonJS({
           if (encoding === void 0 || Buffer.isEncoding(encoding)) {
             return (0, util_buffer_from_1.fromArrayBuffer)(buf.buffer, buf.byteOffset, buf.byteLength).toString(encoding);
           } else {
-            const decoder = new util_1.TextDecoder(encoding);
+            const decoder = new TextDecoder(encoding);
             return decoder.decode(buf);
           }
         },
@@ -26323,7 +26336,7 @@ var require_splitStream = __commonJS({
     var splitStream_browser_1 = require_splitStream_browser();
     var stream_type_check_1 = require_stream_type_check();
     async function splitStream2(stream) {
-      if ((0, stream_type_check_1.isReadableStream)(stream)) {
+      if ((0, stream_type_check_1.isReadableStream)(stream) || (0, stream_type_check_1.isBlob)(stream)) {
         return (0, splitStream_browser_1.splitStream)(stream);
       }
       const stream1 = new stream_1.PassThrough();
@@ -26672,6 +26685,26 @@ var init_extended_encode_uri_component = __esm({
   }
 });
 
+// node_modules/@smithy/core/dist-es/submodules/protocols/resolve-path.js
+var resolvedPath2;
+var init_resolve_path = __esm({
+  "node_modules/@smithy/core/dist-es/submodules/protocols/resolve-path.js"() {
+    init_extended_encode_uri_component();
+    resolvedPath2 = (resolvedPath3, input, memberName, labelValueProvider, uriLabel, isGreedyLabel) => {
+      if (input != null && input[memberName] !== void 0) {
+        const labelValue = labelValueProvider();
+        if (labelValue.length <= 0) {
+          throw new Error("Empty value provided for input HTTP label: " + memberName + ".");
+        }
+        resolvedPath3 = resolvedPath3.replace(uriLabel, isGreedyLabel ? labelValue.split("/").map((segment) => extendedEncodeURIComponent2(segment)).join("/") : extendedEncodeURIComponent2(labelValue));
+      } else {
+        throw new Error("No value provided for input HTTP label: " + memberName + ".");
+      }
+      return resolvedPath3;
+    };
+  }
+});
+
 // node_modules/@smithy/core/dist-es/submodules/protocols/requestBuilder.js
 function requestBuilder(input, context3) {
   return new RequestBuilder(input, context3);
@@ -26679,8 +26712,8 @@ function requestBuilder(input, context3) {
 var import_protocol_http5, RequestBuilder;
 var init_requestBuilder = __esm({
   "node_modules/@smithy/core/dist-es/submodules/protocols/requestBuilder.js"() {
-    init_protocols();
     import_protocol_http5 = __toESM(require_dist_cjs2());
+    init_resolve_path();
     RequestBuilder = class {
       constructor(input, context3) {
         this.input = input;
@@ -26742,26 +26775,6 @@ var init_requestBuilder = __esm({
         this.method = method;
         return this;
       }
-    };
-  }
-});
-
-// node_modules/@smithy/core/dist-es/submodules/protocols/resolve-path.js
-var resolvedPath2;
-var init_resolve_path = __esm({
-  "node_modules/@smithy/core/dist-es/submodules/protocols/resolve-path.js"() {
-    init_extended_encode_uri_component();
-    resolvedPath2 = (resolvedPath3, input, memberName, labelValueProvider, uriLabel, isGreedyLabel) => {
-      if (input != null && input[memberName] !== void 0) {
-        const labelValue = labelValueProvider();
-        if (labelValue.length <= 0) {
-          throw new Error("Empty value provided for input HTTP label: " + memberName + ".");
-        }
-        resolvedPath3 = resolvedPath3.replace(uriLabel, isGreedyLabel ? labelValue.split("/").map((segment) => extendedEncodeURIComponent2(segment)).join("/") : extendedEncodeURIComponent2(labelValue));
-      } else {
-        throw new Error("No value provided for input HTTP label: " + memberName + ".");
-      }
-      return resolvedPath3;
     };
   }
 });
@@ -28256,7 +28269,7 @@ var require_dist_cjs19 = __commonJS({
       ServiceException: () => ServiceException,
       StringWrapper: () => StringWrapper,
       _json: () => _json,
-      collectBody: () => import_protocols3.collectBody,
+      collectBody: () => import_protocols2.collectBody,
       convertMap: () => convertMap,
       createAggregatedClient: () => createAggregatedClient,
       dateToUtcString: () => dateToUtcString,
@@ -28274,7 +28287,7 @@ var require_dist_cjs19 = __commonJS({
       expectShort: () => expectShort,
       expectString: () => expectString,
       expectUnion: () => expectUnion2,
-      extendedEncodeURIComponent: () => import_protocols3.extendedEncodeURIComponent,
+      extendedEncodeURIComponent: () => import_protocols2.extendedEncodeURIComponent,
       getArrayIfSingleItem: () => getArrayIfSingleItem,
       getDefaultClientConfiguration: () => getDefaultClientConfiguration,
       getDefaultExtensionConfiguration: () => getDefaultExtensionConfiguration,
@@ -28294,7 +28307,7 @@ var require_dist_cjs19 = __commonJS({
       parseRfc7231DateTime: () => parseRfc7231DateTime,
       quoteHeader: () => quoteHeader,
       resolveDefaultRuntimeConfig: () => resolveDefaultRuntimeConfig,
-      resolvedPath: () => import_protocols3.resolvedPath,
+      resolvedPath: () => import_protocols2.resolvedPath,
       serializeDateTime: () => serializeDateTime,
       serializeFloat: () => serializeFloat,
       splitEvery: () => splitEvery,
@@ -28360,7 +28373,7 @@ var require_dist_cjs19 = __commonJS({
     };
     __name(_Client, "Client");
     var Client = _Client;
-    var import_protocols3 = (init_protocols(), __toCommonJS(protocols_exports));
+    var import_protocols2 = (init_protocols(), __toCommonJS(protocols_exports));
     var import_types5 = require_dist_cjs();
     var _Command = class _Command {
       constructor() {
@@ -31956,352 +31969,6 @@ var require_main2 = __commonJS({
   }
 });
 
-// node_modules/@aws-crypto/crc32/build/main/aws_crc32.js
-var require_aws_crc32 = __commonJS({
-  "node_modules/@aws-crypto/crc32/build/main/aws_crc32.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.AwsCrc32 = void 0;
-    var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
-    var util_1 = require_main2();
-    var index_1 = require_main3();
-    var AwsCrc32 = (
-      /** @class */
-      function() {
-        function AwsCrc322() {
-          this.crc32 = new index_1.Crc32();
-        }
-        AwsCrc322.prototype.update = function(toHash) {
-          if ((0, util_1.isEmptyData)(toHash))
-            return;
-          this.crc32.update((0, util_1.convertToBuffer)(toHash));
-        };
-        AwsCrc322.prototype.digest = function() {
-          return tslib_1.__awaiter(this, void 0, void 0, function() {
-            return tslib_1.__generator(this, function(_a) {
-              return [2, (0, util_1.numToUint8)(this.crc32.digest())];
-            });
-          });
-        };
-        AwsCrc322.prototype.reset = function() {
-          this.crc32 = new index_1.Crc32();
-        };
-        return AwsCrc322;
-      }()
-    );
-    exports2.AwsCrc32 = AwsCrc32;
-  }
-});
-
-// node_modules/@aws-crypto/crc32/build/main/index.js
-var require_main3 = __commonJS({
-  "node_modules/@aws-crypto/crc32/build/main/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.AwsCrc32 = exports2.Crc32 = exports2.crc32 = void 0;
-    var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
-    var util_1 = require_main2();
-    function crc32(data) {
-      return new Crc32().update(data).digest();
-    }
-    exports2.crc32 = crc32;
-    var Crc32 = (
-      /** @class */
-      function() {
-        function Crc322() {
-          this.checksum = 4294967295;
-        }
-        Crc322.prototype.update = function(data) {
-          var e_1, _a;
-          try {
-            for (var data_1 = tslib_1.__values(data), data_1_1 = data_1.next(); !data_1_1.done; data_1_1 = data_1.next()) {
-              var byte = data_1_1.value;
-              this.checksum = this.checksum >>> 8 ^ lookupTable[(this.checksum ^ byte) & 255];
-            }
-          } catch (e_1_1) {
-            e_1 = { error: e_1_1 };
-          } finally {
-            try {
-              if (data_1_1 && !data_1_1.done && (_a = data_1.return)) _a.call(data_1);
-            } finally {
-              if (e_1) throw e_1.error;
-            }
-          }
-          return this;
-        };
-        Crc322.prototype.digest = function() {
-          return (this.checksum ^ 4294967295) >>> 0;
-        };
-        return Crc322;
-      }()
-    );
-    exports2.Crc32 = Crc32;
-    var a_lookUpTable = [
-      0,
-      1996959894,
-      3993919788,
-      2567524794,
-      124634137,
-      1886057615,
-      3915621685,
-      2657392035,
-      249268274,
-      2044508324,
-      3772115230,
-      2547177864,
-      162941995,
-      2125561021,
-      3887607047,
-      2428444049,
-      498536548,
-      1789927666,
-      4089016648,
-      2227061214,
-      450548861,
-      1843258603,
-      4107580753,
-      2211677639,
-      325883990,
-      1684777152,
-      4251122042,
-      2321926636,
-      335633487,
-      1661365465,
-      4195302755,
-      2366115317,
-      997073096,
-      1281953886,
-      3579855332,
-      2724688242,
-      1006888145,
-      1258607687,
-      3524101629,
-      2768942443,
-      901097722,
-      1119000684,
-      3686517206,
-      2898065728,
-      853044451,
-      1172266101,
-      3705015759,
-      2882616665,
-      651767980,
-      1373503546,
-      3369554304,
-      3218104598,
-      565507253,
-      1454621731,
-      3485111705,
-      3099436303,
-      671266974,
-      1594198024,
-      3322730930,
-      2970347812,
-      795835527,
-      1483230225,
-      3244367275,
-      3060149565,
-      1994146192,
-      31158534,
-      2563907772,
-      4023717930,
-      1907459465,
-      112637215,
-      2680153253,
-      3904427059,
-      2013776290,
-      251722036,
-      2517215374,
-      3775830040,
-      2137656763,
-      141376813,
-      2439277719,
-      3865271297,
-      1802195444,
-      476864866,
-      2238001368,
-      4066508878,
-      1812370925,
-      453092731,
-      2181625025,
-      4111451223,
-      1706088902,
-      314042704,
-      2344532202,
-      4240017532,
-      1658658271,
-      366619977,
-      2362670323,
-      4224994405,
-      1303535960,
-      984961486,
-      2747007092,
-      3569037538,
-      1256170817,
-      1037604311,
-      2765210733,
-      3554079995,
-      1131014506,
-      879679996,
-      2909243462,
-      3663771856,
-      1141124467,
-      855842277,
-      2852801631,
-      3708648649,
-      1342533948,
-      654459306,
-      3188396048,
-      3373015174,
-      1466479909,
-      544179635,
-      3110523913,
-      3462522015,
-      1591671054,
-      702138776,
-      2966460450,
-      3352799412,
-      1504918807,
-      783551873,
-      3082640443,
-      3233442989,
-      3988292384,
-      2596254646,
-      62317068,
-      1957810842,
-      3939845945,
-      2647816111,
-      81470997,
-      1943803523,
-      3814918930,
-      2489596804,
-      225274430,
-      2053790376,
-      3826175755,
-      2466906013,
-      167816743,
-      2097651377,
-      4027552580,
-      2265490386,
-      503444072,
-      1762050814,
-      4150417245,
-      2154129355,
-      426522225,
-      1852507879,
-      4275313526,
-      2312317920,
-      282753626,
-      1742555852,
-      4189708143,
-      2394877945,
-      397917763,
-      1622183637,
-      3604390888,
-      2714866558,
-      953729732,
-      1340076626,
-      3518719985,
-      2797360999,
-      1068828381,
-      1219638859,
-      3624741850,
-      2936675148,
-      906185462,
-      1090812512,
-      3747672003,
-      2825379669,
-      829329135,
-      1181335161,
-      3412177804,
-      3160834842,
-      628085408,
-      1382605366,
-      3423369109,
-      3138078467,
-      570562233,
-      1426400815,
-      3317316542,
-      2998733608,
-      733239954,
-      1555261956,
-      3268935591,
-      3050360625,
-      752459403,
-      1541320221,
-      2607071920,
-      3965973030,
-      1969922972,
-      40735498,
-      2617837225,
-      3943577151,
-      1913087877,
-      83908371,
-      2512341634,
-      3803740692,
-      2075208622,
-      213261112,
-      2463272603,
-      3855990285,
-      2094854071,
-      198958881,
-      2262029012,
-      4057260610,
-      1759359992,
-      534414190,
-      2176718541,
-      4139329115,
-      1873836001,
-      414664567,
-      2282248934,
-      4279200368,
-      1711684554,
-      285281116,
-      2405801727,
-      4167216745,
-      1634467795,
-      376229701,
-      2685067896,
-      3608007406,
-      1308918612,
-      956543938,
-      2808555105,
-      3495958263,
-      1231636301,
-      1047427035,
-      2932959818,
-      3654703836,
-      1088359270,
-      936918e3,
-      2847714899,
-      3736837829,
-      1202900863,
-      817233897,
-      3183342108,
-      3401237130,
-      1404277552,
-      615818150,
-      3134207493,
-      3453421203,
-      1423857449,
-      601450431,
-      3009837614,
-      3294710456,
-      1567103746,
-      711928724,
-      3020668471,
-      3272380065,
-      1510334235,
-      755167117
-    ];
-    var lookupTable = (0, util_1.uint32ArrayFrom)(a_lookUpTable);
-    var aws_crc32_1 = require_aws_crc32();
-    Object.defineProperty(exports2, "AwsCrc32", { enumerable: true, get: function() {
-      return aws_crc32_1.AwsCrc32;
-    } });
-  }
-});
-
 // node_modules/@aws-crypto/crc32c/build/main/aws_crc32c.js
 var require_aws_crc32c = __commonJS({
   "node_modules/@aws-crypto/crc32c/build/main/aws_crc32c.js"(exports2) {
@@ -32310,7 +31977,7 @@ var require_aws_crc32c = __commonJS({
     exports2.AwsCrc32c = void 0;
     var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
     var util_1 = require_main2();
-    var index_1 = require_main4();
+    var index_1 = require_main3();
     var AwsCrc32c = (
       /** @class */
       function() {
@@ -32340,7 +32007,7 @@ var require_aws_crc32c = __commonJS({
 });
 
 // node_modules/@aws-crypto/crc32c/build/main/index.js
-var require_main4 = __commonJS({
+var require_main3 = __commonJS({
   "node_modules/@aws-crypto/crc32c/build/main/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -32648,6 +32315,386 @@ var require_main4 = __commonJS({
   }
 });
 
+// node_modules/@aws-crypto/crc32/build/main/aws_crc32.js
+var require_aws_crc32 = __commonJS({
+  "node_modules/@aws-crypto/crc32/build/main/aws_crc32.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.AwsCrc32 = void 0;
+    var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
+    var util_1 = require_main2();
+    var index_1 = require_main4();
+    var AwsCrc32 = (
+      /** @class */
+      function() {
+        function AwsCrc322() {
+          this.crc32 = new index_1.Crc32();
+        }
+        AwsCrc322.prototype.update = function(toHash) {
+          if ((0, util_1.isEmptyData)(toHash))
+            return;
+          this.crc32.update((0, util_1.convertToBuffer)(toHash));
+        };
+        AwsCrc322.prototype.digest = function() {
+          return tslib_1.__awaiter(this, void 0, void 0, function() {
+            return tslib_1.__generator(this, function(_a) {
+              return [2, (0, util_1.numToUint8)(this.crc32.digest())];
+            });
+          });
+        };
+        AwsCrc322.prototype.reset = function() {
+          this.crc32 = new index_1.Crc32();
+        };
+        return AwsCrc322;
+      }()
+    );
+    exports2.AwsCrc32 = AwsCrc32;
+  }
+});
+
+// node_modules/@aws-crypto/crc32/build/main/index.js
+var require_main4 = __commonJS({
+  "node_modules/@aws-crypto/crc32/build/main/index.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.AwsCrc32 = exports2.Crc32 = exports2.crc32 = void 0;
+    var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
+    var util_1 = require_main2();
+    function crc32(data) {
+      return new Crc32().update(data).digest();
+    }
+    exports2.crc32 = crc32;
+    var Crc32 = (
+      /** @class */
+      function() {
+        function Crc322() {
+          this.checksum = 4294967295;
+        }
+        Crc322.prototype.update = function(data) {
+          var e_1, _a;
+          try {
+            for (var data_1 = tslib_1.__values(data), data_1_1 = data_1.next(); !data_1_1.done; data_1_1 = data_1.next()) {
+              var byte = data_1_1.value;
+              this.checksum = this.checksum >>> 8 ^ lookupTable[(this.checksum ^ byte) & 255];
+            }
+          } catch (e_1_1) {
+            e_1 = { error: e_1_1 };
+          } finally {
+            try {
+              if (data_1_1 && !data_1_1.done && (_a = data_1.return)) _a.call(data_1);
+            } finally {
+              if (e_1) throw e_1.error;
+            }
+          }
+          return this;
+        };
+        Crc322.prototype.digest = function() {
+          return (this.checksum ^ 4294967295) >>> 0;
+        };
+        return Crc322;
+      }()
+    );
+    exports2.Crc32 = Crc32;
+    var a_lookUpTable = [
+      0,
+      1996959894,
+      3993919788,
+      2567524794,
+      124634137,
+      1886057615,
+      3915621685,
+      2657392035,
+      249268274,
+      2044508324,
+      3772115230,
+      2547177864,
+      162941995,
+      2125561021,
+      3887607047,
+      2428444049,
+      498536548,
+      1789927666,
+      4089016648,
+      2227061214,
+      450548861,
+      1843258603,
+      4107580753,
+      2211677639,
+      325883990,
+      1684777152,
+      4251122042,
+      2321926636,
+      335633487,
+      1661365465,
+      4195302755,
+      2366115317,
+      997073096,
+      1281953886,
+      3579855332,
+      2724688242,
+      1006888145,
+      1258607687,
+      3524101629,
+      2768942443,
+      901097722,
+      1119000684,
+      3686517206,
+      2898065728,
+      853044451,
+      1172266101,
+      3705015759,
+      2882616665,
+      651767980,
+      1373503546,
+      3369554304,
+      3218104598,
+      565507253,
+      1454621731,
+      3485111705,
+      3099436303,
+      671266974,
+      1594198024,
+      3322730930,
+      2970347812,
+      795835527,
+      1483230225,
+      3244367275,
+      3060149565,
+      1994146192,
+      31158534,
+      2563907772,
+      4023717930,
+      1907459465,
+      112637215,
+      2680153253,
+      3904427059,
+      2013776290,
+      251722036,
+      2517215374,
+      3775830040,
+      2137656763,
+      141376813,
+      2439277719,
+      3865271297,
+      1802195444,
+      476864866,
+      2238001368,
+      4066508878,
+      1812370925,
+      453092731,
+      2181625025,
+      4111451223,
+      1706088902,
+      314042704,
+      2344532202,
+      4240017532,
+      1658658271,
+      366619977,
+      2362670323,
+      4224994405,
+      1303535960,
+      984961486,
+      2747007092,
+      3569037538,
+      1256170817,
+      1037604311,
+      2765210733,
+      3554079995,
+      1131014506,
+      879679996,
+      2909243462,
+      3663771856,
+      1141124467,
+      855842277,
+      2852801631,
+      3708648649,
+      1342533948,
+      654459306,
+      3188396048,
+      3373015174,
+      1466479909,
+      544179635,
+      3110523913,
+      3462522015,
+      1591671054,
+      702138776,
+      2966460450,
+      3352799412,
+      1504918807,
+      783551873,
+      3082640443,
+      3233442989,
+      3988292384,
+      2596254646,
+      62317068,
+      1957810842,
+      3939845945,
+      2647816111,
+      81470997,
+      1943803523,
+      3814918930,
+      2489596804,
+      225274430,
+      2053790376,
+      3826175755,
+      2466906013,
+      167816743,
+      2097651377,
+      4027552580,
+      2265490386,
+      503444072,
+      1762050814,
+      4150417245,
+      2154129355,
+      426522225,
+      1852507879,
+      4275313526,
+      2312317920,
+      282753626,
+      1742555852,
+      4189708143,
+      2394877945,
+      397917763,
+      1622183637,
+      3604390888,
+      2714866558,
+      953729732,
+      1340076626,
+      3518719985,
+      2797360999,
+      1068828381,
+      1219638859,
+      3624741850,
+      2936675148,
+      906185462,
+      1090812512,
+      3747672003,
+      2825379669,
+      829329135,
+      1181335161,
+      3412177804,
+      3160834842,
+      628085408,
+      1382605366,
+      3423369109,
+      3138078467,
+      570562233,
+      1426400815,
+      3317316542,
+      2998733608,
+      733239954,
+      1555261956,
+      3268935591,
+      3050360625,
+      752459403,
+      1541320221,
+      2607071920,
+      3965973030,
+      1969922972,
+      40735498,
+      2617837225,
+      3943577151,
+      1913087877,
+      83908371,
+      2512341634,
+      3803740692,
+      2075208622,
+      213261112,
+      2463272603,
+      3855990285,
+      2094854071,
+      198958881,
+      2262029012,
+      4057260610,
+      1759359992,
+      534414190,
+      2176718541,
+      4139329115,
+      1873836001,
+      414664567,
+      2282248934,
+      4279200368,
+      1711684554,
+      285281116,
+      2405801727,
+      4167216745,
+      1634467795,
+      376229701,
+      2685067896,
+      3608007406,
+      1308918612,
+      956543938,
+      2808555105,
+      3495958263,
+      1231636301,
+      1047427035,
+      2932959818,
+      3654703836,
+      1088359270,
+      936918e3,
+      2847714899,
+      3736837829,
+      1202900863,
+      817233897,
+      3183342108,
+      3401237130,
+      1404277552,
+      615818150,
+      3134207493,
+      3453421203,
+      1423857449,
+      601450431,
+      3009837614,
+      3294710456,
+      1567103746,
+      711928724,
+      3020668471,
+      3272380065,
+      1510334235,
+      755167117
+    ];
+    var lookupTable = (0, util_1.uint32ArrayFrom)(a_lookUpTable);
+    var aws_crc32_1 = require_aws_crc32();
+    Object.defineProperty(exports2, "AwsCrc32", { enumerable: true, get: function() {
+      return aws_crc32_1.AwsCrc32;
+    } });
+  }
+});
+
+// node_modules/@aws-sdk/middleware-flexible-checksums/dist-cjs/getCrc32ChecksumAlgorithmFunction.js
+var require_getCrc32ChecksumAlgorithmFunction = __commonJS({
+  "node_modules/@aws-sdk/middleware-flexible-checksums/dist-cjs/getCrc32ChecksumAlgorithmFunction.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.getCrc32ChecksumAlgorithmFunction = void 0;
+    var tslib_1 = (init_tslib_es6(), __toCommonJS(tslib_es6_exports));
+    var crc32_1 = require_main4();
+    var util_1 = require_main2();
+    var zlib = tslib_1.__importStar(require("zlib"));
+    var NodeCrc32 = class {
+      constructor() {
+        this.checksum = 0;
+      }
+      update(data) {
+        this.checksum = zlib.crc32(data, this.checksum);
+      }
+      async digest() {
+        return (0, util_1.numToUint8)(this.checksum);
+      }
+      reset() {
+        this.checksum = 0;
+      }
+    };
+    var getCrc32ChecksumAlgorithmFunction = () => {
+      if (typeof zlib.crc32 === "undefined") {
+        return crc32_1.AwsCrc32;
+      }
+      return NodeCrc32;
+    };
+    exports2.getCrc32ChecksumAlgorithmFunction = getCrc32ChecksumAlgorithmFunction;
+  }
+});
+
 // node_modules/@aws-sdk/middleware-flexible-checksums/dist-cjs/streams/create-read-stream-on-buffer.js
 var require_create_read_stream_on_buffer = __commonJS({
   "node_modules/@aws-sdk/middleware-flexible-checksums/dist-cjs/streams/create-read-stream-on-buffer.js"(exports2) {
@@ -32846,8 +32893,8 @@ var require_dist_cjs23 = __commonJS({
     }, "hasHeader");
     var import_is_array_buffer = require_dist_cjs6();
     var isStreaming = /* @__PURE__ */ __name((body) => body !== void 0 && typeof body !== "string" && !ArrayBuffer.isView(body) && !(0, import_is_array_buffer.isArrayBuffer)(body), "isStreaming");
-    var import_crc32 = require_main3();
-    var import_crc32c = require_main4();
+    var import_crc32c = require_main3();
+    var import_getCrc32ChecksumAlgorithmFunction = require_getCrc32ChecksumAlgorithmFunction();
     var selectChecksumAlgorithmFunction = /* @__PURE__ */ __name((checksumAlgorithm, config) => ({
       [
         "MD5"
@@ -32856,7 +32903,7 @@ var require_dist_cjs23 = __commonJS({
       [
         "CRC32"
         /* CRC32 */
-      ]: import_crc32.AwsCrc32,
+      ]: (0, import_getCrc32ChecksumAlgorithmFunction.getCrc32ChecksumAlgorithmFunction)(),
       [
         "CRC32C"
         /* CRC32C */
@@ -32886,10 +32933,10 @@ var require_dist_cjs23 = __commonJS({
       if (!import_protocol_http8.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
-      const { request } = args;
+      const { request, input } = args;
       const { body: requestBody, headers } = request;
       const { base64Encoder, streamHasher } = config;
-      const { input, requestChecksumRequired, requestAlgorithmMember } = middlewareConfig;
+      const { requestChecksumRequired, requestAlgorithmMember } = middlewareConfig;
       const checksumAlgorithm = getChecksumAlgorithmForRequest(
         input,
         {
@@ -32977,10 +33024,8 @@ var require_dist_cjs23 = __commonJS({
       return false;
     }, "isChecksumWithPartNumber");
     var import_create_read_stream_on_buffer = require_create_read_stream_on_buffer();
-    var getChecksum = /* @__PURE__ */ __name(async (body, { streamHasher, checksumAlgorithmFn, base64Encoder }) => {
-      const digest = isStreaming(body) ? streamHasher(checksumAlgorithmFn, body) : stringHasher(checksumAlgorithmFn, body);
-      return base64Encoder(await digest);
-    }, "getChecksum");
+    var import_util_stream2 = require_dist_cjs15();
+    var getChecksum = /* @__PURE__ */ __name(async (body, { checksumAlgorithmFn, base64Encoder }) => base64Encoder(await stringHasher(checksumAlgorithmFn, body)), "getChecksum");
     var validateChecksumFromResponse = /* @__PURE__ */ __name(async (response, { config, responseAlgorithms }) => {
       const checksumAlgorithms = getChecksumAlgorithmListForResponse(responseAlgorithms);
       const { body: responseBody, headers: responseHeaders } = response;
@@ -32989,8 +33034,18 @@ var require_dist_cjs23 = __commonJS({
         const checksumFromResponse = responseHeaders[responseHeader];
         if (checksumFromResponse) {
           const checksumAlgorithmFn = selectChecksumAlgorithmFunction(algorithm, config);
-          const { streamHasher, base64Encoder } = config;
-          const checksum = await getChecksum(responseBody, { streamHasher, checksumAlgorithmFn, base64Encoder });
+          const { base64Encoder } = config;
+          if (isStreaming(responseBody)) {
+            response.body = (0, import_util_stream2.createChecksumStream)({
+              expectedChecksum: checksumFromResponse,
+              checksumSourceLocation: responseHeader,
+              checksum: new checksumAlgorithmFn(),
+              source: responseBody,
+              base64Encoder
+            });
+            return;
+          }
+          const checksum = await getChecksum(responseBody, { checksumAlgorithmFn, base64Encoder });
           if (checksum === checksumFromResponse) {
             break;
           }
@@ -35832,7 +35887,7 @@ var require_dist_cjs37 = __commonJS({
     var DEFAULT_MAX_ATTEMPTS = 3;
     var DEFAULT_RETRY_MODE = "standard";
     var import_service_error_classification = require_dist_cjs36();
-    var _DefaultRateLimiter = class _DefaultRateLimiter {
+    var _DefaultRateLimiter = class _DefaultRateLimiter2 {
       constructor(options) {
         this.currentCapacity = 0;
         this.enabled = false;
@@ -35865,7 +35920,7 @@ var require_dist_cjs37 = __commonJS({
         this.refillTokenBucket();
         if (amount > this.currentCapacity) {
           const delay = (amount - this.currentCapacity) / this.fillRate * 1e3;
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise((resolve) => _DefaultRateLimiter2.setTimeoutFn(resolve, delay));
         }
         this.currentCapacity = this.currentCapacity - amount;
       }
@@ -35932,6 +35987,7 @@ var require_dist_cjs37 = __commonJS({
       }
     };
     __name(_DefaultRateLimiter, "DefaultRateLimiter");
+    _DefaultRateLimiter.setTimeoutFn = setTimeout;
     var DefaultRateLimiter = _DefaultRateLimiter;
     var DEFAULT_RETRY_DELAY_BASE = 100;
     var MAXIMUM_RETRY_DELAY = 20 * 1e3;
@@ -37329,183 +37385,187 @@ var require_ruleset = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ruleSet = void 0;
-    var ce = "required";
-    var cf = "type";
-    var cg = "conditions";
-    var ch = "fn";
-    var ci = "argv";
-    var cj = "ref";
-    var ck = "assign";
-    var cl = "url";
-    var cm = "properties";
-    var cn = "backend";
-    var co = "authSchemes";
-    var cp2 = "disableDoubleEncoding";
-    var cq = "signingName";
-    var cr = "signingRegion";
-    var cs = "headers";
-    var ct = "signingRegionSet";
-    var a = false;
-    var b = true;
-    var c = "isSet";
-    var d = "booleanEquals";
-    var e = "error";
-    var f = "aws.partition";
-    var g = "stringEquals";
-    var h = "getAttr";
-    var i = "name";
-    var j = "substring";
-    var k = "bucketSuffix";
-    var l = "parseURL";
-    var m = "{url#scheme}://{url#authority}/{uri_encoded_bucket}{url#path}";
-    var n = "endpoint";
-    var o = "tree";
-    var p = "aws.isVirtualHostableS3Bucket";
-    var q = "{url#scheme}://{Bucket}.{url#authority}{url#path}";
-    var r = "not";
-    var s = "{url#scheme}://{url#authority}{url#path}";
-    var t = "hardwareType";
-    var u = "regionPrefix";
-    var v = "bucketAliasSuffix";
-    var w = "outpostId";
-    var x = "isValidHostLabel";
-    var y = "sigv4a";
-    var z = "s3-outposts";
-    var A = "s3";
-    var B = "{url#scheme}://{url#authority}{url#normalizedPath}{Bucket}";
-    var C = "https://{Bucket}.s3-accelerate.{partitionResult#dnsSuffix}";
-    var D = "https://{Bucket}.s3.{partitionResult#dnsSuffix}";
-    var E = "aws.parseArn";
-    var F = "bucketArn";
-    var G = "arnType";
-    var H = "";
-    var I = "s3-object-lambda";
-    var J = "accesspoint";
-    var K = "accessPointName";
-    var L = "{url#scheme}://{accessPointName}-{bucketArn#accountId}.{url#authority}{url#path}";
-    var M = "mrapPartition";
-    var N = "outpostType";
-    var O = "arnPrefix";
-    var P = "{url#scheme}://{url#authority}{url#normalizedPath}{uri_encoded_bucket}";
-    var Q = "https://s3.{partitionResult#dnsSuffix}/{uri_encoded_bucket}";
-    var R = "https://s3.{partitionResult#dnsSuffix}";
-    var S = { [ce]: false, [cf]: "String" };
-    var T = { [ce]: true, "default": false, [cf]: "Boolean" };
-    var U = { [ce]: false, [cf]: "Boolean" };
-    var V = { [ch]: d, [ci]: [{ [cj]: "Accelerate" }, true] };
-    var W = { [ch]: d, [ci]: [{ [cj]: "UseFIPS" }, true] };
-    var X = { [ch]: d, [ci]: [{ [cj]: "UseDualStack" }, true] };
-    var Y = { [ch]: c, [ci]: [{ [cj]: "Endpoint" }] };
-    var Z = { [ch]: f, [ci]: [{ [cj]: "Region" }], [ck]: "partitionResult" };
-    var aa = { [ch]: g, [ci]: [{ [ch]: h, [ci]: [{ [cj]: "partitionResult" }, i] }, "aws-cn"] };
-    var ab = { [ch]: c, [ci]: [{ [cj]: "Bucket" }] };
-    var ac = { [cj]: "Bucket" };
-    var ad = { [ch]: l, [ci]: [{ [cj]: "Endpoint" }], [ck]: "url" };
-    var ae = { [ch]: d, [ci]: [{ [ch]: h, [ci]: [{ [cj]: "url" }, "isIp"] }, true] };
-    var af = { [cj]: "url" };
-    var ag = { [ch]: "uriEncode", [ci]: [ac], [ck]: "uri_encoded_bucket" };
-    var ah = { [cn]: "S3Express", [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: "s3express", [cr]: "{Region}" }] };
-    var ai = {};
-    var aj = { [ch]: p, [ci]: [ac, false] };
-    var ak = { [e]: "S3Express bucket name is not a valid virtual hostable name.", [cf]: e };
-    var al = { [cn]: "S3Express", [co]: [{ [cp2]: true, [i]: "sigv4-s3express", [cq]: "s3express", [cr]: "{Region}" }] };
-    var am = { [ch]: c, [ci]: [{ [cj]: "UseS3ExpressControlEndpoint" }] };
-    var an = { [ch]: d, [ci]: [{ [cj]: "UseS3ExpressControlEndpoint" }, true] };
-    var ao = { [ch]: r, [ci]: [Y] };
-    var ap = { [e]: "Unrecognized S3Express bucket name format.", [cf]: e };
-    var aq = { [ch]: r, [ci]: [ab] };
-    var ar = { [cj]: t };
-    var as = { [cg]: [ao], [e]: "Expected a endpoint to be specified but no endpoint was found", [cf]: e };
-    var at = { [co]: [{ [cp2]: true, [i]: y, [cq]: z, [ct]: ["*"] }, { [cp2]: true, [i]: "sigv4", [cq]: z, [cr]: "{Region}" }] };
-    var au = { [ch]: d, [ci]: [{ [cj]: "ForcePathStyle" }, false] };
-    var av = { [cj]: "ForcePathStyle" };
-    var aw = { [ch]: d, [ci]: [{ [cj]: "Accelerate" }, false] };
-    var ax = { [ch]: g, [ci]: [{ [cj]: "Region" }, "aws-global"] };
-    var ay = { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: A, [cr]: "us-east-1" }] };
-    var az = { [ch]: r, [ci]: [ax] };
-    var aA = { [ch]: d, [ci]: [{ [cj]: "UseGlobalEndpoint" }, true] };
-    var aB = { [cl]: "https://{Bucket}.s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}", [cm]: { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: A, [cr]: "{Region}" }] }, [cs]: {} };
-    var aC = { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: A, [cr]: "{Region}" }] };
-    var aD = { [ch]: d, [ci]: [{ [cj]: "UseGlobalEndpoint" }, false] };
-    var aE = { [ch]: d, [ci]: [{ [cj]: "UseDualStack" }, false] };
-    var aF = { [cl]: "https://{Bucket}.s3-fips.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var aG = { [ch]: d, [ci]: [{ [cj]: "UseFIPS" }, false] };
-    var aH = { [cl]: "https://{Bucket}.s3-accelerate.dualstack.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var aI = { [cl]: "https://{Bucket}.s3.dualstack.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var aJ = { [ch]: d, [ci]: [{ [ch]: h, [ci]: [af, "isIp"] }, false] };
-    var aK = { [cl]: B, [cm]: aC, [cs]: {} };
-    var aL = { [cl]: q, [cm]: aC, [cs]: {} };
-    var aM = { [n]: aL, [cf]: n };
-    var aN = { [cl]: C, [cm]: aC, [cs]: {} };
-    var aO = { [cl]: "https://{Bucket}.s3.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var aP = { [e]: "Invalid region: region was not a valid DNS name.", [cf]: e };
-    var aQ = { [cj]: F };
-    var aR = { [cj]: G };
-    var aS = { [ch]: h, [ci]: [aQ, "service"] };
-    var aT = { [cj]: K };
-    var aU = { [cg]: [X], [e]: "S3 Object Lambda does not support Dual-stack", [cf]: e };
-    var aV = { [cg]: [V], [e]: "S3 Object Lambda does not support S3 Accelerate", [cf]: e };
-    var aW = { [cg]: [{ [ch]: c, [ci]: [{ [cj]: "DisableAccessPoints" }] }, { [ch]: d, [ci]: [{ [cj]: "DisableAccessPoints" }, true] }], [e]: "Access points are not supported for this operation", [cf]: e };
-    var aX = { [cg]: [{ [ch]: c, [ci]: [{ [cj]: "UseArnRegion" }] }, { [ch]: d, [ci]: [{ [cj]: "UseArnRegion" }, false] }, { [ch]: r, [ci]: [{ [ch]: g, [ci]: [{ [ch]: h, [ci]: [aQ, "region"] }, "{Region}"] }] }], [e]: "Invalid configuration: region from ARN `{bucketArn#region}` does not match client region `{Region}` and UseArnRegion is `false`", [cf]: e };
-    var aY = { [ch]: h, [ci]: [{ [cj]: "bucketPartition" }, i] };
-    var aZ = { [ch]: h, [ci]: [aQ, "accountId"] };
-    var ba = { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: I, [cr]: "{bucketArn#region}" }] };
-    var bb = { [e]: "Invalid ARN: The access point name may only contain a-z, A-Z, 0-9 and `-`. Found: `{accessPointName}`", [cf]: e };
-    var bc = { [e]: "Invalid ARN: The account id may only contain a-z, A-Z, 0-9 and `-`. Found: `{bucketArn#accountId}`", [cf]: e };
-    var bd = { [e]: "Invalid region in ARN: `{bucketArn#region}` (invalid DNS name)", [cf]: e };
-    var be = { [e]: "Client was configured for partition `{partitionResult#name}` but ARN (`{Bucket}`) has `{bucketPartition#name}`", [cf]: e };
-    var bf = { [e]: "Invalid ARN: The ARN may only contain a single resource component after `accesspoint`.", [cf]: e };
-    var bg = { [e]: "Invalid ARN: Expected a resource of the format `accesspoint:<accesspoint name>` but no name was provided", [cf]: e };
-    var bh = { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: A, [cr]: "{bucketArn#region}" }] };
-    var bi = { [co]: [{ [cp2]: true, [i]: y, [cq]: z, [ct]: ["*"] }, { [cp2]: true, [i]: "sigv4", [cq]: z, [cr]: "{bucketArn#region}" }] };
-    var bj = { [ch]: E, [ci]: [ac] };
-    var bk = { [cl]: "https://s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: aC, [cs]: {} };
-    var bl = { [cl]: "https://s3-fips.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: aC, [cs]: {} };
-    var bm = { [cl]: "https://s3.dualstack.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: aC, [cs]: {} };
-    var bn = { [cl]: P, [cm]: aC, [cs]: {} };
-    var bo = { [cl]: "https://s3.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: aC, [cs]: {} };
-    var bp = { [cj]: "UseObjectLambdaEndpoint" };
-    var bq = { [co]: [{ [cp2]: true, [i]: "sigv4", [cq]: I, [cr]: "{Region}" }] };
-    var br = { [cl]: "https://s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var bs = { [cl]: "https://s3-fips.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var bt = { [cl]: "https://s3.dualstack.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var bu = { [cl]: s, [cm]: aC, [cs]: {} };
-    var bv = { [cl]: "https://s3.{Region}.{partitionResult#dnsSuffix}", [cm]: aC, [cs]: {} };
-    var bw = [{ [cj]: "Region" }];
-    var bx = [{ [cj]: "Endpoint" }];
-    var by = [ac];
-    var bz = [X];
-    var bA = [V];
-    var bB = [Y, ad];
-    var bC = [{ [ch]: c, [ci]: [{ [cj]: "DisableS3ExpressSessionAuth" }] }, { [ch]: d, [ci]: [{ [cj]: "DisableS3ExpressSessionAuth" }, true] }];
-    var bD = [ae];
-    var bE = [ag];
-    var bF = [aj];
-    var bG = [W];
-    var bH = [{ [ch]: j, [ci]: [ac, 6, 14, true], [ck]: "s3expressAvailabilityZoneId" }, { [ch]: j, [ci]: [ac, 14, 16, true], [ck]: "s3expressAvailabilityZoneDelim" }, { [ch]: g, [ci]: [{ [cj]: "s3expressAvailabilityZoneDelim" }, "--"] }];
-    var bI = [{ [cg]: [W], [n]: { [cl]: "https://{Bucket}.s3express-fips-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cm]: ah, [cs]: {} }, [cf]: n }, { [n]: { [cl]: "https://{Bucket}.s3express-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cm]: ah, [cs]: {} }, [cf]: n }];
-    var bJ = [{ [ch]: j, [ci]: [ac, 6, 15, true], [ck]: "s3expressAvailabilityZoneId" }, { [ch]: j, [ci]: [ac, 15, 17, true], [ck]: "s3expressAvailabilityZoneDelim" }, { [ch]: g, [ci]: [{ [cj]: "s3expressAvailabilityZoneDelim" }, "--"] }];
-    var bK = [{ [cg]: [W], [n]: { [cl]: "https://{Bucket}.s3express-fips-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cm]: al, [cs]: {} }, [cf]: n }, { [n]: { [cl]: "https://{Bucket}.s3express-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cm]: al, [cs]: {} }, [cf]: n }];
-    var bL = [ab];
-    var bM = [{ [ch]: x, [ci]: [{ [cj]: w }, false] }];
-    var bN = [{ [ch]: g, [ci]: [{ [cj]: u }, "beta"] }];
-    var bO = ["*"];
-    var bP = [Z];
-    var bQ = [{ [ch]: x, [ci]: [{ [cj]: "Region" }, false] }];
-    var bR = [{ [ch]: g, [ci]: [{ [cj]: "Region" }, "us-east-1"] }];
-    var bS = [{ [ch]: g, [ci]: [aR, J] }];
-    var bT = [{ [ch]: h, [ci]: [aQ, "resourceId[1]"], [ck]: K }, { [ch]: r, [ci]: [{ [ch]: g, [ci]: [aT, H] }] }];
-    var bU = [aQ, "resourceId[1]"];
-    var bV = [{ [ch]: r, [ci]: [{ [ch]: g, [ci]: [{ [ch]: h, [ci]: [aQ, "region"] }, H] }] }];
-    var bW = [{ [ch]: r, [ci]: [{ [ch]: c, [ci]: [{ [ch]: h, [ci]: [aQ, "resourceId[2]"] }] }] }];
-    var bX = [aQ, "resourceId[2]"];
-    var bY = [{ [ch]: f, [ci]: [{ [ch]: h, [ci]: [aQ, "region"] }], [ck]: "bucketPartition" }];
-    var bZ = [{ [ch]: g, [ci]: [aY, { [ch]: h, [ci]: [{ [cj]: "partitionResult" }, i] }] }];
-    var ca = [{ [ch]: x, [ci]: [{ [ch]: h, [ci]: [aQ, "region"] }, true] }];
-    var cb = [{ [ch]: x, [ci]: [aZ, false] }];
-    var cc = [{ [ch]: x, [ci]: [aT, false] }];
-    var cd = [{ [ch]: x, [ci]: [{ [cj]: "Region" }, true] }];
-    var _data = { version: "1.0", parameters: { Bucket: S, Region: S, UseFIPS: T, UseDualStack: T, Endpoint: S, ForcePathStyle: T, Accelerate: T, UseGlobalEndpoint: T, UseObjectLambdaEndpoint: U, Key: S, Prefix: S, CopySource: S, DisableAccessPoints: U, DisableMultiRegionAccessPoints: T, UseArnRegion: U, UseS3ExpressControlEndpoint: U, DisableS3ExpressSessionAuth: U }, rules: [{ [cg]: [{ [ch]: c, [ci]: bw }], rules: [{ [cg]: [V, W], error: "Accelerate cannot be used with FIPS", [cf]: e }, { [cg]: [X, Y], error: "Cannot set dual-stack in combination with a custom endpoint.", [cf]: e }, { [cg]: [Y, W], error: "A custom endpoint cannot be combined with FIPS", [cf]: e }, { [cg]: [Y, V], error: "A custom endpoint cannot be combined with S3 Accelerate", [cf]: e }, { [cg]: [W, Z, aa], error: "Partition does not support FIPS", [cf]: e }, { [cg]: [ab, { [ch]: j, [ci]: [ac, 0, 6, b], [ck]: k }, { [ch]: g, [ci]: [{ [cj]: k }, "--x-s3"] }], rules: [{ [cg]: bz, error: "S3Express does not support Dual-stack.", [cf]: e }, { [cg]: bA, error: "S3Express does not support S3 Accelerate.", [cf]: e }, { [cg]: bB, rules: [{ [cg]: bC, rules: [{ [cg]: bD, rules: [{ [cg]: bE, rules: [{ endpoint: { [cl]: m, [cm]: ah, [cs]: ai }, [cf]: n }], [cf]: o }], [cf]: o }, { [cg]: bF, rules: [{ endpoint: { [cl]: q, [cm]: ah, [cs]: ai }, [cf]: n }], [cf]: o }, ak], [cf]: o }, { [cg]: bD, rules: [{ [cg]: bE, rules: [{ endpoint: { [cl]: m, [cm]: al, [cs]: ai }, [cf]: n }], [cf]: o }], [cf]: o }, { [cg]: bF, rules: [{ endpoint: { [cl]: q, [cm]: al, [cs]: ai }, [cf]: n }], [cf]: o }, ak], [cf]: o }, { [cg]: [am, an], rules: [{ [cg]: [ag, ao], rules: [{ [cg]: bG, endpoint: { [cl]: "https://s3express-control-fips.{Region}.amazonaws.com/{uri_encoded_bucket}", [cm]: ah, [cs]: ai }, [cf]: n }, { endpoint: { [cl]: "https://s3express-control.{Region}.amazonaws.com/{uri_encoded_bucket}", [cm]: ah, [cs]: ai }, [cf]: n }], [cf]: o }], [cf]: o }, { [cg]: bF, rules: [{ [cg]: bC, rules: [{ [cg]: bH, rules: bI, [cf]: o }, { [cg]: bJ, rules: bI, [cf]: o }, ap], [cf]: o }, { [cg]: bH, rules: bK, [cf]: o }, { [cg]: bJ, rules: bK, [cf]: o }, ap], [cf]: o }, ak], [cf]: o }, { [cg]: [aq, am, an], rules: [{ [cg]: bB, endpoint: { [cl]: s, [cm]: ah, [cs]: ai }, [cf]: n }, { [cg]: bG, endpoint: { [cl]: "https://s3express-control-fips.{Region}.amazonaws.com", [cm]: ah, [cs]: ai }, [cf]: n }, { endpoint: { [cl]: "https://s3express-control.{Region}.amazonaws.com", [cm]: ah, [cs]: ai }, [cf]: n }], [cf]: o }, { [cg]: [ab, { [ch]: j, [ci]: [ac, 49, 50, b], [ck]: t }, { [ch]: j, [ci]: [ac, 8, 12, b], [ck]: u }, { [ch]: j, [ci]: [ac, 0, 7, b], [ck]: v }, { [ch]: j, [ci]: [ac, 32, 49, b], [ck]: w }, { [ch]: f, [ci]: bw, [ck]: "regionPartition" }, { [ch]: g, [ci]: [{ [cj]: v }, "--op-s3"] }], rules: [{ [cg]: bM, rules: [{ [cg]: [{ [ch]: g, [ci]: [ar, "e"] }], rules: [{ [cg]: bN, rules: [as, { [cg]: bB, endpoint: { [cl]: "https://{Bucket}.ec2.{url#authority}", [cm]: at, [cs]: ai }, [cf]: n }], [cf]: o }, { endpoint: { [cl]: "https://{Bucket}.ec2.s3-outposts.{Region}.{regionPartition#dnsSuffix}", [cm]: at, [cs]: ai }, [cf]: n }], [cf]: o }, { [cg]: [{ [ch]: g, [ci]: [ar, "o"] }], rules: [{ [cg]: bN, rules: [as, { [cg]: bB, endpoint: { [cl]: "https://{Bucket}.op-{outpostId}.{url#authority}", [cm]: at, [cs]: ai }, [cf]: n }], [cf]: o }, { endpoint: { [cl]: "https://{Bucket}.op-{outpostId}.s3-outposts.{Region}.{regionPartition#dnsSuffix}", [cm]: at, [cs]: ai }, [cf]: n }], [cf]: o }, { error: 'Unrecognized hardware type: "Expected hardware type o or e but got {hardwareType}"', [cf]: e }], [cf]: o }, { error: "Invalid ARN: The outpost Id must only contain a-z, A-Z, 0-9 and `-`.", [cf]: e }], [cf]: o }, { [cg]: bL, rules: [{ [cg]: [Y, { [ch]: r, [ci]: [{ [ch]: c, [ci]: [{ [ch]: l, [ci]: bx }] }] }], error: "Custom endpoint `{Endpoint}` was not a valid URI", [cf]: e }, { [cg]: [au, aj], rules: [{ [cg]: bP, rules: [{ [cg]: bQ, rules: [{ [cg]: [V, aa], error: "S3 Accelerate cannot be used in this region", [cf]: e }, { [cg]: [X, W, aw, ao, ax], endpoint: { [cl]: "https://{Bucket}.s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [X, W, aw, ao, az, aA], rules: [{ endpoint: aB, [cf]: n }], [cf]: o }, { [cg]: [X, W, aw, ao, az, aD], endpoint: aB, [cf]: n }, { [cg]: [aE, W, aw, ao, ax], endpoint: { [cl]: "https://{Bucket}.s3-fips.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, W, aw, ao, az, aA], rules: [{ endpoint: aF, [cf]: n }], [cf]: o }, { [cg]: [aE, W, aw, ao, az, aD], endpoint: aF, [cf]: n }, { [cg]: [X, aG, V, ao, ax], endpoint: { [cl]: "https://{Bucket}.s3-accelerate.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [X, aG, V, ao, az, aA], rules: [{ endpoint: aH, [cf]: n }], [cf]: o }, { [cg]: [X, aG, V, ao, az, aD], endpoint: aH, [cf]: n }, { [cg]: [X, aG, aw, ao, ax], endpoint: { [cl]: "https://{Bucket}.s3.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [X, aG, aw, ao, az, aA], rules: [{ endpoint: aI, [cf]: n }], [cf]: o }, { [cg]: [X, aG, aw, ao, az, aD], endpoint: aI, [cf]: n }, { [cg]: [aE, aG, aw, Y, ad, ae, ax], endpoint: { [cl]: B, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, aG, aw, Y, ad, aJ, ax], endpoint: { [cl]: q, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, aG, aw, Y, ad, ae, az, aA], rules: [{ [cg]: bR, endpoint: aK, [cf]: n }, { endpoint: aK, [cf]: n }], [cf]: o }, { [cg]: [aE, aG, aw, Y, ad, aJ, az, aA], rules: [{ [cg]: bR, endpoint: aL, [cf]: n }, aM], [cf]: o }, { [cg]: [aE, aG, aw, Y, ad, ae, az, aD], endpoint: aK, [cf]: n }, { [cg]: [aE, aG, aw, Y, ad, aJ, az, aD], endpoint: aL, [cf]: n }, { [cg]: [aE, aG, V, ao, ax], endpoint: { [cl]: C, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, aG, V, ao, az, aA], rules: [{ [cg]: bR, endpoint: aN, [cf]: n }, { endpoint: aN, [cf]: n }], [cf]: o }, { [cg]: [aE, aG, V, ao, az, aD], endpoint: aN, [cf]: n }, { [cg]: [aE, aG, aw, ao, ax], endpoint: { [cl]: D, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, aG, aw, ao, az, aA], rules: [{ [cg]: bR, endpoint: { [cl]: D, [cm]: aC, [cs]: ai }, [cf]: n }, { endpoint: aO, [cf]: n }], [cf]: o }, { [cg]: [aE, aG, aw, ao, az, aD], endpoint: aO, [cf]: n }], [cf]: o }, aP], [cf]: o }], [cf]: o }, { [cg]: [Y, ad, { [ch]: g, [ci]: [{ [ch]: h, [ci]: [af, "scheme"] }, "http"] }, { [ch]: p, [ci]: [ac, b] }, au, aG, aE, aw], rules: [{ [cg]: bP, rules: [{ [cg]: bQ, rules: [aM], [cf]: o }, aP], [cf]: o }], [cf]: o }, { [cg]: [au, { [ch]: E, [ci]: by, [ck]: F }], rules: [{ [cg]: [{ [ch]: h, [ci]: [aQ, "resourceId[0]"], [ck]: G }, { [ch]: r, [ci]: [{ [ch]: g, [ci]: [aR, H] }] }], rules: [{ [cg]: [{ [ch]: g, [ci]: [aS, I] }], rules: [{ [cg]: bS, rules: [{ [cg]: bT, rules: [aU, aV, { [cg]: bV, rules: [aW, { [cg]: bW, rules: [aX, { [cg]: bY, rules: [{ [cg]: bP, rules: [{ [cg]: bZ, rules: [{ [cg]: ca, rules: [{ [cg]: [{ [ch]: g, [ci]: [aZ, H] }], error: "Invalid ARN: Missing account id", [cf]: e }, { [cg]: cb, rules: [{ [cg]: cc, rules: [{ [cg]: bB, endpoint: { [cl]: L, [cm]: ba, [cs]: ai }, [cf]: n }, { [cg]: bG, endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-object-lambda-fips.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: ba, [cs]: ai }, [cf]: n }, { endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-object-lambda.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: ba, [cs]: ai }, [cf]: n }], [cf]: o }, bb], [cf]: o }, bc], [cf]: o }, bd], [cf]: o }, be], [cf]: o }], [cf]: o }], [cf]: o }, bf], [cf]: o }, { error: "Invalid ARN: bucket ARN is missing a region", [cf]: e }], [cf]: o }, bg], [cf]: o }, { error: "Invalid ARN: Object Lambda ARNs only support `accesspoint` arn types, but found: `{arnType}`", [cf]: e }], [cf]: o }, { [cg]: bS, rules: [{ [cg]: bT, rules: [{ [cg]: bV, rules: [{ [cg]: bS, rules: [{ [cg]: bV, rules: [aW, { [cg]: bW, rules: [aX, { [cg]: bY, rules: [{ [cg]: bP, rules: [{ [cg]: [{ [ch]: g, [ci]: [aY, "{partitionResult#name}"] }], rules: [{ [cg]: ca, rules: [{ [cg]: [{ [ch]: g, [ci]: [aS, A] }], rules: [{ [cg]: cb, rules: [{ [cg]: cc, rules: [{ [cg]: bA, error: "Access Points do not support S3 Accelerate", [cf]: e }, { [cg]: [W, X], endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint-fips.dualstack.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: bh, [cs]: ai }, [cf]: n }, { [cg]: [W, aE], endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint-fips.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: bh, [cs]: ai }, [cf]: n }, { [cg]: [aG, X], endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint.dualstack.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: bh, [cs]: ai }, [cf]: n }, { [cg]: [aG, aE, Y, ad], endpoint: { [cl]: L, [cm]: bh, [cs]: ai }, [cf]: n }, { [cg]: [aG, aE], endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: bh, [cs]: ai }, [cf]: n }], [cf]: o }, bb], [cf]: o }, bc], [cf]: o }, { error: "Invalid ARN: The ARN was not for the S3 service, found: {bucketArn#service}", [cf]: e }], [cf]: o }, bd], [cf]: o }, be], [cf]: o }], [cf]: o }], [cf]: o }, bf], [cf]: o }], [cf]: o }], [cf]: o }, { [cg]: [{ [ch]: x, [ci]: [aT, b] }], rules: [{ [cg]: bz, error: "S3 MRAP does not support dual-stack", [cf]: e }, { [cg]: bG, error: "S3 MRAP does not support FIPS", [cf]: e }, { [cg]: bA, error: "S3 MRAP does not support S3 Accelerate", [cf]: e }, { [cg]: [{ [ch]: d, [ci]: [{ [cj]: "DisableMultiRegionAccessPoints" }, b] }], error: "Invalid configuration: Multi-Region Access Point ARNs are disabled.", [cf]: e }, { [cg]: [{ [ch]: f, [ci]: bw, [ck]: M }], rules: [{ [cg]: [{ [ch]: g, [ci]: [{ [ch]: h, [ci]: [{ [cj]: M }, i] }, { [ch]: h, [ci]: [aQ, "partition"] }] }], rules: [{ endpoint: { [cl]: "https://{accessPointName}.accesspoint.s3-global.{mrapPartition#dnsSuffix}", [cm]: { [co]: [{ [cp2]: b, name: y, [cq]: A, [ct]: bO }] }, [cs]: ai }, [cf]: n }], [cf]: o }, { error: "Client was configured for partition `{mrapPartition#name}` but bucket referred to partition `{bucketArn#partition}`", [cf]: e }], [cf]: o }], [cf]: o }, { error: "Invalid Access Point Name", [cf]: e }], [cf]: o }, bg], [cf]: o }, { [cg]: [{ [ch]: g, [ci]: [aS, z] }], rules: [{ [cg]: bz, error: "S3 Outposts does not support Dual-stack", [cf]: e }, { [cg]: bG, error: "S3 Outposts does not support FIPS", [cf]: e }, { [cg]: bA, error: "S3 Outposts does not support S3 Accelerate", [cf]: e }, { [cg]: [{ [ch]: c, [ci]: [{ [ch]: h, [ci]: [aQ, "resourceId[4]"] }] }], error: "Invalid Arn: Outpost Access Point ARN contains sub resources", [cf]: e }, { [cg]: [{ [ch]: h, [ci]: bU, [ck]: w }], rules: [{ [cg]: bM, rules: [aX, { [cg]: bY, rules: [{ [cg]: bP, rules: [{ [cg]: bZ, rules: [{ [cg]: ca, rules: [{ [cg]: cb, rules: [{ [cg]: [{ [ch]: h, [ci]: bX, [ck]: N }], rules: [{ [cg]: [{ [ch]: h, [ci]: [aQ, "resourceId[3]"], [ck]: K }], rules: [{ [cg]: [{ [ch]: g, [ci]: [{ [cj]: N }, J] }], rules: [{ [cg]: bB, endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.{outpostId}.{url#authority}", [cm]: bi, [cs]: ai }, [cf]: n }, { endpoint: { [cl]: "https://{accessPointName}-{bucketArn#accountId}.{outpostId}.s3-outposts.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cm]: bi, [cs]: ai }, [cf]: n }], [cf]: o }, { error: "Expected an outpost type `accesspoint`, found {outpostType}", [cf]: e }], [cf]: o }, { error: "Invalid ARN: expected an access point name", [cf]: e }], [cf]: o }, { error: "Invalid ARN: Expected a 4-component resource", [cf]: e }], [cf]: o }, bc], [cf]: o }, bd], [cf]: o }, be], [cf]: o }], [cf]: o }], [cf]: o }, { error: "Invalid ARN: The outpost Id may only contain a-z, A-Z, 0-9 and `-`. Found: `{outpostId}`", [cf]: e }], [cf]: o }, { error: "Invalid ARN: The Outpost Id was not set", [cf]: e }], [cf]: o }, { error: "Invalid ARN: Unrecognized format: {Bucket} (type: {arnType})", [cf]: e }], [cf]: o }, { error: "Invalid ARN: No ARN type specified", [cf]: e }], [cf]: o }, { [cg]: [{ [ch]: j, [ci]: [ac, 0, 4, a], [ck]: O }, { [ch]: g, [ci]: [{ [cj]: O }, "arn:"] }, { [ch]: r, [ci]: [{ [ch]: c, [ci]: [bj] }] }], error: "Invalid ARN: `{Bucket}` was not a valid ARN", [cf]: e }, { [cg]: [{ [ch]: d, [ci]: [av, b] }, bj], error: "Path-style addressing cannot be used with ARN buckets", [cf]: e }, { [cg]: bE, rules: [{ [cg]: bP, rules: [{ [cg]: [aw], rules: [{ [cg]: [X, ao, W, ax], endpoint: { [cl]: "https://s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [X, ao, W, az, aA], rules: [{ endpoint: bk, [cf]: n }], [cf]: o }, { [cg]: [X, ao, W, az, aD], endpoint: bk, [cf]: n }, { [cg]: [aE, ao, W, ax], endpoint: { [cl]: "https://s3-fips.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, ao, W, az, aA], rules: [{ endpoint: bl, [cf]: n }], [cf]: o }, { [cg]: [aE, ao, W, az, aD], endpoint: bl, [cf]: n }, { [cg]: [X, ao, aG, ax], endpoint: { [cl]: "https://s3.dualstack.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [X, ao, aG, az, aA], rules: [{ endpoint: bm, [cf]: n }], [cf]: o }, { [cg]: [X, ao, aG, az, aD], endpoint: bm, [cf]: n }, { [cg]: [aE, Y, ad, aG, ax], endpoint: { [cl]: P, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, Y, ad, aG, az, aA], rules: [{ [cg]: bR, endpoint: bn, [cf]: n }, { endpoint: bn, [cf]: n }], [cf]: o }, { [cg]: [aE, Y, ad, aG, az, aD], endpoint: bn, [cf]: n }, { [cg]: [aE, ao, aG, ax], endpoint: { [cl]: Q, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aE, ao, aG, az, aA], rules: [{ [cg]: bR, endpoint: { [cl]: Q, [cm]: aC, [cs]: ai }, [cf]: n }, { endpoint: bo, [cf]: n }], [cf]: o }, { [cg]: [aE, ao, aG, az, aD], endpoint: bo, [cf]: n }], [cf]: o }, { error: "Path-style addressing cannot be used with S3 Accelerate", [cf]: e }], [cf]: o }], [cf]: o }], [cf]: o }, { [cg]: [{ [ch]: c, [ci]: [bp] }, { [ch]: d, [ci]: [bp, b] }], rules: [{ [cg]: bP, rules: [{ [cg]: cd, rules: [aU, aV, { [cg]: bB, endpoint: { [cl]: s, [cm]: bq, [cs]: ai }, [cf]: n }, { [cg]: bG, endpoint: { [cl]: "https://s3-object-lambda-fips.{Region}.{partitionResult#dnsSuffix}", [cm]: bq, [cs]: ai }, [cf]: n }, { endpoint: { [cl]: "https://s3-object-lambda.{Region}.{partitionResult#dnsSuffix}", [cm]: bq, [cs]: ai }, [cf]: n }], [cf]: o }, aP], [cf]: o }], [cf]: o }, { [cg]: [aq], rules: [{ [cg]: bP, rules: [{ [cg]: cd, rules: [{ [cg]: [W, X, ao, ax], endpoint: { [cl]: "https://s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [W, X, ao, az, aA], rules: [{ endpoint: br, [cf]: n }], [cf]: o }, { [cg]: [W, X, ao, az, aD], endpoint: br, [cf]: n }, { [cg]: [W, aE, ao, ax], endpoint: { [cl]: "https://s3-fips.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [W, aE, ao, az, aA], rules: [{ endpoint: bs, [cf]: n }], [cf]: o }, { [cg]: [W, aE, ao, az, aD], endpoint: bs, [cf]: n }, { [cg]: [aG, X, ao, ax], endpoint: { [cl]: "https://s3.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aG, X, ao, az, aA], rules: [{ endpoint: bt, [cf]: n }], [cf]: o }, { [cg]: [aG, X, ao, az, aD], endpoint: bt, [cf]: n }, { [cg]: [aG, aE, Y, ad, ax], endpoint: { [cl]: s, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aG, aE, Y, ad, az, aA], rules: [{ [cg]: bR, endpoint: bu, [cf]: n }, { endpoint: bu, [cf]: n }], [cf]: o }, { [cg]: [aG, aE, Y, ad, az, aD], endpoint: bu, [cf]: n }, { [cg]: [aG, aE, ao, ax], endpoint: { [cl]: R, [cm]: ay, [cs]: ai }, [cf]: n }, { [cg]: [aG, aE, ao, az, aA], rules: [{ [cg]: bR, endpoint: { [cl]: R, [cm]: aC, [cs]: ai }, [cf]: n }, { endpoint: bv, [cf]: n }], [cf]: o }, { [cg]: [aG, aE, ao, az, aD], endpoint: bv, [cf]: n }], [cf]: o }, aP], [cf]: o }], [cf]: o }], [cf]: o }, { error: "A region must be set when sending requests to S3.", [cf]: e }] };
+    var ci = "required";
+    var cj = "type";
+    var ck = "conditions";
+    var cl = "fn";
+    var cm = "argv";
+    var cn = "ref";
+    var co = "assign";
+    var cp2 = "url";
+    var cq = "properties";
+    var cr = "backend";
+    var cs = "authSchemes";
+    var ct = "disableDoubleEncoding";
+    var cu = "signingName";
+    var cv = "signingRegion";
+    var cw = "headers";
+    var cx = "signingRegionSet";
+    var a = 6;
+    var b = false;
+    var c = true;
+    var d = "isSet";
+    var e = "booleanEquals";
+    var f = "error";
+    var g = "aws.partition";
+    var h = "stringEquals";
+    var i = "getAttr";
+    var j = "name";
+    var k = "substring";
+    var l = "bucketSuffix";
+    var m = "parseURL";
+    var n = "{url#scheme}://{url#authority}/{uri_encoded_bucket}{url#path}";
+    var o = "endpoint";
+    var p = "tree";
+    var q = "aws.isVirtualHostableS3Bucket";
+    var r = "{url#scheme}://{Bucket}.{url#authority}{url#path}";
+    var s = "not";
+    var t = "{url#scheme}://{url#authority}{url#path}";
+    var u = "hardwareType";
+    var v = "regionPrefix";
+    var w = "bucketAliasSuffix";
+    var x = "outpostId";
+    var y = "isValidHostLabel";
+    var z = "sigv4a";
+    var A = "s3-outposts";
+    var B = "s3";
+    var C = "{url#scheme}://{url#authority}{url#normalizedPath}{Bucket}";
+    var D = "https://{Bucket}.s3-accelerate.{partitionResult#dnsSuffix}";
+    var E = "https://{Bucket}.s3.{partitionResult#dnsSuffix}";
+    var F = "aws.parseArn";
+    var G = "bucketArn";
+    var H = "arnType";
+    var I = "";
+    var J = "s3-object-lambda";
+    var K = "accesspoint";
+    var L = "accessPointName";
+    var M = "{url#scheme}://{accessPointName}-{bucketArn#accountId}.{url#authority}{url#path}";
+    var N = "mrapPartition";
+    var O = "outpostType";
+    var P = "arnPrefix";
+    var Q = "{url#scheme}://{url#authority}{url#normalizedPath}{uri_encoded_bucket}";
+    var R = "https://s3.{partitionResult#dnsSuffix}/{uri_encoded_bucket}";
+    var S = "https://s3.{partitionResult#dnsSuffix}";
+    var T = { [ci]: false, [cj]: "String" };
+    var U = { [ci]: true, "default": false, [cj]: "Boolean" };
+    var V = { [ci]: false, [cj]: "Boolean" };
+    var W = { [cl]: e, [cm]: [{ [cn]: "Accelerate" }, true] };
+    var X = { [cl]: e, [cm]: [{ [cn]: "UseFIPS" }, true] };
+    var Y = { [cl]: e, [cm]: [{ [cn]: "UseDualStack" }, true] };
+    var Z = { [cl]: d, [cm]: [{ [cn]: "Endpoint" }] };
+    var aa = { [cl]: g, [cm]: [{ [cn]: "Region" }], [co]: "partitionResult" };
+    var ab = { [cl]: h, [cm]: [{ [cl]: i, [cm]: [{ [cn]: "partitionResult" }, j] }, "aws-cn"] };
+    var ac = { [cl]: d, [cm]: [{ [cn]: "Bucket" }] };
+    var ad = { [cn]: "Bucket" };
+    var ae = { [cl]: m, [cm]: [{ [cn]: "Endpoint" }], [co]: "url" };
+    var af = { [cl]: e, [cm]: [{ [cl]: i, [cm]: [{ [cn]: "url" }, "isIp"] }, true] };
+    var ag = { [cn]: "url" };
+    var ah = { [cl]: "uriEncode", [cm]: [ad], [co]: "uri_encoded_bucket" };
+    var ai = { [cr]: "S3Express", [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: "s3express", [cv]: "{Region}" }] };
+    var aj = {};
+    var ak = { [cl]: q, [cm]: [ad, false] };
+    var al = { [f]: "S3Express bucket name is not a valid virtual hostable name.", [cj]: f };
+    var am = { [cr]: "S3Express", [cs]: [{ [ct]: true, [j]: "sigv4-s3express", [cu]: "s3express", [cv]: "{Region}" }] };
+    var an = { [cl]: d, [cm]: [{ [cn]: "UseS3ExpressControlEndpoint" }] };
+    var ao = { [cl]: e, [cm]: [{ [cn]: "UseS3ExpressControlEndpoint" }, true] };
+    var ap = { [cl]: s, [cm]: [Z] };
+    var aq = { [f]: "Unrecognized S3Express bucket name format.", [cj]: f };
+    var ar = { [cl]: s, [cm]: [ac] };
+    var as = { [cn]: u };
+    var at = { [ck]: [ap], [f]: "Expected a endpoint to be specified but no endpoint was found", [cj]: f };
+    var au = { [cs]: [{ [ct]: true, [j]: z, [cu]: A, [cx]: ["*"] }, { [ct]: true, [j]: "sigv4", [cu]: A, [cv]: "{Region}" }] };
+    var av = { [cl]: e, [cm]: [{ [cn]: "ForcePathStyle" }, false] };
+    var aw = { [cn]: "ForcePathStyle" };
+    var ax = { [cl]: e, [cm]: [{ [cn]: "Accelerate" }, false] };
+    var ay = { [cl]: h, [cm]: [{ [cn]: "Region" }, "aws-global"] };
+    var az = { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: B, [cv]: "us-east-1" }] };
+    var aA = { [cl]: s, [cm]: [ay] };
+    var aB = { [cl]: e, [cm]: [{ [cn]: "UseGlobalEndpoint" }, true] };
+    var aC = { [cp2]: "https://{Bucket}.s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}", [cq]: { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: B, [cv]: "{Region}" }] }, [cw]: {} };
+    var aD = { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: B, [cv]: "{Region}" }] };
+    var aE = { [cl]: e, [cm]: [{ [cn]: "UseGlobalEndpoint" }, false] };
+    var aF = { [cl]: e, [cm]: [{ [cn]: "UseDualStack" }, false] };
+    var aG = { [cp2]: "https://{Bucket}.s3-fips.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var aH = { [cl]: e, [cm]: [{ [cn]: "UseFIPS" }, false] };
+    var aI = { [cp2]: "https://{Bucket}.s3-accelerate.dualstack.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var aJ = { [cp2]: "https://{Bucket}.s3.dualstack.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var aK = { [cl]: e, [cm]: [{ [cl]: i, [cm]: [ag, "isIp"] }, false] };
+    var aL = { [cp2]: C, [cq]: aD, [cw]: {} };
+    var aM = { [cp2]: r, [cq]: aD, [cw]: {} };
+    var aN = { [o]: aM, [cj]: o };
+    var aO = { [cp2]: D, [cq]: aD, [cw]: {} };
+    var aP = { [cp2]: "https://{Bucket}.s3.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var aQ = { [f]: "Invalid region: region was not a valid DNS name.", [cj]: f };
+    var aR = { [cn]: G };
+    var aS = { [cn]: H };
+    var aT = { [cl]: i, [cm]: [aR, "service"] };
+    var aU = { [cn]: L };
+    var aV = { [ck]: [Y], [f]: "S3 Object Lambda does not support Dual-stack", [cj]: f };
+    var aW = { [ck]: [W], [f]: "S3 Object Lambda does not support S3 Accelerate", [cj]: f };
+    var aX = { [ck]: [{ [cl]: d, [cm]: [{ [cn]: "DisableAccessPoints" }] }, { [cl]: e, [cm]: [{ [cn]: "DisableAccessPoints" }, true] }], [f]: "Access points are not supported for this operation", [cj]: f };
+    var aY = { [ck]: [{ [cl]: d, [cm]: [{ [cn]: "UseArnRegion" }] }, { [cl]: e, [cm]: [{ [cn]: "UseArnRegion" }, false] }, { [cl]: s, [cm]: [{ [cl]: h, [cm]: [{ [cl]: i, [cm]: [aR, "region"] }, "{Region}"] }] }], [f]: "Invalid configuration: region from ARN `{bucketArn#region}` does not match client region `{Region}` and UseArnRegion is `false`", [cj]: f };
+    var aZ = { [cl]: i, [cm]: [{ [cn]: "bucketPartition" }, j] };
+    var ba = { [cl]: i, [cm]: [aR, "accountId"] };
+    var bb = { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: J, [cv]: "{bucketArn#region}" }] };
+    var bc = { [f]: "Invalid ARN: The access point name may only contain a-z, A-Z, 0-9 and `-`. Found: `{accessPointName}`", [cj]: f };
+    var bd = { [f]: "Invalid ARN: The account id may only contain a-z, A-Z, 0-9 and `-`. Found: `{bucketArn#accountId}`", [cj]: f };
+    var be = { [f]: "Invalid region in ARN: `{bucketArn#region}` (invalid DNS name)", [cj]: f };
+    var bf = { [f]: "Client was configured for partition `{partitionResult#name}` but ARN (`{Bucket}`) has `{bucketPartition#name}`", [cj]: f };
+    var bg = { [f]: "Invalid ARN: The ARN may only contain a single resource component after `accesspoint`.", [cj]: f };
+    var bh = { [f]: "Invalid ARN: Expected a resource of the format `accesspoint:<accesspoint name>` but no name was provided", [cj]: f };
+    var bi = { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: B, [cv]: "{bucketArn#region}" }] };
+    var bj = { [cs]: [{ [ct]: true, [j]: z, [cu]: A, [cx]: ["*"] }, { [ct]: true, [j]: "sigv4", [cu]: A, [cv]: "{bucketArn#region}" }] };
+    var bk = { [cl]: F, [cm]: [ad] };
+    var bl = { [cp2]: "https://s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: aD, [cw]: {} };
+    var bm = { [cp2]: "https://s3-fips.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: aD, [cw]: {} };
+    var bn = { [cp2]: "https://s3.dualstack.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: aD, [cw]: {} };
+    var bo = { [cp2]: Q, [cq]: aD, [cw]: {} };
+    var bp = { [cp2]: "https://s3.{Region}.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: aD, [cw]: {} };
+    var bq = { [cn]: "UseObjectLambdaEndpoint" };
+    var br = { [cs]: [{ [ct]: true, [j]: "sigv4", [cu]: J, [cv]: "{Region}" }] };
+    var bs = { [cp2]: "https://s3-fips.dualstack.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var bt = { [cp2]: "https://s3-fips.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var bu = { [cp2]: "https://s3.dualstack.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var bv = { [cp2]: t, [cq]: aD, [cw]: {} };
+    var bw = { [cp2]: "https://s3.{Region}.{partitionResult#dnsSuffix}", [cq]: aD, [cw]: {} };
+    var bx = [{ [cn]: "Region" }];
+    var by = [{ [cn]: "Endpoint" }];
+    var bz = [ad];
+    var bA = [Y];
+    var bB = [W];
+    var bC = [Z, ae];
+    var bD = [{ [cl]: d, [cm]: [{ [cn]: "DisableS3ExpressSessionAuth" }] }, { [cl]: e, [cm]: [{ [cn]: "DisableS3ExpressSessionAuth" }, true] }];
+    var bE = [af];
+    var bF = [ah];
+    var bG = [ak];
+    var bH = [X];
+    var bI = [{ [cl]: k, [cm]: [ad, 6, 14, true], [co]: "s3expressAvailabilityZoneId" }, { [cl]: k, [cm]: [ad, 14, 16, true], [co]: "s3expressAvailabilityZoneDelim" }, { [cl]: h, [cm]: [{ [cn]: "s3expressAvailabilityZoneDelim" }, "--"] }];
+    var bJ = [{ [ck]: [X], [o]: { [cp2]: "https://{Bucket}.s3express-fips-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cq]: ai, [cw]: {} }, [cj]: o }, { [o]: { [cp2]: "https://{Bucket}.s3express-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cq]: ai, [cw]: {} }, [cj]: o }];
+    var bK = [{ [cl]: k, [cm]: [ad, 6, 15, true], [co]: "s3expressAvailabilityZoneId" }, { [cl]: k, [cm]: [ad, 15, 17, true], [co]: "s3expressAvailabilityZoneDelim" }, { [cl]: h, [cm]: [{ [cn]: "s3expressAvailabilityZoneDelim" }, "--"] }];
+    var bL = [{ [cl]: k, [cm]: [ad, 6, 19, true], [co]: "s3expressAvailabilityZoneId" }, { [cl]: k, [cm]: [ad, 19, 21, true], [co]: "s3expressAvailabilityZoneDelim" }, { [cl]: h, [cm]: [{ [cn]: "s3expressAvailabilityZoneDelim" }, "--"] }];
+    var bM = [{ [cl]: k, [cm]: [ad, 6, 20, true], [co]: "s3expressAvailabilityZoneId" }, { [cl]: k, [cm]: [ad, 20, 22, true], [co]: "s3expressAvailabilityZoneDelim" }, { [cl]: h, [cm]: [{ [cn]: "s3expressAvailabilityZoneDelim" }, "--"] }];
+    var bN = [{ [cl]: k, [cm]: [ad, 6, 26, true], [co]: "s3expressAvailabilityZoneId" }, { [cl]: k, [cm]: [ad, 26, 28, true], [co]: "s3expressAvailabilityZoneDelim" }, { [cl]: h, [cm]: [{ [cn]: "s3expressAvailabilityZoneDelim" }, "--"] }];
+    var bO = [{ [ck]: [X], [o]: { [cp2]: "https://{Bucket}.s3express-fips-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cq]: am, [cw]: {} }, [cj]: o }, { [o]: { [cp2]: "https://{Bucket}.s3express-{s3expressAvailabilityZoneId}.{Region}.amazonaws.com", [cq]: am, [cw]: {} }, [cj]: o }];
+    var bP = [ac];
+    var bQ = [{ [cl]: y, [cm]: [{ [cn]: x }, false] }];
+    var bR = [{ [cl]: h, [cm]: [{ [cn]: v }, "beta"] }];
+    var bS = ["*"];
+    var bT = [aa];
+    var bU = [{ [cl]: y, [cm]: [{ [cn]: "Region" }, false] }];
+    var bV = [{ [cl]: h, [cm]: [{ [cn]: "Region" }, "us-east-1"] }];
+    var bW = [{ [cl]: h, [cm]: [aS, K] }];
+    var bX = [{ [cl]: i, [cm]: [aR, "resourceId[1]"], [co]: L }, { [cl]: s, [cm]: [{ [cl]: h, [cm]: [aU, I] }] }];
+    var bY = [aR, "resourceId[1]"];
+    var bZ = [{ [cl]: s, [cm]: [{ [cl]: h, [cm]: [{ [cl]: i, [cm]: [aR, "region"] }, I] }] }];
+    var ca = [{ [cl]: s, [cm]: [{ [cl]: d, [cm]: [{ [cl]: i, [cm]: [aR, "resourceId[2]"] }] }] }];
+    var cb = [aR, "resourceId[2]"];
+    var cc = [{ [cl]: g, [cm]: [{ [cl]: i, [cm]: [aR, "region"] }], [co]: "bucketPartition" }];
+    var cd = [{ [cl]: h, [cm]: [aZ, { [cl]: i, [cm]: [{ [cn]: "partitionResult" }, j] }] }];
+    var ce = [{ [cl]: y, [cm]: [{ [cl]: i, [cm]: [aR, "region"] }, true] }];
+    var cf = [{ [cl]: y, [cm]: [ba, false] }];
+    var cg = [{ [cl]: y, [cm]: [aU, false] }];
+    var ch = [{ [cl]: y, [cm]: [{ [cn]: "Region" }, true] }];
+    var _data = { version: "1.0", parameters: { Bucket: T, Region: T, UseFIPS: U, UseDualStack: U, Endpoint: T, ForcePathStyle: U, Accelerate: U, UseGlobalEndpoint: U, UseObjectLambdaEndpoint: V, Key: T, Prefix: T, CopySource: T, DisableAccessPoints: V, DisableMultiRegionAccessPoints: U, UseArnRegion: V, UseS3ExpressControlEndpoint: V, DisableS3ExpressSessionAuth: V }, rules: [{ [ck]: [{ [cl]: d, [cm]: bx }], rules: [{ [ck]: [W, X], error: "Accelerate cannot be used with FIPS", [cj]: f }, { [ck]: [Y, Z], error: "Cannot set dual-stack in combination with a custom endpoint.", [cj]: f }, { [ck]: [Z, X], error: "A custom endpoint cannot be combined with FIPS", [cj]: f }, { [ck]: [Z, W], error: "A custom endpoint cannot be combined with S3 Accelerate", [cj]: f }, { [ck]: [X, aa, ab], error: "Partition does not support FIPS", [cj]: f }, { [ck]: [ac, { [cl]: k, [cm]: [ad, 0, a, c], [co]: l }, { [cl]: h, [cm]: [{ [cn]: l }, "--x-s3"] }], rules: [{ [ck]: bA, error: "S3Express does not support Dual-stack.", [cj]: f }, { [ck]: bB, error: "S3Express does not support S3 Accelerate.", [cj]: f }, { [ck]: bC, rules: [{ [ck]: bD, rules: [{ [ck]: bE, rules: [{ [ck]: bF, rules: [{ endpoint: { [cp2]: n, [cq]: ai, [cw]: aj }, [cj]: o }], [cj]: p }], [cj]: p }, { [ck]: bG, rules: [{ endpoint: { [cp2]: r, [cq]: ai, [cw]: aj }, [cj]: o }], [cj]: p }, al], [cj]: p }, { [ck]: bE, rules: [{ [ck]: bF, rules: [{ endpoint: { [cp2]: n, [cq]: am, [cw]: aj }, [cj]: o }], [cj]: p }], [cj]: p }, { [ck]: bG, rules: [{ endpoint: { [cp2]: r, [cq]: am, [cw]: aj }, [cj]: o }], [cj]: p }, al], [cj]: p }, { [ck]: [an, ao], rules: [{ [ck]: [ah, ap], rules: [{ [ck]: bH, endpoint: { [cp2]: "https://s3express-control-fips.{Region}.amazonaws.com/{uri_encoded_bucket}", [cq]: ai, [cw]: aj }, [cj]: o }, { endpoint: { [cp2]: "https://s3express-control.{Region}.amazonaws.com/{uri_encoded_bucket}", [cq]: ai, [cw]: aj }, [cj]: o }], [cj]: p }], [cj]: p }, { [ck]: bG, rules: [{ [ck]: bD, rules: [{ [ck]: bI, rules: bJ, [cj]: p }, { [ck]: bK, rules: bJ, [cj]: p }, { [ck]: bL, rules: bJ, [cj]: p }, { [ck]: bM, rules: bJ, [cj]: p }, { [ck]: bN, rules: bJ, [cj]: p }, aq], [cj]: p }, { [ck]: bI, rules: bO, [cj]: p }, { [ck]: bK, rules: bO, [cj]: p }, { [ck]: bL, rules: bO, [cj]: p }, { [ck]: bM, rules: bO, [cj]: p }, { [ck]: bN, rules: bO, [cj]: p }, aq], [cj]: p }, al], [cj]: p }, { [ck]: [ar, an, ao], rules: [{ [ck]: bC, endpoint: { [cp2]: t, [cq]: ai, [cw]: aj }, [cj]: o }, { [ck]: bH, endpoint: { [cp2]: "https://s3express-control-fips.{Region}.amazonaws.com", [cq]: ai, [cw]: aj }, [cj]: o }, { endpoint: { [cp2]: "https://s3express-control.{Region}.amazonaws.com", [cq]: ai, [cw]: aj }, [cj]: o }], [cj]: p }, { [ck]: [ac, { [cl]: k, [cm]: [ad, 49, 50, c], [co]: u }, { [cl]: k, [cm]: [ad, 8, 12, c], [co]: v }, { [cl]: k, [cm]: [ad, 0, 7, c], [co]: w }, { [cl]: k, [cm]: [ad, 32, 49, c], [co]: x }, { [cl]: g, [cm]: bx, [co]: "regionPartition" }, { [cl]: h, [cm]: [{ [cn]: w }, "--op-s3"] }], rules: [{ [ck]: bQ, rules: [{ [ck]: [{ [cl]: h, [cm]: [as, "e"] }], rules: [{ [ck]: bR, rules: [at, { [ck]: bC, endpoint: { [cp2]: "https://{Bucket}.ec2.{url#authority}", [cq]: au, [cw]: aj }, [cj]: o }], [cj]: p }, { endpoint: { [cp2]: "https://{Bucket}.ec2.s3-outposts.{Region}.{regionPartition#dnsSuffix}", [cq]: au, [cw]: aj }, [cj]: o }], [cj]: p }, { [ck]: [{ [cl]: h, [cm]: [as, "o"] }], rules: [{ [ck]: bR, rules: [at, { [ck]: bC, endpoint: { [cp2]: "https://{Bucket}.op-{outpostId}.{url#authority}", [cq]: au, [cw]: aj }, [cj]: o }], [cj]: p }, { endpoint: { [cp2]: "https://{Bucket}.op-{outpostId}.s3-outposts.{Region}.{regionPartition#dnsSuffix}", [cq]: au, [cw]: aj }, [cj]: o }], [cj]: p }, { error: 'Unrecognized hardware type: "Expected hardware type o or e but got {hardwareType}"', [cj]: f }], [cj]: p }, { error: "Invalid ARN: The outpost Id must only contain a-z, A-Z, 0-9 and `-`.", [cj]: f }], [cj]: p }, { [ck]: bP, rules: [{ [ck]: [Z, { [cl]: s, [cm]: [{ [cl]: d, [cm]: [{ [cl]: m, [cm]: by }] }] }], error: "Custom endpoint `{Endpoint}` was not a valid URI", [cj]: f }, { [ck]: [av, ak], rules: [{ [ck]: bT, rules: [{ [ck]: bU, rules: [{ [ck]: [W, ab], error: "S3 Accelerate cannot be used in this region", [cj]: f }, { [ck]: [Y, X, ax, ap, ay], endpoint: { [cp2]: "https://{Bucket}.s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [Y, X, ax, ap, aA, aB], rules: [{ endpoint: aC, [cj]: o }], [cj]: p }, { [ck]: [Y, X, ax, ap, aA, aE], endpoint: aC, [cj]: o }, { [ck]: [aF, X, ax, ap, ay], endpoint: { [cp2]: "https://{Bucket}.s3-fips.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, X, ax, ap, aA, aB], rules: [{ endpoint: aG, [cj]: o }], [cj]: p }, { [ck]: [aF, X, ax, ap, aA, aE], endpoint: aG, [cj]: o }, { [ck]: [Y, aH, W, ap, ay], endpoint: { [cp2]: "https://{Bucket}.s3-accelerate.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [Y, aH, W, ap, aA, aB], rules: [{ endpoint: aI, [cj]: o }], [cj]: p }, { [ck]: [Y, aH, W, ap, aA, aE], endpoint: aI, [cj]: o }, { [ck]: [Y, aH, ax, ap, ay], endpoint: { [cp2]: "https://{Bucket}.s3.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [Y, aH, ax, ap, aA, aB], rules: [{ endpoint: aJ, [cj]: o }], [cj]: p }, { [ck]: [Y, aH, ax, ap, aA, aE], endpoint: aJ, [cj]: o }, { [ck]: [aF, aH, ax, Z, ae, af, ay], endpoint: { [cp2]: C, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, aH, ax, Z, ae, aK, ay], endpoint: { [cp2]: r, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, aH, ax, Z, ae, af, aA, aB], rules: [{ [ck]: bV, endpoint: aL, [cj]: o }, { endpoint: aL, [cj]: o }], [cj]: p }, { [ck]: [aF, aH, ax, Z, ae, aK, aA, aB], rules: [{ [ck]: bV, endpoint: aM, [cj]: o }, aN], [cj]: p }, { [ck]: [aF, aH, ax, Z, ae, af, aA, aE], endpoint: aL, [cj]: o }, { [ck]: [aF, aH, ax, Z, ae, aK, aA, aE], endpoint: aM, [cj]: o }, { [ck]: [aF, aH, W, ap, ay], endpoint: { [cp2]: D, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, aH, W, ap, aA, aB], rules: [{ [ck]: bV, endpoint: aO, [cj]: o }, { endpoint: aO, [cj]: o }], [cj]: p }, { [ck]: [aF, aH, W, ap, aA, aE], endpoint: aO, [cj]: o }, { [ck]: [aF, aH, ax, ap, ay], endpoint: { [cp2]: E, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, aH, ax, ap, aA, aB], rules: [{ [ck]: bV, endpoint: { [cp2]: E, [cq]: aD, [cw]: aj }, [cj]: o }, { endpoint: aP, [cj]: o }], [cj]: p }, { [ck]: [aF, aH, ax, ap, aA, aE], endpoint: aP, [cj]: o }], [cj]: p }, aQ], [cj]: p }], [cj]: p }, { [ck]: [Z, ae, { [cl]: h, [cm]: [{ [cl]: i, [cm]: [ag, "scheme"] }, "http"] }, { [cl]: q, [cm]: [ad, c] }, av, aH, aF, ax], rules: [{ [ck]: bT, rules: [{ [ck]: bU, rules: [aN], [cj]: p }, aQ], [cj]: p }], [cj]: p }, { [ck]: [av, { [cl]: F, [cm]: bz, [co]: G }], rules: [{ [ck]: [{ [cl]: i, [cm]: [aR, "resourceId[0]"], [co]: H }, { [cl]: s, [cm]: [{ [cl]: h, [cm]: [aS, I] }] }], rules: [{ [ck]: [{ [cl]: h, [cm]: [aT, J] }], rules: [{ [ck]: bW, rules: [{ [ck]: bX, rules: [aV, aW, { [ck]: bZ, rules: [aX, { [ck]: ca, rules: [aY, { [ck]: cc, rules: [{ [ck]: bT, rules: [{ [ck]: cd, rules: [{ [ck]: ce, rules: [{ [ck]: [{ [cl]: h, [cm]: [ba, I] }], error: "Invalid ARN: Missing account id", [cj]: f }, { [ck]: cf, rules: [{ [ck]: cg, rules: [{ [ck]: bC, endpoint: { [cp2]: M, [cq]: bb, [cw]: aj }, [cj]: o }, { [ck]: bH, endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-object-lambda-fips.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bb, [cw]: aj }, [cj]: o }, { endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-object-lambda.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bb, [cw]: aj }, [cj]: o }], [cj]: p }, bc], [cj]: p }, bd], [cj]: p }, be], [cj]: p }, bf], [cj]: p }], [cj]: p }], [cj]: p }, bg], [cj]: p }, { error: "Invalid ARN: bucket ARN is missing a region", [cj]: f }], [cj]: p }, bh], [cj]: p }, { error: "Invalid ARN: Object Lambda ARNs only support `accesspoint` arn types, but found: `{arnType}`", [cj]: f }], [cj]: p }, { [ck]: bW, rules: [{ [ck]: bX, rules: [{ [ck]: bZ, rules: [{ [ck]: bW, rules: [{ [ck]: bZ, rules: [aX, { [ck]: ca, rules: [aY, { [ck]: cc, rules: [{ [ck]: bT, rules: [{ [ck]: [{ [cl]: h, [cm]: [aZ, "{partitionResult#name}"] }], rules: [{ [ck]: ce, rules: [{ [ck]: [{ [cl]: h, [cm]: [aT, B] }], rules: [{ [ck]: cf, rules: [{ [ck]: cg, rules: [{ [ck]: bB, error: "Access Points do not support S3 Accelerate", [cj]: f }, { [ck]: [X, Y], endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint-fips.dualstack.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bi, [cw]: aj }, [cj]: o }, { [ck]: [X, aF], endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint-fips.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bi, [cw]: aj }, [cj]: o }, { [ck]: [aH, Y], endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint.dualstack.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bi, [cw]: aj }, [cj]: o }, { [ck]: [aH, aF, Z, ae], endpoint: { [cp2]: M, [cq]: bi, [cw]: aj }, [cj]: o }, { [ck]: [aH, aF], endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.s3-accesspoint.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bi, [cw]: aj }, [cj]: o }], [cj]: p }, bc], [cj]: p }, bd], [cj]: p }, { error: "Invalid ARN: The ARN was not for the S3 service, found: {bucketArn#service}", [cj]: f }], [cj]: p }, be], [cj]: p }, bf], [cj]: p }], [cj]: p }], [cj]: p }, bg], [cj]: p }], [cj]: p }], [cj]: p }, { [ck]: [{ [cl]: y, [cm]: [aU, c] }], rules: [{ [ck]: bA, error: "S3 MRAP does not support dual-stack", [cj]: f }, { [ck]: bH, error: "S3 MRAP does not support FIPS", [cj]: f }, { [ck]: bB, error: "S3 MRAP does not support S3 Accelerate", [cj]: f }, { [ck]: [{ [cl]: e, [cm]: [{ [cn]: "DisableMultiRegionAccessPoints" }, c] }], error: "Invalid configuration: Multi-Region Access Point ARNs are disabled.", [cj]: f }, { [ck]: [{ [cl]: g, [cm]: bx, [co]: N }], rules: [{ [ck]: [{ [cl]: h, [cm]: [{ [cl]: i, [cm]: [{ [cn]: N }, j] }, { [cl]: i, [cm]: [aR, "partition"] }] }], rules: [{ endpoint: { [cp2]: "https://{accessPointName}.accesspoint.s3-global.{mrapPartition#dnsSuffix}", [cq]: { [cs]: [{ [ct]: c, name: z, [cu]: B, [cx]: bS }] }, [cw]: aj }, [cj]: o }], [cj]: p }, { error: "Client was configured for partition `{mrapPartition#name}` but bucket referred to partition `{bucketArn#partition}`", [cj]: f }], [cj]: p }], [cj]: p }, { error: "Invalid Access Point Name", [cj]: f }], [cj]: p }, bh], [cj]: p }, { [ck]: [{ [cl]: h, [cm]: [aT, A] }], rules: [{ [ck]: bA, error: "S3 Outposts does not support Dual-stack", [cj]: f }, { [ck]: bH, error: "S3 Outposts does not support FIPS", [cj]: f }, { [ck]: bB, error: "S3 Outposts does not support S3 Accelerate", [cj]: f }, { [ck]: [{ [cl]: d, [cm]: [{ [cl]: i, [cm]: [aR, "resourceId[4]"] }] }], error: "Invalid Arn: Outpost Access Point ARN contains sub resources", [cj]: f }, { [ck]: [{ [cl]: i, [cm]: bY, [co]: x }], rules: [{ [ck]: bQ, rules: [aY, { [ck]: cc, rules: [{ [ck]: bT, rules: [{ [ck]: cd, rules: [{ [ck]: ce, rules: [{ [ck]: cf, rules: [{ [ck]: [{ [cl]: i, [cm]: cb, [co]: O }], rules: [{ [ck]: [{ [cl]: i, [cm]: [aR, "resourceId[3]"], [co]: L }], rules: [{ [ck]: [{ [cl]: h, [cm]: [{ [cn]: O }, K] }], rules: [{ [ck]: bC, endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.{outpostId}.{url#authority}", [cq]: bj, [cw]: aj }, [cj]: o }, { endpoint: { [cp2]: "https://{accessPointName}-{bucketArn#accountId}.{outpostId}.s3-outposts.{bucketArn#region}.{bucketPartition#dnsSuffix}", [cq]: bj, [cw]: aj }, [cj]: o }], [cj]: p }, { error: "Expected an outpost type `accesspoint`, found {outpostType}", [cj]: f }], [cj]: p }, { error: "Invalid ARN: expected an access point name", [cj]: f }], [cj]: p }, { error: "Invalid ARN: Expected a 4-component resource", [cj]: f }], [cj]: p }, bd], [cj]: p }, be], [cj]: p }, bf], [cj]: p }], [cj]: p }], [cj]: p }, { error: "Invalid ARN: The outpost Id may only contain a-z, A-Z, 0-9 and `-`. Found: `{outpostId}`", [cj]: f }], [cj]: p }, { error: "Invalid ARN: The Outpost Id was not set", [cj]: f }], [cj]: p }, { error: "Invalid ARN: Unrecognized format: {Bucket} (type: {arnType})", [cj]: f }], [cj]: p }, { error: "Invalid ARN: No ARN type specified", [cj]: f }], [cj]: p }, { [ck]: [{ [cl]: k, [cm]: [ad, 0, 4, b], [co]: P }, { [cl]: h, [cm]: [{ [cn]: P }, "arn:"] }, { [cl]: s, [cm]: [{ [cl]: d, [cm]: [bk] }] }], error: "Invalid ARN: `{Bucket}` was not a valid ARN", [cj]: f }, { [ck]: [{ [cl]: e, [cm]: [aw, c] }, bk], error: "Path-style addressing cannot be used with ARN buckets", [cj]: f }, { [ck]: bF, rules: [{ [ck]: bT, rules: [{ [ck]: [ax], rules: [{ [ck]: [Y, ap, X, ay], endpoint: { [cp2]: "https://s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [Y, ap, X, aA, aB], rules: [{ endpoint: bl, [cj]: o }], [cj]: p }, { [ck]: [Y, ap, X, aA, aE], endpoint: bl, [cj]: o }, { [ck]: [aF, ap, X, ay], endpoint: { [cp2]: "https://s3-fips.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, ap, X, aA, aB], rules: [{ endpoint: bm, [cj]: o }], [cj]: p }, { [ck]: [aF, ap, X, aA, aE], endpoint: bm, [cj]: o }, { [ck]: [Y, ap, aH, ay], endpoint: { [cp2]: "https://s3.dualstack.us-east-1.{partitionResult#dnsSuffix}/{uri_encoded_bucket}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [Y, ap, aH, aA, aB], rules: [{ endpoint: bn, [cj]: o }], [cj]: p }, { [ck]: [Y, ap, aH, aA, aE], endpoint: bn, [cj]: o }, { [ck]: [aF, Z, ae, aH, ay], endpoint: { [cp2]: Q, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, Z, ae, aH, aA, aB], rules: [{ [ck]: bV, endpoint: bo, [cj]: o }, { endpoint: bo, [cj]: o }], [cj]: p }, { [ck]: [aF, Z, ae, aH, aA, aE], endpoint: bo, [cj]: o }, { [ck]: [aF, ap, aH, ay], endpoint: { [cp2]: R, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aF, ap, aH, aA, aB], rules: [{ [ck]: bV, endpoint: { [cp2]: R, [cq]: aD, [cw]: aj }, [cj]: o }, { endpoint: bp, [cj]: o }], [cj]: p }, { [ck]: [aF, ap, aH, aA, aE], endpoint: bp, [cj]: o }], [cj]: p }, { error: "Path-style addressing cannot be used with S3 Accelerate", [cj]: f }], [cj]: p }], [cj]: p }], [cj]: p }, { [ck]: [{ [cl]: d, [cm]: [bq] }, { [cl]: e, [cm]: [bq, c] }], rules: [{ [ck]: bT, rules: [{ [ck]: ch, rules: [aV, aW, { [ck]: bC, endpoint: { [cp2]: t, [cq]: br, [cw]: aj }, [cj]: o }, { [ck]: bH, endpoint: { [cp2]: "https://s3-object-lambda-fips.{Region}.{partitionResult#dnsSuffix}", [cq]: br, [cw]: aj }, [cj]: o }, { endpoint: { [cp2]: "https://s3-object-lambda.{Region}.{partitionResult#dnsSuffix}", [cq]: br, [cw]: aj }, [cj]: o }], [cj]: p }, aQ], [cj]: p }], [cj]: p }, { [ck]: [ar], rules: [{ [ck]: bT, rules: [{ [ck]: ch, rules: [{ [ck]: [X, Y, ap, ay], endpoint: { [cp2]: "https://s3-fips.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [X, Y, ap, aA, aB], rules: [{ endpoint: bs, [cj]: o }], [cj]: p }, { [ck]: [X, Y, ap, aA, aE], endpoint: bs, [cj]: o }, { [ck]: [X, aF, ap, ay], endpoint: { [cp2]: "https://s3-fips.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [X, aF, ap, aA, aB], rules: [{ endpoint: bt, [cj]: o }], [cj]: p }, { [ck]: [X, aF, ap, aA, aE], endpoint: bt, [cj]: o }, { [ck]: [aH, Y, ap, ay], endpoint: { [cp2]: "https://s3.dualstack.us-east-1.{partitionResult#dnsSuffix}", [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aH, Y, ap, aA, aB], rules: [{ endpoint: bu, [cj]: o }], [cj]: p }, { [ck]: [aH, Y, ap, aA, aE], endpoint: bu, [cj]: o }, { [ck]: [aH, aF, Z, ae, ay], endpoint: { [cp2]: t, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aH, aF, Z, ae, aA, aB], rules: [{ [ck]: bV, endpoint: bv, [cj]: o }, { endpoint: bv, [cj]: o }], [cj]: p }, { [ck]: [aH, aF, Z, ae, aA, aE], endpoint: bv, [cj]: o }, { [ck]: [aH, aF, ap, ay], endpoint: { [cp2]: S, [cq]: az, [cw]: aj }, [cj]: o }, { [ck]: [aH, aF, ap, aA, aB], rules: [{ [ck]: bV, endpoint: { [cp2]: S, [cq]: aD, [cw]: aj }, [cj]: o }, { endpoint: bw, [cj]: o }], [cj]: p }, { [ck]: [aH, aF, ap, aA, aE], endpoint: bw, [cj]: o }], [cj]: p }, aQ], [cj]: p }], [cj]: p }], [cj]: p }, { error: "A region must be set when sending requests to S3.", [cj]: f }] };
     exports2.ruleSet = _data;
   }
 });
@@ -37844,7 +37904,7 @@ var require_package = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-s3",
       description: "AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native",
-      version: "3.682.0",
+      version: "3.703.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-s3",
@@ -37855,12 +37915,12 @@ var require_package = __commonJS({
         clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo s3",
-        test: "vitest run",
-        "test:watch": "vitest watch",
-        "test:e2e": "vitest run -c vitest.config.e2e.ts && yarn test:browser",
-        "test:e2e:watch": "vitest watch -c vitest.config.e2e.ts",
-        "test:browser": "node ./test/browser-build/esbuild && vitest run -c vitest.config.browser.ts",
-        "test:browser:watch": "node ./test/browser-build/esbuild && vitest watch -c vitest.config.browser.ts"
+        test: "yarn g:vitest run",
+        "test:browser": "node ./test/browser-build/esbuild && vitest run -c vitest.config.browser.ts --mode development",
+        "test:browser:watch": "node ./test/browser-build/esbuild && yarn g:vitest watch -c vitest.config.browser.ts",
+        "test:e2e": "yarn g:vitest run -c vitest.config.e2e.ts --mode development && yarn test:browser",
+        "test:e2e:watch": "yarn g:vitest watch -c vitest.config.e2e.ts",
+        "test:watch": "yarn g:vitest watch"
       },
       main: "./dist-cjs/index.js",
       types: "./dist-types/index.d.ts",
@@ -37870,67 +37930,65 @@ var require_package = __commonJS({
         "@aws-crypto/sha1-browser": "5.2.0",
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.682.0",
-        "@aws-sdk/client-sts": "3.682.0",
-        "@aws-sdk/core": "3.679.0",
-        "@aws-sdk/credential-provider-node": "3.682.0",
-        "@aws-sdk/middleware-bucket-endpoint": "3.679.0",
-        "@aws-sdk/middleware-expect-continue": "3.679.0",
-        "@aws-sdk/middleware-flexible-checksums": "3.682.0",
-        "@aws-sdk/middleware-host-header": "3.679.0",
-        "@aws-sdk/middleware-location-constraint": "3.679.0",
-        "@aws-sdk/middleware-logger": "3.679.0",
-        "@aws-sdk/middleware-recursion-detection": "3.679.0",
-        "@aws-sdk/middleware-sdk-s3": "3.682.0",
-        "@aws-sdk/middleware-ssec": "3.679.0",
-        "@aws-sdk/middleware-user-agent": "3.682.0",
-        "@aws-sdk/region-config-resolver": "3.679.0",
-        "@aws-sdk/signature-v4-multi-region": "3.682.0",
-        "@aws-sdk/types": "3.679.0",
-        "@aws-sdk/util-endpoints": "3.679.0",
-        "@aws-sdk/util-user-agent-browser": "3.679.0",
-        "@aws-sdk/util-user-agent-node": "3.682.0",
-        "@aws-sdk/xml-builder": "3.679.0",
-        "@smithy/config-resolver": "^3.0.9",
-        "@smithy/core": "^2.4.8",
-        "@smithy/eventstream-serde-browser": "^3.0.10",
-        "@smithy/eventstream-serde-config-resolver": "^3.0.7",
-        "@smithy/eventstream-serde-node": "^3.0.9",
-        "@smithy/fetch-http-handler": "^3.2.9",
-        "@smithy/hash-blob-browser": "^3.1.6",
-        "@smithy/hash-node": "^3.0.7",
-        "@smithy/hash-stream-node": "^3.1.6",
-        "@smithy/invalid-dependency": "^3.0.7",
-        "@smithy/md5-js": "^3.0.7",
-        "@smithy/middleware-content-length": "^3.0.9",
-        "@smithy/middleware-endpoint": "^3.1.4",
-        "@smithy/middleware-retry": "^3.0.23",
-        "@smithy/middleware-serde": "^3.0.7",
-        "@smithy/middleware-stack": "^3.0.7",
-        "@smithy/node-config-provider": "^3.1.8",
-        "@smithy/node-http-handler": "^3.2.4",
-        "@smithy/protocol-http": "^4.1.4",
-        "@smithy/smithy-client": "^3.4.0",
-        "@smithy/types": "^3.5.0",
-        "@smithy/url-parser": "^3.0.7",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/client-sts": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-bucket-endpoint": "3.696.0",
+        "@aws-sdk/middleware-expect-continue": "3.696.0",
+        "@aws-sdk/middleware-flexible-checksums": "3.701.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-location-constraint": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-sdk-s3": "3.696.0",
+        "@aws-sdk/middleware-ssec": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/signature-v4-multi-region": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@aws-sdk/xml-builder": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/eventstream-serde-browser": "^3.0.13",
+        "@smithy/eventstream-serde-config-resolver": "^3.0.10",
+        "@smithy/eventstream-serde-node": "^3.0.12",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-blob-browser": "^3.1.9",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/hash-stream-node": "^3.1.9",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/md5-js": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
         "@smithy/util-base64": "^3.0.0",
         "@smithy/util-body-length-browser": "^3.0.0",
         "@smithy/util-body-length-node": "^3.0.0",
-        "@smithy/util-defaults-mode-browser": "^3.0.23",
-        "@smithy/util-defaults-mode-node": "^3.0.23",
-        "@smithy/util-endpoints": "^2.1.3",
-        "@smithy/util-middleware": "^3.0.7",
-        "@smithy/util-retry": "^3.0.7",
-        "@smithy/util-stream": "^3.1.9",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-stream": "^3.3.1",
         "@smithy/util-utf8": "^3.0.0",
-        "@smithy/util-waiter": "^3.1.6",
+        "@smithy/util-waiter": "^3.1.9",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/signature-v4-crt": "3.682.0",
+        "@aws-sdk/signature-v4-crt": "3.696.0",
         "@tsconfig/node16": "16.1.3",
-        "@types/chai": "^4.2.11",
-        "@types/mocha": "^8.0.4",
         "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
@@ -38716,7 +38774,7 @@ var require_package2 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sso",
       description: "AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native",
-      version: "3.682.0",
+      version: "3.696.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sso",
@@ -38735,40 +38793,40 @@ var require_package2 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.679.0",
-        "@aws-sdk/middleware-host-header": "3.679.0",
-        "@aws-sdk/middleware-logger": "3.679.0",
-        "@aws-sdk/middleware-recursion-detection": "3.679.0",
-        "@aws-sdk/middleware-user-agent": "3.682.0",
-        "@aws-sdk/region-config-resolver": "3.679.0",
-        "@aws-sdk/types": "3.679.0",
-        "@aws-sdk/util-endpoints": "3.679.0",
-        "@aws-sdk/util-user-agent-browser": "3.679.0",
-        "@aws-sdk/util-user-agent-node": "3.682.0",
-        "@smithy/config-resolver": "^3.0.9",
-        "@smithy/core": "^2.4.8",
-        "@smithy/fetch-http-handler": "^3.2.9",
-        "@smithy/hash-node": "^3.0.7",
-        "@smithy/invalid-dependency": "^3.0.7",
-        "@smithy/middleware-content-length": "^3.0.9",
-        "@smithy/middleware-endpoint": "^3.1.4",
-        "@smithy/middleware-retry": "^3.0.23",
-        "@smithy/middleware-serde": "^3.0.7",
-        "@smithy/middleware-stack": "^3.0.7",
-        "@smithy/node-config-provider": "^3.1.8",
-        "@smithy/node-http-handler": "^3.2.4",
-        "@smithy/protocol-http": "^4.1.4",
-        "@smithy/smithy-client": "^3.4.0",
-        "@smithy/types": "^3.5.0",
-        "@smithy/url-parser": "^3.0.7",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
         "@smithy/util-base64": "^3.0.0",
         "@smithy/util-body-length-browser": "^3.0.0",
         "@smithy/util-body-length-node": "^3.0.0",
-        "@smithy/util-defaults-mode-browser": "^3.0.23",
-        "@smithy/util-defaults-mode-node": "^3.0.23",
-        "@smithy/util-endpoints": "^2.1.3",
-        "@smithy/util-middleware": "^3.0.7",
-        "@smithy/util-retry": "^3.0.7",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
         "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
@@ -39981,7 +40039,7 @@ var require_package3 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sso-oidc",
       description: "AWS SDK for JavaScript Sso Oidc Client for Node.js, Browser and React Native",
-      version: "3.682.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sso-oidc",
@@ -40000,41 +40058,41 @@ var require_package3 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.679.0",
-        "@aws-sdk/credential-provider-node": "3.682.0",
-        "@aws-sdk/middleware-host-header": "3.679.0",
-        "@aws-sdk/middleware-logger": "3.679.0",
-        "@aws-sdk/middleware-recursion-detection": "3.679.0",
-        "@aws-sdk/middleware-user-agent": "3.682.0",
-        "@aws-sdk/region-config-resolver": "3.679.0",
-        "@aws-sdk/types": "3.679.0",
-        "@aws-sdk/util-endpoints": "3.679.0",
-        "@aws-sdk/util-user-agent-browser": "3.679.0",
-        "@aws-sdk/util-user-agent-node": "3.682.0",
-        "@smithy/config-resolver": "^3.0.9",
-        "@smithy/core": "^2.4.8",
-        "@smithy/fetch-http-handler": "^3.2.9",
-        "@smithy/hash-node": "^3.0.7",
-        "@smithy/invalid-dependency": "^3.0.7",
-        "@smithy/middleware-content-length": "^3.0.9",
-        "@smithy/middleware-endpoint": "^3.1.4",
-        "@smithy/middleware-retry": "^3.0.23",
-        "@smithy/middleware-serde": "^3.0.7",
-        "@smithy/middleware-stack": "^3.0.7",
-        "@smithy/node-config-provider": "^3.1.8",
-        "@smithy/node-http-handler": "^3.2.4",
-        "@smithy/protocol-http": "^4.1.4",
-        "@smithy/smithy-client": "^3.4.0",
-        "@smithy/types": "^3.5.0",
-        "@smithy/url-parser": "^3.0.7",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
         "@smithy/util-base64": "^3.0.0",
         "@smithy/util-body-length-browser": "^3.0.0",
         "@smithy/util-body-length-node": "^3.0.0",
-        "@smithy/util-defaults-mode-browser": "^3.0.23",
-        "@smithy/util-defaults-mode-node": "^3.0.23",
-        "@smithy/util-endpoints": "^2.1.3",
-        "@smithy/util-middleware": "^3.0.7",
-        "@smithy/util-retry": "^3.0.7",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
         "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
@@ -40065,7 +40123,7 @@ var require_package3 = __commonJS({
       },
       license: "Apache-2.0",
       peerDependencies: {
-        "@aws-sdk/client-sts": "^3.682.0"
+        "@aws-sdk/client-sts": "^3.699.0"
       },
       browser: {
         "./dist-es/runtimeConfig": "./dist-es/runtimeConfig.browser"
@@ -41252,19 +41310,20 @@ var require_dist_cjs56 = __commonJS({
     module2.exports = __toCommonJS2(src_exports2);
     var EXPIRE_WINDOW_MS = 5 * 60 * 1e3;
     var REFRESH_MESSAGE = `To refresh this SSO session run 'aws sso login' with the corresponding profile.`;
-    var ssoOidcClientsHash = {};
-    var getSsoOidcClient = /* @__PURE__ */ __name(async (ssoRegion) => {
+    var getSsoOidcClient = /* @__PURE__ */ __name(async (ssoRegion, init = {}) => {
+      var _a, _b, _c;
       const { SSOOIDCClient } = await Promise.resolve().then(() => __toESM2(require_dist_cjs55()));
-      if (ssoOidcClientsHash[ssoRegion]) {
-        return ssoOidcClientsHash[ssoRegion];
-      }
-      const ssoOidcClient = new SSOOIDCClient({ region: ssoRegion });
-      ssoOidcClientsHash[ssoRegion] = ssoOidcClient;
+      const ssoOidcClient = new SSOOIDCClient(
+        Object.assign({}, init.clientConfig ?? {}, {
+          region: ssoRegion ?? ((_a = init.clientConfig) == null ? void 0 : _a.region),
+          logger: ((_b = init.clientConfig) == null ? void 0 : _b.logger) ?? ((_c = init.parentClientConfig) == null ? void 0 : _c.logger)
+        })
+      );
       return ssoOidcClient;
     }, "getSsoOidcClient");
-    var getNewSsoOidcToken = /* @__PURE__ */ __name(async (ssoToken, ssoRegion) => {
+    var getNewSsoOidcToken = /* @__PURE__ */ __name(async (ssoToken, ssoRegion, init = {}) => {
       const { CreateTokenCommand } = await Promise.resolve().then(() => __toESM2(require_dist_cjs55()));
-      const ssoOidcClient = await getSsoOidcClient(ssoRegion);
+      const ssoOidcClient = await getSsoOidcClient(ssoRegion, init);
       return ssoOidcClient.send(
         new CreateTokenCommand({
           clientId: ssoToken.clientId,
@@ -41352,7 +41411,7 @@ var require_dist_cjs56 = __commonJS({
       validateTokenKey("refreshToken", ssoToken.refreshToken, true);
       try {
         lastRefreshAttemptTime.setTime(Date.now());
-        const newSsoOidcToken = await getNewSsoOidcToken(ssoToken, ssoRegion);
+        const newSsoOidcToken = await getNewSsoOidcToken(ssoToken, ssoRegion, init);
         validateTokenKey("accessToken", newSsoOidcToken.accessToken);
         validateTokenKey("expiresIn", newSsoOidcToken.expiresIn);
         const newTokenExpiration = new Date(Date.now() + newSsoOidcToken.expiresIn * 1e3);
@@ -41449,6 +41508,7 @@ var require_dist_cjs57 = __commonJS({
       ssoRoleName,
       ssoClient,
       clientConfig,
+      parentClientConfig,
       profile,
       logger
     }) => {
@@ -41487,6 +41547,7 @@ var require_dist_cjs57 = __commonJS({
       const { SSOClient: SSOClient2, GetRoleCredentialsCommand: GetRoleCredentialsCommand2 } = await Promise.resolve().then(() => (init_loadSso(), loadSso_exports));
       const sso = ssoClient || new SSOClient2(
         Object.assign({}, clientConfig ?? {}, {
+          logger: (clientConfig == null ? void 0 : clientConfig.logger) ?? (parentClientConfig == null ? void 0 : parentClientConfig.logger),
           region: (clientConfig == null ? void 0 : clientConfig.region) ?? ssoRegion
         })
       );
@@ -41590,6 +41651,7 @@ Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.ht
           ssoRoleName: sso_role_name,
           ssoClient,
           clientConfig: init.clientConfig,
+          parentClientConfig: init.parentClientConfig,
           profile: profileName
         });
       } else if (!ssoStartUrl || !ssoAccountId || !ssoRegion || !ssoRoleName) {
@@ -41606,6 +41668,7 @@ Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.ht
           ssoRoleName,
           ssoClient,
           clientConfig: init.clientConfig,
+          parentClientConfig: init.parentClientConfig,
           profile: profileName
         });
       }
@@ -41717,7 +41780,7 @@ var require_package4 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sts",
       description: "AWS SDK for JavaScript Sts Client for Node.js, Browser and React Native",
-      version: "3.682.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sts",
@@ -41728,8 +41791,8 @@ var require_package4 = __commonJS({
         clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo sts",
-        test: "vitest run",
-        "test:watch": "vitest watch"
+        test: "yarn g:vitest run",
+        "test:watch": "yarn g:vitest watch"
       },
       main: "./dist-cjs/index.js",
       types: "./dist-types/index.d.ts",
@@ -41738,42 +41801,42 @@ var require_package4 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.682.0",
-        "@aws-sdk/core": "3.679.0",
-        "@aws-sdk/credential-provider-node": "3.682.0",
-        "@aws-sdk/middleware-host-header": "3.679.0",
-        "@aws-sdk/middleware-logger": "3.679.0",
-        "@aws-sdk/middleware-recursion-detection": "3.679.0",
-        "@aws-sdk/middleware-user-agent": "3.682.0",
-        "@aws-sdk/region-config-resolver": "3.679.0",
-        "@aws-sdk/types": "3.679.0",
-        "@aws-sdk/util-endpoints": "3.679.0",
-        "@aws-sdk/util-user-agent-browser": "3.679.0",
-        "@aws-sdk/util-user-agent-node": "3.682.0",
-        "@smithy/config-resolver": "^3.0.9",
-        "@smithy/core": "^2.4.8",
-        "@smithy/fetch-http-handler": "^3.2.9",
-        "@smithy/hash-node": "^3.0.7",
-        "@smithy/invalid-dependency": "^3.0.7",
-        "@smithy/middleware-content-length": "^3.0.9",
-        "@smithy/middleware-endpoint": "^3.1.4",
-        "@smithy/middleware-retry": "^3.0.23",
-        "@smithy/middleware-serde": "^3.0.7",
-        "@smithy/middleware-stack": "^3.0.7",
-        "@smithy/node-config-provider": "^3.1.8",
-        "@smithy/node-http-handler": "^3.2.4",
-        "@smithy/protocol-http": "^4.1.4",
-        "@smithy/smithy-client": "^3.4.0",
-        "@smithy/types": "^3.5.0",
-        "@smithy/url-parser": "^3.0.7",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
         "@smithy/util-base64": "^3.0.0",
         "@smithy/util-body-length-browser": "^3.0.0",
         "@smithy/util-body-length-node": "^3.0.0",
-        "@smithy/util-defaults-mode-browser": "^3.0.23",
-        "@smithy/util-defaults-mode-node": "^3.0.23",
-        "@smithy/util-endpoints": "^2.1.3",
-        "@smithy/util-middleware": "^3.0.7",
-        "@smithy/util-retry": "^3.0.7",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
         "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
@@ -42173,7 +42236,9 @@ var require_dist_cjs58 = __commonJS({
       AssumeRoleWithWebIdentityCommand: () => AssumeRoleWithWebIdentityCommand,
       AssumeRoleWithWebIdentityRequestFilterSensitiveLog: () => AssumeRoleWithWebIdentityRequestFilterSensitiveLog,
       AssumeRoleWithWebIdentityResponseFilterSensitiveLog: () => AssumeRoleWithWebIdentityResponseFilterSensitiveLog,
-      ClientInputEndpointParameters: () => import_EndpointParameters9.ClientInputEndpointParameters,
+      AssumeRootCommand: () => AssumeRootCommand,
+      AssumeRootResponseFilterSensitiveLog: () => AssumeRootResponseFilterSensitiveLog,
+      ClientInputEndpointParameters: () => import_EndpointParameters10.ClientInputEndpointParameters,
       CredentialsFilterSensitiveLog: () => CredentialsFilterSensitiveLog,
       DecodeAuthorizationMessageCommand: () => DecodeAuthorizationMessageCommand,
       ExpiredTokenException: () => ExpiredTokenException,
@@ -42373,6 +42438,10 @@ var require_dist_cjs58 = __commonJS({
       ...obj,
       ...obj.Credentials && { Credentials: CredentialsFilterSensitiveLog(obj.Credentials) }
     }), "AssumeRoleWithWebIdentityResponseFilterSensitiveLog");
+    var AssumeRootResponseFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+      ...obj,
+      ...obj.Credentials && { Credentials: CredentialsFilterSensitiveLog(obj.Credentials) }
+    }), "AssumeRootResponseFilterSensitiveLog");
     var GetFederationTokenResponseFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.Credentials && { Credentials: CredentialsFilterSensitiveLog(obj.Credentials) }
@@ -42413,6 +42482,16 @@ var require_dist_cjs58 = __commonJS({
       });
       return buildHttpRpcRequest(context3, headers, "/", void 0, body);
     }, "se_AssumeRoleWithWebIdentityCommand");
+    var se_AssumeRootCommand = /* @__PURE__ */ __name(async (input, context3) => {
+      const headers = SHARED_HEADERS;
+      let body;
+      body = buildFormUrlencodedString({
+        ...se_AssumeRootRequest(input, context3),
+        [_A]: _ARs,
+        [_V]: _
+      });
+      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+    }, "se_AssumeRootCommand");
     var se_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (input, context3) => {
       const headers = SHARED_HEADERS;
       let body;
@@ -42502,6 +42581,19 @@ var require_dist_cjs58 = __commonJS({
       };
       return response;
     }, "de_AssumeRoleWithWebIdentityCommand");
+    var de_AssumeRootCommand = /* @__PURE__ */ __name(async (output, context3) => {
+      if (output.statusCode >= 300) {
+        return de_CommandError(output, context3);
+      }
+      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      let contents = {};
+      contents = de_AssumeRootResponse(data.AssumeRootResult, context3);
+      const response = {
+        $metadata: deserializeMetadata(output),
+        ...contents
+      };
+      return response;
+    }, "de_AssumeRootCommand");
     var de_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (output, context3) => {
       if (output.statusCode >= 300) {
         return de_CommandError(output, context3);
@@ -42811,6 +42903,23 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_AssumeRoleWithWebIdentityRequest");
+    var se_AssumeRootRequest = /* @__PURE__ */ __name((input, context3) => {
+      const entries = {};
+      if (input[_TP] != null) {
+        entries[_TP] = input[_TP];
+      }
+      if (input[_TPA] != null) {
+        const memberEntries = se_PolicyDescriptorType(input[_TPA], context3);
+        Object.entries(memberEntries).forEach(([key, value]) => {
+          const loc = `TaskPolicyArn.${key}`;
+          entries[loc] = value;
+        });
+      }
+      if (input[_DS] != null) {
+        entries[_DS] = input[_DS];
+      }
+      return entries;
+    }, "se_AssumeRootRequest");
     var se_DecodeAuthorizationMessageRequest = /* @__PURE__ */ __name((input, context3) => {
       const entries = {};
       if (input[_EM] != null) {
@@ -43042,6 +43151,16 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_AssumeRoleWithWebIdentityResponse");
+    var de_AssumeRootResponse = /* @__PURE__ */ __name((output, context3) => {
+      const contents = {};
+      if (output[_C] != null) {
+        contents[_C] = de_Credentials(output[_C], context3);
+      }
+      if (output[_SI] != null) {
+        contents[_SI] = (0, import_smithy_client4.expectString)(output[_SI]);
+      }
+      return contents;
+    }, "de_AssumeRootResponse");
     var de_Credentials = /* @__PURE__ */ __name((output, context3) => {
       const contents = {};
       if (output[_AKI] != null) {
@@ -43207,6 +43326,7 @@ var require_dist_cjs58 = __commonJS({
     var _ARU = "AssumedRoleUser";
     var _ARWSAML = "AssumeRoleWithSAML";
     var _ARWWI = "AssumeRoleWithWebIdentity";
+    var _ARs = "AssumeRoot";
     var _Ac = "Account";
     var _Ar = "Arn";
     var _Au = "Audience";
@@ -43248,6 +43368,8 @@ var require_dist_cjs58 = __commonJS({
     var _STe = "SessionToken";
     var _T = "Tags";
     var _TC = "TokenCode";
+    var _TP = "TargetPrincipal";
+    var _TPA = "TaskPolicyArn";
     var _TTK = "TransitiveTagKeys";
     var _UI = "UserId";
     var _V = "Version";
@@ -43295,7 +43417,17 @@ var require_dist_cjs58 = __commonJS({
     __name(_AssumeRoleWithWebIdentityCommand, "AssumeRoleWithWebIdentityCommand");
     var AssumeRoleWithWebIdentityCommand = _AssumeRoleWithWebIdentityCommand;
     var import_EndpointParameters4 = require_EndpointParameters();
-    var _DecodeAuthorizationMessageCommand = class _DecodeAuthorizationMessageCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters4.commonParams).m(function(Command, cs, config, o) {
+    var _AssumeRootCommand = class _AssumeRootCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters4.commonParams).m(function(Command, cs, config, o) {
+      return [
+        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
+        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
+      ];
+    }).s("AWSSecurityTokenServiceV20110615", "AssumeRoot", {}).n("STSClient", "AssumeRootCommand").f(void 0, AssumeRootResponseFilterSensitiveLog).ser(se_AssumeRootCommand).de(de_AssumeRootCommand).build() {
+    };
+    __name(_AssumeRootCommand, "AssumeRootCommand");
+    var AssumeRootCommand = _AssumeRootCommand;
+    var import_EndpointParameters5 = require_EndpointParameters();
+    var _DecodeAuthorizationMessageCommand = class _DecodeAuthorizationMessageCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters5.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -43304,8 +43436,8 @@ var require_dist_cjs58 = __commonJS({
     };
     __name(_DecodeAuthorizationMessageCommand, "DecodeAuthorizationMessageCommand");
     var DecodeAuthorizationMessageCommand = _DecodeAuthorizationMessageCommand;
-    var import_EndpointParameters5 = require_EndpointParameters();
-    var _GetAccessKeyInfoCommand = class _GetAccessKeyInfoCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters5.commonParams).m(function(Command, cs, config, o) {
+    var import_EndpointParameters6 = require_EndpointParameters();
+    var _GetAccessKeyInfoCommand = class _GetAccessKeyInfoCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters6.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -43314,8 +43446,8 @@ var require_dist_cjs58 = __commonJS({
     };
     __name(_GetAccessKeyInfoCommand, "GetAccessKeyInfoCommand");
     var GetAccessKeyInfoCommand = _GetAccessKeyInfoCommand;
-    var import_EndpointParameters6 = require_EndpointParameters();
-    var _GetCallerIdentityCommand = class _GetCallerIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters6.commonParams).m(function(Command, cs, config, o) {
+    var import_EndpointParameters7 = require_EndpointParameters();
+    var _GetCallerIdentityCommand = class _GetCallerIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters7.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -43324,8 +43456,8 @@ var require_dist_cjs58 = __commonJS({
     };
     __name(_GetCallerIdentityCommand, "GetCallerIdentityCommand");
     var GetCallerIdentityCommand = _GetCallerIdentityCommand;
-    var import_EndpointParameters7 = require_EndpointParameters();
-    var _GetFederationTokenCommand = class _GetFederationTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters7.commonParams).m(function(Command, cs, config, o) {
+    var import_EndpointParameters8 = require_EndpointParameters();
+    var _GetFederationTokenCommand = class _GetFederationTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters8.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -43334,8 +43466,8 @@ var require_dist_cjs58 = __commonJS({
     };
     __name(_GetFederationTokenCommand, "GetFederationTokenCommand");
     var GetFederationTokenCommand = _GetFederationTokenCommand;
-    var import_EndpointParameters8 = require_EndpointParameters();
-    var _GetSessionTokenCommand = class _GetSessionTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters8.commonParams).m(function(Command, cs, config, o) {
+    var import_EndpointParameters9 = require_EndpointParameters();
+    var _GetSessionTokenCommand = class _GetSessionTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters9.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -43349,6 +43481,7 @@ var require_dist_cjs58 = __commonJS({
       AssumeRoleCommand,
       AssumeRoleWithSAMLCommand,
       AssumeRoleWithWebIdentityCommand,
+      AssumeRootCommand,
       DecodeAuthorizationMessageCommand,
       GetAccessKeyInfoCommand,
       GetCallerIdentityCommand,
@@ -43360,7 +43493,7 @@ var require_dist_cjs58 = __commonJS({
     __name(_STS, "STS");
     var STS = _STS;
     (0, import_smithy_client4.createAggregatedClient)(commands, STS);
-    var import_EndpointParameters9 = require_EndpointParameters();
+    var import_EndpointParameters10 = require_EndpointParameters();
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var ASSUME_ROLE_DEFAULT_REGION = "us-east-1";
     var getAccountIdFromAssumedRoleUser = /* @__PURE__ */ __name((assumedRoleUser) => {
@@ -43887,7 +44020,9 @@ var require_dist_cjs61 = __commonJS({
       const { fromSSO } = await Promise.resolve().then(() => __toESM2(require_dist_cjs57()));
       return fromSSO({
         profile,
-        logger: options.logger
+        logger: options.logger,
+        parentClientConfig: options.parentClientConfig,
+        clientConfig: options.clientConfig
       })().then((creds) => {
         if (profileData.sso_session) {
           return (0, import_client2.setCredentialFeature)(creds, "CREDENTIALS_PROFILE_SSO", "r");
@@ -44595,7 +44730,7 @@ var require_dist_cjs64 = __commonJS({
       SmithyMessageEncoderStream: () => SmithyMessageEncoderStream
     });
     module2.exports = __toCommonJS2(src_exports2);
-    var import_crc322 = require_main3();
+    var import_crc322 = require_main4();
     var import_util_hex_encoding = require_dist_cjs14();
     var _Int64 = class _Int642 {
       constructor(bytes) {
@@ -44835,7 +44970,7 @@ var require_dist_cjs64 = __commonJS({
     var TIMESTAMP_TAG = "timestamp";
     var UUID_TAG = "uuid";
     var UUID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-    var import_crc32 = require_main3();
+    var import_crc32 = require_main4();
     var PRELUDE_MEMBER_LENGTH = 4;
     var PRELUDE_LENGTH = PRELUDE_MEMBER_LENGTH * 2;
     var CHECKSUM_LENGTH = 4;
@@ -45859,6 +45994,7 @@ var require_dist_cjs71 = __commonJS({
       DeletePublicAccessBlockCommand: () => DeletePublicAccessBlockCommand,
       EncodingType: () => EncodingType,
       EncryptionFilterSensitiveLog: () => EncryptionFilterSensitiveLog,
+      EncryptionTypeMismatch: () => EncryptionTypeMismatch,
       Event: () => Event2,
       ExistingObjectReplicationStatus: () => ExistingObjectReplicationStatus,
       ExpirationStatus: () => ExpirationStatus,
@@ -45907,6 +46043,8 @@ var require_dist_cjs71 = __commonJS({
       IntelligentTieringAccessTier: () => IntelligentTieringAccessTier,
       IntelligentTieringStatus: () => IntelligentTieringStatus,
       InvalidObjectState: () => InvalidObjectState,
+      InvalidRequest: () => InvalidRequest,
+      InvalidWriteOffset: () => InvalidWriteOffset,
       InventoryConfigurationFilterSensitiveLog: () => InventoryConfigurationFilterSensitiveLog,
       InventoryDestinationFilterSensitiveLog: () => InventoryDestinationFilterSensitiveLog,
       InventoryEncryptionFilterSensitiveLog: () => InventoryEncryptionFilterSensitiveLog,
@@ -46018,6 +46156,7 @@ var require_dist_cjs71 = __commonJS({
       StorageClassAnalysisSchemaVersion: () => StorageClassAnalysisSchemaVersion,
       TaggingDirective: () => TaggingDirective,
       Tier: () => Tier,
+      TooManyParts: () => TooManyParts,
       TransitionDefaultMinimumObjectSize: () => TransitionDefaultMinimumObjectSize,
       TransitionStorageClass: () => TransitionStorageClass,
       Type: () => Type,
@@ -46245,13 +46384,15 @@ var require_dist_cjs71 = __commonJS({
       public_read_write: "public-read-write"
     };
     var DataRedundancy = {
-      SingleAvailabilityZone: "SingleAvailabilityZone"
+      SingleAvailabilityZone: "SingleAvailabilityZone",
+      SingleLocalZone: "SingleLocalZone"
     };
     var BucketType = {
       Directory: "Directory"
     };
     var LocationType = {
-      AvailabilityZone: "AvailabilityZone"
+      AvailabilityZone: "AvailabilityZone",
+      LocalZone: "LocalZone"
     };
     var BucketLocationConstraint = {
       EU: "EU",
@@ -46740,6 +46881,74 @@ var require_dist_cjs71 = __commonJS({
       Disabled: "Disabled",
       Enabled: "Enabled"
     };
+    var _EncryptionTypeMismatch = class _EncryptionTypeMismatch2 extends S3ServiceException {
+      /**
+       * @internal
+       */
+      constructor(opts) {
+        super({
+          name: "EncryptionTypeMismatch",
+          $fault: "client",
+          ...opts
+        });
+        this.name = "EncryptionTypeMismatch";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _EncryptionTypeMismatch2.prototype);
+      }
+    };
+    __name(_EncryptionTypeMismatch, "EncryptionTypeMismatch");
+    var EncryptionTypeMismatch = _EncryptionTypeMismatch;
+    var _InvalidRequest = class _InvalidRequest2 extends S3ServiceException {
+      /**
+       * @internal
+       */
+      constructor(opts) {
+        super({
+          name: "InvalidRequest",
+          $fault: "client",
+          ...opts
+        });
+        this.name = "InvalidRequest";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRequest2.prototype);
+      }
+    };
+    __name(_InvalidRequest, "InvalidRequest");
+    var InvalidRequest = _InvalidRequest;
+    var _InvalidWriteOffset = class _InvalidWriteOffset2 extends S3ServiceException {
+      /**
+       * @internal
+       */
+      constructor(opts) {
+        super({
+          name: "InvalidWriteOffset",
+          $fault: "client",
+          ...opts
+        });
+        this.name = "InvalidWriteOffset";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidWriteOffset2.prototype);
+      }
+    };
+    __name(_InvalidWriteOffset, "InvalidWriteOffset");
+    var InvalidWriteOffset = _InvalidWriteOffset;
+    var _TooManyParts = class _TooManyParts2 extends S3ServiceException {
+      /**
+       * @internal
+       */
+      constructor(opts) {
+        super({
+          name: "TooManyParts",
+          $fault: "client",
+          ...opts
+        });
+        this.name = "TooManyParts";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _TooManyParts2.prototype);
+      }
+    };
+    __name(_TooManyParts, "TooManyParts");
+    var TooManyParts = _TooManyParts;
     var _ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError2 extends S3ServiceException {
       /**
        * @internal
@@ -46880,7 +47089,8 @@ var require_dist_cjs71 = __commonJS({
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
-        [_xaebo]: input[_EBO]
+        [_xaebo]: input[_EBO],
+        [_xaimit]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMIT]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMIT]).toString()]
       });
       b.bp("/{Key+}");
       b.p("Bucket", () => input.Bucket, "{Bucket}", false);
@@ -46903,6 +47113,7 @@ var require_dist_cjs71 = __commonJS({
         [_xacs_]: input[_CSHAh],
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO],
+        [_im]: input[_IM],
         [_inm]: input[_INM],
         [_xasseca]: input[_SSECA],
         [_xasseck]: input[_SSECK],
@@ -47258,7 +47469,10 @@ var require_dist_cjs71 = __commonJS({
         [_xam]: input[_MFA],
         [_xarp]: input[_RP],
         [_xabgr]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_BGR]), () => input[_BGR].toString()],
-        [_xaebo]: input[_EBO]
+        [_xaebo]: input[_EBO],
+        [_im]: input[_IM],
+        [_xaimlmt]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMLMT]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMLMT]).toString()],
+        [_xaims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMS]), () => input[_IMS].toString()]
       });
       b.bp("/{Key+}");
       b.p("Bucket", () => input.Bucket, "{Bucket}", false);
@@ -47618,7 +47832,7 @@ var require_dist_cjs71 = __commonJS({
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_im]: input[_IM],
-        [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMS]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMS]).toString()],
+        [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMSf]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMSf]).toString()],
         [_inm]: input[_INM],
         [_ius]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IUS]), () => (0, import_smithy_client4.dateToUtcString)(input[_IUS]).toString()],
         [_ra]: input[_R],
@@ -47797,7 +48011,7 @@ var require_dist_cjs71 = __commonJS({
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_im]: input[_IM],
-        [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMS]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMS]).toString()],
+        [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMSf]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMSf]).toString()],
         [_inm]: input[_INM],
         [_ius]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IUS]), () => (0, import_smithy_client4.dateToUtcString)(input[_IUS]).toString()],
         [_ra]: input[_R],
@@ -48472,11 +48686,13 @@ var require_dist_cjs71 = __commonJS({
         [_xacs]: input[_CSHA],
         [_xacs_]: input[_CSHAh],
         [_e]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_E]), () => (0, import_smithy_client4.dateToUtcString)(input[_E]).toString()],
+        [_im]: input[_IM],
         [_inm]: input[_INM],
         [_xagfc]: input[_GFC],
         [_xagr]: input[_GR],
         [_xagra]: input[_GRACP],
         [_xagwa]: input[_GWACP],
+        [_xawob]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_WOB]), () => input[_WOB].toString()],
         [_xasse]: input[_SSE],
         [_xasc]: input[_SC],
         [_xawrl]: input[_WRL],
@@ -50323,6 +50539,7 @@ var require_dist_cjs71 = __commonJS({
         [_SSEKMSKI]: [, output.headers[_xasseakki]],
         [_SSEKMSEC]: [, output.headers[_xassec]],
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])],
+        [_Si]: [() => void 0 !== output.headers[_xaos], () => (0, import_smithy_client4.strictParseLong)(output.headers[_xaos])],
         [_RC]: [, output.headers[_xarc]]
       });
       await (0, import_smithy_client4.collectBody)(output.body, context3);
@@ -50496,6 +50713,18 @@ var require_dist_cjs71 = __commonJS({
         case "NotFound":
         case "com.amazonaws.s3#NotFound":
           throw await de_NotFoundRes(parsedOutput, context3);
+        case "EncryptionTypeMismatch":
+        case "com.amazonaws.s3#EncryptionTypeMismatch":
+          throw await de_EncryptionTypeMismatchRes(parsedOutput, context3);
+        case "InvalidRequest":
+        case "com.amazonaws.s3#InvalidRequest":
+          throw await de_InvalidRequestRes(parsedOutput, context3);
+        case "InvalidWriteOffset":
+        case "com.amazonaws.s3#InvalidWriteOffset":
+          throw await de_InvalidWriteOffsetRes(parsedOutput, context3);
+        case "TooManyParts":
+        case "com.amazonaws.s3#TooManyParts":
+          throw await de_TooManyPartsRes(parsedOutput, context3);
         case "ObjectAlreadyInActiveTierError":
         case "com.amazonaws.s3#ObjectAlreadyInActiveTierError":
           throw await de_ObjectAlreadyInActiveTierErrorRes(parsedOutput, context3);
@@ -50527,6 +50756,15 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_BucketAlreadyOwnedByYouRes");
+    var de_EncryptionTypeMismatchRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+      const contents = (0, import_smithy_client4.map)({});
+      const data = parsedOutput.body;
+      const exception2 = new EncryptionTypeMismatch({
+        $metadata: deserializeMetadata(parsedOutput),
+        ...contents
+      });
+      return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
+    }, "de_EncryptionTypeMismatchRes");
     var de_InvalidObjectStateRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
@@ -50542,6 +50780,24 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidObjectStateRes");
+    var de_InvalidRequestRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+      const contents = (0, import_smithy_client4.map)({});
+      const data = parsedOutput.body;
+      const exception2 = new InvalidRequest({
+        $metadata: deserializeMetadata(parsedOutput),
+        ...contents
+      });
+      return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
+    }, "de_InvalidRequestRes");
+    var de_InvalidWriteOffsetRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+      const contents = (0, import_smithy_client4.map)({});
+      const data = parsedOutput.body;
+      const exception2 = new InvalidWriteOffset({
+        $metadata: deserializeMetadata(parsedOutput),
+        ...contents
+      });
+      return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
+    }, "de_InvalidWriteOffsetRes");
     var de_NoSuchBucketRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
@@ -50596,6 +50852,15 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_ObjectNotInActiveTierErrorRes");
+    var de_TooManyPartsRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+      const contents = (0, import_smithy_client4.map)({});
+      const data = parsedOutput.body;
+      const exception2 = new TooManyParts({
+        $metadata: deserializeMetadata(parsedOutput),
+        ...contents
+      });
+      return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
+    }, "de_TooManyPartsRes");
     var de_SelectObjectContentEventStream = /* @__PURE__ */ __name((output, context3) => {
       return context3.eventStreamMarshaller.deserialize(output, async (event) => {
         if (event["Records"] != null) {
@@ -51397,6 +51662,13 @@ var require_dist_cjs71 = __commonJS({
       }
       if (input[_VI] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OVI, input[_VI]).n(_VI));
+      }
+      bn.cc(input, _ETa);
+      if (input[_LMT] != null) {
+        bn.c(import_xml_builder.XmlNode.of(_LMT, (0, import_smithy_client4.dateToUtcString)(input[_LMT]).toString()).n(_LMT));
+      }
+      if (input[_Si] != null) {
+        bn.c(import_xml_builder.XmlNode.of(_Si, String(input[_Si])).n(_Si));
       }
       return bn;
     }, "se_ObjectIdentifier");
@@ -53635,7 +53907,10 @@ var require_dist_cjs71 = __commonJS({
     var _IIOV = "InventoryIncludedObjectVersions";
     var _IL = "IsLatest";
     var _IM = "IfMatch";
-    var _IMS = "IfModifiedSince";
+    var _IMIT = "IfMatchInitiatedTime";
+    var _IMLMT = "IfMatchLastModifiedTime";
+    var _IMS = "IfMatchSize";
+    var _IMSf = "IfModifiedSince";
     var _INM = "IfNoneMatch";
     var _IOF = "InventoryOptionalField";
     var _IOV = "IncludedObjectVersions";
@@ -53678,6 +53953,7 @@ var require_dist_cjs71 = __commonJS({
     var _LFCa = "LambdaFunctionConfiguration";
     var _LI = "LocationInfo";
     var _LM = "LastModified";
+    var _LMT = "LastModifiedTime";
     var _LNAS = "LocationNameAsString";
     var _LP = "LocationPrefix";
     var _LR = "LifecycleRule";
@@ -53904,6 +54180,7 @@ var require_dist_cjs71 = __commonJS({
     var _Va = "Value";
     var _Ve = "Versions";
     var _WC = "WebsiteConfiguration";
+    var _WOB = "WriteOffsetBytes";
     var _WRL = "WebsiteRedirectLocation";
     var _Y = "Years";
     var _a = "analytics";
@@ -54060,6 +54337,9 @@ var require_dist_cjs71 = __commonJS({
     var _xagra = "x-amz-grant-read-acp";
     var _xagw = "x-amz-grant-write";
     var _xagwa = "x-amz-grant-write-acp";
+    var _xaimit = "x-amz-if-match-initiated-time";
+    var _xaimlmt = "x-amz-if-match-last-modified-time";
+    var _xaims = "x-amz-if-match-size";
     var _xam = "x-amz-mfa";
     var _xamd = "x-amz-metadata-directive";
     var _xamm = "x-amz-missing-meta";
@@ -54071,6 +54351,7 @@ var require_dist_cjs71 = __commonJS({
     var _xaolrud = "x-amz-object-lock-retain-until-date";
     var _xaoo = "x-amz-object-ownership";
     var _xaooa = "x-amz-optional-object-attributes";
+    var _xaos = "x-amz-object-size";
     var _xapnm = "x-amz-part-number-marker";
     var _xar = "x-amz-restore";
     var _xarc = "x-amz-request-charged";
@@ -54095,6 +54376,7 @@ var require_dist_cjs71 = __commonJS({
     var _xatd = "x-amz-tagging-directive";
     var _xatdmos = "x-amz-transition-default-minimum-object-size";
     var _xavi = "x-amz-version-id";
+    var _xawob = "x-amz-write-offset-bytes";
     var _xawrl = "x-amz-website-redirect-location";
     var _xi = "x-id";
     var _CreateSessionCommand = class _CreateSessionCommand extends import_smithy_client4.Command.classBuilder().ep({
@@ -54493,8 +54775,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s39.getThrow200ExceptionsPlugin)(config)
@@ -54870,7 +55152,6 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestChecksumRequired: false,
           requestValidationModeMember: "ChecksumMode",
           responseAlgorithms: ["CRC32", "CRC32C", "SHA256", "SHA1"]
@@ -55165,8 +55446,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         })
       ];
@@ -55183,8 +55464,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55214,8 +55495,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55232,8 +55513,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55277,8 +55558,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s352.getThrow200ExceptionsPlugin)(config)
@@ -55296,8 +55577,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55340,7 +55621,6 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestChecksumRequired: true
         })
       ];
@@ -55357,8 +55637,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55375,8 +55655,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55393,8 +55673,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55411,8 +55691,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55429,8 +55709,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55447,8 +55727,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55466,8 +55746,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s353.getThrow200ExceptionsPlugin)(config)
@@ -55486,8 +55766,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
         (0, import_middleware_sdk_s354.getCheckContentLengthHeaderPlugin)(config),
@@ -55507,8 +55787,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s355.getThrow200ExceptionsPlugin)(config)
@@ -55526,8 +55806,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s356.getThrow200ExceptionsPlugin)(config)
@@ -55545,8 +55825,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s357.getThrow200ExceptionsPlugin)(config)
@@ -55564,8 +55844,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s358.getThrow200ExceptionsPlugin)(config)
@@ -55583,8 +55863,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
@@ -55601,8 +55881,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
         (0, import_middleware_sdk_s359.getThrow200ExceptionsPlugin)(config)
@@ -55643,8 +55923,8 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          input: this.input,
           requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
         (0, import_middleware_sdk_s361.getThrow200ExceptionsPlugin)(config),
@@ -55996,7 +56276,7 @@ var require_package5 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-cognito-identity",
       description: "AWS SDK for JavaScript Cognito Identity Client for Node.js, Browser and React Native",
-      version: "3.682.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-cognito-identity",
@@ -56007,8 +56287,8 @@ var require_package5 = __commonJS({
         clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo cognito-identity",
-        "test:e2e": "vitest run -c vitest.config.e2e.ts",
-        "test:e2e:watch": "vitest watch -c vitest.config.e2e.ts"
+        "test:e2e": "yarn g:vitest run -c vitest.config.e2e.ts --mode development",
+        "test:e2e:watch": "yarn g:vitest watch -c vitest.config.e2e.ts"
       },
       main: "./dist-cjs/index.js",
       types: "./dist-types/index.d.ts",
@@ -56017,51 +56297,50 @@ var require_package5 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.682.0",
-        "@aws-sdk/client-sts": "3.682.0",
-        "@aws-sdk/core": "3.679.0",
-        "@aws-sdk/credential-provider-node": "3.682.0",
-        "@aws-sdk/middleware-host-header": "3.679.0",
-        "@aws-sdk/middleware-logger": "3.679.0",
-        "@aws-sdk/middleware-recursion-detection": "3.679.0",
-        "@aws-sdk/middleware-user-agent": "3.682.0",
-        "@aws-sdk/region-config-resolver": "3.679.0",
-        "@aws-sdk/types": "3.679.0",
-        "@aws-sdk/util-endpoints": "3.679.0",
-        "@aws-sdk/util-user-agent-browser": "3.679.0",
-        "@aws-sdk/util-user-agent-node": "3.682.0",
-        "@smithy/config-resolver": "^3.0.9",
-        "@smithy/core": "^2.4.8",
-        "@smithy/fetch-http-handler": "^3.2.9",
-        "@smithy/hash-node": "^3.0.7",
-        "@smithy/invalid-dependency": "^3.0.7",
-        "@smithy/middleware-content-length": "^3.0.9",
-        "@smithy/middleware-endpoint": "^3.1.4",
-        "@smithy/middleware-retry": "^3.0.23",
-        "@smithy/middleware-serde": "^3.0.7",
-        "@smithy/middleware-stack": "^3.0.7",
-        "@smithy/node-config-provider": "^3.1.8",
-        "@smithy/node-http-handler": "^3.2.4",
-        "@smithy/protocol-http": "^4.1.4",
-        "@smithy/smithy-client": "^3.4.0",
-        "@smithy/types": "^3.5.0",
-        "@smithy/url-parser": "^3.0.7",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/client-sts": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
         "@smithy/util-base64": "^3.0.0",
         "@smithy/util-body-length-browser": "^3.0.0",
         "@smithy/util-body-length-node": "^3.0.0",
-        "@smithy/util-defaults-mode-browser": "^3.0.23",
-        "@smithy/util-defaults-mode-node": "^3.0.23",
-        "@smithy/util-endpoints": "^2.1.3",
-        "@smithy/util-middleware": "^3.0.7",
-        "@smithy/util-retry": "^3.0.7",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
         "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/client-iam": "3.682.0",
+        "@aws-sdk/client-iam": "3.699.0",
         "@tsconfig/node16": "16.1.3",
         "@types/chai": "^4.2.11",
-        "@types/mocha": "^8.0.4",
         "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
