@@ -142,21 +142,27 @@ export const main = async (options: Options): Promise<void> => {
 		throw err;
 	}
 
-	try {
-		const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
-		if (pullRequestNumber) {
-			core.info(`Commenting on PR ${pullRequestNumber}`);
-			await commentOnPullRequest(pullRequestNumber, pullRequestComment);
-		} else {
-			core.info(
-				`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
+	if (pullRequestComment.commentingEnabled) {
+		try {
+			const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+			if (pullRequestNumber) {
+				core.info(`Commenting on PR ${pullRequestNumber}`);
+				await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+			} else {
+				core.info(
+					`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
+				);
+			}
+		} catch (err) {
+			core.error(
+				'Error commenting on PR. Do you have the correct permissions?',
 			);
-		}
-	} catch (err) {
-		core.error('Error commenting on PR. Do you have the correct permissions?');
 
-		// throw to fail the action
-		throw err;
+			// throw to fail the action
+			throw err;
+		}
+	} else {
+		core.info('commentingEnabled is `false`, skipping comment');
 	}
 };
 

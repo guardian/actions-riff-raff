@@ -38,6 +38,10 @@ inputs:
     required: false
     description: When commenting on a pull request, which stage should be used. Typically a pre-production stage.
     default: CODE
+  commentingEnabled:
+    required: false
+    description: Whether to comment on the pull request with Riff-Raff deployment links. See also `commentingStage`.
+    default: 'true'
 runs:
   using: node20
   main: "dist/index.js"
