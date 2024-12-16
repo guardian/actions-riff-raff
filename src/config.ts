@@ -147,6 +147,7 @@ export interface PullRequestCommentConfig {
 	buildNumber: string;
 	commentingStage: string;
 	githubToken: string;
+	commentingEnabled: boolean;
 }
 
 export interface Configuration {
@@ -203,6 +204,8 @@ export function getConfiguration(): Configuration {
 
 	const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
 	const commentingStage = getInput('commentingStage') ?? 'CODE';
+	const commentingEnabled: boolean =
+		(getInput('commentingEnabled') ?? 'true') === 'true';
 
 	return {
 		projectName,
@@ -220,6 +223,7 @@ export function getConfiguration(): Configuration {
 			buildNumber,
 			commentingStage,
 			githubToken: githubToken(),
+			commentingEnabled,
 		},
 	};
 }

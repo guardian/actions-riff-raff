@@ -137,6 +137,12 @@ _Default: CODE_
 
 When commenting on a pull request, which stage should be used. Typically a pre-production stage.
 
+### `commentingEnabled`
+_Default: true_
+
+Whether to comment on the pull request with Riff-Raff deployment links. See also `commentingStage`.
+
+
 ## Detailed example
 To illustrate, given the following file structure:
 

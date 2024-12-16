@@ -61180,6 +61180,7 @@ function getConfiguration() {
   const baseBuildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
   const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
   const commentingStage = getInput2("commentingStage") ?? "CODE";
+  const commentingEnabled = (getInput2("commentingEnabled") ?? "true") === "true";
   return {
     projectName,
     roleArn,
@@ -61195,7 +61196,8 @@ function getConfiguration() {
       projectName,
       buildNumber,
       commentingStage,
-      githubToken: githubToken()
+      githubToken: githubToken(),
+      commentingEnabled
     }
   };
 }
@@ -61450,19 +61452,25 @@ var main = async (options) => {
     );
     throw err;
   }
-  try {
-    const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
-    if (pullRequestNumber) {
-      core4.info(`Commenting on PR ${pullRequestNumber}`);
-      await commentOnPullRequest(pullRequestNumber, pullRequestComment);
-    } else {
-      core4.info(
-        `Unable to calculate Pull Request number, so cannot add a comment. Event is ${import_github2.context.eventName}`
+  if (pullRequestComment.commentingEnabled) {
+    try {
+      const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+      if (pullRequestNumber) {
+        core4.info(`Commenting on PR ${pullRequestNumber}`);
+        await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+      } else {
+        core4.info(
+          `Unable to calculate Pull Request number, so cannot add a comment. Event is ${import_github2.context.eventName}`
+        );
+      }
+    } catch (err) {
+      core4.error(
+        "Error commenting on PR. Do you have the correct permissions?"
       );
+      throw err;
     }
-  } catch (err) {
-    core4.error("Error commenting on PR. Do you have the correct permissions?");
-    throw err;
+  } else {
+    core4.info("commentingEnabled is `false`, skipping comment");
   }
 };
 if (require.main === module) {
