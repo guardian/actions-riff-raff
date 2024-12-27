@@ -23,7 +23,7 @@
     "@actions/github": "^6.0.0",
     "@aws-sdk/client-s3": "^3.717.0",
     "@aws-sdk/credential-providers": "^3.716.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.24.2",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
