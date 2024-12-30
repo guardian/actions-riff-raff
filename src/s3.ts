@@ -1,37 +1,37 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import type { S3Client } from '@aws-sdk/client-s3';
+import type { PutObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { walk } from './file';
 
-export interface Store {
-	put: (data: Buffer, bucket: string, key: string) => Promise<void>;
-}
-
-export class S3Store implements Store {
+export class S3Store {
 	client: S3Client;
 
 	constructor(client: S3Client) {
 		this.client = client;
 	}
 
-	async put(data: Buffer, bucket: string, key: string): Promise<void> {
+	async put(
+		data: Buffer,
+		bucket: string,
+		key: string,
+	): Promise<PutObjectCommandOutput> {
 		const cmd = new PutObjectCommand({
 			Body: data,
 			Key: key,
 			Bucket: bucket,
 		});
 
-		await this.client.send(cmd);
+		return this.client.send(cmd);
 	}
 }
 
 export const sync = async (
-	store: Store,
+	store: S3Store,
 	dir: string,
 	bucket: string,
 	keyPrefix: string,
-): Promise<void> => {
+) => {
 	const responses = walk(dir, (filePath: string) => {
 		const data = fs.readFileSync(filePath);
 		const key = keyPrefix + filePath.substring(dir.length);
@@ -40,5 +40,10 @@ export const sync = async (
 		return store.put(data, bucket, key);
 	});
 
-	await Promise.all(responses);
+	const res = await Promise.allSettled(responses);
+
+	const errors = res.filter((r) => r.status === 'rejected');
+	console.log(errors);
+
+	return res.filter((r) => r.status === 'fulfilled');
 };

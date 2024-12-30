@@ -61635,7 +61635,7 @@ var S3Store = class {
       Key: key,
       Bucket: bucket
     });
-    await this.client.send(cmd);
+    return this.client.send(cmd);
   }
 };
 var sync = async (store, dir, bucket, keyPrefix) => {
@@ -61645,7 +61645,10 @@ var sync = async (store, dir, bucket, keyPrefix) => {
     core3.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);
   });
-  await Promise.all(responses);
+  const res = await Promise.allSettled(responses);
+  const errors = res.filter((r) => r.status === "rejected");
+  console.log(errors);
+  return res.filter((r) => r.status === "fulfilled");
 };
 
 // src/index.ts
