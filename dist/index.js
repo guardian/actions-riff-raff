@@ -61724,7 +61724,11 @@ var main = async (options) => {
       credentials: (0, import_credential_providers.fromWebToken)({
         roleArn,
         webIdentityToken: idToken
-      })
+      }),
+      requestHandler: {
+        requestTimeout: 5 * 1e3
+        // 5 seconds
+      }
     })
   );
   const keyPrefix = riffraffPrefix(mfest);

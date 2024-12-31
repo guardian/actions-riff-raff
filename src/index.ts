@@ -115,6 +115,9 @@ export const main = async (options: Options): Promise<void> => {
 				roleArn: roleArn,
 				webIdentityToken: idToken,
 			}),
+			requestHandler: {
+				requestTimeout: 5 * 1000, // 5 seconds
+			},
 		}),
 	);
 	const keyPrefix = riffraffPrefix(mfest);
