@@ -23817,8 +23817,8 @@ var require_dist_cjs = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AlgorithmId: () => AlgorithmId,
       EndpointURLScheme: () => EndpointURLScheme,
       FieldPosition: () => FieldPosition,
@@ -23830,7 +23830,7 @@ var require_dist_cjs = __commonJS({
       getDefaultClientConfiguration: () => getDefaultClientConfiguration,
       resolveDefaultRuntimeConfig: () => resolveDefaultRuntimeConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var HttpAuthLocation = /* @__PURE__ */ ((HttpAuthLocation2) => {
       HttpAuthLocation2["HEADER"] = "header";
       HttpAuthLocation2["QUERY"] = "query";
@@ -23937,8 +23937,8 @@ var require_dist_cjs2 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       Field: () => Field,
       Fields: () => Fields,
       HttpRequest: () => HttpRequest7,
@@ -23948,7 +23948,7 @@ var require_dist_cjs2 = __commonJS({
       isValidHostname: () => isValidHostname,
       resolveHttpHandlerRuntimeConfig: () => resolveHttpHandlerRuntimeConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var getHttpHandlerExtensionConfiguration = /* @__PURE__ */ __name((runtimeConfig) => {
       let httpHandler = runtimeConfig.httpHandler;
       return {
@@ -24176,13 +24176,13 @@ var require_dist_cjs3 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       addExpectContinueMiddleware: () => addExpectContinueMiddleware,
       addExpectContinueMiddlewareOptions: () => addExpectContinueMiddlewareOptions,
       getAddExpectContinuePlugin: () => getAddExpectContinuePlugin
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     function addExpectContinueMiddleware(options) {
       return (next) => async (args) => {
@@ -24469,12 +24469,12 @@ var require_dist_cjs4 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       getSmithyContext: () => getSmithyContext4,
       normalizeProvider: () => normalizeProvider2
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_types5 = require_dist_cjs();
     var getSmithyContext4 = /* @__PURE__ */ __name((context3) => context3[import_types5.SMITHY_CONTEXT_KEY] || (context3[import_types5.SMITHY_CONTEXT_KEY] = {}), "getSmithyContext");
     var normalizeProvider2 = /* @__PURE__ */ __name((input) => {
@@ -24578,15 +24578,15 @@ var require_dist_cjs5 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       deserializerMiddleware: () => deserializerMiddleware,
       deserializerMiddlewareOption: () => deserializerMiddlewareOption,
       getSerdePlugin: () => getSerdePlugin,
       serializerMiddleware: () => serializerMiddleware,
       serializerMiddlewareOption: () => serializerMiddlewareOption2
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var deserializerMiddleware = /* @__PURE__ */ __name((options, deserializer) => (next) => async (args) => {
       const { response } = await next(args);
       try {
@@ -24821,11 +24821,11 @@ var require_dist_cjs6 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       isArrayBuffer: () => isArrayBuffer
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var isArrayBuffer = /* @__PURE__ */ __name((arg) => typeof ArrayBuffer === "function" && arg instanceof ArrayBuffer || Object.prototype.toString.call(arg) === "[object ArrayBuffer]", "isArrayBuffer");
   }
 });
@@ -24851,12 +24851,12 @@ var require_dist_cjs7 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromArrayBuffer: () => fromArrayBuffer,
       fromString: () => fromString
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_is_array_buffer = require_dist_cjs6();
     var import_buffer = require("buffer");
     var fromArrayBuffer = /* @__PURE__ */ __name((input, offset = 0, length = input.byteLength - offset) => {
@@ -24917,13 +24917,13 @@ var require_dist_cjs8 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromUtf8: () => fromUtf8,
       toUint8Array: () => toUint8Array,
       toUtf8: () => toUtf8
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_buffer_from = require_dist_cjs7();
     var fromUtf8 = /* @__PURE__ */ __name((input) => {
       const buf = (0, import_util_buffer_from.fromString)(input, "utf8");
@@ -24991,10 +24991,10 @@ var require_dist_cjs9 = __commonJS({
     };
     var __reExport = (target, mod, secondTarget) => (__copyProps2(target, mod, "default"), secondTarget && __copyProps2(secondTarget, mod, "default"));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    module2.exports = __toCommonJS2(src_exports2);
-    __reExport(src_exports2, require_fromBase64(), module2.exports);
-    __reExport(src_exports2, require_toBase64(), module2.exports);
+    var src_exports = {};
+    module2.exports = __toCommonJS2(src_exports);
+    __reExport(src_exports, require_fromBase64(), module2.exports);
+    __reExport(src_exports, require_toBase64(), module2.exports);
   }
 });
 
@@ -25057,12 +25057,12 @@ var require_dist_cjs10 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       escapeUri: () => escapeUri,
       escapeUriPath: () => escapeUriPath
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var escapeUri = /* @__PURE__ */ __name((uri) => (
       // AWS percent-encodes some extra non-standard characters in a URI
       encodeURIComponent(uri).replace(/[!'()*]/g, hexEncode)
@@ -25093,11 +25093,11 @@ var require_dist_cjs11 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       buildQueryString: () => buildQueryString
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_uri_escape = require_dist_cjs10();
     function buildQueryString(query) {
       const parts = [];
@@ -25153,14 +25153,14 @@ var require_dist_cjs12 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       DEFAULT_REQUEST_TIMEOUT: () => DEFAULT_REQUEST_TIMEOUT,
       NodeHttp2Handler: () => NodeHttp2Handler,
       NodeHttpHandler: () => NodeHttpHandler,
       streamCollector: () => streamCollector
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var import_querystring_builder = require_dist_cjs11();
     var import_http = require("http");
@@ -25897,13 +25897,13 @@ var require_dist_cjs13 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       FetchHttpHandler: () => FetchHttpHandler,
       keepAliveSupport: () => keepAliveSupport,
       streamCollector: () => streamCollector
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var import_querystring_builder = require_dist_cjs11();
     function createRequest(url, requestOptions) {
@@ -26120,12 +26120,12 @@ var require_dist_cjs14 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromHex: () => fromHex,
       toHex: () => toHex
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var SHORT_TO_HEX = {};
     var HEX_TO_SHORT = {};
     for (let i = 0; i < 256; i++) {
@@ -26594,11 +26594,11 @@ var require_dist_cjs15 = __commonJS({
     };
     var __reExport = (target, mod, secondTarget) => (__copyProps2(target, mod, "default"), secondTarget && __copyProps2(secondTarget, mod, "default"));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       Uint8ArrayBlobAdapter: () => Uint8ArrayBlobAdapter2
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_base64 = require_dist_cjs9();
     var import_util_utf8 = require_dist_cjs8();
     function transformToString(payload, encoding = "utf-8") {
@@ -26646,13 +26646,13 @@ var require_dist_cjs15 = __commonJS({
     };
     __name(_Uint8ArrayBlobAdapter, "Uint8ArrayBlobAdapter");
     var Uint8ArrayBlobAdapter2 = _Uint8ArrayBlobAdapter;
-    __reExport(src_exports2, require_getAwsChunkedEncodingStream(), module2.exports);
-    __reExport(src_exports2, require_sdk_stream_mixin(), module2.exports);
-    __reExport(src_exports2, require_splitStream(), module2.exports);
-    __reExport(src_exports2, require_headStream(), module2.exports);
-    __reExport(src_exports2, require_stream_type_check(), module2.exports);
-    __reExport(src_exports2, require_createChecksumStream(), module2.exports);
-    __reExport(src_exports2, require_ChecksumStream(), module2.exports);
+    __reExport(src_exports, require_getAwsChunkedEncodingStream(), module2.exports);
+    __reExport(src_exports, require_sdk_stream_mixin(), module2.exports);
+    __reExport(src_exports, require_splitStream(), module2.exports);
+    __reExport(src_exports, require_headStream(), module2.exports);
+    __reExport(src_exports, require_stream_type_check(), module2.exports);
+    __reExport(src_exports, require_createChecksumStream(), module2.exports);
+    __reExport(src_exports, require_ChecksumStream(), module2.exports);
   }
 });
 
@@ -27041,8 +27041,8 @@ var require_dist_cjs16 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       CredentialsProviderError: () => CredentialsProviderError,
       ProviderError: () => ProviderError2,
       TokenProviderError: () => TokenProviderError,
@@ -27050,7 +27050,7 @@ var require_dist_cjs16 = __commonJS({
       fromStatic: () => fromStatic,
       memoize: () => memoize
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var _ProviderError = class _ProviderError2 extends Error {
       constructor(message, options = true) {
         var _a;
@@ -27222,8 +27222,8 @@ var require_dist_cjs17 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       SignatureV4: () => SignatureV42,
       clearCredentialCache: () => clearCredentialCache,
       createScope: () => createScope,
@@ -27234,7 +27234,7 @@ var require_dist_cjs17 = __commonJS({
       moveHeadersToQuery: () => moveHeadersToQuery,
       prepareRequest: () => prepareRequest
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_middleware3 = require_dist_cjs4();
     var import_util_utf84 = require_dist_cjs8();
     var ALGORITHM_QUERY_PARAM = "X-Amz-Algorithm";
@@ -27942,11 +27942,11 @@ var require_dist_cjs18 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       constructStack: () => constructStack
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var getAllAliases = /* @__PURE__ */ __name((name, aliases) => {
       const _aliases = [];
       if (name) {
@@ -28259,8 +28259,8 @@ var require_dist_cjs19 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       Client: () => Client,
       Command: () => Command,
       LazyJsonString: () => LazyJsonString,
@@ -28324,7 +28324,7 @@ var require_dist_cjs19 = __commonJS({
       throwDefaultError: () => throwDefaultError,
       withBaseException: () => withBaseException
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_stack = require_dist_cjs18();
     var _Client = class _Client {
       constructor(config) {
@@ -31756,11 +31756,11 @@ var require_dist_cjs20 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       isArrayBuffer: () => isArrayBuffer
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var isArrayBuffer = /* @__PURE__ */ __name((arg) => typeof ArrayBuffer === "function" && arg instanceof ArrayBuffer || Object.prototype.toString.call(arg) === "[object ArrayBuffer]", "isArrayBuffer");
   }
 });
@@ -31786,12 +31786,12 @@ var require_dist_cjs21 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromArrayBuffer: () => fromArrayBuffer,
       fromString: () => fromString
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_is_array_buffer = require_dist_cjs20();
     var import_buffer = require("buffer");
     var fromArrayBuffer = /* @__PURE__ */ __name((input, offset = 0, length = input.byteLength - offset) => {
@@ -31830,13 +31830,13 @@ var require_dist_cjs22 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromUtf8: () => fromUtf8,
       toUint8Array: () => toUint8Array,
       toUtf8: () => toUtf8
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_buffer_from = require_dist_cjs21();
     var fromUtf8 = /* @__PURE__ */ __name((input) => {
       const buf = (0, import_util_buffer_from.fromString)(input, "utf8");
@@ -32734,8 +32734,8 @@ var require_dist_cjs23 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       CONFIG_REQUEST_CHECKSUM_CALCULATION: () => CONFIG_REQUEST_CHECKSUM_CALCULATION,
       CONFIG_RESPONSE_CHECKSUM_VALIDATION: () => CONFIG_RESPONSE_CHECKSUM_VALIDATION,
       ChecksumAlgorithm: () => ChecksumAlgorithm,
@@ -32755,7 +32755,7 @@ var require_dist_cjs23 = __commonJS({
       getFlexibleChecksumsPlugin: () => getFlexibleChecksumsPlugin,
       resolveFlexibleChecksumsConfig: () => resolveFlexibleChecksumsConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var RequestChecksumCalculation = {
       /**
        * When set, a checksum will be calculated for all request payloads of operations
@@ -33140,14 +33140,14 @@ var require_dist_cjs24 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       getHostHeaderPlugin: () => getHostHeaderPlugin,
       hostHeaderMiddleware: () => hostHeaderMiddleware,
       hostHeaderMiddlewareOptions: () => hostHeaderMiddlewareOptions,
       resolveHostHeaderConfig: () => resolveHostHeaderConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     function resolveHostHeaderConfig(input) {
       return input;
@@ -33206,13 +33206,13 @@ var require_dist_cjs25 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       getLoggerPlugin: () => getLoggerPlugin,
       loggerMiddleware: () => loggerMiddleware,
       loggerMiddlewareOptions: () => loggerMiddlewareOptions
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var loggerMiddleware = /* @__PURE__ */ __name(() => (next, context3) => async (args) => {
       var _a, _b;
       try {
@@ -33280,13 +33280,13 @@ var require_dist_cjs26 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       addRecursionDetectionMiddlewareOptions: () => addRecursionDetectionMiddlewareOptions,
       getRecursionDetectionPlugin: () => getRecursionDetectionPlugin,
       recursionDetectionMiddleware: () => recursionDetectionMiddleware
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var TRACE_ID_HEADER_NAME = "X-Amzn-Trace-Id";
     var ENV_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME";
@@ -33343,13 +33343,13 @@ var require_dist_cjs27 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       SelectorType: () => SelectorType,
       booleanSelector: () => booleanSelector,
       numberSelector: () => numberSelector
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var booleanSelector = /* @__PURE__ */ __name((obj, key, type2) => {
       if (!(key in obj))
         return void 0;
@@ -33398,13 +33398,13 @@ var require_dist_cjs28 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       build: () => build,
       parse: () => parse2,
       validate: () => validate2
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var validate2 = /* @__PURE__ */ __name((str2) => typeof str2 === "string" && str2.indexOf("arn:") === 0 && str2.split(":").length >= 6, "validate");
     var parse2 = /* @__PURE__ */ __name((arn) => {
       const segments = arn.split(":");
@@ -33459,8 +33459,8 @@ var require_dist_cjs29 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       NODE_DISABLE_S3_EXPRESS_SESSION_AUTH_OPTIONS: () => NODE_DISABLE_S3_EXPRESS_SESSION_AUTH_OPTIONS,
       S3ExpressIdentityCache: () => S3ExpressIdentityCache,
       S3ExpressIdentityCacheEntry: () => S3ExpressIdentityCacheEntry,
@@ -33491,7 +33491,7 @@ var require_dist_cjs29 = __commonJS({
       validateBucketNameMiddleware: () => validateBucketNameMiddleware,
       validateBucketNameMiddlewareOptions: () => validateBucketNameMiddlewareOptions
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var import_smithy_client4 = require_dist_cjs19();
     var CONTENT_LENGTH_HEADER = "content-length";
@@ -34077,8 +34077,8 @@ var require_dist_cjs30 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       EndpointCache: () => EndpointCache,
       EndpointError: () => EndpointError2,
       customEndpointFunctions: () => customEndpointFunctions,
@@ -34086,7 +34086,7 @@ var require_dist_cjs30 = __commonJS({
       isValidHostLabel: () => isValidHostLabel,
       resolveEndpoint: () => resolveEndpoint2
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var _EndpointCache = class _EndpointCache {
       /**
        * @param [size] - desired average maximum capacity. A buffer of 10 additional keys will be allowed
@@ -34553,8 +34553,8 @@ var require_dist_cjs31 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       ConditionObject: () => import_util_endpoints.ConditionObject,
       DeprecatedObject: () => import_util_endpoints.DeprecatedObject,
       EndpointError: () => import_util_endpoints.EndpointError,
@@ -34584,7 +34584,7 @@ var require_dist_cjs31 = __commonJS({
       setPartitionInfo: () => setPartitionInfo,
       useDefaultPartitionInfo: () => useDefaultPartitionInfo
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_endpoints = require_dist_cjs30();
     var isVirtualHostableS3Bucket = /* @__PURE__ */ __name((value, allowSubDomains = false) => {
       if (allowSubDomains) {
@@ -34922,15 +34922,15 @@ var require_dist_cjs32 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       DEFAULT_UA_APP_ID: () => DEFAULT_UA_APP_ID,
       getUserAgentMiddlewareOptions: () => getUserAgentMiddlewareOptions,
       getUserAgentPlugin: () => getUserAgentPlugin,
       resolveUserAgentConfig: () => resolveUserAgentConfig,
       userAgentMiddleware: () => userAgentMiddleware
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_core4 = (init_dist_es(), __toCommonJS(dist_es_exports));
     var DEFAULT_UA_APP_ID = void 0;
     function isValidUserAgentAppId(appId) {
@@ -35134,8 +35134,8 @@ var require_dist_cjs33 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       CONFIG_USE_DUALSTACK_ENDPOINT: () => CONFIG_USE_DUALSTACK_ENDPOINT,
       CONFIG_USE_FIPS_ENDPOINT: () => CONFIG_USE_FIPS_ENDPOINT,
       DEFAULT_USE_DUALSTACK_ENDPOINT: () => DEFAULT_USE_DUALSTACK_ENDPOINT,
@@ -35153,7 +35153,7 @@ var require_dist_cjs33 = __commonJS({
       resolveEndpointsConfig: () => resolveEndpointsConfig,
       resolveRegionConfig: () => resolveRegionConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_config_provider = require_dist_cjs27();
     var ENV_USE_DUALSTACK_ENDPOINT = "AWS_USE_DUALSTACK_ENDPOINT";
     var CONFIG_USE_DUALSTACK_ENDPOINT = "use_dualstack_endpoint";
@@ -35320,11 +35320,11 @@ var require_dist_cjs34 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       resolveEventStreamSerdeConfig: () => resolveEventStreamSerdeConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var resolveEventStreamSerdeConfig = /* @__PURE__ */ __name((input) => ({
       ...input,
       eventStreamMarshaller: input.eventStreamSerdeProvider(input)
@@ -35353,13 +35353,13 @@ var require_dist_cjs35 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       contentLengthMiddleware: () => contentLengthMiddleware,
       contentLengthMiddlewareOptions: () => contentLengthMiddlewareOptions,
       getContentLengthPlugin: () => getContentLengthPlugin
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var CONTENT_LENGTH_HEADER = "content-length";
     function contentLengthMiddleware(bodyLengthChecker) {
@@ -35772,8 +35772,8 @@ var require_dist_cjs36 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       isClockSkewCorrectedError: () => isClockSkewCorrectedError,
       isClockSkewError: () => isClockSkewError,
       isRetryableByTrait: () => isRetryableByTrait,
@@ -35781,7 +35781,7 @@ var require_dist_cjs36 = __commonJS({
       isThrottlingError: () => isThrottlingError,
       isTransientError: () => isTransientError
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var CLOCK_SKEW_ERROR_CODES = [
       "AuthFailure",
       "InvalidSignatureException",
@@ -35859,8 +35859,8 @@ var require_dist_cjs37 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AdaptiveRetryStrategy: () => AdaptiveRetryStrategy,
       ConfiguredRetryStrategy: () => ConfiguredRetryStrategy,
       DEFAULT_MAX_ATTEMPTS: () => DEFAULT_MAX_ATTEMPTS,
@@ -35878,7 +35878,7 @@ var require_dist_cjs37 = __commonJS({
       THROTTLING_RETRY_DELAY_BASE: () => THROTTLING_RETRY_DELAY_BASE,
       TIMEOUT_RETRY_COST: () => TIMEOUT_RETRY_COST
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var RETRY_MODES = /* @__PURE__ */ ((RETRY_MODES2) => {
       RETRY_MODES2["STANDARD"] = "standard";
       RETRY_MODES2["ADAPTIVE"] = "adaptive";
@@ -36186,8 +36186,8 @@ var require_dist_cjs38 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AdaptiveRetryStrategy: () => AdaptiveRetryStrategy,
       CONFIG_MAX_ATTEMPTS: () => CONFIG_MAX_ATTEMPTS,
       CONFIG_RETRY_MODE: () => CONFIG_RETRY_MODE,
@@ -36207,7 +36207,7 @@ var require_dist_cjs38 = __commonJS({
       retryMiddleware: () => retryMiddleware,
       retryMiddlewareOptions: () => retryMiddlewareOptions
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_protocol_http8 = require_dist_cjs2();
     var import_uuid = (init_esm_node(), __toCommonJS(esm_node_exports));
     var import_util_retry = require_dist_cjs37();
@@ -36560,12 +36560,12 @@ var require_dist_cjs39 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       SignatureV4MultiRegion: () => SignatureV4MultiRegion,
       signatureV4CrtContainer: () => signatureV4CrtContainer
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_sdk_s3 = require_dist_cjs29();
     var signatureV4CrtContainer = {
       CrtSignerV4: null
@@ -36744,8 +36744,8 @@ var require_dist_cjs40 = __commonJS({
     };
     var __reExport = (target, mod, secondTarget) => (__copyProps2(target, mod, "default"), secondTarget && __copyProps2(secondTarget, mod, "default"));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       CONFIG_PREFIX_SEPARATOR: () => CONFIG_PREFIX_SEPARATOR,
       DEFAULT_PROFILE: () => DEFAULT_PROFILE,
       ENV_PROFILE: () => ENV_PROFILE,
@@ -36754,13 +36754,13 @@ var require_dist_cjs40 = __commonJS({
       loadSsoSessionData: () => loadSsoSessionData,
       parseKnownFiles: () => parseKnownFiles
     });
-    module2.exports = __toCommonJS2(src_exports2);
-    __reExport(src_exports2, require_getHomeDir(), module2.exports);
+    module2.exports = __toCommonJS2(src_exports);
+    __reExport(src_exports, require_getHomeDir(), module2.exports);
     var ENV_PROFILE = "AWS_PROFILE";
     var DEFAULT_PROFILE = "default";
     var getProfileName = /* @__PURE__ */ __name((init) => init.profile || process.env[ENV_PROFILE] || DEFAULT_PROFILE, "getProfileName");
-    __reExport(src_exports2, require_getSSOTokenFilepath(), module2.exports);
-    __reExport(src_exports2, require_getSSOTokenFromFile(), module2.exports);
+    __reExport(src_exports, require_getSSOTokenFilepath(), module2.exports);
+    __reExport(src_exports, require_getSSOTokenFromFile(), module2.exports);
     var import_types5 = require_dist_cjs();
     var getConfigData = /* @__PURE__ */ __name((data) => Object.entries(data).filter(([key]) => {
       const indexOfSeparator = key.indexOf(CONFIG_PREFIX_SEPARATOR);
@@ -36908,11 +36908,11 @@ var require_dist_cjs41 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       loadConfig: () => loadConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_property_provider2 = require_dist_cjs16();
     function getSelectorName(functionString) {
       try {
@@ -37048,11 +37048,11 @@ var require_dist_cjs42 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       parseQueryString: () => parseQueryString
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     function parseQueryString(querystring) {
       const query = {};
       querystring = querystring.replace(/^\?/, "");
@@ -37099,11 +37099,11 @@ var require_dist_cjs43 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       parseUrl: () => parseUrl
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_querystring_parser = require_dist_cjs42();
     var parseUrl = /* @__PURE__ */ __name((url) => {
       if (typeof url === "string") {
@@ -37146,8 +37146,8 @@ var require_dist_cjs44 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       endpointMiddleware: () => endpointMiddleware,
       endpointMiddlewareOptions: () => endpointMiddlewareOptions,
       getEndpointFromInstructions: () => getEndpointFromInstructions,
@@ -37156,7 +37156,7 @@ var require_dist_cjs44 = __commonJS({
       resolveParams: () => resolveParams,
       toEndpointV1: () => toEndpointV1
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var resolveParamsForS3 = /* @__PURE__ */ __name(async (endpointParams) => {
       const bucket = (endpointParams == null ? void 0 : endpointParams.Bucket) || "";
       if (typeof endpointParams.Bucket === "string") {
@@ -37760,12 +37760,12 @@ var require_dist_cjs45 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       XmlNode: () => XmlNode,
       XmlText: () => XmlText
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     function escapeAttribute(value) {
       return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
@@ -38051,8 +38051,8 @@ var require_dist_cjs46 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       ENV_ACCOUNT_ID: () => ENV_ACCOUNT_ID,
       ENV_CREDENTIAL_SCOPE: () => ENV_CREDENTIAL_SCOPE,
       ENV_EXPIRATION: () => ENV_EXPIRATION,
@@ -38061,7 +38061,7 @@ var require_dist_cjs46 = __commonJS({
       ENV_SESSION: () => ENV_SESSION,
       fromEnv: () => fromEnv
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var import_property_provider2 = require_dist_cjs16();
     var ENV_KEY = "AWS_ACCESS_KEY_ID";
@@ -38117,8 +38117,8 @@ var require_dist_cjs47 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       DEFAULT_MAX_RETRIES: () => DEFAULT_MAX_RETRIES,
       DEFAULT_TIMEOUT: () => DEFAULT_TIMEOUT,
       ENV_CMDS_AUTH_TOKEN: () => ENV_CMDS_AUTH_TOKEN,
@@ -38131,7 +38131,7 @@ var require_dist_cjs47 = __commonJS({
       httpRequest: () => httpRequest,
       providerConfigFromInit: () => providerConfigFromInit
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_url = require("url");
     var import_property_provider2 = require_dist_cjs16();
     var import_buffer = require("buffer");
@@ -38894,8 +38894,8 @@ var require_dist_cjs49 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       NODE_APP_ID_CONFIG_OPTIONS: () => NODE_APP_ID_CONFIG_OPTIONS,
       UA_APP_ID_ENV_NAME: () => UA_APP_ID_ENV_NAME,
       UA_APP_ID_INI_NAME: () => UA_APP_ID_INI_NAME,
@@ -38903,7 +38903,7 @@ var require_dist_cjs49 = __commonJS({
       crtAvailability: () => crtAvailability,
       defaultUserAgent: () => defaultUserAgent
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_os = require("os");
     var import_process = require("process");
     var crtAvailability = {
@@ -38978,11 +38978,11 @@ var require_dist_cjs50 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       Hash: () => Hash
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_buffer_from = require_dist_cjs7();
     var import_util_utf8 = require_dist_cjs8();
     var import_buffer = require("buffer");
@@ -39042,11 +39042,11 @@ var require_dist_cjs51 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       calculateBodyLength: () => calculateBodyLength
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_fs = require("fs");
     var calculateBodyLength = /* @__PURE__ */ __name((body) => {
       if (!body) {
@@ -39206,11 +39206,11 @@ var require_dist_cjs52 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       resolveDefaultsModeConfig: () => resolveDefaultsModeConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_config_resolver = require_dist_cjs33();
     var import_node_config_provider = require_dist_cjs41();
     var import_property_provider2 = require_dist_cjs16();
@@ -39358,8 +39358,8 @@ var require_dist_cjs53 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       NODE_REGION_CONFIG_FILE_OPTIONS: () => NODE_REGION_CONFIG_FILE_OPTIONS,
       NODE_REGION_CONFIG_OPTIONS: () => NODE_REGION_CONFIG_OPTIONS,
       REGION_ENV_NAME: () => REGION_ENV_NAME,
@@ -39368,7 +39368,7 @@ var require_dist_cjs53 = __commonJS({
       resolveAwsRegionExtensionConfiguration: () => resolveAwsRegionExtensionConfiguration,
       resolveRegionConfig: () => resolveRegionConfig
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var getAwsRegionExtensionConfiguration = /* @__PURE__ */ __name((runtimeConfig) => {
       let runtimeConfigRegion = /* @__PURE__ */ __name(async () => {
         if (runtimeConfig.region === void 0) {
@@ -39456,8 +39456,8 @@ var require_dist_cjs54 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       GetRoleCredentialsCommand: () => GetRoleCredentialsCommand,
       GetRoleCredentialsRequestFilterSensitiveLog: () => GetRoleCredentialsRequestFilterSensitiveLog,
       GetRoleCredentialsResponseFilterSensitiveLog: () => GetRoleCredentialsResponseFilterSensitiveLog,
@@ -39479,7 +39479,7 @@ var require_dist_cjs54 = __commonJS({
       paginateListAccountRoles: () => paginateListAccountRoles,
       paginateListAccounts: () => paginateListAccounts
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_host_header = require_dist_cjs24();
     var import_middleware_logger = require_dist_cjs25();
     var import_middleware_recursion_detection = require_dist_cjs26();
@@ -40322,8 +40322,8 @@ var require_dist_cjs55 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AccessDeniedException: () => AccessDeniedException,
       AuthorizationPendingException: () => AuthorizationPendingException,
       CreateTokenCommand: () => CreateTokenCommand,
@@ -40353,7 +40353,7 @@ var require_dist_cjs55 = __commonJS({
       UnsupportedGrantTypeException: () => UnsupportedGrantTypeException,
       __Client: () => import_smithy_client4.Client
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_host_header = require_dist_cjs24();
     var import_middleware_logger = require_dist_cjs25();
     var import_middleware_recursion_detection = require_dist_cjs26();
@@ -41301,13 +41301,13 @@ var require_dist_cjs56 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromSso: () => fromSso,
       fromStatic: () => fromStatic,
       nodeProvider: () => nodeProvider
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var EXPIRE_WINDOW_MS = 5 * 60 * 1e3;
     var REFRESH_MESSAGE = `To refresh this SSO session run 'aws sso login' with the corresponding profile.`;
     var getSsoOidcClient = /* @__PURE__ */ __name(async (ssoRegion, init = {}) => {
@@ -41487,13 +41487,13 @@ var require_dist_cjs57 = __commonJS({
         import_client_sso = require_dist_cjs54();
       }
     });
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromSSO: () => fromSSO,
       isSsoProfile: () => isSsoProfile,
       validateSsoProfile: () => validateSsoProfile
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var isSsoProfile = /* @__PURE__ */ __name((arg) => arg && (typeof arg.sso_start_url === "string" || typeof arg.sso_account_id === "string" || typeof arg.sso_session === "string" || typeof arg.sso_region === "string" || typeof arg.sso_role_name === "string"), "isSsoProfile");
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var import_token_providers = require_dist_cjs56();
@@ -42226,8 +42226,8 @@ var require_dist_cjs58 = __commonJS({
     };
     var __reExport = (target, mod, secondTarget) => (__copyProps2(target, mod, "default"), secondTarget && __copyProps2(secondTarget, mod, "default"));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AssumeRoleCommand: () => AssumeRoleCommand,
       AssumeRoleResponseFilterSensitiveLog: () => AssumeRoleResponseFilterSensitiveLog,
       AssumeRoleWithSAMLCommand: () => AssumeRoleWithSAMLCommand,
@@ -42261,8 +42261,8 @@ var require_dist_cjs58 = __commonJS({
       getDefaultRoleAssumer: () => getDefaultRoleAssumer2,
       getDefaultRoleAssumerWithWebIdentity: () => getDefaultRoleAssumerWithWebIdentity2
     });
-    module2.exports = __toCommonJS2(src_exports2);
-    __reExport(src_exports2, require_STSClient(), module2.exports);
+    module2.exports = __toCommonJS2(src_exports);
+    __reExport(src_exports, require_STSClient(), module2.exports);
     var import_middleware_endpoint = require_dist_cjs44();
     var import_middleware_serde2 = require_dist_cjs5();
     var import_EndpointParameters = require_EndpointParameters();
@@ -43659,11 +43659,11 @@ var require_dist_cjs59 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromProcess: () => fromProcess
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_shared_ini_file_loader = require_dist_cjs40();
     var import_property_provider2 = require_dist_cjs16();
     var import_child_process = require("child_process");
@@ -43850,10 +43850,10 @@ var require_dist_cjs60 = __commonJS({
     };
     var __reExport = (target, mod, secondTarget) => (__copyProps2(target, mod, "default"), secondTarget && __copyProps2(secondTarget, mod, "default"));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    module2.exports = __toCommonJS2(src_exports2);
-    __reExport(src_exports2, require_fromTokenFile(), module2.exports);
-    __reExport(src_exports2, require_fromWebToken(), module2.exports);
+    var src_exports = {};
+    module2.exports = __toCommonJS2(src_exports);
+    __reExport(src_exports, require_fromTokenFile(), module2.exports);
+    __reExport(src_exports, require_fromWebToken(), module2.exports);
   }
 });
 
@@ -43889,11 +43889,11 @@ var require_dist_cjs61 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromIni: () => fromIni
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_shared_ini_file_loader = require_dist_cjs40();
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var import_property_provider2 = require_dist_cjs16();
@@ -44122,13 +44122,13 @@ var require_dist_cjs62 = __commonJS({
       mod
     ));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       credentialsTreatedAsExpired: () => credentialsTreatedAsExpired,
       credentialsWillNeedRefresh: () => credentialsWillNeedRefresh,
       defaultProvider: () => defaultProvider
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_credential_provider_env = require_dist_cjs46();
     var import_shared_ini_file_loader = require_dist_cjs40();
     var import_property_provider2 = require_dist_cjs16();
@@ -44255,8 +44255,8 @@ var require_dist_cjs63 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       NODE_DISABLE_MULTIREGION_ACCESS_POINT_CONFIG_OPTIONS: () => NODE_DISABLE_MULTIREGION_ACCESS_POINT_CONFIG_OPTIONS,
       NODE_DISABLE_MULTIREGION_ACCESS_POINT_ENV_NAME: () => NODE_DISABLE_MULTIREGION_ACCESS_POINT_ENV_NAME,
       NODE_DISABLE_MULTIREGION_ACCESS_POINT_INI_NAME: () => NODE_DISABLE_MULTIREGION_ACCESS_POINT_INI_NAME,
@@ -44278,7 +44278,7 @@ var require_dist_cjs63 = __commonJS({
       validatePartition: () => validatePartition,
       validateRegion: () => validateRegion
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_util_config_provider = require_dist_cjs27();
     var NODE_DISABLE_MULTIREGION_ACCESS_POINT_ENV_NAME = "AWS_S3_DISABLE_MULTIREGION_ACCESS_POINTS";
     var NODE_DISABLE_MULTIREGION_ACCESS_POINT_INI_NAME = "s3_disable_multiregion_access_points";
@@ -44719,8 +44719,8 @@ var require_dist_cjs64 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       EventStreamCodec: () => EventStreamCodec,
       HeaderMarshaller: () => HeaderMarshaller,
       Int64: () => Int64,
@@ -44729,7 +44729,7 @@ var require_dist_cjs64 = __commonJS({
       SmithyMessageDecoderStream: () => SmithyMessageDecoderStream,
       SmithyMessageEncoderStream: () => SmithyMessageEncoderStream
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_crc322 = require_main4();
     var import_util_hex_encoding = require_dist_cjs14();
     var _Int64 = class _Int642 {
@@ -45177,12 +45177,12 @@ var require_dist_cjs65 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       EventStreamMarshaller: () => EventStreamMarshaller,
       eventStreamSerdeProvider: () => eventStreamSerdeProvider
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_eventstream_codec = require_dist_cjs64();
     function getChunkedStream(source) {
       let currentMessageTotalLength = 0;
@@ -45346,12 +45346,12 @@ var require_dist_cjs66 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       EventStreamMarshaller: () => EventStreamMarshaller,
       eventStreamSerdeProvider: () => eventStreamSerdeProvider
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_eventstream_serde_universal = require_dist_cjs65();
     var import_stream = require("stream");
     async function* readabletoIterable(readStream) {
@@ -45423,12 +45423,12 @@ var require_dist_cjs67 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fileStreamHasher: () => fileStreamHasher,
       readableStreamHasher: () => readableStreamHasher
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_fs = require("fs");
     var import_util_utf8 = require_dist_cjs8();
     var import_stream = require("stream");
@@ -45633,14 +45633,14 @@ var require_dist_cjs68 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       getSsecPlugin: () => getSsecPlugin,
       isValidBase64EncodedSSECustomerKey: () => isValidBase64EncodedSSECustomerKey,
       ssecMiddleware: () => ssecMiddleware,
       ssecMiddlewareOptions: () => ssecMiddlewareOptions
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     function ssecMiddleware(options) {
       return (next) => async (args) => {
         const input = { ...args.input };
@@ -45729,13 +45729,13 @@ var require_dist_cjs69 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       getLocationConstraintPlugin: () => getLocationConstraintPlugin,
       locationConstraintMiddleware: () => locationConstraintMiddleware,
       locationConstraintMiddlewareOptions: () => locationConstraintMiddlewareOptions
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     function locationConstraintMiddleware(options) {
       return (next) => async (args) => {
         const { CreateBucketConfiguration } = args.input;
@@ -45788,14 +45788,14 @@ var require_dist_cjs70 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       WaiterState: () => WaiterState,
       checkExceptions: () => checkExceptions,
       createWaiter: () => createWaiter,
       waiterServiceDefaults: () => waiterServiceDefaults
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var sleep = /* @__PURE__ */ __name((seconds) => {
       return new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
     }, "sleep");
@@ -45943,8 +45943,8 @@ var require_dist_cjs71 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AbortMultipartUploadCommand: () => AbortMultipartUploadCommand,
       AnalyticsFilter: () => AnalyticsFilter,
       AnalyticsS3ExportFileFormat: () => AnalyticsS3ExportFileFormat,
@@ -46182,7 +46182,7 @@ var require_dist_cjs71 = __commonJS({
       waitUntilObjectExists: () => waitUntilObjectExists,
       waitUntilObjectNotExists: () => waitUntilObjectNotExists
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_expect_continue = require_dist_cjs3();
     var import_middleware_flexible_checksums = require_dist_cjs23();
     var import_middleware_host_header = require_dist_cjs24();
@@ -56560,8 +56560,8 @@ var require_dist_cjs72 = __commonJS({
       return to;
     };
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       AmbiguousRoleResolutionType: () => AmbiguousRoleResolutionType,
       CognitoIdentity: () => CognitoIdentity,
       CognitoIdentityClient: () => CognitoIdentityClient,
@@ -56615,7 +56615,7 @@ var require_dist_cjs72 = __commonJS({
       __Client: () => import_smithy_client4.Client,
       paginateListIdentityPools: () => paginateListIdentityPools
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_middleware_host_header = require_dist_cjs24();
     var import_middleware_logger = require_dist_cjs25();
     var import_middleware_recursion_detection = require_dist_cjs26();
@@ -57914,12 +57914,12 @@ var require_dist_cjs73 = __commonJS({
         import_client_cognito_identity = require_dist_cjs72();
       }
     });
-    var src_exports2 = {};
-    __export2(src_exports2, {
+    var src_exports = {};
+    __export2(src_exports, {
       fromCognitoIdentity: () => fromCognitoIdentity,
       fromCognitoIdentityPool: () => fromCognitoIdentityPool
     });
-    module2.exports = __toCommonJS2(src_exports2);
+    module2.exports = __toCommonJS2(src_exports);
     var import_property_provider2 = require_dist_cjs16();
     function resolveLogins(logins) {
       return Promise.all(
@@ -58414,11 +58414,11 @@ var require_dist_cjs74 = __commonJS({
 });
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   main: () => main
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 var fs3 = __toESM(require("fs"));
 var core4 = __toESM(require_core());
 var import_github2 = __toESM(require_github());
