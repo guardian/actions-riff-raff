@@ -61721,7 +61721,17 @@ var main = async (options) => {
       credentials: (0, import_credential_providers.fromWebToken)({
         roleArn,
         webIdentityToken: idToken
-      })
+      }),
+      /*
+            Increase the timeout. Since updating `@aws-sdk/client-s3` to v3.717.0 we've seen an increase of timeouts:
+            > RequestTimeout: Your socket connection to the server was not read from or written to within the timeout period. Idle connections will be closed.
+      
+            See https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/node-configuring-maxsockets.html
+             */
+      requestHandler: {
+        requestTimeout: 10 * 1e3
+        // 10 seconds
+      }
     })
   );
   const keyPrefix = riffraffPrefix(mfest);
