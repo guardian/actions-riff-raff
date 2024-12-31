@@ -19716,10 +19716,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       error2(message);
     }
     exports2.setFailed = setFailed2;
-    function isDebug() {
+    function isDebug2() {
       return process.env["RUNNER_DEBUG"] === "1";
     }
-    exports2.isDebug = isDebug;
+    exports2.isDebug = isDebug2;
     function debug3(message) {
       (0, command_1.issueCommand)("debug", {}, message);
     }
@@ -61731,7 +61731,9 @@ var main = async (options) => {
       requestHandler: {
         requestTimeout: 10 * 1e3
         // 10 seconds
-      }
+      },
+      // Enable AWS SDK logging if the action is run in debug mode
+      ...core4.isDebug() && { logger: { ...console } }
     })
   );
   const keyPrefix = riffraffPrefix(mfest);

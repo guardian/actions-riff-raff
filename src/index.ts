@@ -125,6 +125,9 @@ export const main = async (options: Options): Promise<void> => {
 			requestHandler: {
 				requestTimeout: 10 * 1000, // 10 seconds
 			},
+
+			// Enable AWS SDK logging if the action is run in debug mode
+			...(core.isDebug() && { logger: { ...console } }),
 		}),
 	);
 	const keyPrefix = riffraffPrefix(mfest);
