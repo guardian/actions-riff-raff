@@ -236,10 +236,10 @@ var require_proxy = __commonJS({
       })();
       if (proxyVar) {
         try {
-          return new URL(proxyVar);
+          return new DecodedURL(proxyVar);
         } catch (_a) {
           if (!proxyVar.startsWith("http://") && !proxyVar.startsWith("https://"))
-            return new URL(`http://${proxyVar}`);
+            return new DecodedURL(`http://${proxyVar}`);
         }
       } else {
         return void 0;
@@ -282,6 +282,19 @@ var require_proxy = __commonJS({
       const hostLower = host.toLowerCase();
       return hostLower === "localhost" || hostLower.startsWith("127.") || hostLower.startsWith("[::1]") || hostLower.startsWith("[0:0:0:0:0:0:0:1]");
     }
+    var DecodedURL = class extends URL {
+      constructor(url, base) {
+        super(url, base);
+        this._decodedUsername = decodeURIComponent(super.username);
+        this._decodedPassword = decodeURIComponent(super.password);
+      }
+      get username() {
+        return this._decodedUsername;
+      }
+      get password() {
+        return this._decodedPassword;
+      }
+    };
   }
 });
 
@@ -1738,7 +1751,7 @@ var require_Dicer = __commonJS({
       if (this._headerFirst && this._isPreamble) {
         if (!this._part) {
           this._part = new PartStream(this._partOpts);
-          if (this._events.preamble) {
+          if (this.listenerCount("preamble") !== 0) {
             this.emit("preamble", this._part);
           } else {
             this._ignore();
@@ -1801,7 +1814,7 @@ var require_Dicer = __commonJS({
           }
         }
         if (this._dashes === 2) {
-          if (start + i < end && this._events.trailer) {
+          if (start + i < end && this.listenerCount("trailer") !== 0) {
             this.emit("trailer", data.slice(start + i, end));
           }
           this.reset();
@@ -1824,9 +1837,9 @@ var require_Dicer = __commonJS({
         this._part._read = function(n) {
           self2._unpause();
         };
-        if (this._isPreamble && this._events.preamble) {
+        if (this._isPreamble && this.listenerCount("preamble") !== 0) {
           this.emit("preamble", this._part);
-        } else if (this._isPreamble !== true && this._events.part) {
+        } else if (this._isPreamble !== true && this.listenerCount("part") !== 0) {
           this.emit("part", this._part);
         } else {
           this._ignore();
@@ -1989,7 +2002,7 @@ var require_decodeText = __commonJS({
         if (textDecoders.has(exports2.toString())) {
           try {
             return textDecoders.get(exports2).decode(data);
-          } catch (e) {
+          } catch {
           }
         }
         return typeof data === "string" ? data : data.toString();
@@ -2773,7 +2786,7 @@ var require_multipart = __commonJS({
               return skipPart(part);
             }
             ++nfiles;
-            if (!boy._events.file) {
+            if (boy.listenerCount("file") === 0) {
               self2.parser._ignore();
               return;
             }
@@ -17765,7 +17778,7 @@ var require_lib = __commonJS({
         if (this._keepAlive && useProxy) {
           agent = this._proxyAgent;
         }
-        if (this._keepAlive && !useProxy) {
+        if (!useProxy) {
           agent = this._agent;
         }
         if (agent) {
@@ -17794,13 +17807,10 @@ var require_lib = __commonJS({
           agent = tunnelAgent(agentOptions);
           this._proxyAgent = agent;
         }
-        if (this._keepAlive && !agent) {
+        if (!agent) {
           const options = { keepAlive: this._keepAlive, maxSockets };
           agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
           this._agent = agent;
-        }
-        if (!agent) {
-          agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
           agent.options = Object.assign(agent.options || {}, {
@@ -17819,7 +17829,7 @@ var require_lib = __commonJS({
         }
         const usingSsl = parsedUrl.protocol === "https:";
         proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, (proxyUrl.username || proxyUrl.password) && {
-          token: `${proxyUrl.username}:${proxyUrl.password}`
+          token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString("base64")}`
         }));
         this._proxyAgentDispatcher = proxyAgent;
         if (usingSsl && this._ignoreSslError) {
@@ -19716,10 +19726,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       error2(message);
     }
     exports2.setFailed = setFailed2;
-    function isDebug2() {
+    function isDebug() {
       return process.env["RUNNER_DEBUG"] === "1";
     }
-    exports2.isDebug = isDebug2;
+    exports2.isDebug = isDebug;
     function debug3(message) {
       (0, command_1.issueCommand)("debug", {}, message);
     }
@@ -20116,30 +20126,6 @@ var require_before_after_hook = __commonJS({
   }
 });
 
-// node_modules/is-plain-object/dist/is-plain-object.js
-var require_is_plain_object = __commonJS({
-  "node_modules/is-plain-object/dist/is-plain-object.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    function isObject2(o) {
-      return Object.prototype.toString.call(o) === "[object Object]";
-    }
-    function isPlainObject(o) {
-      var ctor, prot;
-      if (isObject2(o) === false) return false;
-      ctor = o.constructor;
-      if (ctor === void 0) return true;
-      prot = ctor.prototype;
-      if (isObject2(prot) === false) return false;
-      if (prot.hasOwnProperty("isPrototypeOf") === false) {
-        return false;
-      }
-      return true;
-    }
-    exports2.isPlainObject = isPlainObject;
-  }
-});
-
 // node_modules/@octokit/endpoint/dist-node/index.js
 var require_dist_node2 = __commonJS({
   "node_modules/@octokit/endpoint/dist-node/index.js"(exports2, module2) {
@@ -20167,7 +20153,7 @@ var require_dist_node2 = __commonJS({
     });
     module2.exports = __toCommonJS2(dist_src_exports);
     var import_universal_user_agent = require_dist_node();
-    var VERSION = "9.0.2";
+    var VERSION = "9.0.5";
     var userAgent = `octokit-endpoint.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
     var DEFAULTS = {
       method: "GET",
@@ -20189,11 +20175,21 @@ var require_dist_node2 = __commonJS({
         return newObj;
       }, {});
     }
-    var import_is_plain_object = require_is_plain_object();
+    function isPlainObject(value) {
+      if (typeof value !== "object" || value === null)
+        return false;
+      if (Object.prototype.toString.call(value) !== "[object Object]")
+        return false;
+      const proto = Object.getPrototypeOf(value);
+      if (proto === null)
+        return true;
+      const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+      return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+    }
     function mergeDeep(defaults, options) {
       const result = Object.assign({}, defaults);
       Object.keys(options).forEach((key) => {
-        if ((0, import_is_plain_object.isPlainObject)(options[key])) {
+        if (isPlainObject(options[key])) {
           if (!(key in defaults))
             Object.assign(result, { [key]: options[key] });
           else
@@ -20258,10 +20254,13 @@ var require_dist_node2 = __commonJS({
       return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
     }
     function omit(object, keysToOmit) {
-      return Object.keys(object).filter((option) => !keysToOmit.includes(option)).reduce((obj, key) => {
-        obj[key] = object[key];
-        return obj;
-      }, {});
+      const result = { __proto__: null };
+      for (const key of Object.keys(object)) {
+        if (keysToOmit.indexOf(key) === -1) {
+          result[key] = object[key];
+        }
+      }
+      return result;
     }
     function encodeReserved(str2) {
       return str2.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
@@ -20685,17 +20684,27 @@ var require_dist_node5 = __commonJS({
     module2.exports = __toCommonJS2(dist_src_exports);
     var import_endpoint = require_dist_node2();
     var import_universal_user_agent = require_dist_node();
-    var VERSION = "8.1.5";
-    var import_is_plain_object = require_is_plain_object();
+    var VERSION = "8.4.0";
+    function isPlainObject(value) {
+      if (typeof value !== "object" || value === null)
+        return false;
+      if (Object.prototype.toString.call(value) !== "[object Object]")
+        return false;
+      const proto = Object.getPrototypeOf(value);
+      if (proto === null)
+        return true;
+      const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+      return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+    }
     var import_request_error = require_dist_node4();
     function getBufferResponse(response) {
       return response.arrayBuffer();
     }
     function fetchWrapper(requestOptions) {
-      var _a, _b, _c;
+      var _a, _b, _c, _d;
       const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
       const parseSuccessResponseBody = ((_a = requestOptions.request) == null ? void 0 : _a.parseSuccessResponseBody) !== false;
-      if ((0, import_is_plain_object.isPlainObject)(requestOptions.body) || Array.isArray(requestOptions.body)) {
+      if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
         requestOptions.body = JSON.stringify(requestOptions.body);
       }
       let headers = {};
@@ -20713,8 +20722,9 @@ var require_dist_node5 = __commonJS({
       return fetch2(requestOptions.url, {
         method: requestOptions.method,
         body: requestOptions.body,
+        redirect: (_c = requestOptions.request) == null ? void 0 : _c.redirect,
         headers: requestOptions.headers,
-        signal: (_c = requestOptions.request) == null ? void 0 : _c.signal,
+        signal: (_d = requestOptions.request) == null ? void 0 : _d.signal,
         // duplex must be set if request.body is ReadableStream or Async Iterables.
         // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
         ...requestOptions.body && { duplex: "half" }
@@ -20811,11 +20821,17 @@ var require_dist_node5 = __commonJS({
     function toErrorMessage(data) {
       if (typeof data === "string")
         return data;
+      let suffix;
+      if ("documentation_url" in data) {
+        suffix = ` - ${data.documentation_url}`;
+      } else {
+        suffix = "";
+      }
       if ("message" in data) {
         if (Array.isArray(data.errors)) {
-          return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}`;
+          return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}${suffix}`;
         }
-        return data.message;
+        return `${data.message}${suffix}`;
       }
       return `Unknown error: ${JSON.stringify(data)}`;
     }
@@ -20880,7 +20896,7 @@ var require_dist_node6 = __commonJS({
     module2.exports = __toCommonJS2(dist_src_exports);
     var import_request3 = require_dist_node5();
     var import_universal_user_agent = require_dist_node();
-    var VERSION = "7.0.2";
+    var VERSION = "7.1.0";
     var import_request2 = require_dist_node5();
     var import_request = require_dist_node5();
     function _buildMessageForResponseErrors(data) {
@@ -21090,7 +21106,12 @@ var require_dist_node8 = __commonJS({
     var import_request = require_dist_node5();
     var import_graphql = require_dist_node6();
     var import_auth_token = require_dist_node7();
-    var VERSION = "5.0.1";
+    var VERSION = "5.2.0";
+    var noop = () => {
+    };
+    var consoleWarn = console.warn.bind(console);
+    var consoleError = console.error.bind(console);
+    var userAgentTrail = `octokit-core.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
     var Octokit = class {
       static {
         this.VERSION = VERSION;
@@ -21151,10 +21172,7 @@ var require_dist_node8 = __commonJS({
             format: ""
           }
         };
-        requestDefaults.headers["user-agent"] = [
-          options.userAgent,
-          `octokit-core.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
-        ].filter(Boolean).join(" ");
+        requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail}` : userAgentTrail;
         if (options.baseUrl) {
           requestDefaults.baseUrl = options.baseUrl;
         }
@@ -21168,12 +21186,10 @@ var require_dist_node8 = __commonJS({
         this.graphql = (0, import_graphql.withCustomRequest)(this.request).defaults(requestDefaults);
         this.log = Object.assign(
           {
-            debug: () => {
-            },
-            info: () => {
-            },
-            warn: console.warn.bind(console),
-            error: console.error.bind(console)
+            debug: noop,
+            info: noop,
+            warn: consoleWarn,
+            error: consoleError
           },
           options.log
         );
@@ -21210,9 +21226,9 @@ var require_dist_node8 = __commonJS({
           this.auth = auth;
         }
         const classConstructor = this.constructor;
-        classConstructor.plugins.forEach((plugin) => {
-          Object.assign(this, plugin(this, options));
-        });
+        for (let i = 0; i < classConstructor.plugins.length; ++i) {
+          Object.assign(this, classConstructor.plugins[i](this, options));
+        }
       }
     };
   }
@@ -21245,7 +21261,7 @@ var require_dist_node9 = __commonJS({
       restEndpointMethods: () => restEndpointMethods
     });
     module2.exports = __toCommonJS2(dist_src_exports);
-    var VERSION = "10.1.5";
+    var VERSION = "10.4.1";
     var Endpoints = {
       actions: {
         addCustomLabelsToSelfHostedRunnerForOrg: [
@@ -21370,6 +21386,9 @@ var require_dist_node9 = __commonJS({
           "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
         ],
         getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+        getCustomOidcSubClaimForRepo: [
+          "GET /repos/{owner}/{repo}/actions/oidc/customization/sub"
+        ],
         getEnvironmentPublicKey: [
           "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
         ],
@@ -21522,6 +21541,9 @@ var require_dist_node9 = __commonJS({
         setCustomLabelsForSelfHostedRunnerForRepo: [
           "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
         ],
+        setCustomOidcSubClaimForRepo: [
+          "PUT /repos/{owner}/{repo}/actions/oidc/customization/sub"
+        ],
         setGithubActionsDefaultWorkflowPermissionsOrganization: [
           "PUT /orgs/{org}/actions/permissions/workflow"
         ],
@@ -21591,6 +21613,7 @@ var require_dist_node9 = __commonJS({
         listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
         markNotificationsAsRead: ["PUT /notifications"],
         markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+        markThreadAsDone: ["DELETE /notifications/threads/{thread_id}"],
         markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
         setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
         setThreadSubscription: [
@@ -21867,10 +21890,10 @@ var require_dist_node9 = __commonJS({
         updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
       },
       copilot: {
-        addCopilotForBusinessSeatsForTeams: [
+        addCopilotSeatsForTeams: [
           "POST /orgs/{org}/copilot/billing/selected_teams"
         ],
-        addCopilotForBusinessSeatsForUsers: [
+        addCopilotSeatsForUsers: [
           "POST /orgs/{org}/copilot/billing/selected_users"
         ],
         cancelCopilotSeatAssignmentForTeams: [
@@ -22183,9 +22206,23 @@ var require_dist_node9 = __commonJS({
           }
         ]
       },
+      oidc: {
+        getOidcCustomSubTemplateForOrg: [
+          "GET /orgs/{org}/actions/oidc/customization/sub"
+        ],
+        updateOidcCustomSubTemplateForOrg: [
+          "PUT /orgs/{org}/actions/oidc/customization/sub"
+        ]
+      },
       orgs: {
         addSecurityManagerTeam: [
           "PUT /orgs/{org}/security-managers/teams/{team_slug}"
+        ],
+        assignTeamToOrgRole: [
+          "PUT /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+        ],
+        assignUserToOrgRole: [
+          "PUT /orgs/{org}/organization-roles/users/{username}/{role_id}"
         ],
         blockUser: ["PUT /orgs/{org}/blocks/{username}"],
         cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
@@ -22195,6 +22232,7 @@ var require_dist_node9 = __commonJS({
         convertMemberToOutsideCollaborator: [
           "PUT /orgs/{org}/outside_collaborators/{username}"
         ],
+        createCustomOrganizationRole: ["POST /orgs/{org}/organization-roles"],
         createInvitation: ["POST /orgs/{org}/invitations"],
         createOrUpdateCustomProperties: ["PATCH /orgs/{org}/properties/schema"],
         createOrUpdateCustomPropertiesValuesForRepos: [
@@ -22205,6 +22243,9 @@ var require_dist_node9 = __commonJS({
         ],
         createWebhook: ["POST /orgs/{org}/hooks"],
         delete: ["DELETE /orgs/{org}"],
+        deleteCustomOrganizationRole: [
+          "DELETE /orgs/{org}/organization-roles/{role_id}"
+        ],
         deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
         enableOrDisableSecurityProductOnAllOrgRepos: [
           "POST /orgs/{org}/{security_product}/{enablement}"
@@ -22216,6 +22257,7 @@ var require_dist_node9 = __commonJS({
         ],
         getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
         getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+        getOrgRole: ["GET /orgs/{org}/organization-roles/{role_id}"],
         getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
         getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
         getWebhookDelivery: [
@@ -22231,6 +22273,12 @@ var require_dist_node9 = __commonJS({
         listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
         listMembers: ["GET /orgs/{org}/members"],
         listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+        listOrgRoleTeams: ["GET /orgs/{org}/organization-roles/{role_id}/teams"],
+        listOrgRoleUsers: ["GET /orgs/{org}/organization-roles/{role_id}/users"],
+        listOrgRoles: ["GET /orgs/{org}/organization-roles"],
+        listOrganizationFineGrainedPermissions: [
+          "GET /orgs/{org}/organization-fine-grained-permissions"
+        ],
         listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
         listPatGrantRepositories: [
           "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
@@ -22245,6 +22293,9 @@ var require_dist_node9 = __commonJS({
         listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
         listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
         listWebhooks: ["GET /orgs/{org}/hooks"],
+        patchCustomOrganizationRole: [
+          "PATCH /orgs/{org}/organization-roles/{role_id}"
+        ],
         pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
         redeliverWebhookDelivery: [
           "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
@@ -22268,6 +22319,18 @@ var require_dist_node9 = __commonJS({
         ],
         reviewPatGrantRequestsInBulk: [
           "POST /orgs/{org}/personal-access-token-requests"
+        ],
+        revokeAllOrgRolesTeam: [
+          "DELETE /orgs/{org}/organization-roles/teams/{team_slug}"
+        ],
+        revokeAllOrgRolesUser: [
+          "DELETE /orgs/{org}/organization-roles/users/{username}"
+        ],
+        revokeOrgRoleTeam: [
+          "DELETE /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+        ],
+        revokeOrgRoleUser: [
+          "DELETE /orgs/{org}/organization-roles/users/{username}/{role_id}"
         ],
         setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
         setPublicMembershipForAuthenticatedUser: [
@@ -22559,6 +22622,9 @@ var require_dist_node9 = __commonJS({
           {},
           { mapToData: "users" }
         ],
+        cancelPagesDeployment: [
+          "POST /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}/cancel"
+        ],
         checkAutomatedSecurityFixes: [
           "GET /repos/{owner}/{repo}/automated-security-fixes"
         ],
@@ -22594,12 +22660,15 @@ var require_dist_node9 = __commonJS({
         createForAuthenticatedUser: ["POST /user/repos"],
         createFork: ["POST /repos/{owner}/{repo}/forks"],
         createInOrg: ["POST /orgs/{org}/repos"],
+        createOrUpdateCustomPropertiesValues: [
+          "PATCH /repos/{owner}/{repo}/properties/values"
+        ],
         createOrUpdateEnvironment: [
           "PUT /repos/{owner}/{repo}/environments/{environment_name}"
         ],
         createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
         createOrgRuleset: ["POST /orgs/{org}/rulesets"],
-        createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployment"],
+        createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployments"],
         createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
         createRelease: ["POST /repos/{owner}/{repo}/releases"],
         createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
@@ -22752,6 +22821,9 @@ var require_dist_node9 = __commonJS({
         getOrgRulesets: ["GET /orgs/{org}/rulesets"],
         getPages: ["GET /repos/{owner}/{repo}/pages"],
         getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+        getPagesDeployment: [
+          "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}"
+        ],
         getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
         getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
         getPullRequestReviewProtection: [
@@ -22962,6 +23034,9 @@ var require_dist_node9 = __commonJS({
         ]
       },
       securityAdvisories: {
+        createFork: [
+          "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/forks"
+        ],
         createPrivateVulnerabilityReport: [
           "POST /repos/{owner}/{repo}/security-advisories/reports"
         ],
@@ -23344,7 +23419,7 @@ var require_dist_node10 = __commonJS({
       paginatingEndpoints: () => paginatingEndpoints
     });
     module2.exports = __toCommonJS2(dist_src_exports);
-    var VERSION = "9.1.4";
+    var VERSION = "9.2.1";
     function normalizePaginatedListResponse(response) {
       if (!response.data) {
         return {
@@ -23495,6 +23570,8 @@ var require_dist_node10 = __commonJS({
       "GET /orgs/{org}/members/{username}/codespaces",
       "GET /orgs/{org}/migrations",
       "GET /orgs/{org}/migrations/{migration_id}/repositories",
+      "GET /orgs/{org}/organization-roles/{role_id}/teams",
+      "GET /orgs/{org}/organization-roles/{role_id}/users",
       "GET /orgs/{org}/outside_collaborators",
       "GET /orgs/{org}/packages",
       "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
@@ -23972,10 +24049,7 @@ var require_dist_cjs2 = __commonJS({
       };
     }, "resolveHttpHandlerRuntimeConfig");
     var import_types5 = require_dist_cjs();
-    var Field = class {
-      static {
-        __name(this, "Field");
-      }
+    var _Field = class _Field {
       constructor({ name, kind = import_types5.FieldPosition.HEADER, values = [] }) {
         this.name = name;
         this.kind = kind;
@@ -24022,14 +24096,13 @@ var require_dist_cjs2 = __commonJS({
         return this.values;
       }
     };
-    var Fields = class {
+    __name(_Field, "Field");
+    var Field = _Field;
+    var _Fields = class _Fields {
       constructor({ fields = [], encoding = "utf-8" }) {
         this.entries = {};
         fields.forEach(this.setField.bind(this));
         this.encoding = encoding;
-      }
-      static {
-        __name(this, "Fields");
       }
       /**
        * Set entry for a {@link Field} name. The `name`
@@ -24070,10 +24143,9 @@ var require_dist_cjs2 = __commonJS({
         return Object.values(this.entries).filter((field) => field.kind === kind);
       }
     };
-    var HttpRequest7 = class _HttpRequest {
-      static {
-        __name(this, "HttpRequest");
-      }
+    __name(_Fields, "Fields");
+    var Fields = _Fields;
+    var _HttpRequest = class _HttpRequest2 {
       constructor(options) {
         this.method = options.method || "GET";
         this.hostname = options.hostname || "localhost";
@@ -24091,7 +24163,7 @@ var require_dist_cjs2 = __commonJS({
        * Note: this does not deep-clone the body.
        */
       static clone(request) {
-        const cloned = new _HttpRequest({
+        const cloned = new _HttpRequest2({
           ...request,
           headers: { ...request.headers }
         });
@@ -24120,9 +24192,11 @@ var require_dist_cjs2 = __commonJS({
        * asserts that IHttpRequest (interface) objects are of type HttpRequest (class).
        */
       clone() {
-        return _HttpRequest.clone(this);
+        return _HttpRequest2.clone(this);
       }
     };
+    __name(_HttpRequest, "HttpRequest");
+    var HttpRequest7 = _HttpRequest;
     function cloneQuery(query) {
       return Object.keys(query).reduce((carry, paramName) => {
         const param = query[paramName];
@@ -24133,10 +24207,7 @@ var require_dist_cjs2 = __commonJS({
       }, {});
     }
     __name(cloneQuery, "cloneQuery");
-    var HttpResponse2 = class {
-      static {
-        __name(this, "HttpResponse");
-      }
+    var _HttpResponse = class _HttpResponse {
       constructor(options) {
         this.statusCode = options.statusCode;
         this.reason = options.reason;
@@ -24150,6 +24221,8 @@ var require_dist_cjs2 = __commonJS({
         return typeof resp.statusCode === "number" && typeof resp.headers === "object";
       }
     };
+    __name(_HttpResponse, "HttpResponse");
+    var HttpResponse2 = _HttpResponse;
     function isValidHostname(hostname) {
       const hostPattern = /^[a-z0-9][a-z0-9\.\-]*[a-z0-9]$/;
       return hostPattern.test(hostname);
@@ -24190,9 +24263,10 @@ var require_dist_cjs3 = __commonJS({
     var import_protocol_http8 = require_dist_cjs2();
     function addExpectContinueMiddleware(options) {
       return (next) => async (args) => {
+        var _a, _b;
         const { request } = args;
         if (import_protocol_http8.HttpRequest.isInstance(request) && request.body && options.runtime === "node") {
-          if (options.requestHandler?.constructor?.name !== "FetchHttpHandler") {
+          if (((_b = (_a = options.requestHandler) == null ? void 0 : _a.constructor) == null ? void 0 : _b.name) !== "FetchHttpHandler") {
             request.headers = {
               ...request.headers,
               Expect: "100-continue"
@@ -24615,7 +24689,8 @@ var require_dist_cjs5 = __commonJS({
       }
     }, "deserializerMiddleware");
     var serializerMiddleware = /* @__PURE__ */ __name((options, serializer) => (next, context3) => async (args) => {
-      const endpoint = context3.endpointV2?.url && options.urlParser ? async () => options.urlParser(context3.endpointV2.url) : options.endpoint;
+      var _a;
+      const endpoint = ((_a = context3.endpointV2) == null ? void 0 : _a.url) && options.urlParser ? async () => options.urlParser(context3.endpointV2.url) : options.endpoint;
       if (!endpoint) {
         throw new Error("No valid endpoint provider available.");
       }
@@ -25195,7 +25270,7 @@ var require_dist_cjs12 = __commonJS({
           );
         }, timeoutInMs - offset);
         const doWithSocket = /* @__PURE__ */ __name((socket) => {
-          if (socket?.connecting) {
+          if (socket == null ? void 0 : socket.connecting) {
             socket.on("connect", () => {
               timing.clearTimeout(timeoutId);
             });
@@ -25236,7 +25311,7 @@ var require_dist_cjs12 = __commonJS({
       return timing.setTimeout(registerListener, deferTimeMs);
     }, "setSocketKeepAlive");
     var DEFER_EVENT_LISTENER_TIME3 = 3e3;
-    var setSocketTimeout = /* @__PURE__ */ __name((request, reject, timeoutInMs = DEFAULT_REQUEST_TIMEOUT) => {
+    var setSocketTimeout = /* @__PURE__ */ __name((request, reject, timeoutInMs = 0) => {
       const registerTimeout = /* @__PURE__ */ __name((offset) => {
         const timeout = timeoutInMs - offset;
         const onTimeout = /* @__PURE__ */ __name(() => {
@@ -25313,7 +25388,7 @@ var require_dist_cjs12 = __commonJS({
     }
     __name(writeBody, "writeBody");
     var DEFAULT_REQUEST_TIMEOUT = 0;
-    var NodeHttpHandler = class _NodeHttpHandler {
+    var _NodeHttpHandler = class _NodeHttpHandler2 {
       constructor(options) {
         this.socketWarningTimestamp = 0;
         this.metadata = { handlerProtocol: "http/1.1" };
@@ -25327,18 +25402,15 @@ var require_dist_cjs12 = __commonJS({
           }
         });
       }
-      static {
-        __name(this, "NodeHttpHandler");
-      }
       /**
        * @returns the input if it is an HttpHandler of any class,
        * or instantiates a new instance of this handler.
        */
       static create(instanceOrOptions) {
-        if (typeof instanceOrOptions?.handle === "function") {
+        if (typeof (instanceOrOptions == null ? void 0 : instanceOrOptions.handle) === "function") {
           return instanceOrOptions;
         }
-        return new _NodeHttpHandler(instanceOrOptions);
+        return new _NodeHttpHandler2(instanceOrOptions);
       }
       /**
        * @internal
@@ -25349,6 +25421,7 @@ var require_dist_cjs12 = __commonJS({
        * @returns timestamp of last emitted warning.
        */
       static checkSocketUsage(agent, socketWarningTimestamp, logger = console) {
+        var _a, _b, _c;
         const { sockets, requests, maxSockets } = agent;
         if (typeof maxSockets !== "number" || maxSockets === Infinity) {
           return socketWarningTimestamp;
@@ -25359,10 +25432,11 @@ var require_dist_cjs12 = __commonJS({
         }
         if (sockets && requests) {
           for (const origin in sockets) {
-            const socketsInUse = sockets[origin]?.length ?? 0;
-            const requestsEnqueued = requests[origin]?.length ?? 0;
+            const socketsInUse = ((_a = sockets[origin]) == null ? void 0 : _a.length) ?? 0;
+            const requestsEnqueued = ((_b = requests[origin]) == null ? void 0 : _b.length) ?? 0;
             if (socketsInUse >= maxSockets && requestsEnqueued >= 2 * maxSockets) {
-              logger?.warn?.(
+              (_c = logger == null ? void 0 : logger.warn) == null ? void 0 : _c.call(
+                logger,
                 `@smithy/node-http-handler:WARN - socket usage at capacity=${socketsInUse} and ${requestsEnqueued} additional requests are enqueued.
 See https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/node-configuring-maxsockets.html
 or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler config.`
@@ -25381,13 +25455,13 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           connectionTimeout,
           requestTimeout: requestTimeout ?? socketTimeout,
           httpAgent: (() => {
-            if (httpAgent instanceof import_http.Agent || typeof httpAgent?.destroy === "function") {
+            if (httpAgent instanceof import_http.Agent || typeof (httpAgent == null ? void 0 : httpAgent.destroy) === "function") {
               return httpAgent;
             }
             return new import_http.Agent({ keepAlive, maxSockets, ...httpAgent });
           })(),
           httpsAgent: (() => {
-            if (httpsAgent instanceof import_https.Agent || typeof httpsAgent?.destroy === "function") {
+            if (httpsAgent instanceof import_https.Agent || typeof (httpsAgent == null ? void 0 : httpsAgent.destroy) === "function") {
               return httpsAgent;
             }
             return new import_https.Agent({ keepAlive, maxSockets, ...httpsAgent });
@@ -25396,8 +25470,9 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         };
       }
       destroy() {
-        this.config?.httpAgent?.destroy();
-        this.config?.httpsAgent?.destroy();
+        var _a, _b, _c, _d;
+        (_b = (_a = this.config) == null ? void 0 : _a.httpAgent) == null ? void 0 : _b.destroy();
+        (_d = (_c = this.config) == null ? void 0 : _c.httpsAgent) == null ? void 0 : _d.destroy();
       }
       async handle(request, { abortSignal } = {}) {
         if (!this.config) {
@@ -25419,7 +25494,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           if (!this.config) {
             throw new Error("Node HTTP request handler config is not resolved");
           }
-          if (abortSignal?.aborted) {
+          if (abortSignal == null ? void 0 : abortSignal.aborted) {
             const abortError = new Error("Request aborted");
             abortError.name = "AbortError";
             reject(abortError);
@@ -25430,7 +25505,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           timeouts.push(
             timing.setTimeout(
               () => {
-                this.socketWarningTimestamp = _NodeHttpHandler.checkSocketUsage(
+                this.socketWarningTimestamp = _NodeHttpHandler2.checkSocketUsage(
                   agent,
                   this.socketWarningTimestamp,
                   this.config.logger
@@ -25532,15 +25607,14 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         return this.config ?? {};
       }
     };
+    __name(_NodeHttpHandler, "NodeHttpHandler");
+    var NodeHttpHandler = _NodeHttpHandler;
     var import_http22 = require("http2");
     var import_http2 = __toESM2(require("http2"));
-    var NodeHttp2ConnectionPool = class {
+    var _NodeHttp2ConnectionPool = class _NodeHttp2ConnectionPool {
       constructor(sessions) {
         this.sessions = [];
         this.sessions = sessions ?? [];
-      }
-      static {
-        __name(this, "NodeHttp2ConnectionPool");
       }
       poll() {
         if (this.sessions.length > 0) {
@@ -25569,16 +25643,15 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         }
       }
     };
-    var NodeHttp2ConnectionManager = class {
+    __name(_NodeHttp2ConnectionPool, "NodeHttp2ConnectionPool");
+    var NodeHttp2ConnectionPool = _NodeHttp2ConnectionPool;
+    var _NodeHttp2ConnectionManager = class _NodeHttp2ConnectionManager {
       constructor(config) {
         this.sessionCache = /* @__PURE__ */ new Map();
         this.config = config;
         if (this.config.maxConcurrency && this.config.maxConcurrency <= 0) {
           throw new RangeError("maxConcurrency must be greater than zero.");
         }
-      }
-      static {
-        __name(this, "NodeHttp2ConnectionManager");
       }
       lease(requestContext, connectionConfiguration) {
         const url = this.getUrlString(requestContext);
@@ -25633,8 +25706,9 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         this.sessionCache.set(authority, existingConnectionPool);
       }
       release(requestContext, session) {
+        var _a;
         const cacheKey = this.getUrlString(requestContext);
-        this.sessionCache.get(cacheKey)?.offerLast(session);
+        (_a = this.sessionCache.get(cacheKey)) == null ? void 0 : _a.offerLast(session);
       }
       destroy() {
         for (const [key, connectionPool] of this.sessionCache) {
@@ -25660,7 +25734,9 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         return request.destination.toString();
       }
     };
-    var NodeHttp2Handler = class _NodeHttp2Handler {
+    __name(_NodeHttp2ConnectionManager, "NodeHttp2ConnectionManager");
+    var NodeHttp2ConnectionManager = _NodeHttp2ConnectionManager;
+    var _NodeHttp2Handler = class _NodeHttp2Handler2 {
       constructor(options) {
         this.metadata = { handlerProtocol: "h2" };
         this.connectionManager = new NodeHttp2ConnectionManager({});
@@ -25674,18 +25750,15 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           }
         });
       }
-      static {
-        __name(this, "NodeHttp2Handler");
-      }
       /**
        * @returns the input if it is an HttpHandler of any class,
        * or instantiates a new instance of this handler.
        */
       static create(instanceOrOptions) {
-        if (typeof instanceOrOptions?.handle === "function") {
+        if (typeof (instanceOrOptions == null ? void 0 : instanceOrOptions.handle) === "function") {
           return instanceOrOptions;
         }
-        return new _NodeHttp2Handler(instanceOrOptions);
+        return new _NodeHttp2Handler2(instanceOrOptions);
       }
       destroy() {
         this.connectionManager.destroy();
@@ -25700,6 +25773,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         }
         const { requestTimeout, disableConcurrentStreams } = this.config;
         return new Promise((_resolve, _reject) => {
+          var _a;
           let fulfilled = false;
           let writeRequestBodyPromise = void 0;
           const resolve = /* @__PURE__ */ __name(async (arg) => {
@@ -25710,7 +25784,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
             await writeRequestBodyPromise;
             _reject(arg);
           }, "reject");
-          if (abortSignal?.aborted) {
+          if (abortSignal == null ? void 0 : abortSignal.aborted) {
             fulfilled = true;
             const abortError = new Error("Request aborted");
             abortError.name = "AbortError";
@@ -25727,7 +25801,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
           const authority = `${protocol}//${auth}${hostname}${port ? `:${port}` : ""}`;
           const requestContext = { destination: new URL(authority) };
           const session = this.connectionManager.lease(requestContext, {
-            requestTimeout: this.config?.sessionTimeout,
+            requestTimeout: (_a = this.config) == null ? void 0 : _a.sessionTimeout,
             disableConcurrentStreams: disableConcurrentStreams || false
           });
           const rejectWithDestroy = /* @__PURE__ */ __name((err) => {
@@ -25822,7 +25896,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
       }
       /**
        * Destroys a session.
-       * @param session - the session to destroy.
+       * @param session The session to destroy.
        */
       destroySession(session) {
         if (!session.destroyed) {
@@ -25830,19 +25904,20 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         }
       }
     };
-    var Collector = class extends import_stream.Writable {
+    __name(_NodeHttp2Handler, "NodeHttp2Handler");
+    var NodeHttp2Handler = _NodeHttp2Handler;
+    var _Collector = class _Collector extends import_stream.Writable {
       constructor() {
         super(...arguments);
         this.bufferedBytes = [];
-      }
-      static {
-        __name(this, "Collector");
       }
       _write(chunk, encoding, callback) {
         this.bufferedBytes.push(chunk);
         callback();
       }
     };
+    __name(_Collector, "Collector");
+    var Collector = _Collector;
     var streamCollector = /* @__PURE__ */ __name((stream) => {
       if (isReadableStreamInstance(stream)) {
         return collectReadableStream(stream);
@@ -25936,19 +26011,16 @@ var require_dist_cjs13 = __commonJS({
     var keepAliveSupport = {
       supported: void 0
     };
-    var FetchHttpHandler = class _FetchHttpHandler {
-      static {
-        __name(this, "FetchHttpHandler");
-      }
+    var _FetchHttpHandler = class _FetchHttpHandler2 {
       /**
        * @returns the input if it is an HttpHandler of any class,
        * or instantiates a new instance of this handler.
        */
       static create(instanceOrOptions) {
-        if (typeof instanceOrOptions?.handle === "function") {
+        if (typeof (instanceOrOptions == null ? void 0 : instanceOrOptions.handle) === "function") {
           return instanceOrOptions;
         }
-        return new _FetchHttpHandler(instanceOrOptions);
+        return new _FetchHttpHandler2(instanceOrOptions);
       }
       constructor(options) {
         if (typeof options === "function") {
@@ -25966,13 +26038,14 @@ var require_dist_cjs13 = __commonJS({
       destroy() {
       }
       async handle(request, { abortSignal } = {}) {
+        var _a;
         if (!this.config) {
           this.config = await this.configProvider;
         }
         const requestTimeoutInMs = this.config.requestTimeout;
         const keepAlive = this.config.keepAlive === true;
         const credentials = this.config.credentials;
-        if (abortSignal?.aborted) {
+        if (abortSignal == null ? void 0 : abortSignal.aborted) {
           const abortError = new Error("Request aborted");
           abortError.name = "AbortError";
           return Promise.reject(abortError);
@@ -26000,7 +26073,7 @@ var require_dist_cjs13 = __commonJS({
           method,
           credentials
         };
-        if (this.config?.cache) {
+        if ((_a = this.config) == null ? void 0 : _a.cache) {
           requestOptions.cache = this.config.cache;
         }
         if (body) {
@@ -26078,9 +26151,12 @@ var require_dist_cjs13 = __commonJS({
         return this.config ?? {};
       }
     };
+    __name(_FetchHttpHandler, "FetchHttpHandler");
+    var FetchHttpHandler = _FetchHttpHandler;
     var import_util_base64 = require_dist_cjs9();
     var streamCollector = /* @__PURE__ */ __name(async (stream) => {
-      if (typeof Blob === "function" && stream instanceof Blob || stream.constructor?.name === "Blob") {
+      var _a;
+      if (typeof Blob === "function" && stream instanceof Blob || ((_a = stream.constructor) == null ? void 0 : _a.name) === "Blob") {
         if (Blob.prototype.arrayBuffer !== void 0) {
           return new Uint8Array(await stream.arrayBuffer());
         }
@@ -26336,7 +26412,7 @@ var require_sdk_stream_mixin = __commonJS({
             throw new Error("The stream has been consumed by other callbacks.");
           }
           if (typeof stream_1.Readable.toWeb !== "function") {
-            throw new Error("Readable.toWeb() is not supported. Please ensure a polyfill is available.");
+            throw new Error("Readable.toWeb() is not supported. Please make sure you are using Node.js >= 17.0.0, or polyfill is available.");
           }
           transformed = true;
           return stream_1.Readable.toWeb(stream);
@@ -26653,10 +26729,7 @@ var require_dist_cjs15 = __commonJS({
       return Uint8ArrayBlobAdapter2.mutate((0, import_util_utf8.fromUtf8)(str2));
     }
     __name(transformFromString, "transformFromString");
-    var Uint8ArrayBlobAdapter2 = class _Uint8ArrayBlobAdapter extends Uint8Array {
-      static {
-        __name(this, "Uint8ArrayBlobAdapter");
-      }
+    var _Uint8ArrayBlobAdapter = class _Uint8ArrayBlobAdapter2 extends Uint8Array {
       /**
        * @param source - such as a string or Stream.
        * @returns a new Uint8ArrayBlobAdapter extending Uint8Array.
@@ -26674,7 +26747,7 @@ var require_dist_cjs15 = __commonJS({
        * @returns the same Uint8Array but with prototype switched to Uint8ArrayBlobAdapter.
        */
       static mutate(source) {
-        Object.setPrototypeOf(source, _Uint8ArrayBlobAdapter.prototype);
+        Object.setPrototypeOf(source, _Uint8ArrayBlobAdapter2.prototype);
         return source;
       }
       /**
@@ -26685,6 +26758,8 @@ var require_dist_cjs15 = __commonJS({
         return transformToString(this, encoding);
       }
     };
+    __name(_Uint8ArrayBlobAdapter, "Uint8ArrayBlobAdapter");
+    var Uint8ArrayBlobAdapter2 = _Uint8ArrayBlobAdapter;
     __reExport(src_exports, require_getAwsChunkedEncodingStream(), module2.exports);
     __reExport(src_exports, require_sdk_stream_mixin(), module2.exports);
     __reExport(src_exports, require_splitStream(), module2.exports);
@@ -27090,8 +27165,9 @@ var require_dist_cjs16 = __commonJS({
       memoize: () => memoize
     });
     module2.exports = __toCommonJS2(src_exports);
-    var ProviderError2 = class _ProviderError extends Error {
+    var _ProviderError = class _ProviderError2 extends Error {
       constructor(message, options = true) {
+        var _a;
         let logger;
         let tryNextLink = true;
         if (typeof options === "boolean") {
@@ -27104,11 +27180,8 @@ var require_dist_cjs16 = __commonJS({
         super(message);
         this.name = "ProviderError";
         this.tryNextLink = tryNextLink;
-        Object.setPrototypeOf(this, _ProviderError.prototype);
-        logger?.debug?.(`@smithy/property-provider ${tryNextLink ? "->" : "(!)"} ${message}`);
-      }
-      static {
-        __name(this, "ProviderError");
+        Object.setPrototypeOf(this, _ProviderError2.prototype);
+        (_a = logger == null ? void 0 : logger.debug) == null ? void 0 : _a.call(logger, `@smithy/property-provider ${tryNextLink ? "->" : "(!)"} ${message}`);
       }
       /**
        * @deprecated use new operator.
@@ -27117,32 +27190,32 @@ var require_dist_cjs16 = __commonJS({
         return Object.assign(new this(error2.message, options), error2);
       }
     };
-    var CredentialsProviderError = class _CredentialsProviderError extends ProviderError2 {
+    __name(_ProviderError, "ProviderError");
+    var ProviderError2 = _ProviderError;
+    var _CredentialsProviderError = class _CredentialsProviderError2 extends ProviderError2 {
       /**
        * @override
        */
       constructor(message, options = true) {
         super(message, options);
         this.name = "CredentialsProviderError";
-        Object.setPrototypeOf(this, _CredentialsProviderError.prototype);
-      }
-      static {
-        __name(this, "CredentialsProviderError");
+        Object.setPrototypeOf(this, _CredentialsProviderError2.prototype);
       }
     };
-    var TokenProviderError = class _TokenProviderError extends ProviderError2 {
+    __name(_CredentialsProviderError, "CredentialsProviderError");
+    var CredentialsProviderError = _CredentialsProviderError;
+    var _TokenProviderError = class _TokenProviderError2 extends ProviderError2 {
       /**
        * @override
        */
       constructor(message, options = true) {
         super(message, options);
         this.name = "TokenProviderError";
-        Object.setPrototypeOf(this, _TokenProviderError.prototype);
-      }
-      static {
-        __name(this, "TokenProviderError");
+        Object.setPrototypeOf(this, _TokenProviderError2.prototype);
       }
     };
+    __name(_TokenProviderError, "TokenProviderError");
+    var TokenProviderError = _TokenProviderError;
     var chain = /* @__PURE__ */ __name((...providers) => async () => {
       if (providers.length === 0) {
         throw new ProviderError2("No providers in chain");
@@ -27154,7 +27227,7 @@ var require_dist_cjs16 = __commonJS({
           return credentials;
         } catch (err) {
           lastProviderError = err;
-          if (err?.tryNextLink) {
+          if (err == null ? void 0 : err.tryNextLink) {
             continue;
           }
           throw err;
@@ -27183,14 +27256,14 @@ var require_dist_cjs16 = __commonJS({
       }, "coalesceProvider");
       if (isExpired === void 0) {
         return async (options) => {
-          if (!hasResult || options?.forceRefresh) {
+          if (!hasResult || (options == null ? void 0 : options.forceRefresh)) {
             resolved = await coalesceProvider();
           }
           return resolved;
         };
       }
       return async (options) => {
-        if (!hasResult || options?.forceRefresh) {
+        if (!hasResult || (options == null ? void 0 : options.forceRefresh)) {
           resolved = await coalesceProvider();
         }
         if (isConstant) {
@@ -27356,7 +27429,7 @@ var require_dist_cjs17 = __commonJS({
           continue;
         }
         const canonicalHeaderName = headerName.toLowerCase();
-        if (canonicalHeaderName in ALWAYS_UNSIGNABLE_HEADERS || unsignableHeaders?.has(canonicalHeaderName) || PROXY_HEADER_PATTERN.test(canonicalHeaderName) || SEC_HEADER_PATTERN.test(canonicalHeaderName)) {
+        if (canonicalHeaderName in ALWAYS_UNSIGNABLE_HEADERS || (unsignableHeaders == null ? void 0 : unsignableHeaders.has(canonicalHeaderName)) || PROXY_HEADER_PATTERN.test(canonicalHeaderName) || SEC_HEADER_PATTERN.test(canonicalHeaderName)) {
           if (!signableHeaders || signableHeaders && !signableHeaders.has(canonicalHeaderName)) {
             continue;
           }
@@ -27402,10 +27475,7 @@ var require_dist_cjs17 = __commonJS({
       return UNSIGNED_PAYLOAD;
     }, "getPayloadHash");
     var import_util_utf83 = require_dist_cjs8();
-    var HeaderFormatter = class {
-      static {
-        __name(this, "HeaderFormatter");
-      }
+    var _HeaderFormatter = class _HeaderFormatter {
       format(headers) {
         const chunks = [];
         for (const headerName of Object.keys(headers)) {
@@ -27491,16 +27561,15 @@ var require_dist_cjs17 = __commonJS({
         }
       }
     };
+    __name(_HeaderFormatter, "HeaderFormatter");
+    var HeaderFormatter = _HeaderFormatter;
     var UUID_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-    var Int64 = class _Int64 {
+    var _Int64 = class _Int642 {
       constructor(bytes) {
         this.bytes = bytes;
         if (bytes.byteLength !== 8) {
           throw new Error("Int64 buffers must be exactly 8 bytes");
         }
-      }
-      static {
-        __name(this, "Int64");
       }
       static fromNumber(number) {
         if (number > 9223372036854776e3 || number < -9223372036854776e3) {
@@ -27513,7 +27582,7 @@ var require_dist_cjs17 = __commonJS({
         if (number < 0) {
           negate(bytes);
         }
-        return new _Int64(bytes);
+        return new _Int642(bytes);
       }
       /**
        * Called implicitly by infix arithmetic operators.
@@ -27530,6 +27599,8 @@ var require_dist_cjs17 = __commonJS({
         return String(this.valueOf());
       }
     };
+    __name(_Int64, "Int64");
+    var Int64 = _Int64;
     function negate(bytes) {
       for (let i = 0; i < 8; i++) {
         bytes[i] ^= 255;
@@ -27552,10 +27623,11 @@ var require_dist_cjs17 = __commonJS({
     }, "hasHeader");
     var import_protocol_http8 = require_dist_cjs2();
     var moveHeadersToQuery = /* @__PURE__ */ __name((request, options = {}) => {
+      var _a, _b;
       const { headers, query = {} } = import_protocol_http8.HttpRequest.clone(request);
       for (const name of Object.keys(headers)) {
         const lname = name.toLowerCase();
-        if (lname.slice(0, 6) === "x-amz-" && !options.unhoistableHeaders?.has(lname) || options.hoistableHeaders?.has(lname)) {
+        if (lname.slice(0, 6) === "x-amz-" && !((_a = options.unhoistableHeaders) == null ? void 0 : _a.has(lname)) || ((_b = options.hoistableHeaders) == null ? void 0 : _b.has(lname))) {
           query[name] = headers[name];
           delete headers[name];
         }
@@ -27588,7 +27660,7 @@ var require_dist_cjs17 = __commonJS({
       }
       return time;
     }, "toDate");
-    var SignatureV42 = class {
+    var _SignatureV4 = class _SignatureV4 {
       constructor({
         applyChecksum,
         credentials,
@@ -27604,9 +27676,6 @@ var require_dist_cjs17 = __commonJS({
         this.applyChecksum = typeof applyChecksum === "boolean" ? applyChecksum : true;
         this.regionProvider = (0, import_util_middleware3.normalizeProvider)(region);
         this.credentialProvider = (0, import_util_middleware3.normalizeProvider)(credentials);
-      }
-      static {
-        __name(this, "SignatureV4");
       }
       async presign(originalRequest, options = {}) {
         const {
@@ -27756,7 +27825,7 @@ ${(0, import_util_hex_encoding.toHex)(hashedRequest)}`;
         if (this.uriEscapePath) {
           const normalizedPathSegments = [];
           for (const pathSegment of path2.split("/")) {
-            if (pathSegment?.length === 0)
+            if ((pathSegment == null ? void 0 : pathSegment.length) === 0)
               continue;
             if (pathSegment === ".")
               continue;
@@ -27766,7 +27835,7 @@ ${(0, import_util_hex_encoding.toHex)(hashedRequest)}`;
               normalizedPathSegments.push(pathSegment);
             }
           }
-          const normalizedPath = `${path2?.startsWith("/") ? "/" : ""}${normalizedPathSegments.join("/")}${normalizedPathSegments.length > 0 && path2?.endsWith("/") ? "/" : ""}`;
+          const normalizedPath = `${(path2 == null ? void 0 : path2.startsWith("/")) ? "/" : ""}${normalizedPathSegments.join("/")}${normalizedPathSegments.length > 0 && (path2 == null ? void 0 : path2.endsWith("/")) ? "/" : ""}`;
           const doubleEncoded = (0, import_util_uri_escape.escapeUri)(normalizedPath);
           return doubleEncoded.replace(/%2F/g, "/");
         }
@@ -27789,6 +27858,8 @@ ${(0, import_util_hex_encoding.toHex)(hashedRequest)}`;
         }
       }
     };
+    __name(_SignatureV4, "SignatureV4");
+    var SignatureV42 = _SignatureV4;
     var formatDate = /* @__PURE__ */ __name((now) => {
       const longDate = iso8601(now).replace(/[\-:]/g, "");
       return {
@@ -27809,23 +27880,22 @@ var init_resolveAwsSdkSigV4Config = __esm({
     import_signature_v4 = __toESM(require_dist_cjs17());
     resolveAwsSdkSigV4Config = (config) => {
       let isUserSupplied = false;
-      let credentialsProvider;
+      let normalizedCreds;
       if (config.credentials) {
         isUserSupplied = true;
-        credentialsProvider = memoizeIdentityProvider(config.credentials, isIdentityExpired, doesIdentityRequireRefresh);
+        normalizedCreds = memoizeIdentityProvider(config.credentials, isIdentityExpired, doesIdentityRequireRefresh);
       }
-      if (!credentialsProvider) {
+      if (!normalizedCreds) {
         if (config.credentialDefaultProvider) {
-          credentialsProvider = normalizeProvider(config.credentialDefaultProvider(Object.assign({}, config, {
+          normalizedCreds = normalizeProvider(config.credentialDefaultProvider(Object.assign({}, config, {
             parentClientConfig: config
           })));
         } else {
-          credentialsProvider = async () => {
+          normalizedCreds = async () => {
             throw new Error("`credentials` is missing");
           };
         }
       }
-      const boundCredentialsProvider = async () => credentialsProvider({ callerClientConfig: config });
       const { signingEscapePath = true, systemClockOffset = config.systemClockOffset || 0, sha256 } = config;
       let signer;
       if (config.signer) {
@@ -27843,7 +27913,7 @@ var init_resolveAwsSdkSigV4Config = __esm({
           config.signingName = config.signingName || signingService || config.serviceId;
           const params = {
             ...config,
-            credentials: boundCredentialsProvider,
+            credentials: normalizedCreds,
             region: config.signingRegion,
             service: config.signingName,
             sha256,
@@ -27866,7 +27936,7 @@ var init_resolveAwsSdkSigV4Config = __esm({
           config.signingName = config.signingName || signingService || config.serviceId;
           const params = {
             ...config,
-            credentials: boundCredentialsProvider,
+            credentials: normalizedCreds,
             region: config.signingRegion,
             service: config.signingName,
             sha256,
@@ -27880,7 +27950,7 @@ var init_resolveAwsSdkSigV4Config = __esm({
         ...config,
         systemClockOffset,
         signingEscapePath,
-        credentials: isUserSupplied ? async () => boundCredentialsProvider().then((creds) => setCredentialFeature(creds, "CREDENTIALS_CODE", "e")) : boundCredentialsProvider,
+        credentials: isUserSupplied ? async () => normalizedCreds().then((creds) => setCredentialFeature(creds, "CREDENTIALS_CODE", "e")) : normalizedCreds,
         signer
       };
     };
@@ -28048,13 +28118,14 @@ var require_dist_cjs18 = __commonJS({
         return isRemoved;
       }, "removeByReference");
       const cloneTo = /* @__PURE__ */ __name((toStack) => {
+        var _a;
         absoluteEntries.forEach((entry) => {
           toStack.add(entry.middleware, { ...entry });
         });
         relativeEntries.forEach((entry) => {
           toStack.addRelativeTo(entry.middleware, { ...entry });
         });
-        toStack.identifyOnResolve?.(stack.identifyOnResolve());
+        (_a = toStack.identifyOnResolve) == null ? void 0 : _a.call(toStack, stack.identifyOnResolve());
         return toStack;
       }, "cloneTo");
       const expandRelativeMiddlewareList = /* @__PURE__ */ __name((from) => {
@@ -28146,7 +28217,10 @@ var require_dist_cjs18 = __commonJS({
                 throw new Error(`Duplicate middleware name '${getMiddlewareNameWithAliases(name, _aliases)}'`);
               for (const alias of aliases) {
                 const toOverrideIndex = absoluteEntries.findIndex(
-                  (entry2) => entry2.name === alias || entry2.aliases?.some((a) => a === alias)
+                  (entry2) => {
+                    var _a;
+                    return entry2.name === alias || ((_a = entry2.aliases) == null ? void 0 : _a.some((a) => a === alias));
+                  }
                 );
                 if (toOverrideIndex === -1) {
                   continue;
@@ -28179,7 +28253,10 @@ var require_dist_cjs18 = __commonJS({
                 throw new Error(`Duplicate middleware name '${getMiddlewareNameWithAliases(name, _aliases)}'`);
               for (const alias of aliases) {
                 const toOverrideIndex = relativeEntries.findIndex(
-                  (entry2) => entry2.name === alias || entry2.aliases?.some((a) => a === alias)
+                  (entry2) => {
+                    var _a;
+                    return entry2.name === alias || ((_a = entry2.aliases) == null ? void 0 : _a.some((a) => a === alias));
+                  }
                 );
                 if (toOverrideIndex === -1) {
                   continue;
@@ -28228,10 +28305,11 @@ var require_dist_cjs18 = __commonJS({
           return isRemoved;
         },
         concat: (from) => {
+          var _a;
           const cloned = cloneTo(constructStack());
           cloned.use(from);
           cloned.identifyOnResolve(
-            identifyOnResolve || cloned.identifyOnResolve() || (from.identifyOnResolve?.() ?? false)
+            identifyOnResolve || cloned.identifyOnResolve() || (((_a = from.identifyOnResolve) == null ? void 0 : _a.call(from)) ?? false)
           );
           return cloned;
         },
@@ -28361,13 +28439,10 @@ var require_dist_cjs19 = __commonJS({
     });
     module2.exports = __toCommonJS2(src_exports);
     var import_middleware_stack = require_dist_cjs18();
-    var Client = class {
+    var _Client = class _Client {
       constructor(config) {
         this.config = config;
         this.middlewareStack = (0, import_middleware_stack.constructStack)();
-      }
-      static {
-        __name(this, "Client");
       }
       send(command, optionsOrCb, cb) {
         const options = typeof optionsOrCb !== "function" ? optionsOrCb : void 0;
@@ -28404,18 +28479,18 @@ var require_dist_cjs19 = __commonJS({
         }
       }
       destroy() {
-        this.config?.requestHandler?.destroy?.();
+        var _a, _b, _c;
+        (_c = (_b = (_a = this.config) == null ? void 0 : _a.requestHandler) == null ? void 0 : _b.destroy) == null ? void 0 : _c.call(_b);
         delete this.handlers;
       }
     };
+    __name(_Client, "Client");
+    var Client = _Client;
     var import_protocols2 = (init_protocols(), __toCommonJS(protocols_exports));
     var import_types5 = require_dist_cjs();
-    var Command = class {
+    var _Command = class _Command {
       constructor() {
         this.middlewareStack = (0, import_middleware_stack.constructStack)();
-      }
-      static {
-        __name(this, "Command");
       }
       /**
        * Factory for Command ClassBuilder.
@@ -28461,7 +28536,9 @@ var require_dist_cjs19 = __commonJS({
         );
       }
     };
-    var ClassBuilder = class {
+    __name(_Command, "Command");
+    var Command = _Command;
+    var _ClassBuilder = class _ClassBuilder {
       constructor() {
         this._init = () => {
         };
@@ -28475,9 +28552,6 @@ var require_dist_cjs19 = __commonJS({
         this._outputFilterSensitiveLog = (_) => _;
         this._serializer = null;
         this._deserializer = null;
-      }
-      static {
-        __name(this, "ClassBuilder");
       }
       /**
        * Optional init callback.
@@ -28551,9 +28625,10 @@ var require_dist_cjs19 = __commonJS({
        * @returns a Command class with the classBuilder properties.
        */
       build() {
+        var _a;
         const closure = this;
         let CommandRef;
-        return CommandRef = class extends Command {
+        return CommandRef = (_a = class extends Command {
           /**
            * @public
            */
@@ -28563,9 +28638,6 @@ var require_dist_cjs19 = __commonJS({
             this.deserialize = closure._deserializer;
             this.input = input ?? {};
             closure._init(this);
-          }
-          static {
-            __name(this, "CommandRef");
           }
           /**
            * @public
@@ -28588,9 +28660,11 @@ var require_dist_cjs19 = __commonJS({
               additionalContext: closure._additionalContext
             });
           }
-        };
+        }, __name(_a, "CommandRef"), _a);
       }
     };
+    __name(_ClassBuilder, "ClassBuilder");
+    var ClassBuilder = _ClassBuilder;
     var SENSITIVE_STRING = "***SensitiveInformation***";
     var createAggregatedClient = /* @__PURE__ */ __name((commands, Client2) => {
       for (const command of Object.keys(commands)) {
@@ -29061,13 +29135,10 @@ var require_dist_cjs19 = __commonJS({
       }
       return value.slice(idx);
     }, "stripLeadingZeroes");
-    var ServiceException = class _ServiceException extends Error {
-      static {
-        __name(this, "ServiceException");
-      }
+    var _ServiceException = class _ServiceException2 extends Error {
       constructor(options) {
         super(options.message);
-        Object.setPrototypeOf(this, _ServiceException.prototype);
+        Object.setPrototypeOf(this, _ServiceException2.prototype);
         this.name = options.name;
         this.$fault = options.$fault;
         this.$metadata = options.$metadata;
@@ -29082,6 +29153,8 @@ var require_dist_cjs19 = __commonJS({
         return Boolean(candidate.$fault) && Boolean(candidate.$metadata) && (candidate.$fault === "client" || candidate.$fault === "server");
       }
     };
+    __name(_ServiceException, "ServiceException");
+    var ServiceException = _ServiceException;
     var decorateServiceException = /* @__PURE__ */ __name((exception2, additions = {}) => {
       Object.entries(additions).filter(([, v]) => v !== void 0).forEach(([k, v]) => {
         if (exception2[k] == void 0 || exception2[k] === "") {
@@ -29097,7 +29170,7 @@ var require_dist_cjs19 = __commonJS({
       const $metadata = deserializeMetadata(output);
       const statusCode = $metadata.httpStatusCode ? $metadata.httpStatusCode + "" : void 0;
       const response = new exceptionCtor({
-        name: parsedBody?.code || parsedBody?.Code || errorCode || statusCode || "UnknownError",
+        name: (parsedBody == null ? void 0 : parsedBody.code) || (parsedBody == null ? void 0 : parsedBody.Code) || errorCode || statusCode || "UnknownError",
         $fault: "client",
         $metadata
       });
@@ -29242,10 +29315,7 @@ var require_dist_cjs19 = __commonJS({
       return LazyJsonString(JSON.stringify(object));
     };
     LazyJsonString.fromObject = LazyJsonString.from;
-    var NoOpLogger = class {
-      static {
-        __name(this, "NoOpLogger");
-      }
+    var _NoOpLogger = class _NoOpLogger {
       trace() {
       }
       debug() {
@@ -29257,6 +29327,8 @@ var require_dist_cjs19 = __commonJS({
       error() {
       }
     };
+    __name(_NoOpLogger, "NoOpLogger");
+    var NoOpLogger = _NoOpLogger;
     function map2(arg0, arg1, arg2) {
       let target;
       let filter;
@@ -31319,6 +31391,7 @@ __export(tslib_es6_exports, {
   __propKey: () => __propKey,
   __read: () => __read,
   __rest: () => __rest,
+  __rewriteRelativeImportExtension: () => __rewriteRelativeImportExtension,
   __runInitializers: () => __runInitializers,
   __setFunctionName: () => __setFunctionName,
   __spread: () => __spread,
@@ -31438,8 +31511,8 @@ function __generator(thisArg, body) {
   var _ = { label: 0, sent: function() {
     if (t[0] & 1) throw t[1];
     return t[1];
-  }, trys: [], ops: [] }, f, y, t, g;
-  return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() {
+  }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+  return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() {
     return this;
   }), g;
   function verb(n) {
@@ -31561,15 +31634,23 @@ function __await(v) {
 function __asyncGenerator(thisArg, _arguments, generator) {
   if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
   var g = generator.apply(thisArg, _arguments || []), i, q = [];
-  return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
+  return i = Object.create((typeof AsyncIterator === "function" ? AsyncIterator : Object).prototype), verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function() {
     return this;
   }, i;
-  function verb(n) {
-    if (g[n]) i[n] = function(v) {
-      return new Promise(function(a, b) {
-        q.push([n, v, a, b]) > 1 || resume(n, v);
-      });
+  function awaitReturn(f) {
+    return function(v) {
+      return Promise.resolve(v).then(f, reject);
     };
+  }
+  function verb(n, f) {
+    if (g[n]) {
+      i[n] = function(v) {
+        return new Promise(function(a, b) {
+          q.push([n, v, a, b]) > 1 || resume(n, v);
+        });
+      };
+      if (f) i[n] = f(i[n]);
+    }
   }
   function resume(n, v) {
     try {
@@ -31635,7 +31716,7 @@ function __importStar(mod) {
   if (mod && mod.__esModule) return mod;
   var result = {};
   if (mod != null) {
-    for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
   }
   __setModuleDefault(result, mod);
   return result;
@@ -31661,7 +31742,7 @@ function __classPrivateFieldIn(state2, receiver) {
 function __addDisposableResource(env, value, async) {
   if (value !== null && value !== void 0) {
     if (typeof value !== "object" && typeof value !== "function") throw new TypeError("Object expected.");
-    var dispose;
+    var dispose, inner;
     if (async) {
       if (!Symbol.asyncDispose) throw new TypeError("Symbol.asyncDispose is not defined.");
       dispose = value[Symbol.asyncDispose];
@@ -31669,8 +31750,16 @@ function __addDisposableResource(env, value, async) {
     if (dispose === void 0) {
       if (!Symbol.dispose) throw new TypeError("Symbol.dispose is not defined.");
       dispose = value[Symbol.dispose];
+      if (async) inner = dispose;
     }
     if (typeof dispose !== "function") throw new TypeError("Object not disposable.");
+    if (inner) dispose = function() {
+      try {
+        inner.call(this);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    };
     env.stack.push({ value, dispose, async });
   } else if (async) {
     env.stack.push({ async: true });
@@ -31682,24 +31771,36 @@ function __disposeResources(env) {
     env.error = env.hasError ? new _SuppressedError(e, env.error, "An error was suppressed during disposal.") : e;
     env.hasError = true;
   }
+  var r, s = 0;
   function next() {
-    while (env.stack.length) {
-      var rec = env.stack.pop();
+    while (r = env.stack.pop()) {
       try {
-        var result = rec.dispose && rec.dispose.call(rec.value);
-        if (rec.async) return Promise.resolve(result).then(next, function(e) {
-          fail(e);
-          return next();
-        });
+        if (!r.async && s === 1) return s = 0, env.stack.push(r), Promise.resolve().then(next);
+        if (r.dispose) {
+          var result = r.dispose.call(r.value);
+          if (r.async) return s |= 2, Promise.resolve(result).then(next, function(e) {
+            fail(e);
+            return next();
+          });
+        } else s |= 1;
       } catch (e) {
         fail(e);
       }
     }
+    if (s === 1) return env.hasError ? Promise.reject(env.error) : Promise.resolve();
     if (env.hasError) throw env.error;
   }
   return next();
 }
-var extendStatics, __assign, __createBinding, __setModuleDefault, _SuppressedError, tslib_es6_default;
+function __rewriteRelativeImportExtension(path2, preserveJsx) {
+  if (typeof path2 === "string" && /^\.\.?\//.test(path2)) {
+    return path2.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function(m, tsx, d, ext, cm) {
+      return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : d + ext + "." + cm.toLowerCase() + "js";
+    });
+  }
+  return path2;
+}
+var extendStatics, __assign, __createBinding, __setModuleDefault, ownKeys, _SuppressedError, tslib_es6_default;
 var init_tslib_es6 = __esm({
   "node_modules/tslib/tslib.es6.mjs"() {
     extendStatics = function(d, b) {
@@ -31738,6 +31839,14 @@ var init_tslib_es6 = __esm({
     } : function(o, v) {
       o["default"] = v;
     };
+    ownKeys = function(o) {
+      ownKeys = Object.getOwnPropertyNames || function(o2) {
+        var ar = [];
+        for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
+        return ar;
+      };
+      return ownKeys(o);
+    };
     _SuppressedError = typeof SuppressedError === "function" ? SuppressedError : function(error2, suppressed, message) {
       var e = new Error(message);
       return e.name = "SuppressedError", e.error = error2, e.suppressed = suppressed, e;
@@ -31748,6 +31857,10 @@ var init_tslib_es6 = __esm({
       __rest,
       __decorate,
       __param,
+      __esDecorate,
+      __runInitializers,
+      __propKey,
+      __setFunctionName,
       __metadata,
       __awaiter,
       __generator,
@@ -31769,7 +31882,8 @@ var init_tslib_es6 = __esm({
       __classPrivateFieldSet,
       __classPrivateFieldIn,
       __addDisposableResource,
-      __disposeResources
+      __disposeResources,
+      __rewriteRelativeImportExtension
     };
   }
 });
@@ -32711,7 +32825,9 @@ var require_getCrc32ChecksumAlgorithmFunction = __commonJS({
     var util_1 = require_main2();
     var zlib = tslib_1.__importStar(require("zlib"));
     var NodeCrc32 = class {
-      checksum = 0;
+      constructor() {
+        this.checksum = 0;
+      }
       update(data) {
         this.checksum = zlib.crc32(data, this.checksum);
       }
@@ -32928,35 +33044,32 @@ var require_dist_cjs23 = __commonJS({
       }
       return false;
     }, "hasHeader");
-    var hasHeaderWithPrefix = /* @__PURE__ */ __name((headerPrefix, headers) => {
-      const soughtHeaderPrefix = headerPrefix.toLowerCase();
-      for (const headerName of Object.keys(headers)) {
-        if (headerName.toLowerCase().startsWith(soughtHeaderPrefix)) {
-          return true;
-        }
-      }
-      return false;
-    }, "hasHeaderWithPrefix");
     var import_is_array_buffer = require_dist_cjs6();
     var isStreaming = /* @__PURE__ */ __name((body) => body !== void 0 && typeof body !== "string" && !ArrayBuffer.isView(body) && !(0, import_is_array_buffer.isArrayBuffer)(body), "isStreaming");
     var import_crc32c = require_main3();
     var import_getCrc32ChecksumAlgorithmFunction = require_getCrc32ChecksumAlgorithmFunction();
-    var selectChecksumAlgorithmFunction = /* @__PURE__ */ __name((checksumAlgorithm, config) => {
-      switch (checksumAlgorithm) {
-        case "MD5":
-          return config.md5;
-        case "CRC32":
-          return (0, import_getCrc32ChecksumAlgorithmFunction.getCrc32ChecksumAlgorithmFunction)();
-        case "CRC32C":
-          return import_crc32c.AwsCrc32c;
-        case "SHA1":
-          return config.sha1;
-        case "SHA256":
-          return config.sha256;
-        default:
-          throw new Error(`Unsupported checksum algorithm: ${checksumAlgorithm}`);
-      }
-    }, "selectChecksumAlgorithmFunction");
+    var selectChecksumAlgorithmFunction = /* @__PURE__ */ __name((checksumAlgorithm, config) => ({
+      [
+        "MD5"
+        /* MD5 */
+      ]: config.md5,
+      [
+        "CRC32"
+        /* CRC32 */
+      ]: (0, import_getCrc32ChecksumAlgorithmFunction.getCrc32ChecksumAlgorithmFunction)(),
+      [
+        "CRC32C"
+        /* CRC32C */
+      ]: import_crc32c.AwsCrc32c,
+      [
+        "SHA1"
+        /* SHA1 */
+      ]: config.sha1,
+      [
+        "SHA256"
+        /* SHA256 */
+      ]: config.sha256
+    })[checksumAlgorithm], "selectChecksumAlgorithmFunction");
     var import_util_utf8 = require_dist_cjs8();
     var stringHasher = /* @__PURE__ */ __name((checksumAlgorithmFn, body) => {
       const hash = new checksumAlgorithmFn();
@@ -32973,9 +33086,6 @@ var require_dist_cjs23 = __commonJS({
       if (!import_protocol_http8.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
-      if (hasHeaderWithPrefix("x-amz-checksum-", args.request.headers)) {
-        return next(args);
-      }
       const { request, input } = args;
       const { body: requestBody, headers } = request;
       const { base64Encoder, streamHasher } = config;
@@ -32984,7 +33094,7 @@ var require_dist_cjs23 = __commonJS({
         input,
         {
           requestChecksumRequired,
-          requestAlgorithmMember: requestAlgorithmMember?.name
+          requestAlgorithmMember
         },
         !!context3.isS3ExpressBucket
       );
@@ -33257,6 +33367,7 @@ var require_dist_cjs25 = __commonJS({
     });
     module2.exports = __toCommonJS2(src_exports);
     var loggerMiddleware = /* @__PURE__ */ __name(() => (next, context3) => async (args) => {
+      var _a, _b;
       try {
         const response = await next(args);
         const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
@@ -33264,7 +33375,7 @@ var require_dist_cjs25 = __commonJS({
         const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context3.inputFilterSensitiveLog;
         const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog ?? context3.outputFilterSensitiveLog;
         const { $metadata, ...outputWithoutMetadata } = response.output;
-        logger?.info?.({
+        (_a = logger == null ? void 0 : logger.info) == null ? void 0 : _a.call(logger, {
           clientName,
           commandName,
           input: inputFilterSensitiveLog(args.input),
@@ -33276,7 +33387,7 @@ var require_dist_cjs25 = __commonJS({
         const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
         const { overrideInputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
         const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context3.inputFilterSensitiveLog;
-        logger?.error?.({
+        (_b = logger == null ? void 0 : logger.error) == null ? void 0 : _b.call(logger, {
           clientName,
           commandName,
           input: inputFilterSensitiveLog(args.input),
@@ -33539,11 +33650,12 @@ var require_dist_cjs29 = __commonJS({
     var CONTENT_LENGTH_HEADER = "content-length";
     function checkContentLengthHeader() {
       return (next, context3) => async (args) => {
+        var _a;
         const { request } = args;
         if (import_protocol_http8.HttpRequest.isInstance(request)) {
           if (!(CONTENT_LENGTH_HEADER in request.headers)) {
             const message = `Are you using a Stream of unknown length as the Body of a PutObject request? Consider using Upload instead from @aws-sdk/lib-storage.`;
-            if (typeof context3?.logger?.warn === "function" && !(context3.logger instanceof import_smithy_client4.NoOpLogger)) {
+            if (typeof ((_a = context3 == null ? void 0 : context3.logger) == null ? void 0 : _a.warn) === "function" && !(context3.logger instanceof import_smithy_client4.NoOpLogger)) {
               context3.logger.warn(message);
             } else {
               console.warn(message);
@@ -33608,15 +33720,16 @@ var require_dist_cjs29 = __commonJS({
     };
     function regionRedirectMiddleware(clientConfig) {
       return (next, context3) => async (args) => {
+        var _a, _b, _c;
         try {
           return await next(args);
         } catch (err) {
           if (clientConfig.followRegionRedirects) {
-            if (err?.$metadata?.httpStatusCode === 301 || // err.name === "PermanentRedirect" && --> removing the error name check, as that allows for HEAD operations (which have the 301 status code, but not the same error name) to be covered for region redirection as well
-            err?.$metadata?.httpStatusCode === 400 && err?.name === "IllegalLocationConstraintException") {
+            if (((_a = err == null ? void 0 : err.$metadata) == null ? void 0 : _a.httpStatusCode) === 301 || // err.name === "PermanentRedirect" && --> removing the error name check, as that allows for HEAD operations (which have the 301 status code, but not the same error name) to be covered for region redirection as well
+            ((_b = err == null ? void 0 : err.$metadata) == null ? void 0 : _b.httpStatusCode) === 400 && (err == null ? void 0 : err.name) === "IllegalLocationConstraintException") {
               try {
                 const actualRegion = err.$response.headers["x-amz-bucket-region"];
-                context3.logger?.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
+                (_c = context3.logger) == null ? void 0 : _c.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
                 context3.__s3RegionRedirect = actualRegion;
               } catch (e) {
                 throw new Error("Region redirect failed: " + e);
@@ -33643,6 +33756,7 @@ var require_dist_cjs29 = __commonJS({
     }), "getRegionRedirectMiddlewarePlugin");
     var s3ExpiresMiddleware = /* @__PURE__ */ __name((config) => {
       return (next, context3) => async (args) => {
+        var _a;
         const result = await next(args);
         const { response } = result;
         if (import_protocol_http8.HttpResponse.isInstance(response)) {
@@ -33651,7 +33765,7 @@ var require_dist_cjs29 = __commonJS({
             try {
               (0, import_smithy_client4.parseRfc7231DateTime)(response.headers.expires);
             } catch (e) {
-              context3.logger?.warn(
+              (_a = context3.logger) == null ? void 0 : _a.warn(
                 `AWS SDK Warning for ${context3.clientName}::${context3.commandName} response parsing (${response.headers.expires}): ${e}`
               );
               delete response.headers.expires;
@@ -33673,15 +33787,11 @@ var require_dist_cjs29 = __commonJS({
         clientStack.addRelativeTo(s3ExpiresMiddleware(clientConfig), s3ExpiresMiddlewareOptions);
       }
     }), "getS3ExpiresMiddlewarePlugin");
-    var S3ExpressIdentityCache = class _S3ExpressIdentityCache {
+    var _S3ExpressIdentityCache = class _S3ExpressIdentityCache2 {
       constructor(data = {}) {
         this.data = data;
+        this.lastPurgeTime = Date.now();
       }
-      static {
-        __name(this, "S3ExpressIdentityCache");
-      }
-      lastPurgeTime = Date.now();
-      static EXPIRED_CREDENTIAL_PURGE_INTERVAL_MS = 3e4;
       get(key) {
         const entry = this.data[key];
         if (!entry) {
@@ -33698,7 +33808,7 @@ var require_dist_cjs29 = __commonJS({
       }
       async purgeExpired() {
         const now = Date.now();
-        if (this.lastPurgeTime + _S3ExpressIdentityCache.EXPIRED_CREDENTIAL_PURGE_INTERVAL_MS > now) {
+        if (this.lastPurgeTime + _S3ExpressIdentityCache2.EXPIRED_CREDENTIAL_PURGE_INTERVAL_MS > now) {
           return;
         }
         for (const key in this.data) {
@@ -33714,7 +33824,10 @@ var require_dist_cjs29 = __commonJS({
         }
       }
     };
-    var S3ExpressIdentityCacheEntry = class {
+    __name(_S3ExpressIdentityCache, "S3ExpressIdentityCache");
+    _S3ExpressIdentityCache.EXPIRED_CREDENTIAL_PURGE_INTERVAL_MS = 3e4;
+    var S3ExpressIdentityCache = _S3ExpressIdentityCache;
+    var _S3ExpressIdentityCacheEntry = class _S3ExpressIdentityCacheEntry {
       /**
        * @param identity - stored identity.
        * @param accessed - timestamp of last access in epoch ms.
@@ -33725,34 +33838,30 @@ var require_dist_cjs29 = __commonJS({
         this.isRefreshing = isRefreshing;
         this.accessed = accessed;
       }
-      static {
-        __name(this, "S3ExpressIdentityCacheEntry");
-      }
       get identity() {
         this.accessed = Date.now();
         return this._identity;
       }
     };
-    var S3ExpressIdentityProviderImpl = class _S3ExpressIdentityProviderImpl {
+    __name(_S3ExpressIdentityCacheEntry, "S3ExpressIdentityCacheEntry");
+    var S3ExpressIdentityCacheEntry = _S3ExpressIdentityCacheEntry;
+    var _S3ExpressIdentityProviderImpl = class _S3ExpressIdentityProviderImpl2 {
       constructor(createSessionFn, cache = new S3ExpressIdentityCache()) {
         this.createSessionFn = createSessionFn;
         this.cache = cache;
       }
-      static {
-        __name(this, "S3ExpressIdentityProviderImpl");
-      }
-      static REFRESH_WINDOW_MS = 6e4;
       async getS3ExpressIdentity(awsIdentity, identityProperties) {
         const key = identityProperties.Bucket;
         const { cache } = this;
         const entry = cache.get(key);
         if (entry) {
           return entry.identity.then((identity) => {
-            const isExpired = (identity.expiration?.getTime() ?? 0) < Date.now();
+            var _a, _b;
+            const isExpired = (((_a = identity.expiration) == null ? void 0 : _a.getTime()) ?? 0) < Date.now();
             if (isExpired) {
               return cache.set(key, new S3ExpressIdentityCacheEntry(this.getIdentity(key))).identity;
             }
-            const isExpiringSoon = (identity.expiration?.getTime() ?? 0) < Date.now() + _S3ExpressIdentityProviderImpl.REFRESH_WINDOW_MS;
+            const isExpiringSoon = (((_b = identity.expiration) == null ? void 0 : _b.getTime()) ?? 0) < Date.now() + _S3ExpressIdentityProviderImpl2.REFRESH_WINDOW_MS;
             if (isExpiringSoon && !entry.isRefreshing) {
               entry.isRefreshing = true;
               this.getIdentity(key).then((id) => {
@@ -33765,11 +33874,12 @@ var require_dist_cjs29 = __commonJS({
         return cache.set(key, new S3ExpressIdentityCacheEntry(this.getIdentity(key))).identity;
       }
       async getIdentity(key) {
+        var _a, _b;
         await this.cache.purgeExpired().catch((error2) => {
           console.warn("Error while clearing expired entries in S3ExpressIdentityCache: \n" + error2);
         });
         const session = await this.createSessionFn(key);
-        if (!session.Credentials?.AccessKeyId || !session.Credentials?.SecretAccessKey) {
+        if (!((_a = session.Credentials) == null ? void 0 : _a.AccessKeyId) || !((_b = session.Credentials) == null ? void 0 : _b.SecretAccessKey)) {
           throw new Error("s3#createSession response credential missing AccessKeyId or SecretAccessKey.");
         }
         const identity = {
@@ -33781,6 +33891,9 @@ var require_dist_cjs29 = __commonJS({
         return identity;
       }
     };
+    __name(_S3ExpressIdentityProviderImpl, "S3ExpressIdentityProviderImpl");
+    _S3ExpressIdentityProviderImpl.REFRESH_WINDOW_MS = 6e4;
+    var S3ExpressIdentityProviderImpl = _S3ExpressIdentityProviderImpl;
     var import_signature_v42 = require_dist_cjs17();
     var import_util_config_provider = require_dist_cjs27();
     var S3_EXPRESS_BUCKET_TYPE = "Directory";
@@ -33795,10 +33908,7 @@ var require_dist_cjs29 = __commonJS({
       configFileSelector: (profile) => (0, import_util_config_provider.booleanSelector)(profile, NODE_DISABLE_S3_EXPRESS_SESSION_AUTH_INI_NAME, import_util_config_provider.SelectorType.CONFIG),
       default: false
     };
-    var SignatureV4S3Express = class extends import_signature_v42.SignatureV4 {
-      static {
-        __name(this, "SignatureV4S3Express");
-      }
+    var _SignatureV4S3Express = class _SignatureV4S3Express extends import_signature_v42.SignatureV4 {
       /**
        * Signs with alternate provided credentials instead of those provided in the
        * constructor.
@@ -33827,6 +33937,8 @@ var require_dist_cjs29 = __commonJS({
         return this.presign(requestToSign, options);
       }
     };
+    __name(_SignatureV4S3Express, "SignatureV4S3Express");
+    var SignatureV4S3Express = _SignatureV4S3Express;
     function getCredentialsWithoutSessionToken(credentials) {
       const credentialsWithoutSessionToken = {
         accessKeyId: credentials.accessKeyId,
@@ -33852,10 +33964,11 @@ var require_dist_cjs29 = __commonJS({
     var import_core4 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var s3ExpressMiddleware = /* @__PURE__ */ __name((options) => {
       return (next, context3) => async (args) => {
+        var _a, _b, _c, _d, _e;
         if (context3.endpointV2) {
           const endpoint = context3.endpointV2;
-          const isS3ExpressAuth = endpoint.properties?.authSchemes?.[0]?.name === S3_EXPRESS_AUTH_SCHEME;
-          const isS3ExpressBucket = endpoint.properties?.backend === S3_EXPRESS_BACKEND || endpoint.properties?.bucketType === S3_EXPRESS_BUCKET_TYPE;
+          const isS3ExpressAuth = ((_c = (_b = (_a = endpoint.properties) == null ? void 0 : _a.authSchemes) == null ? void 0 : _b[0]) == null ? void 0 : _c.name) === S3_EXPRESS_AUTH_SCHEME;
+          const isS3ExpressBucket = ((_d = endpoint.properties) == null ? void 0 : _d.backend) === S3_EXPRESS_BACKEND || ((_e = endpoint.properties) == null ? void 0 : _e.bucketType) === S3_EXPRESS_BUCKET_TYPE;
           if (isS3ExpressBucket) {
             (0, import_core4.setFeature)(context3, "S3_EXPRESS_BUCKET", "J");
             context3.isS3ExpressBucket = true;
@@ -33983,7 +34096,7 @@ var require_dist_cjs29 = __commonJS({
       if (statusCode < 200 || statusCode >= 300) {
         return result;
       }
-      const isSplittableStream = typeof sourceBody?.stream === "function" || typeof sourceBody?.pipe === "function" || typeof sourceBody?.tee === "function";
+      const isSplittableStream = typeof (sourceBody == null ? void 0 : sourceBody.stream) === "function" || typeof (sourceBody == null ? void 0 : sourceBody.pipe) === "function" || typeof (sourceBody == null ? void 0 : sourceBody.tee) === "function";
       if (!isSplittableStream) {
         return result;
       }
@@ -33998,7 +34111,7 @@ var require_dist_cjs29 = __commonJS({
           return (0, import_util_stream2.headStream)(stream, MAX_BYTES_TO_INSPECT);
         }
       });
-      if (typeof bodyCopy?.destroy === "function") {
+      if (typeof (bodyCopy == null ? void 0 : bodyCopy.destroy) === "function") {
         bodyCopy.destroy();
       }
       const bodyStringTail = config.utf8Encoder(bodyBytes.subarray(bodyBytes.length - 16));
@@ -34033,6 +34146,7 @@ var require_dist_cjs29 = __commonJS({
     var import_util_arn_parser = require_dist_cjs28();
     function bucketEndpointMiddleware(options) {
       return (next, context3) => async (args) => {
+        var _a, _b, _c, _d;
         if (options.bucketEndpoint) {
           const endpoint = context3.endpointV2;
           if (endpoint) {
@@ -34046,10 +34160,10 @@ var require_dist_cjs29 = __commonJS({
                 };
               } catch (e) {
                 const warning = `@aws-sdk/middleware-sdk-s3: bucketEndpoint=true was set but Bucket=${bucket} could not be parsed as URL.`;
-                if (context3.logger?.constructor?.name === "NoOpLogger") {
+                if (((_b = (_a = context3.logger) == null ? void 0 : _a.constructor) == null ? void 0 : _b.name) === "NoOpLogger") {
                   console.warn(warning);
                 } else {
-                  context3.logger?.warn?.(warning);
+                  (_d = (_c = context3.logger) == null ? void 0 : _c.warn) == null ? void 0 : _d.call(_c, warning);
                 }
                 throw e;
               }
@@ -34126,7 +34240,7 @@ var require_dist_cjs30 = __commonJS({
       resolveEndpoint: () => resolveEndpoint2
     });
     module2.exports = __toCommonJS2(src_exports);
-    var EndpointCache = class {
+    var _EndpointCache = class _EndpointCache {
       /**
        * @param [size] - desired average maximum capacity. A buffer of 10 additional keys will be allowed
        *                 before keys are dropped.
@@ -34142,9 +34256,6 @@ var require_dist_cjs30 = __commonJS({
         if (params) {
           this.parameters = params;
         }
-      }
-      static {
-        __name(this, "EndpointCache");
       }
       /**
        * @param endpointParams - query for endpoint.
@@ -34194,6 +34305,8 @@ var require_dist_cjs30 = __commonJS({
         return buffer;
       }
     };
+    __name(_EndpointCache, "EndpointCache");
+    var EndpointCache = _EndpointCache;
     var IP_V4_REGEX = new RegExp(
       `^(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)){3}$`
     );
@@ -34226,15 +34339,14 @@ var require_dist_cjs30 = __commonJS({
       return JSON.stringify(input, null, 2);
     }
     __name(toDebugString, "toDebugString");
-    var EndpointError2 = class extends Error {
-      static {
-        __name(this, "EndpointError");
-      }
+    var _EndpointError = class _EndpointError extends Error {
       constructor(message) {
         super(message);
         this.name = "EndpointError";
       }
     };
+    __name(_EndpointError, "EndpointError");
+    var EndpointError2 = _EndpointError;
     var booleanEquals = /* @__PURE__ */ __name((value1, value2) => value1 === value2, "booleanEquals");
     var getAttrPathList = /* @__PURE__ */ __name((path2) => {
       const parts = path2.split(".");
@@ -34399,17 +34511,19 @@ var require_dist_cjs30 = __commonJS({
       return endpointFunctions[fn](...evaluatedArgs);
     }, "callFunction");
     var evaluateCondition = /* @__PURE__ */ __name(({ assign, ...fnArgs }, options) => {
+      var _a, _b;
       if (assign && assign in options.referenceRecord) {
         throw new EndpointError2(`'${assign}' is already defined in Reference Record.`);
       }
       const value = callFunction(fnArgs, options);
-      options.logger?.debug?.(`${debugId} evaluateCondition: ${toDebugString(fnArgs)} = ${toDebugString(value)}`);
+      (_b = (_a = options.logger) == null ? void 0 : _a.debug) == null ? void 0 : _b.call(_a, `${debugId} evaluateCondition: ${toDebugString(fnArgs)} = ${toDebugString(value)}`);
       return {
         result: value === "" ? true : !!value,
         ...assign != null && { toAssign: { name: assign, value } }
       };
     }, "evaluateCondition");
     var evaluateConditions = /* @__PURE__ */ __name((conditions = [], options) => {
+      var _a, _b;
       const conditionsReferenceRecord = {};
       for (const condition of conditions) {
         const { result, toAssign } = evaluateCondition(condition, {
@@ -34424,7 +34538,7 @@ var require_dist_cjs30 = __commonJS({
         }
         if (toAssign) {
           conditionsReferenceRecord[toAssign.name] = toAssign.value;
-          options.logger?.debug?.(`${debugId} assign: ${toAssign.name} := ${toDebugString(toAssign.value)}`);
+          (_b = (_a = options.logger) == null ? void 0 : _a.debug) == null ? void 0 : _b.call(_a, `${debugId} assign: ${toAssign.name} := ${toDebugString(toAssign.value)}`);
         }
       }
       return { result: true, referenceRecord: conditionsReferenceRecord };
@@ -34480,6 +34594,7 @@ var require_dist_cjs30 = __commonJS({
       throw new EndpointError2(`Endpoint URL must be a string, got ${typeof expression}`);
     }, "getEndpointUrl");
     var evaluateEndpointRule = /* @__PURE__ */ __name((endpointRule, options) => {
+      var _a, _b;
       const { conditions, endpoint } = endpointRule;
       const { result, referenceRecord } = evaluateConditions(conditions, options);
       if (!result) {
@@ -34490,7 +34605,7 @@ var require_dist_cjs30 = __commonJS({
         referenceRecord: { ...options.referenceRecord, ...referenceRecord }
       };
       const { url, properties, headers } = endpoint;
-      options.logger?.debug?.(`${debugId} Resolving endpoint from template: ${toDebugString(endpoint)}`);
+      (_b = (_a = options.logger) == null ? void 0 : _a.debug) == null ? void 0 : _b.call(_a, `${debugId} Resolving endpoint from template: ${toDebugString(endpoint)}`);
       return {
         ...headers != void 0 && {
           headers: getEndpointHeaders(headers, endpointRuleOptions)
@@ -34546,9 +34661,10 @@ var require_dist_cjs30 = __commonJS({
       throw new EndpointError2(`Rules evaluation failed`);
     }, "evaluateRules");
     var resolveEndpoint2 = /* @__PURE__ */ __name((ruleSetObject, options) => {
+      var _a, _b, _c, _d;
       const { endpointParams, logger } = options;
       const { parameters, rules } = ruleSetObject;
-      options.logger?.debug?.(`${debugId} Initial EndpointParams: ${toDebugString(endpointParams)}`);
+      (_b = (_a = options.logger) == null ? void 0 : _a.debug) == null ? void 0 : _b.call(_a, `${debugId} Initial EndpointParams: ${toDebugString(endpointParams)}`);
       const paramsWithDefault = Object.entries(parameters).filter(([, v]) => v.default != null).map(([k, v]) => [k, v.default]);
       if (paramsWithDefault.length > 0) {
         for (const [paramKey, paramDefaultValue] of paramsWithDefault) {
@@ -34562,7 +34678,7 @@ var require_dist_cjs30 = __commonJS({
         }
       }
       const endpoint = evaluateRules(rules, { endpointParams, logger, referenceRecord: {} });
-      options.logger?.debug?.(`${debugId} Resolved endpoint: ${toDebugString(endpoint)}`);
+      (_d = (_c = options.logger) == null ? void 0 : _c.debug) == null ? void 0 : _d.call(_c, `${debugId} Resolved endpoint: ${toDebugString(endpoint)}`);
       return endpoint;
     }, "resolveEndpoint");
   }
@@ -34983,13 +35099,14 @@ var require_dist_cjs32 = __commonJS({
         ...input,
         customUserAgent: typeof input.customUserAgent === "string" ? [[input.customUserAgent]] : input.customUserAgent,
         userAgentAppId: async () => {
+          var _a, _b;
           const appId = await normalizedAppIdProvider();
           if (!isValidUserAgentAppId(appId)) {
-            const logger = input.logger?.constructor?.name === "NoOpLogger" || !input.logger ? console : input.logger;
+            const logger = ((_b = (_a = input.logger) == null ? void 0 : _a.constructor) == null ? void 0 : _b.name) === "NoOpLogger" || !input.logger ? console : input.logger;
             if (typeof appId !== "string") {
-              logger?.warn("userAgentAppId must be a string or undefined.");
+              logger == null ? void 0 : logger.warn("userAgentAppId must be a string or undefined.");
             } else if (appId.length > 50) {
-              logger?.warn("The provided userAgentAppId exceeds the maximum length of 50 characters.");
+              logger == null ? void 0 : logger.warn("The provided userAgentAppId exceeds the maximum length of 50 characters.");
             }
           }
           return appId;
@@ -35002,14 +35119,15 @@ var require_dist_cjs32 = __commonJS({
     var import_core22 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var ACCOUNT_ID_ENDPOINT_REGEX = /\d{12}\.ddb/;
     async function checkFeatures(context3, config, args) {
+      var _a, _b, _c, _d, _e, _f, _g;
       const request = args.request;
-      if (request?.headers?.["smithy-protocol"] === "rpc-v2-cbor") {
+      if (((_a = request == null ? void 0 : request.headers) == null ? void 0 : _a["smithy-protocol"]) === "rpc-v2-cbor") {
         (0, import_core22.setFeature)(context3, "PROTOCOL_RPC_V2_CBOR", "M");
       }
       if (typeof config.retryStrategy === "function") {
         const retryStrategy = await config.retryStrategy();
         if (typeof retryStrategy.acquireInitialRetryToken === "function") {
-          if (retryStrategy.constructor?.name?.includes("Adaptive")) {
+          if ((_c = (_b = retryStrategy.constructor) == null ? void 0 : _b.name) == null ? void 0 : _c.includes("Adaptive")) {
             (0, import_core22.setFeature)(context3, "RETRY_MODE_ADAPTIVE", "F");
           } else {
             (0, import_core22.setFeature)(context3, "RETRY_MODE_STANDARD", "E");
@@ -35020,10 +35138,10 @@ var require_dist_cjs32 = __commonJS({
       }
       if (typeof config.accountIdEndpointMode === "function") {
         const endpointV2 = context3.endpointV2;
-        if (String(endpointV2?.url?.hostname).match(ACCOUNT_ID_ENDPOINT_REGEX)) {
+        if (String((_d = endpointV2 == null ? void 0 : endpointV2.url) == null ? void 0 : _d.hostname).match(ACCOUNT_ID_ENDPOINT_REGEX)) {
           (0, import_core22.setFeature)(context3, "ACCOUNT_ID_ENDPOINT", "O");
         }
-        switch (await config.accountIdEndpointMode?.()) {
+        switch (await ((_e = config.accountIdEndpointMode) == null ? void 0 : _e.call(config))) {
           case "disabled":
             (0, import_core22.setFeature)(context3, "ACCOUNT_ID_MODE_DISABLED", "Q");
             break;
@@ -35035,8 +35153,8 @@ var require_dist_cjs32 = __commonJS({
             break;
         }
       }
-      const identity = context3.__smithy_context?.selectedHttpAuthScheme?.identity;
-      if (identity?.$source) {
+      const identity = (_g = (_f = context3.__smithy_context) == null ? void 0 : _f.selectedHttpAuthScheme) == null ? void 0 : _g.identity;
+      if (identity == null ? void 0 : identity.$source) {
         const credentials = identity;
         if (credentials.accountId) {
           (0, import_core22.setFeature)(context3, "RESOLVED_ACCOUNT_ID", "T");
@@ -35073,21 +35191,22 @@ var require_dist_cjs32 = __commonJS({
     }
     __name(encodeFeatures, "encodeFeatures");
     var userAgentMiddleware = /* @__PURE__ */ __name((options) => (next, context3) => async (args) => {
+      var _a, _b, _c, _d;
       const { request } = args;
       if (!import_protocol_http8.HttpRequest.isInstance(request)) {
         return next(args);
       }
       const { headers } = request;
-      const userAgent = context3?.userAgent?.map(escapeUserAgent) || [];
+      const userAgent = ((_a = context3 == null ? void 0 : context3.userAgent) == null ? void 0 : _a.map(escapeUserAgent)) || [];
       const defaultUserAgent = (await options.defaultUserAgentProvider()).map(escapeUserAgent);
       await checkFeatures(context3, options, args);
       const awsContext = context3;
       defaultUserAgent.push(
         `m/${encodeFeatures(
-          Object.assign({}, context3.__smithy_context?.features, awsContext.__aws_sdk_context?.features)
+          Object.assign({}, (_b = context3.__smithy_context) == null ? void 0 : _b.features, (_c = awsContext.__aws_sdk_context) == null ? void 0 : _c.features)
         )}`
       );
-      const customUserAgent = options?.customUserAgent?.map(escapeUserAgent) || [];
+      const customUserAgent = ((_d = options == null ? void 0 : options.customUserAgent) == null ? void 0 : _d.map(escapeUserAgent)) || [];
       const appId = await options.userAgentAppId();
       if (appId) {
         defaultUserAgent.push(escapeUserAgent([`app/${appId}`]));
@@ -35112,8 +35231,9 @@ var require_dist_cjs32 = __commonJS({
       });
     }, "userAgentMiddleware");
     var escapeUserAgent = /* @__PURE__ */ __name((userAgentPair) => {
+      var _a;
       const name = userAgentPair[0].split(UA_NAME_SEPARATOR).map((part) => part.replace(UA_NAME_ESCAPE_REGEX, UA_ESCAPE_CHAR)).join(UA_NAME_SEPARATOR);
-      const version2 = userAgentPair[1]?.replace(UA_VALUE_ESCAPE_REGEX, UA_ESCAPE_CHAR);
+      const version2 = (_a = userAgentPair[1]) == null ? void 0 : _a.replace(UA_VALUE_ESCAPE_REGEX, UA_ESCAPE_CHAR);
       const prefixSeparatorIndex = name.indexOf(UA_NAME_SEPARATOR);
       const prefix = name.substring(0, prefixSeparatorIndex);
       let uaName = name.substring(prefixSeparatorIndex + 1);
@@ -35278,9 +35398,12 @@ var require_dist_cjs33 = __commonJS({
         }
       };
     }, "resolveRegionConfig");
-    var getHostnameFromVariants = /* @__PURE__ */ __name((variants = [], { useFipsEndpoint, useDualstackEndpoint }) => variants.find(
-      ({ tags }) => useFipsEndpoint === tags.includes("fips") && useDualstackEndpoint === tags.includes("dualstack")
-    )?.hostname, "getHostnameFromVariants");
+    var getHostnameFromVariants = /* @__PURE__ */ __name((variants = [], { useFipsEndpoint, useDualstackEndpoint }) => {
+      var _a;
+      return (_a = variants.find(
+        ({ tags }) => useFipsEndpoint === tags.includes("fips") && useDualstackEndpoint === tags.includes("dualstack")
+      )) == null ? void 0 : _a.hostname;
+    }, "getHostnameFromVariants");
     var getResolvedHostname = /* @__PURE__ */ __name((resolvedRegion, { regionHostname, partitionHostname }) => regionHostname ? regionHostname : partitionHostname ? partitionHostname.replace("{region}", resolvedRegion) : void 0, "getResolvedHostname");
     var getResolvedPartition = /* @__PURE__ */ __name((region, { partitionHash }) => Object.keys(partitionHash || {}).find((key) => partitionHash[key].regions.includes(region)) ?? "aws", "getResolvedPartition");
     var getResolvedSigningRegion = /* @__PURE__ */ __name((hostname, { signingRegion, regionRegex, useFipsEndpoint }) => {
@@ -35301,17 +35424,18 @@ var require_dist_cjs33 = __commonJS({
       regionHash,
       partitionHash
     }) => {
+      var _a, _b, _c, _d, _e;
       const partition = getResolvedPartition(region, { partitionHash });
-      const resolvedRegion = region in regionHash ? region : partitionHash[partition]?.endpoint ?? region;
+      const resolvedRegion = region in regionHash ? region : ((_a = partitionHash[partition]) == null ? void 0 : _a.endpoint) ?? region;
       const hostnameOptions = { useFipsEndpoint, useDualstackEndpoint };
-      const regionHostname = getHostnameFromVariants(regionHash[resolvedRegion]?.variants, hostnameOptions);
-      const partitionHostname = getHostnameFromVariants(partitionHash[partition]?.variants, hostnameOptions);
+      const regionHostname = getHostnameFromVariants((_b = regionHash[resolvedRegion]) == null ? void 0 : _b.variants, hostnameOptions);
+      const partitionHostname = getHostnameFromVariants((_c = partitionHash[partition]) == null ? void 0 : _c.variants, hostnameOptions);
       const hostname = getResolvedHostname(resolvedRegion, { regionHostname, partitionHostname });
       if (hostname === void 0) {
         throw new Error(`Endpoint resolution failed for: ${{ resolvedRegion, useFipsEndpoint, useDualstackEndpoint }}`);
       }
       const signingRegion = getResolvedSigningRegion(hostname, {
-        signingRegion: regionHash[resolvedRegion]?.signingRegion,
+        signingRegion: (_d = regionHash[resolvedRegion]) == null ? void 0 : _d.signingRegion,
         regionRegex: partitionHash[partition].regionRegex,
         useFipsEndpoint
       });
@@ -35320,7 +35444,7 @@ var require_dist_cjs33 = __commonJS({
         signingService,
         hostname,
         ...signingRegion && { signingRegion },
-        ...regionHash[resolvedRegion]?.signingService && {
+        ...((_e = regionHash[resolvedRegion]) == null ? void 0 : _e.signingService) && {
           signingService: regionHash[resolvedRegion].signingService
         }
       };
@@ -35841,11 +35965,21 @@ var require_dist_cjs36 = __commonJS({
     var NODEJS_TIMEOUT_ERROR_CODES = ["ECONNRESET", "ECONNREFUSED", "EPIPE", "ETIMEDOUT"];
     var isRetryableByTrait = /* @__PURE__ */ __name((error2) => error2.$retryable !== void 0, "isRetryableByTrait");
     var isClockSkewError = /* @__PURE__ */ __name((error2) => CLOCK_SKEW_ERROR_CODES.includes(error2.name), "isClockSkewError");
-    var isClockSkewCorrectedError = /* @__PURE__ */ __name((error2) => error2.$metadata?.clockSkewCorrected, "isClockSkewCorrectedError");
-    var isThrottlingError = /* @__PURE__ */ __name((error2) => error2.$metadata?.httpStatusCode === 429 || THROTTLING_ERROR_CODES.includes(error2.name) || error2.$retryable?.throttling == true, "isThrottlingError");
-    var isTransientError = /* @__PURE__ */ __name((error2, depth = 0) => isClockSkewCorrectedError(error2) || TRANSIENT_ERROR_CODES.includes(error2.name) || NODEJS_TIMEOUT_ERROR_CODES.includes(error2?.code || "") || TRANSIENT_ERROR_STATUS_CODES.includes(error2.$metadata?.httpStatusCode || 0) || error2.cause !== void 0 && depth <= 10 && isTransientError(error2.cause, depth + 1), "isTransientError");
+    var isClockSkewCorrectedError = /* @__PURE__ */ __name((error2) => {
+      var _a;
+      return (_a = error2.$metadata) == null ? void 0 : _a.clockSkewCorrected;
+    }, "isClockSkewCorrectedError");
+    var isThrottlingError = /* @__PURE__ */ __name((error2) => {
+      var _a, _b;
+      return ((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) === 429 || THROTTLING_ERROR_CODES.includes(error2.name) || ((_b = error2.$retryable) == null ? void 0 : _b.throttling) == true;
+    }, "isThrottlingError");
+    var isTransientError = /* @__PURE__ */ __name((error2, depth = 0) => {
+      var _a;
+      return isClockSkewCorrectedError(error2) || TRANSIENT_ERROR_CODES.includes(error2.name) || NODEJS_TIMEOUT_ERROR_CODES.includes((error2 == null ? void 0 : error2.code) || "") || TRANSIENT_ERROR_STATUS_CODES.includes(((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) || 0) || error2.cause !== void 0 && depth <= 10 && isTransientError(error2.cause, depth + 1);
+    }, "isTransientError");
     var isServerError = /* @__PURE__ */ __name((error2) => {
-      if (error2.$metadata?.httpStatusCode !== void 0) {
+      var _a;
+      if (((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) !== void 0) {
         const statusCode = error2.$metadata.httpStatusCode;
         if (500 <= statusCode && statusCode <= 599 && !isTransientError(error2)) {
           return true;
@@ -35906,7 +36040,7 @@ var require_dist_cjs37 = __commonJS({
     var DEFAULT_MAX_ATTEMPTS = 3;
     var DEFAULT_RETRY_MODE = "standard";
     var import_service_error_classification = require_dist_cjs36();
-    var DefaultRateLimiter = class _DefaultRateLimiter {
+    var _DefaultRateLimiter = class _DefaultRateLimiter2 {
       constructor(options) {
         this.currentCapacity = 0;
         this.enabled = false;
@@ -35915,22 +36049,16 @@ var require_dist_cjs37 = __commonJS({
         this.requestCount = 0;
         this.lastTimestamp = 0;
         this.timeWindow = 0;
-        this.beta = options?.beta ?? 0.7;
-        this.minCapacity = options?.minCapacity ?? 1;
-        this.minFillRate = options?.minFillRate ?? 0.5;
-        this.scaleConstant = options?.scaleConstant ?? 0.4;
-        this.smooth = options?.smooth ?? 0.8;
+        this.beta = (options == null ? void 0 : options.beta) ?? 0.7;
+        this.minCapacity = (options == null ? void 0 : options.minCapacity) ?? 1;
+        this.minFillRate = (options == null ? void 0 : options.minFillRate) ?? 0.5;
+        this.scaleConstant = (options == null ? void 0 : options.scaleConstant) ?? 0.4;
+        this.smooth = (options == null ? void 0 : options.smooth) ?? 0.8;
         const currentTimeInSeconds = this.getCurrentTimeInSeconds();
         this.lastThrottleTime = currentTimeInSeconds;
         this.lastTxRateBucket = Math.floor(this.getCurrentTimeInSeconds());
         this.fillRate = this.minFillRate;
         this.maxCapacity = this.minCapacity;
-      }
-      static {
-        __name(this, "DefaultRateLimiter");
-      }
-      static {
-        this.setTimeoutFn = setTimeout;
       }
       getCurrentTimeInSeconds() {
         return Date.now() / 1e3;
@@ -35945,7 +36073,7 @@ var require_dist_cjs37 = __commonJS({
         this.refillTokenBucket();
         if (amount > this.currentCapacity) {
           const delay = (amount - this.currentCapacity) / this.fillRate * 1e3;
-          await new Promise((resolve) => _DefaultRateLimiter.setTimeoutFn(resolve, delay));
+          await new Promise((resolve) => _DefaultRateLimiter2.setTimeoutFn(resolve, delay));
         }
         this.currentCapacity = this.currentCapacity - amount;
       }
@@ -36011,6 +36139,9 @@ var require_dist_cjs37 = __commonJS({
         return parseFloat(num.toFixed(8));
       }
     };
+    __name(_DefaultRateLimiter, "DefaultRateLimiter");
+    _DefaultRateLimiter.setTimeoutFn = setTimeout;
+    var DefaultRateLimiter = _DefaultRateLimiter;
     var DEFAULT_RETRY_DELAY_BASE = 100;
     var MAXIMUM_RETRY_DELAY = 20 * 1e3;
     var THROTTLING_RETRY_DELAY_BASE = 500;
@@ -36047,16 +36178,13 @@ var require_dist_cjs37 = __commonJS({
         getRetryCost
       };
     }, "createDefaultRetryToken");
-    var StandardRetryStrategy = class {
+    var _StandardRetryStrategy = class _StandardRetryStrategy {
       constructor(maxAttempts) {
         this.maxAttempts = maxAttempts;
         this.mode = "standard";
         this.capacity = INITIAL_RETRY_TOKENS;
         this.retryBackoffStrategy = getDefaultRetryBackoffStrategy();
         this.maxAttemptsProvider = typeof maxAttempts === "function" ? maxAttempts : async () => maxAttempts;
-      }
-      static {
-        __name(this, "StandardRetryStrategy");
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async acquireInitialRetryToken(retryTokenScope) {
@@ -36114,16 +36242,15 @@ var require_dist_cjs37 = __commonJS({
         return errorType === "THROTTLING" || errorType === "TRANSIENT";
       }
     };
-    var AdaptiveRetryStrategy = class {
+    __name(_StandardRetryStrategy, "StandardRetryStrategy");
+    var StandardRetryStrategy = _StandardRetryStrategy;
+    var _AdaptiveRetryStrategy = class _AdaptiveRetryStrategy {
       constructor(maxAttemptsProvider, options) {
         this.maxAttemptsProvider = maxAttemptsProvider;
         this.mode = "adaptive";
         const { rateLimiter } = options ?? {};
         this.rateLimiter = rateLimiter ?? new DefaultRateLimiter();
         this.standardRetryStrategy = new StandardRetryStrategy(maxAttemptsProvider);
-      }
-      static {
-        __name(this, "AdaptiveRetryStrategy");
       }
       async acquireInitialRetryToken(retryTokenScope) {
         await this.rateLimiter.getSendToken();
@@ -36138,10 +36265,9 @@ var require_dist_cjs37 = __commonJS({
         this.standardRetryStrategy.recordSuccess(token);
       }
     };
-    var ConfiguredRetryStrategy = class extends StandardRetryStrategy {
-      static {
-        __name(this, "ConfiguredRetryStrategy");
-      }
+    __name(_AdaptiveRetryStrategy, "AdaptiveRetryStrategy");
+    var AdaptiveRetryStrategy = _AdaptiveRetryStrategy;
+    var _ConfiguredRetryStrategy = class _ConfiguredRetryStrategy extends StandardRetryStrategy {
       /**
        * @param maxAttempts - the maximum number of retry attempts allowed.
        *                      e.g., if set to 3, then 4 total requests are possible.
@@ -36175,6 +36301,8 @@ var require_dist_cjs37 = __commonJS({
         return token;
       }
     };
+    __name(_ConfiguredRetryStrategy, "ConfiguredRetryStrategy");
+    var ConfiguredRetryStrategy = _ConfiguredRetryStrategy;
   }
 });
 
@@ -36238,9 +36366,9 @@ var require_dist_cjs38 = __commonJS({
     var import_util_retry = require_dist_cjs37();
     var getDefaultRetryQuota = /* @__PURE__ */ __name((initialRetryTokens, options) => {
       const MAX_CAPACITY = initialRetryTokens;
-      const noRetryIncrement = options?.noRetryIncrement ?? import_util_retry.NO_RETRY_INCREMENT;
-      const retryCost = options?.retryCost ?? import_util_retry.RETRY_COST;
-      const timeoutRetryCost = options?.timeoutRetryCost ?? import_util_retry.TIMEOUT_RETRY_COST;
+      const noRetryIncrement = (options == null ? void 0 : options.noRetryIncrement) ?? import_util_retry.NO_RETRY_INCREMENT;
+      const retryCost = (options == null ? void 0 : options.retryCost) ?? import_util_retry.RETRY_COST;
+      const timeoutRetryCost = (options == null ? void 0 : options.timeoutRetryCost) ?? import_util_retry.TIMEOUT_RETRY_COST;
       let availableCapacity = initialRetryTokens;
       const getCapacityAmount = /* @__PURE__ */ __name((error2) => error2.name === "TimeoutError" ? timeoutRetryCost : retryCost, "getCapacityAmount");
       const hasRetryTokens = /* @__PURE__ */ __name((error2) => getCapacityAmount(error2) <= availableCapacity, "hasRetryTokens");
@@ -36279,16 +36407,13 @@ var require_dist_cjs38 = __commonJS({
         return new Error(error2);
       return new Error(`AWS SDK error wrapper for ${error2}`);
     }, "asSdkError");
-    var StandardRetryStrategy = class {
+    var _StandardRetryStrategy = class _StandardRetryStrategy {
       constructor(maxAttemptsProvider, options) {
         this.maxAttemptsProvider = maxAttemptsProvider;
         this.mode = import_util_retry.RETRY_MODES.STANDARD;
-        this.retryDecider = options?.retryDecider ?? defaultRetryDecider;
-        this.delayDecider = options?.delayDecider ?? defaultDelayDecider;
-        this.retryQuota = options?.retryQuota ?? getDefaultRetryQuota(import_util_retry.INITIAL_RETRY_TOKENS);
-      }
-      static {
-        __name(this, "StandardRetryStrategy");
+        this.retryDecider = (options == null ? void 0 : options.retryDecider) ?? defaultRetryDecider;
+        this.delayDecider = (options == null ? void 0 : options.delayDecider) ?? defaultDelayDecider;
+        this.retryQuota = (options == null ? void 0 : options.retryQuota) ?? getDefaultRetryQuota(import_util_retry.INITIAL_RETRY_TOKENS);
       }
       shouldRetry(error2, attempts, maxAttempts) {
         return attempts < maxAttempts && this.retryDecider(error2) && this.retryQuota.hasRetryTokens(error2);
@@ -36316,11 +36441,11 @@ var require_dist_cjs38 = __commonJS({
             if (import_protocol_http8.HttpRequest.isInstance(request)) {
               request.headers[import_util_retry.REQUEST_HEADER] = `attempt=${attempts + 1}; max=${maxAttempts}`;
             }
-            if (options?.beforeRequest) {
+            if (options == null ? void 0 : options.beforeRequest) {
               await options.beforeRequest();
             }
             const { response, output } = await next(args);
-            if (options?.afterRequest) {
+            if (options == null ? void 0 : options.afterRequest) {
               options.afterRequest(response);
             }
             this.retryQuota.releaseRetryTokens(retryTokenAmount);
@@ -36352,6 +36477,8 @@ var require_dist_cjs38 = __commonJS({
         }
       }
     };
+    __name(_StandardRetryStrategy, "StandardRetryStrategy");
+    var StandardRetryStrategy = _StandardRetryStrategy;
     var getDelayFromRetryAfterHeader = /* @__PURE__ */ __name((response) => {
       if (!import_protocol_http8.HttpResponse.isInstance(response))
         return;
@@ -36365,10 +36492,7 @@ var require_dist_cjs38 = __commonJS({
       const retryAfterDate = new Date(retryAfter);
       return retryAfterDate.getTime() - Date.now();
     }, "getDelayFromRetryAfterHeader");
-    var AdaptiveRetryStrategy = class extends StandardRetryStrategy {
-      static {
-        __name(this, "AdaptiveRetryStrategy");
-      }
+    var _AdaptiveRetryStrategy = class _AdaptiveRetryStrategy extends StandardRetryStrategy {
       constructor(maxAttemptsProvider, options) {
         const { rateLimiter, ...superOptions } = options ?? {};
         super(maxAttemptsProvider, superOptions);
@@ -36386,6 +36510,8 @@ var require_dist_cjs38 = __commonJS({
         });
       }
     };
+    __name(_AdaptiveRetryStrategy, "AdaptiveRetryStrategy");
+    var AdaptiveRetryStrategy = _AdaptiveRetryStrategy;
     var import_util_middleware3 = require_dist_cjs4();
     var ENV_MAX_ATTEMPTS = "AWS_MAX_ATTEMPTS";
     var CONFIG_MAX_ATTEMPTS = "max_attempts";
@@ -36460,6 +36586,7 @@ var require_dist_cjs38 = __commonJS({
     var import_smithy_client4 = require_dist_cjs19();
     var import_isStreamingPayload = require_isStreamingPayload();
     var retryMiddleware = /* @__PURE__ */ __name((options) => (next, context3) => async (args) => {
+      var _a;
       let retryStrategy = await options.retryStrategy();
       const maxAttempts = await options.maxAttempts();
       if (isRetryStrategyV2(retryStrategy)) {
@@ -36487,7 +36614,7 @@ var require_dist_cjs38 = __commonJS({
             const retryErrorInfo = getRetryErrorInfo(e);
             lastError = asSdkError(e);
             if (isRequest && (0, import_isStreamingPayload.isStreamingPayload)(request)) {
-              (context3.logger instanceof import_smithy_client4.NoOpLogger ? console : context3.logger)?.warn(
+              (_a = context3.logger instanceof import_smithy_client4.NoOpLogger ? console : context3.logger) == null ? void 0 : _a.warn(
                 "An error was encountered in a non-retryable streaming request."
               );
               throw lastError;
@@ -36510,7 +36637,7 @@ var require_dist_cjs38 = __commonJS({
         }
       } else {
         retryStrategy = retryStrategy;
-        if (retryStrategy?.mode)
+        if (retryStrategy == null ? void 0 : retryStrategy.mode)
           context3.userAgent = [...context3.userAgent || [], ["cfg/retry-mode", retryStrategy.mode]];
         return retryStrategy.retry(next, args);
       }
@@ -36596,13 +36723,7 @@ var require_dist_cjs39 = __commonJS({
     var signatureV4CrtContainer = {
       CrtSignerV4: null
     };
-    var SignatureV4MultiRegion = class {
-      static {
-        __name(this, "SignatureV4MultiRegion");
-      }
-      sigv4aSigner;
-      sigv4Signer;
-      signerOptions;
+    var _SignatureV4MultiRegion = class _SignatureV4MultiRegion {
       constructor(options) {
         this.sigv4Signer = new import_middleware_sdk_s3.SignatureV4S3Express(options);
         this.signerOptions = options;
@@ -36662,6 +36783,8 @@ For more information please go to https://github.com/aws/aws-sdk-js-v3#functiona
         return this.sigv4aSigner;
       }
     };
+    __name(_SignatureV4MultiRegion, "SignatureV4MultiRegion");
+    var SignatureV4MultiRegion = _SignatureV4MultiRegion;
   }
 });
 
@@ -37188,7 +37311,7 @@ var require_dist_cjs44 = __commonJS({
     });
     module2.exports = __toCommonJS2(src_exports);
     var resolveParamsForS3 = /* @__PURE__ */ __name(async (endpointParams) => {
-      const bucket = endpointParams?.Bucket || "";
+      const bucket = (endpointParams == null ? void 0 : endpointParams.Bucket) || "";
       if (typeof endpointParams.Bucket === "string") {
         endpointParams.Bucket = bucket.replace(/#/g, encodeURIComponent("#")).replace(/\?/g, encodeURIComponent("?"));
       }
@@ -37229,14 +37352,14 @@ var require_dist_cjs44 = __commonJS({
       if (configKey === "credentialScope" || canonicalEndpointParamKey === "CredentialScope") {
         return async () => {
           const credentials = typeof config.credentials === "function" ? await config.credentials() : config.credentials;
-          const configValue = credentials?.credentialScope ?? credentials?.CredentialScope;
+          const configValue = (credentials == null ? void 0 : credentials.credentialScope) ?? (credentials == null ? void 0 : credentials.CredentialScope);
           return configValue;
         };
       }
       if (configKey === "accountId" || canonicalEndpointParamKey === "AccountId") {
         return async () => {
           const credentials = typeof config.credentials === "function" ? await config.credentials() : config.credentials;
-          const configValue = credentials?.accountId ?? credentials?.AccountId;
+          const configValue = (credentials == null ? void 0 : credentials.accountId) ?? (credentials == null ? void 0 : credentials.AccountId);
           return configValue;
         };
       }
@@ -37288,8 +37411,9 @@ var require_dist_cjs44 = __commonJS({
       return endpoint;
     }, "getEndpointFromInstructions");
     var resolveParams = /* @__PURE__ */ __name(async (commandInput, instructionsSupplier, clientConfig) => {
+      var _a;
       const endpointParams = {};
-      const instructions = instructionsSupplier?.getEndpointParameterInstructions?.() || {};
+      const instructions = ((_a = instructionsSupplier == null ? void 0 : instructionsSupplier.getEndpointParameterInstructions) == null ? void 0 : _a.call(instructionsSupplier)) || {};
       for (const [name, instruction] of Object.entries(instructions)) {
         switch (instruction.type) {
           case "staticContextParams":
@@ -37324,6 +37448,7 @@ var require_dist_cjs44 = __commonJS({
       instructions
     }) => {
       return (next, context3) => async (args) => {
+        var _a, _b, _c;
         if (config.endpoint) {
           (0, import_core4.setFeature)(context3, "ENDPOINT_OVERRIDE", "N");
         }
@@ -37338,13 +37463,13 @@ var require_dist_cjs44 = __commonJS({
           context3
         );
         context3.endpointV2 = endpoint;
-        context3.authSchemes = endpoint.properties?.authSchemes;
-        const authScheme = context3.authSchemes?.[0];
+        context3.authSchemes = (_a = endpoint.properties) == null ? void 0 : _a.authSchemes;
+        const authScheme = (_b = context3.authSchemes) == null ? void 0 : _b[0];
         if (authScheme) {
           context3["signing_region"] = authScheme.signingRegion;
           context3["signing_service"] = authScheme.signingName;
           const smithyContext = (0, import_util_middleware3.getSmithyContext)(context3);
-          const httpAuthOption = smithyContext?.selectedHttpAuthScheme?.httpAuthOption;
+          const httpAuthOption = (_c = smithyContext == null ? void 0 : smithyContext.selectedHttpAuthScheme) == null ? void 0 : _c.httpAuthOption;
           if (httpAuthOption) {
             httpAuthOption.signingProperties = Object.assign(
               httpAuthOption.signingProperties || {},
@@ -37805,28 +37930,24 @@ var require_dist_cjs45 = __commonJS({
       return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r/g, "&#x0D;").replace(/\n/g, "&#x0A;").replace(/\u0085/g, "&#x85;").replace(/\u2028/, "&#x2028;");
     }
     __name(escapeElement, "escapeElement");
-    var XmlText = class {
+    var _XmlText = class _XmlText {
       constructor(value) {
         this.value = value;
-      }
-      static {
-        __name(this, "XmlText");
       }
       toString() {
         return escapeElement("" + this.value);
       }
     };
-    var XmlNode = class _XmlNode {
+    __name(_XmlText, "XmlText");
+    var XmlText = _XmlText;
+    var _XmlNode = class _XmlNode2 {
       constructor(name, children = []) {
         this.name = name;
         this.children = children;
+        this.attributes = {};
       }
-      static {
-        __name(this, "XmlNode");
-      }
-      attributes = {};
       static of(name, childText, withName) {
-        const node = new _XmlNode(name);
+        const node = new _XmlNode2(name);
         if (childText !== void 0) {
           node.addChildNode(new XmlText(childText));
         }
@@ -37884,7 +38005,7 @@ var require_dist_cjs45 = __commonJS({
        */
       cc(input, field, withName = field) {
         if (input[field] != null) {
-          const node = _XmlNode.of(field, input[field]).withName(withName);
+          const node = _XmlNode2.of(field, input[field]).withName(withName);
           this.c(node);
         }
       }
@@ -37908,7 +38029,7 @@ var require_dist_cjs45 = __commonJS({
       lc(input, listName, memberName, valueProvider) {
         if (input[listName] != null) {
           const nodes = valueProvider();
-          const containerNode = new _XmlNode(memberName);
+          const containerNode = new _XmlNode2(memberName);
           nodes.map((node) => {
             containerNode.c(node);
           });
@@ -37928,6 +38049,8 @@ var require_dist_cjs45 = __commonJS({
         return xmlText += !hasChildren ? "/>" : `>${this.children.map((c) => c.toString()).join("")}</${this.name}>`;
       }
     };
+    __name(_XmlNode, "XmlNode");
+    var XmlNode = _XmlNode;
   }
 });
 
@@ -37937,7 +38060,7 @@ var require_package = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-s3",
       description: "AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native",
-      version: "3.723.0",
+      version: "3.703.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-s3",
@@ -37963,73 +38086,73 @@ var require_package = __commonJS({
         "@aws-crypto/sha1-browser": "5.2.0",
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.723.0",
-        "@aws-sdk/client-sts": "3.723.0",
-        "@aws-sdk/core": "3.723.0",
-        "@aws-sdk/credential-provider-node": "3.723.0",
-        "@aws-sdk/middleware-bucket-endpoint": "3.723.0",
-        "@aws-sdk/middleware-expect-continue": "3.723.0",
-        "@aws-sdk/middleware-flexible-checksums": "3.723.0",
-        "@aws-sdk/middleware-host-header": "3.723.0",
-        "@aws-sdk/middleware-location-constraint": "3.723.0",
-        "@aws-sdk/middleware-logger": "3.723.0",
-        "@aws-sdk/middleware-recursion-detection": "3.723.0",
-        "@aws-sdk/middleware-sdk-s3": "3.723.0",
-        "@aws-sdk/middleware-ssec": "3.723.0",
-        "@aws-sdk/middleware-user-agent": "3.723.0",
-        "@aws-sdk/region-config-resolver": "3.723.0",
-        "@aws-sdk/signature-v4-multi-region": "3.723.0",
-        "@aws-sdk/types": "3.723.0",
-        "@aws-sdk/util-endpoints": "3.723.0",
-        "@aws-sdk/util-user-agent-browser": "3.723.0",
-        "@aws-sdk/util-user-agent-node": "3.723.0",
-        "@aws-sdk/xml-builder": "3.723.0",
-        "@smithy/config-resolver": "^4.0.0",
-        "@smithy/core": "^3.0.0",
-        "@smithy/eventstream-serde-browser": "^4.0.0",
-        "@smithy/eventstream-serde-config-resolver": "^4.0.0",
-        "@smithy/eventstream-serde-node": "^4.0.0",
-        "@smithy/fetch-http-handler": "^5.0.0",
-        "@smithy/hash-blob-browser": "^4.0.0",
-        "@smithy/hash-node": "^4.0.0",
-        "@smithy/hash-stream-node": "^4.0.0",
-        "@smithy/invalid-dependency": "^4.0.0",
-        "@smithy/md5-js": "^4.0.0",
-        "@smithy/middleware-content-length": "^4.0.0",
-        "@smithy/middleware-endpoint": "^4.0.0",
-        "@smithy/middleware-retry": "^4.0.0",
-        "@smithy/middleware-serde": "^4.0.0",
-        "@smithy/middleware-stack": "^4.0.0",
-        "@smithy/node-config-provider": "^4.0.0",
-        "@smithy/node-http-handler": "^4.0.0",
-        "@smithy/protocol-http": "^5.0.0",
-        "@smithy/smithy-client": "^4.0.0",
-        "@smithy/types": "^4.0.0",
-        "@smithy/url-parser": "^4.0.0",
-        "@smithy/util-base64": "^4.0.0",
-        "@smithy/util-body-length-browser": "^4.0.0",
-        "@smithy/util-body-length-node": "^4.0.0",
-        "@smithy/util-defaults-mode-browser": "^4.0.0",
-        "@smithy/util-defaults-mode-node": "^4.0.0",
-        "@smithy/util-endpoints": "^3.0.0",
-        "@smithy/util-middleware": "^4.0.0",
-        "@smithy/util-retry": "^4.0.0",
-        "@smithy/util-stream": "^4.0.0",
-        "@smithy/util-utf8": "^4.0.0",
-        "@smithy/util-waiter": "^4.0.0",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/client-sts": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-bucket-endpoint": "3.696.0",
+        "@aws-sdk/middleware-expect-continue": "3.696.0",
+        "@aws-sdk/middleware-flexible-checksums": "3.701.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-location-constraint": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-sdk-s3": "3.696.0",
+        "@aws-sdk/middleware-ssec": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/signature-v4-multi-region": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@aws-sdk/xml-builder": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/eventstream-serde-browser": "^3.0.13",
+        "@smithy/eventstream-serde-config-resolver": "^3.0.10",
+        "@smithy/eventstream-serde-node": "^3.0.12",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-blob-browser": "^3.1.9",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/hash-stream-node": "^3.1.9",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/md5-js": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
+        "@smithy/util-base64": "^3.0.0",
+        "@smithy/util-body-length-browser": "^3.0.0",
+        "@smithy/util-body-length-node": "^3.0.0",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-stream": "^3.3.1",
+        "@smithy/util-utf8": "^3.0.0",
+        "@smithy/util-waiter": "^3.1.9",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/signature-v4-crt": "3.723.0",
-        "@tsconfig/node18": "18.2.4",
-        "@types/node": "^18.19.69",
+        "@aws-sdk/signature-v4-crt": "3.696.0",
+        "@tsconfig/node16": "16.1.3",
+        "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
         rimraf: "3.0.2",
-        typescript: "~5.2.2"
+        typescript: "~4.9.5"
       },
       engines: {
-        node: ">=18.0.0"
+        node: ">=16.0.0"
       },
       typesVersions: {
         "<4.0": {
@@ -38104,7 +38227,8 @@ var require_dist_cjs46 = __commonJS({
     var ENV_CREDENTIAL_SCOPE = "AWS_CREDENTIAL_SCOPE";
     var ENV_ACCOUNT_ID = "AWS_ACCOUNT_ID";
     var fromEnv = /* @__PURE__ */ __name((init) => async () => {
-      init?.logger?.debug("@aws-sdk/credential-provider-env - fromEnv");
+      var _a;
+      (_a = init == null ? void 0 : init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-env - fromEnv");
       const accessKeyId = process.env[ENV_KEY];
       const secretAccessKey = process.env[ENV_SECRET];
       const sessionToken = process.env[ENV_SESSION];
@@ -38123,7 +38247,7 @@ var require_dist_cjs46 = __commonJS({
         (0, import_client2.setCredentialFeature)(credentials, "CREDENTIALS_ENV_VARS", "g");
         return credentials;
       }
-      throw new import_property_provider2.CredentialsProviderError("Unable to find environment variable credentials.", { logger: init?.logger });
+      throw new import_property_provider2.CredentialsProviderError("Unable to find environment variable credentials.", { logger: init == null ? void 0 : init.logger });
     }, "fromEnv");
   }
 });
@@ -38170,12 +38294,13 @@ var require_dist_cjs47 = __commonJS({
     var import_http = require("http");
     function httpRequest(options) {
       return new Promise((resolve, reject) => {
+        var _a;
         const req = (0, import_http.request)({
           method: "GET",
           ...options,
           // Node.js http module doesn't accept hostname with square brackets
           // Refs: https://github.com/nodejs/node/issues/39738
-          hostname: options.hostname?.replace(/^\[(.+)\]$/, "$1")
+          hostname: (_a = options.hostname) == null ? void 0 : _a.replace(/^\[(.+)\]$/, "$1")
         });
         req.on("error", (err) => {
           reject(Object.assign(new import_property_provider2.ProviderError("Unable to connect to instance metadata service"), err));
@@ -38299,17 +38424,16 @@ var require_dist_cjs47 = __commonJS({
         }
       );
     }, "getCmdsUri");
-    var InstanceMetadataV1FallbackError = class _InstanceMetadataV1FallbackError extends import_property_provider2.CredentialsProviderError {
+    var _InstanceMetadataV1FallbackError = class _InstanceMetadataV1FallbackError2 extends import_property_provider2.CredentialsProviderError {
       constructor(message, tryNextLink = true) {
         super(message, tryNextLink);
         this.tryNextLink = tryNextLink;
         this.name = "InstanceMetadataV1FallbackError";
-        Object.setPrototypeOf(this, _InstanceMetadataV1FallbackError.prototype);
-      }
-      static {
-        __name(this, "InstanceMetadataV1FallbackError");
+        Object.setPrototypeOf(this, _InstanceMetadataV1FallbackError2.prototype);
       }
     };
+    __name(_InstanceMetadataV1FallbackError, "InstanceMetadataV1FallbackError");
+    var InstanceMetadataV1FallbackError = _InstanceMetadataV1FallbackError;
     var import_node_config_provider = require_dist_cjs41();
     var import_url_parser = require_dist_cjs43();
     var Endpoint = /* @__PURE__ */ ((Endpoint2) => {
@@ -38368,7 +38492,7 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       };
     }, "getExtendedInstanceMetadataCredentials");
     var staticStabilityProvider = /* @__PURE__ */ __name((provider, options = {}) => {
-      const logger = options?.logger || console;
+      const logger = (options == null ? void 0 : options.logger) || console;
       let pastCredentials;
       return async () => {
         let credentials;
@@ -38400,7 +38524,8 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       const { logger, profile } = init;
       const { timeout, maxRetries } = providerConfigFromInit(init);
       const getCredentials = /* @__PURE__ */ __name(async (maxRetries2, options) => {
-        const isImdsV1Fallback = disableFetchToken || options.headers?.[X_AWS_EC2_METADATA_TOKEN] == null;
+        var _a;
+        const isImdsV1Fallback = disableFetchToken || ((_a = options.headers) == null ? void 0 : _a[X_AWS_EC2_METADATA_TOKEN]) == null;
         if (isImdsV1Fallback) {
           let fallbackBlockedFromProfile = false;
           let fallbackBlockedFromProcessEnv = false;
@@ -38471,21 +38596,21 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       return async () => {
         const endpoint = await getInstanceMetadataEndpoint();
         if (disableFetchToken) {
-          logger?.debug("AWS SDK Instance Metadata", "using v1 fallback (no token fetch)");
+          logger == null ? void 0 : logger.debug("AWS SDK Instance Metadata", "using v1 fallback (no token fetch)");
           return getCredentials(maxRetries, { ...endpoint, timeout });
         } else {
           let token;
           try {
             token = (await getMetadataToken({ ...endpoint, timeout })).toString();
           } catch (error2) {
-            if (error2?.statusCode === 400) {
+            if ((error2 == null ? void 0 : error2.statusCode) === 400) {
               throw Object.assign(error2, {
                 message: "EC2 Metadata token request returned error"
               });
             } else if (error2.message === "TimeoutError" || [403, 404, 405].includes(error2.statusCode)) {
               disableFetchToken = true;
             }
-            logger?.debug("AWS SDK Instance Metadata", "using v1 fallback (initial)");
+            logger == null ? void 0 : logger.debug("AWS SDK Instance Metadata", "using v1 fallback (initial)");
             return getCredentials(maxRetries, { ...endpoint, timeout });
           }
           return getCredentials(maxRetries, {
@@ -38805,7 +38930,7 @@ var require_package2 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sso",
       description: "AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native",
-      version: "3.723.0",
+      version: "3.696.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sso",
@@ -38824,53 +38949,53 @@ var require_package2 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.723.0",
-        "@aws-sdk/middleware-host-header": "3.723.0",
-        "@aws-sdk/middleware-logger": "3.723.0",
-        "@aws-sdk/middleware-recursion-detection": "3.723.0",
-        "@aws-sdk/middleware-user-agent": "3.723.0",
-        "@aws-sdk/region-config-resolver": "3.723.0",
-        "@aws-sdk/types": "3.723.0",
-        "@aws-sdk/util-endpoints": "3.723.0",
-        "@aws-sdk/util-user-agent-browser": "3.723.0",
-        "@aws-sdk/util-user-agent-node": "3.723.0",
-        "@smithy/config-resolver": "^4.0.0",
-        "@smithy/core": "^3.0.0",
-        "@smithy/fetch-http-handler": "^5.0.0",
-        "@smithy/hash-node": "^4.0.0",
-        "@smithy/invalid-dependency": "^4.0.0",
-        "@smithy/middleware-content-length": "^4.0.0",
-        "@smithy/middleware-endpoint": "^4.0.0",
-        "@smithy/middleware-retry": "^4.0.0",
-        "@smithy/middleware-serde": "^4.0.0",
-        "@smithy/middleware-stack": "^4.0.0",
-        "@smithy/node-config-provider": "^4.0.0",
-        "@smithy/node-http-handler": "^4.0.0",
-        "@smithy/protocol-http": "^5.0.0",
-        "@smithy/smithy-client": "^4.0.0",
-        "@smithy/types": "^4.0.0",
-        "@smithy/url-parser": "^4.0.0",
-        "@smithy/util-base64": "^4.0.0",
-        "@smithy/util-body-length-browser": "^4.0.0",
-        "@smithy/util-body-length-node": "^4.0.0",
-        "@smithy/util-defaults-mode-browser": "^4.0.0",
-        "@smithy/util-defaults-mode-node": "^4.0.0",
-        "@smithy/util-endpoints": "^3.0.0",
-        "@smithy/util-middleware": "^4.0.0",
-        "@smithy/util-retry": "^4.0.0",
-        "@smithy/util-utf8": "^4.0.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
+        "@smithy/util-base64": "^3.0.0",
+        "@smithy/util-body-length-browser": "^3.0.0",
+        "@smithy/util-body-length-node": "^3.0.0",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@tsconfig/node18": "18.2.4",
-        "@types/node": "^18.19.69",
+        "@tsconfig/node16": "16.1.3",
+        "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
         rimraf: "3.0.2",
-        typescript: "~5.2.2"
+        typescript: "~4.9.5"
       },
       engines: {
-        node: ">=18.0.0"
+        node: ">=16.0.0"
       },
       typesVersions: {
         "<4.0": {
@@ -38948,6 +39073,7 @@ var require_dist_cjs49 = __commonJS({
     }, "isCrtAvailable");
     var createDefaultUserAgentProvider = /* @__PURE__ */ __name(({ serviceId, clientVersion }) => {
       return async (config) => {
+        var _a;
         const sections = [
           // sdk-metadata
           ["aws-sdk-js", clientVersion],
@@ -38970,7 +39096,7 @@ var require_dist_cjs49 = __commonJS({
         if (import_process.env.AWS_EXECUTION_ENV) {
           sections.push([`exec-env/${import_process.env.AWS_EXECUTION_ENV}`]);
         }
-        const appId = await config?.userAgentAppId?.();
+        const appId = await ((_a = config == null ? void 0 : config.userAgentAppId) == null ? void 0 : _a.call(config));
         const resolvedUserAgent = appId ? [...sections, [`app/${appId}`]] : [...sections];
         return resolvedUserAgent;
       };
@@ -38978,11 +39104,10 @@ var require_dist_cjs49 = __commonJS({
     var defaultUserAgent = createDefaultUserAgentProvider;
     var import_middleware_user_agent = require_dist_cjs32();
     var UA_APP_ID_ENV_NAME = "AWS_SDK_UA_APP_ID";
-    var UA_APP_ID_INI_NAME = "sdk_ua_app_id";
-    var UA_APP_ID_INI_NAME_DEPRECATED = "sdk-ua-app-id";
+    var UA_APP_ID_INI_NAME = "sdk-ua-app-id";
     var NODE_APP_ID_CONFIG_OPTIONS = {
       environmentVariableSelector: (env2) => env2[UA_APP_ID_ENV_NAME],
-      configFileSelector: (profile) => profile[UA_APP_ID_INI_NAME] ?? profile[UA_APP_ID_INI_NAME_DEPRECATED],
+      configFileSelector: (profile) => profile[UA_APP_ID_INI_NAME],
       default: import_middleware_user_agent.DEFAULT_UA_APP_ID
     };
   }
@@ -39018,10 +39143,7 @@ var require_dist_cjs50 = __commonJS({
     var import_util_utf8 = require_dist_cjs8();
     var import_buffer = require("buffer");
     var import_crypto5 = require("crypto");
-    var Hash = class {
-      static {
-        __name(this, "Hash");
-      }
+    var _Hash = class _Hash {
       constructor(algorithmIdentifier, secret) {
         this.algorithmIdentifier = algorithmIdentifier;
         this.secret = secret;
@@ -39037,6 +39159,8 @@ var require_dist_cjs50 = __commonJS({
         this.hash = this.secret ? (0, import_crypto5.createHmac)(this.algorithmIdentifier, castSourceData(this.secret)) : (0, import_crypto5.createHash)(this.algorithmIdentifier);
       }
     };
+    __name(_Hash, "Hash");
+    var Hash = _Hash;
     function castSourceData(toCast, encoding) {
       if (import_buffer.Buffer.isBuffer(toCast)) {
         return toCast;
@@ -39268,7 +39392,7 @@ var require_dist_cjs52 = __commonJS({
       defaultsMode = (0, import_node_config_provider.loadConfig)(NODE_DEFAULTS_MODE_CONFIG_OPTIONS)
     } = {}) => (0, import_property_provider2.memoize)(async () => {
       const mode = typeof defaultsMode === "function" ? await defaultsMode() : defaultsMode;
-      switch (mode?.toLowerCase()) {
+      switch (mode == null ? void 0 : mode.toLowerCase()) {
         case "auto":
           return resolveNodeDefaultsModeAuto(region);
         case "in-region":
@@ -39276,7 +39400,7 @@ var require_dist_cjs52 = __commonJS({
         case "mobile":
         case "standard":
         case "legacy":
-          return Promise.resolve(mode?.toLocaleLowerCase());
+          return Promise.resolve(mode == null ? void 0 : mode.toLocaleLowerCase());
         case void 0:
           return Promise.resolve("legacy");
         default:
@@ -39343,7 +39467,6 @@ var require_runtimeConfig = __commonJS({
       const defaultConfigProvider = () => defaultsMode().then(smithy_client_1.loadConfigsForDefaultMode);
       const clientSharedValues = (0, runtimeConfig_shared_1.getRuntimeConfig)(config);
       (0, core_1.emitWarningIfUnsupportedVersion)(process.version);
-      const profileConfig = { profile: config?.profile };
       return {
         ...clientSharedValues,
         ...config,
@@ -39351,18 +39474,18 @@ var require_runtimeConfig = __commonJS({
         defaultsMode,
         bodyLengthChecker: config?.bodyLengthChecker ?? util_body_length_node_1.calculateBodyLength,
         defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
-        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...profileConfig }),
+        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
         retryMode: config?.retryMode ?? (0, node_config_provider_1.loadConfig)({
           ...middleware_retry_1.NODE_RETRY_MODE_CONFIG_OPTIONS,
           default: async () => (await defaultConfigProvider()).retryMode || util_retry_1.DEFAULT_RETRY_MODE
-        }, config),
+        }),
         sha256: config?.sha256 ?? hash_node_1.Hash.bind(null, "sha256"),
         streamCollector: config?.streamCollector ?? node_http_handler_1.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS, profileConfig)
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS),
+        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS)
       };
     };
     exports2.getRuntimeConfig = getRuntimeConfig;
@@ -39595,14 +39718,7 @@ var require_dist_cjs54 = __commonJS({
         ...resolveHttpAuthRuntimeConfig(extensionConfiguration)
       };
     }, "resolveRuntimeExtensions");
-    var SSOClient = class extends import_smithy_client4.Client {
-      static {
-        __name(this, "SSOClient");
-      }
-      /**
-       * The resolved configuration of SSOClient class. This is resolved and normalized from the {@link SSOClientConfig | constructor configuration interface}.
-       */
-      config;
+    var _SSOClient = class _SSOClient extends import_smithy_client4.Client {
       constructor(...[configuration]) {
         const _config_0 = (0, import_runtimeConfig.getRuntimeConfig)(configuration || {});
         const _config_1 = resolveClientEndpointParameters(_config_0);
@@ -39612,7 +39728,7 @@ var require_dist_cjs54 = __commonJS({
         const _config_5 = (0, import_middleware_host_header.resolveHostHeaderConfig)(_config_4);
         const _config_6 = (0, import_middleware_endpoint.resolveEndpointConfig)(_config_5);
         const _config_7 = (0, import_httpAuthSchemeProvider.resolveHttpAuthSchemeConfig)(_config_6);
-        const _config_8 = resolveRuntimeExtensions(_config_7, configuration?.extensions || []);
+        const _config_8 = resolveRuntimeExtensions(_config_7, (configuration == null ? void 0 : configuration.extensions) || []);
         super(_config_8);
         this.config = _config_8;
         this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
@@ -39640,25 +39756,21 @@ var require_dist_cjs54 = __commonJS({
         super.destroy();
       }
     };
+    __name(_SSOClient, "SSOClient");
+    var SSOClient = _SSOClient;
     var import_middleware_serde2 = require_dist_cjs5();
-    var SSOServiceException = class _SSOServiceException extends import_smithy_client4.ServiceException {
-      static {
-        __name(this, "SSOServiceException");
-      }
+    var _SSOServiceException = class _SSOServiceException2 extends import_smithy_client4.ServiceException {
       /**
        * @internal
        */
       constructor(options) {
         super(options);
-        Object.setPrototypeOf(this, _SSOServiceException.prototype);
+        Object.setPrototypeOf(this, _SSOServiceException2.prototype);
       }
     };
-    var InvalidRequestException = class _InvalidRequestException extends SSOServiceException {
-      static {
-        __name(this, "InvalidRequestException");
-      }
-      name = "InvalidRequestException";
-      $fault = "client";
+    __name(_SSOServiceException, "SSOServiceException");
+    var SSOServiceException = _SSOServiceException;
+    var _InvalidRequestException = class _InvalidRequestException2 extends SSOServiceException {
       /**
        * @internal
        */
@@ -39668,15 +39780,14 @@ var require_dist_cjs54 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidRequestException.prototype);
+        this.name = "InvalidRequestException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRequestException2.prototype);
       }
     };
-    var ResourceNotFoundException = class _ResourceNotFoundException extends SSOServiceException {
-      static {
-        __name(this, "ResourceNotFoundException");
-      }
-      name = "ResourceNotFoundException";
-      $fault = "client";
+    __name(_InvalidRequestException, "InvalidRequestException");
+    var InvalidRequestException = _InvalidRequestException;
+    var _ResourceNotFoundException = class _ResourceNotFoundException2 extends SSOServiceException {
       /**
        * @internal
        */
@@ -39686,15 +39797,14 @@ var require_dist_cjs54 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ResourceNotFoundException.prototype);
+        this.name = "ResourceNotFoundException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ResourceNotFoundException2.prototype);
       }
     };
-    var TooManyRequestsException = class _TooManyRequestsException extends SSOServiceException {
-      static {
-        __name(this, "TooManyRequestsException");
-      }
-      name = "TooManyRequestsException";
-      $fault = "client";
+    __name(_ResourceNotFoundException, "ResourceNotFoundException");
+    var ResourceNotFoundException = _ResourceNotFoundException;
+    var _TooManyRequestsException = class _TooManyRequestsException2 extends SSOServiceException {
       /**
        * @internal
        */
@@ -39704,15 +39814,14 @@ var require_dist_cjs54 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _TooManyRequestsException.prototype);
+        this.name = "TooManyRequestsException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _TooManyRequestsException2.prototype);
       }
     };
-    var UnauthorizedException = class _UnauthorizedException extends SSOServiceException {
-      static {
-        __name(this, "UnauthorizedException");
-      }
-      name = "UnauthorizedException";
-      $fault = "client";
+    __name(_TooManyRequestsException, "TooManyRequestsException");
+    var TooManyRequestsException = _TooManyRequestsException;
+    var _UnauthorizedException = class _UnauthorizedException2 extends SSOServiceException {
       /**
        * @internal
        */
@@ -39722,9 +39831,13 @@ var require_dist_cjs54 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _UnauthorizedException.prototype);
+        this.name = "UnauthorizedException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _UnauthorizedException2.prototype);
       }
     };
+    __name(_UnauthorizedException, "UnauthorizedException");
+    var UnauthorizedException = _UnauthorizedException;
     var GetRoleCredentialsRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.accessToken && { accessToken: import_smithy_client4.SENSITIVE_STRING }
@@ -39955,57 +40068,52 @@ var require_dist_cjs54 = __commonJS({
     var _rN = "roleName";
     var _rn = "role_name";
     var _xasbt = "x-amz-sso_bearer_token";
-    var GetRoleCredentialsCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    var _GetRoleCredentialsCommand = class _GetRoleCredentialsCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("SWBPortalService", "GetRoleCredentials", {}).n("SSOClient", "GetRoleCredentialsCommand").f(GetRoleCredentialsRequestFilterSensitiveLog, GetRoleCredentialsResponseFilterSensitiveLog).ser(se_GetRoleCredentialsCommand).de(de_GetRoleCredentialsCommand).build() {
-      static {
-        __name(this, "GetRoleCredentialsCommand");
-      }
     };
-    var ListAccountRolesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetRoleCredentialsCommand, "GetRoleCredentialsCommand");
+    var GetRoleCredentialsCommand = _GetRoleCredentialsCommand;
+    var _ListAccountRolesCommand = class _ListAccountRolesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("SWBPortalService", "ListAccountRoles", {}).n("SSOClient", "ListAccountRolesCommand").f(ListAccountRolesRequestFilterSensitiveLog, void 0).ser(se_ListAccountRolesCommand).de(de_ListAccountRolesCommand).build() {
-      static {
-        __name(this, "ListAccountRolesCommand");
-      }
     };
-    var ListAccountsCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_ListAccountRolesCommand, "ListAccountRolesCommand");
+    var ListAccountRolesCommand = _ListAccountRolesCommand;
+    var _ListAccountsCommand = class _ListAccountsCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("SWBPortalService", "ListAccounts", {}).n("SSOClient", "ListAccountsCommand").f(ListAccountsRequestFilterSensitiveLog, void 0).ser(se_ListAccountsCommand).de(de_ListAccountsCommand).build() {
-      static {
-        __name(this, "ListAccountsCommand");
-      }
     };
-    var LogoutCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_ListAccountsCommand, "ListAccountsCommand");
+    var ListAccountsCommand = _ListAccountsCommand;
+    var _LogoutCommand = class _LogoutCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("SWBPortalService", "Logout", {}).n("SSOClient", "LogoutCommand").f(LogoutRequestFilterSensitiveLog, void 0).ser(se_LogoutCommand).de(de_LogoutCommand).build() {
-      static {
-        __name(this, "LogoutCommand");
-      }
     };
+    __name(_LogoutCommand, "LogoutCommand");
+    var LogoutCommand = _LogoutCommand;
     var commands = {
       GetRoleCredentialsCommand,
       ListAccountRolesCommand,
       ListAccountsCommand,
       LogoutCommand
     };
-    var SSO = class extends SSOClient {
-      static {
-        __name(this, "SSO");
-      }
+    var _SSO = class _SSO extends SSOClient {
     };
+    __name(_SSO, "SSO");
+    var SSO = _SSO;
     (0, import_smithy_client4.createAggregatedClient)(commands, SSO);
     var paginateListAccountRoles = (0, import_core4.createPaginator)(SSOClient, ListAccountRolesCommand, "nextToken", "nextToken", "maxResults");
     var paginateListAccounts = (0, import_core4.createPaginator)(SSOClient, ListAccountsCommand, "nextToken", "nextToken", "maxResults");
@@ -40087,7 +40195,7 @@ var require_package3 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sso-oidc",
       description: "AWS SDK for JavaScript Sso Oidc Client for Node.js, Browser and React Native",
-      version: "3.723.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sso-oidc",
@@ -40106,54 +40214,54 @@ var require_package3 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.723.0",
-        "@aws-sdk/credential-provider-node": "3.723.0",
-        "@aws-sdk/middleware-host-header": "3.723.0",
-        "@aws-sdk/middleware-logger": "3.723.0",
-        "@aws-sdk/middleware-recursion-detection": "3.723.0",
-        "@aws-sdk/middleware-user-agent": "3.723.0",
-        "@aws-sdk/region-config-resolver": "3.723.0",
-        "@aws-sdk/types": "3.723.0",
-        "@aws-sdk/util-endpoints": "3.723.0",
-        "@aws-sdk/util-user-agent-browser": "3.723.0",
-        "@aws-sdk/util-user-agent-node": "3.723.0",
-        "@smithy/config-resolver": "^4.0.0",
-        "@smithy/core": "^3.0.0",
-        "@smithy/fetch-http-handler": "^5.0.0",
-        "@smithy/hash-node": "^4.0.0",
-        "@smithy/invalid-dependency": "^4.0.0",
-        "@smithy/middleware-content-length": "^4.0.0",
-        "@smithy/middleware-endpoint": "^4.0.0",
-        "@smithy/middleware-retry": "^4.0.0",
-        "@smithy/middleware-serde": "^4.0.0",
-        "@smithy/middleware-stack": "^4.0.0",
-        "@smithy/node-config-provider": "^4.0.0",
-        "@smithy/node-http-handler": "^4.0.0",
-        "@smithy/protocol-http": "^5.0.0",
-        "@smithy/smithy-client": "^4.0.0",
-        "@smithy/types": "^4.0.0",
-        "@smithy/url-parser": "^4.0.0",
-        "@smithy/util-base64": "^4.0.0",
-        "@smithy/util-body-length-browser": "^4.0.0",
-        "@smithy/util-body-length-node": "^4.0.0",
-        "@smithy/util-defaults-mode-browser": "^4.0.0",
-        "@smithy/util-defaults-mode-node": "^4.0.0",
-        "@smithy/util-endpoints": "^3.0.0",
-        "@smithy/util-middleware": "^4.0.0",
-        "@smithy/util-retry": "^4.0.0",
-        "@smithy/util-utf8": "^4.0.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
+        "@smithy/util-base64": "^3.0.0",
+        "@smithy/util-body-length-browser": "^3.0.0",
+        "@smithy/util-body-length-node": "^3.0.0",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@tsconfig/node18": "18.2.4",
-        "@types/node": "^18.19.69",
+        "@tsconfig/node16": "16.1.3",
+        "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
         rimraf: "3.0.2",
-        typescript: "~5.2.2"
+        typescript: "~4.9.5"
       },
       engines: {
-        node: ">=18.0.0"
+        node: ">=16.0.0"
       },
       typesVersions: {
         "<4.0": {
@@ -40171,7 +40279,7 @@ var require_package3 = __commonJS({
       },
       license: "Apache-2.0",
       peerDependencies: {
-        "@aws-sdk/client-sts": "^3.723.0"
+        "@aws-sdk/client-sts": "^3.699.0"
       },
       browser: {
         "./dist-es/runtimeConfig": "./dist-es/runtimeConfig.browser"
@@ -40322,7 +40430,6 @@ var require_runtimeConfig2 = __commonJS({
       const defaultConfigProvider = () => defaultsMode().then(smithy_client_1.loadConfigsForDefaultMode);
       const clientSharedValues = (0, runtimeConfig_shared_1.getRuntimeConfig)(config);
       (0, core_1.emitWarningIfUnsupportedVersion)(process.version);
-      const profileConfig = { profile: config?.profile };
       return {
         ...clientSharedValues,
         ...config,
@@ -40331,18 +40438,18 @@ var require_runtimeConfig2 = __commonJS({
         bodyLengthChecker: config?.bodyLengthChecker ?? util_body_length_node_1.calculateBodyLength,
         credentialDefaultProvider: config?.credentialDefaultProvider ?? credential_provider_node_1.defaultProvider,
         defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
-        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...profileConfig }),
+        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
         retryMode: config?.retryMode ?? (0, node_config_provider_1.loadConfig)({
           ...middleware_retry_1.NODE_RETRY_MODE_CONFIG_OPTIONS,
           default: async () => (await defaultConfigProvider()).retryMode || util_retry_1.DEFAULT_RETRY_MODE
-        }, config),
+        }),
         sha256: config?.sha256 ?? hash_node_1.Hash.bind(null, "sha256"),
         streamCollector: config?.streamCollector ?? node_http_handler_1.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS, profileConfig)
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS),
+        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS)
       };
     };
     exports2.getRuntimeConfig = getRuntimeConfig;
@@ -40485,14 +40592,7 @@ var require_dist_cjs55 = __commonJS({
         ...resolveHttpAuthRuntimeConfig(extensionConfiguration)
       };
     }, "resolveRuntimeExtensions");
-    var SSOOIDCClient = class extends import_smithy_client4.Client {
-      static {
-        __name(this, "SSOOIDCClient");
-      }
-      /**
-       * The resolved configuration of SSOOIDCClient class. This is resolved and normalized from the {@link SSOOIDCClientConfig | constructor configuration interface}.
-       */
-      config;
+    var _SSOOIDCClient = class _SSOOIDCClient extends import_smithy_client4.Client {
       constructor(...[configuration]) {
         const _config_0 = (0, import_runtimeConfig.getRuntimeConfig)(configuration || {});
         const _config_1 = resolveClientEndpointParameters(_config_0);
@@ -40502,7 +40602,7 @@ var require_dist_cjs55 = __commonJS({
         const _config_5 = (0, import_middleware_host_header.resolveHostHeaderConfig)(_config_4);
         const _config_6 = (0, import_middleware_endpoint.resolveEndpointConfig)(_config_5);
         const _config_7 = (0, import_httpAuthSchemeProvider.resolveHttpAuthSchemeConfig)(_config_6);
-        const _config_8 = resolveRuntimeExtensions(_config_7, configuration?.extensions || []);
+        const _config_8 = resolveRuntimeExtensions(_config_7, (configuration == null ? void 0 : configuration.extensions) || []);
         super(_config_8);
         this.config = _config_8;
         this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
@@ -40530,37 +40630,21 @@ var require_dist_cjs55 = __commonJS({
         super.destroy();
       }
     };
+    __name(_SSOOIDCClient, "SSOOIDCClient");
+    var SSOOIDCClient = _SSOOIDCClient;
     var import_middleware_serde2 = require_dist_cjs5();
-    var SSOOIDCServiceException = class _SSOOIDCServiceException extends import_smithy_client4.ServiceException {
-      static {
-        __name(this, "SSOOIDCServiceException");
-      }
+    var _SSOOIDCServiceException = class _SSOOIDCServiceException2 extends import_smithy_client4.ServiceException {
       /**
        * @internal
        */
       constructor(options) {
         super(options);
-        Object.setPrototypeOf(this, _SSOOIDCServiceException.prototype);
+        Object.setPrototypeOf(this, _SSOOIDCServiceException2.prototype);
       }
     };
-    var AccessDeniedException = class _AccessDeniedException extends SSOOIDCServiceException {
-      static {
-        __name(this, "AccessDeniedException");
-      }
-      name = "AccessDeniedException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>access_denied</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_SSOOIDCServiceException, "SSOOIDCServiceException");
+    var SSOOIDCServiceException = _SSOOIDCServiceException;
+    var _AccessDeniedException = class _AccessDeniedException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40570,29 +40654,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _AccessDeniedException.prototype);
+        this.name = "AccessDeniedException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _AccessDeniedException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var AuthorizationPendingException = class _AuthorizationPendingException extends SSOOIDCServiceException {
-      static {
-        __name(this, "AuthorizationPendingException");
-      }
-      name = "AuthorizationPendingException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>authorization_pending</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_AccessDeniedException, "AccessDeniedException");
+    var AccessDeniedException = _AccessDeniedException;
+    var _AuthorizationPendingException = class _AuthorizationPendingException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40602,29 +40673,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _AuthorizationPendingException.prototype);
+        this.name = "AuthorizationPendingException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _AuthorizationPendingException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var ExpiredTokenException = class _ExpiredTokenException extends SSOOIDCServiceException {
-      static {
-        __name(this, "ExpiredTokenException");
-      }
-      name = "ExpiredTokenException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>expired_token</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_AuthorizationPendingException, "AuthorizationPendingException");
+    var AuthorizationPendingException = _AuthorizationPendingException;
+    var _ExpiredTokenException = class _ExpiredTokenException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40634,29 +40692,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ExpiredTokenException.prototype);
+        this.name = "ExpiredTokenException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ExpiredTokenException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InternalServerException = class _InternalServerException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InternalServerException");
-      }
-      name = "InternalServerException";
-      $fault = "server";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>server_error</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_ExpiredTokenException, "ExpiredTokenException");
+    var ExpiredTokenException = _ExpiredTokenException;
+    var _InternalServerException = class _InternalServerException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40666,29 +40711,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "server",
           ...opts
         });
-        Object.setPrototypeOf(this, _InternalServerException.prototype);
+        this.name = "InternalServerException";
+        this.$fault = "server";
+        Object.setPrototypeOf(this, _InternalServerException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidClientException = class _InvalidClientException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidClientException");
-      }
-      name = "InvalidClientException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_client</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InternalServerException, "InternalServerException");
+    var InternalServerException = _InternalServerException;
+    var _InvalidClientException = class _InvalidClientException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40698,29 +40730,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidClientException.prototype);
+        this.name = "InvalidClientException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidClientException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidGrantException = class _InvalidGrantException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidGrantException");
-      }
-      name = "InvalidGrantException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_grant</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidClientException, "InvalidClientException");
+    var InvalidClientException = _InvalidClientException;
+    var _InvalidGrantException = class _InvalidGrantException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40730,29 +40749,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidGrantException.prototype);
+        this.name = "InvalidGrantException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidGrantException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidRequestException = class _InvalidRequestException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidRequestException");
-      }
-      name = "InvalidRequestException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_request</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidGrantException, "InvalidGrantException");
+    var InvalidGrantException = _InvalidGrantException;
+    var _InvalidRequestException = class _InvalidRequestException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40762,29 +40768,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidRequestException.prototype);
+        this.name = "InvalidRequestException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRequestException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidScopeException = class _InvalidScopeException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidScopeException");
-      }
-      name = "InvalidScopeException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_scope</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidRequestException, "InvalidRequestException");
+    var InvalidRequestException = _InvalidRequestException;
+    var _InvalidScopeException = class _InvalidScopeException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40794,29 +40787,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidScopeException.prototype);
+        this.name = "InvalidScopeException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidScopeException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var SlowDownException = class _SlowDownException extends SSOOIDCServiceException {
-      static {
-        __name(this, "SlowDownException");
-      }
-      name = "SlowDownException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>slow_down</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidScopeException, "InvalidScopeException");
+    var InvalidScopeException = _InvalidScopeException;
+    var _SlowDownException = class _SlowDownException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40826,29 +40806,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _SlowDownException.prototype);
+        this.name = "SlowDownException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _SlowDownException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var UnauthorizedClientException = class _UnauthorizedClientException extends SSOOIDCServiceException {
-      static {
-        __name(this, "UnauthorizedClientException");
-      }
-      name = "UnauthorizedClientException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>unauthorized_client</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_SlowDownException, "SlowDownException");
+    var SlowDownException = _SlowDownException;
+    var _UnauthorizedClientException = class _UnauthorizedClientException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40858,29 +40825,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _UnauthorizedClientException.prototype);
+        this.name = "UnauthorizedClientException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _UnauthorizedClientException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var UnsupportedGrantTypeException = class _UnsupportedGrantTypeException extends SSOOIDCServiceException {
-      static {
-        __name(this, "UnsupportedGrantTypeException");
-      }
-      name = "UnsupportedGrantTypeException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>unsupported_grant_type</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_UnauthorizedClientException, "UnauthorizedClientException");
+    var UnauthorizedClientException = _UnauthorizedClientException;
+    var _UnsupportedGrantTypeException = class _UnsupportedGrantTypeException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40890,39 +40844,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _UnsupportedGrantTypeException.prototype);
+        this.name = "UnsupportedGrantTypeException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _UnsupportedGrantTypeException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidRequestRegionException = class _InvalidRequestRegionException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidRequestRegionException");
-      }
-      name = "InvalidRequestRegionException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_request</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
-      /**
-       * <p>Indicates the IAM Identity Center endpoint which the requester may call with this token.</p>
-       * @public
-       */
-      endpoint;
-      /**
-       * <p>Indicates the region which the requester may call with this token.</p>
-       * @public
-       */
-      region;
+    __name(_UnsupportedGrantTypeException, "UnsupportedGrantTypeException");
+    var UnsupportedGrantTypeException = _UnsupportedGrantTypeException;
+    var _InvalidRequestRegionException = class _InvalidRequestRegionException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40932,31 +40863,18 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidRequestRegionException.prototype);
+        this.name = "InvalidRequestRegionException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRequestRegionException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
         this.endpoint = opts.endpoint;
         this.region = opts.region;
       }
     };
-    var InvalidClientMetadataException = class _InvalidClientMetadataException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidClientMetadataException");
-      }
-      name = "InvalidClientMetadataException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_client_metadata</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidRequestRegionException, "InvalidRequestRegionException");
+    var InvalidRequestRegionException = _InvalidRequestRegionException;
+    var _InvalidClientMetadataException = class _InvalidClientMetadataException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40966,29 +40884,16 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidClientMetadataException.prototype);
+        this.name = "InvalidClientMetadataException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidClientMetadataException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
-    var InvalidRedirectUriException = class _InvalidRedirectUriException extends SSOOIDCServiceException {
-      static {
-        __name(this, "InvalidRedirectUriException");
-      }
-      name = "InvalidRedirectUriException";
-      $fault = "client";
-      /**
-       * <p>Single error code.
-       *       For this exception the value will be <code>invalid_redirect_uri</code>.</p>
-       * @public
-       */
-      error;
-      /**
-       * <p>Human-readable text providing additional information, used to assist the
-       *       client developer in understanding the error that occurred.</p>
-       * @public
-       */
-      error_description;
+    __name(_InvalidClientMetadataException, "InvalidClientMetadataException");
+    var InvalidClientMetadataException = _InvalidClientMetadataException;
+    var _InvalidRedirectUriException = class _InvalidRedirectUriException2 extends SSOOIDCServiceException {
       /**
        * @internal
        */
@@ -40998,11 +40903,15 @@ var require_dist_cjs55 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidRedirectUriException.prototype);
+        this.name = "InvalidRedirectUriException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRedirectUriException2.prototype);
         this.error = opts.error;
         this.error_description = opts.error_description;
       }
     };
+    __name(_InvalidRedirectUriException, "InvalidRedirectUriException");
+    var InvalidRedirectUriException = _InvalidRedirectUriException;
     var CreateTokenRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.clientSecret && { clientSecret: import_smithy_client4.SENSITIVE_STRING },
@@ -41466,57 +41375,52 @@ var require_dist_cjs55 = __commonJS({
       cfId: output.headers["x-amz-cf-id"]
     }), "deserializeMetadata");
     var _ai = "aws_iam";
-    var CreateTokenCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    var _CreateTokenCommand = class _CreateTokenCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSSOOIDCService", "CreateToken", {}).n("SSOOIDCClient", "CreateTokenCommand").f(CreateTokenRequestFilterSensitiveLog, CreateTokenResponseFilterSensitiveLog).ser(se_CreateTokenCommand).de(de_CreateTokenCommand).build() {
-      static {
-        __name(this, "CreateTokenCommand");
-      }
     };
-    var CreateTokenWithIAMCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_CreateTokenCommand, "CreateTokenCommand");
+    var CreateTokenCommand = _CreateTokenCommand;
+    var _CreateTokenWithIAMCommand = class _CreateTokenWithIAMCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSSOOIDCService", "CreateTokenWithIAM", {}).n("SSOOIDCClient", "CreateTokenWithIAMCommand").f(CreateTokenWithIAMRequestFilterSensitiveLog, CreateTokenWithIAMResponseFilterSensitiveLog).ser(se_CreateTokenWithIAMCommand).de(de_CreateTokenWithIAMCommand).build() {
-      static {
-        __name(this, "CreateTokenWithIAMCommand");
-      }
     };
-    var RegisterClientCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_CreateTokenWithIAMCommand, "CreateTokenWithIAMCommand");
+    var CreateTokenWithIAMCommand = _CreateTokenWithIAMCommand;
+    var _RegisterClientCommand = class _RegisterClientCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSSOOIDCService", "RegisterClient", {}).n("SSOOIDCClient", "RegisterClientCommand").f(void 0, RegisterClientResponseFilterSensitiveLog).ser(se_RegisterClientCommand).de(de_RegisterClientCommand).build() {
-      static {
-        __name(this, "RegisterClientCommand");
-      }
     };
-    var StartDeviceAuthorizationCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_RegisterClientCommand, "RegisterClientCommand");
+    var RegisterClientCommand = _RegisterClientCommand;
+    var _StartDeviceAuthorizationCommand = class _StartDeviceAuthorizationCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSSOOIDCService", "StartDeviceAuthorization", {}).n("SSOOIDCClient", "StartDeviceAuthorizationCommand").f(StartDeviceAuthorizationRequestFilterSensitiveLog, void 0).ser(se_StartDeviceAuthorizationCommand).de(de_StartDeviceAuthorizationCommand).build() {
-      static {
-        __name(this, "StartDeviceAuthorizationCommand");
-      }
     };
+    __name(_StartDeviceAuthorizationCommand, "StartDeviceAuthorizationCommand");
+    var StartDeviceAuthorizationCommand = _StartDeviceAuthorizationCommand;
     var commands = {
       CreateTokenCommand,
       CreateTokenWithIAMCommand,
       RegisterClientCommand,
       StartDeviceAuthorizationCommand
     };
-    var SSOOIDC = class extends SSOOIDCClient {
-      static {
-        __name(this, "SSOOIDC");
-      }
+    var _SSOOIDC = class _SSOOIDC extends SSOOIDCClient {
     };
+    __name(_SSOOIDC, "SSOOIDC");
+    var SSOOIDC = _SSOOIDC;
     (0, import_smithy_client4.createAggregatedClient)(commands, SSOOIDC);
   }
 });
@@ -41563,11 +41467,12 @@ var require_dist_cjs56 = __commonJS({
     var EXPIRE_WINDOW_MS = 5 * 60 * 1e3;
     var REFRESH_MESSAGE = `To refresh this SSO session run 'aws sso login' with the corresponding profile.`;
     var getSsoOidcClient = /* @__PURE__ */ __name(async (ssoRegion, init = {}) => {
+      var _a, _b, _c;
       const { SSOOIDCClient } = await Promise.resolve().then(() => __toESM2(require_dist_cjs55()));
       const ssoOidcClient = new SSOOIDCClient(
         Object.assign({}, init.clientConfig ?? {}, {
-          region: ssoRegion ?? init.clientConfig?.region,
-          logger: init.clientConfig?.logger ?? init.parentClientConfig?.logger
+          region: ssoRegion ?? ((_a = init.clientConfig) == null ? void 0 : _a.region),
+          logger: ((_b = init.clientConfig) == null ? void 0 : _b.logger) ?? ((_c = init.parentClientConfig) == null ? void 0 : _c.logger)
         })
       );
       return ssoOidcClient;
@@ -41607,19 +41512,11 @@ var require_dist_cjs56 = __commonJS({
       return writeFile(tokenFilepath, tokenString);
     }, "writeSSOTokenToFile");
     var lastRefreshAttemptTime = /* @__PURE__ */ new Date(0);
-    var fromSso = /* @__PURE__ */ __name((_init = {}) => async ({ callerClientConfig } = {}) => {
-      const init = {
-        ..._init,
-        parentClientConfig: {
-          ...callerClientConfig,
-          ..._init.parentClientConfig
-        }
-      };
-      init.logger?.debug("@aws-sdk/token-providers - fromSso");
+    var fromSso = /* @__PURE__ */ __name((init = {}) => async () => {
+      var _a;
+      (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/token-providers - fromSso");
       const profiles = await (0, import_shared_ini_file_loader.parseKnownFiles)(init);
-      const profileName = (0, import_shared_ini_file_loader.getProfileName)({
-        profile: init.profile ?? callerClientConfig?.profile
-      });
+      const profileName = (0, import_shared_ini_file_loader.getProfileName)(init);
       const profile = profiles[profileName];
       if (!profile) {
         throw new import_property_provider2.TokenProviderError(`Profile '${profileName}' could not be found in shared credentials file.`, false);
@@ -41693,7 +41590,7 @@ var require_dist_cjs56 = __commonJS({
       }
     }, "fromSso");
     var fromStatic = /* @__PURE__ */ __name(({ token, logger }) => async () => {
-      logger?.debug("@aws-sdk/token-providers - fromStatic");
+      logger == null ? void 0 : logger.debug("@aws-sdk/token-providers - fromStatic");
       if (!token || !token.token) {
         throw new import_property_provider2.TokenProviderError(`Please pass a valid token to fromStatic`, false);
       }
@@ -41806,8 +41703,8 @@ var require_dist_cjs57 = __commonJS({
       const { SSOClient: SSOClient2, GetRoleCredentialsCommand: GetRoleCredentialsCommand2 } = await Promise.resolve().then(() => (init_loadSso(), loadSso_exports));
       const sso = ssoClient || new SSOClient2(
         Object.assign({}, clientConfig ?? {}, {
-          logger: clientConfig?.logger ?? parentClientConfig?.logger,
-          region: clientConfig?.region ?? ssoRegion
+          logger: (clientConfig == null ? void 0 : clientConfig.logger) ?? (parentClientConfig == null ? void 0 : parentClientConfig.logger),
+          region: (clientConfig == null ? void 0 : clientConfig.region) ?? ssoRegion
         })
       );
       let ssoResp;
@@ -41862,13 +41759,12 @@ Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.ht
       }
       return profile;
     }, "validateSsoProfile");
-    var fromSSO = /* @__PURE__ */ __name((init = {}) => async ({ callerClientConfig } = {}) => {
-      init.logger?.debug("@aws-sdk/credential-provider-sso - fromSSO");
+    var fromSSO = /* @__PURE__ */ __name((init = {}) => async () => {
+      var _a;
+      (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-sso - fromSSO");
       const { ssoStartUrl, ssoAccountId, ssoRegion, ssoRoleName, ssoSession } = init;
       const { ssoClient } = init;
-      const profileName = (0, import_shared_ini_file_loader.getProfileName)({
-        profile: init.profile ?? callerClientConfig?.profile
-      });
+      const profileName = (0, import_shared_ini_file_loader.getProfileName)(init);
       if (!ssoStartUrl && !ssoAccountId && !ssoRegion && !ssoRoleName && !ssoSession) {
         const profiles = await (0, import_shared_ini_file_loader.parseKnownFiles)(init);
         const profile = profiles[profileName];
@@ -41880,7 +41776,7 @@ Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.ht
             logger: init.logger
           });
         }
-        if (profile?.sso_session) {
+        if (profile == null ? void 0 : profile.sso_session) {
           const ssoSessions = await (0, import_shared_ini_file_loader.loadSsoSessionData)(init);
           const session = ssoSessions[profile.sso_session];
           const conflictMsg = ` configurations in profile ${profileName} and sso-session ${profile.sso_session}`;
@@ -42040,7 +41936,7 @@ var require_package4 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sts",
       description: "AWS SDK for JavaScript Sts Client for Node.js, Browser and React Native",
-      version: "3.723.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-sts",
@@ -42061,55 +41957,55 @@ var require_package4 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.723.0",
-        "@aws-sdk/core": "3.723.0",
-        "@aws-sdk/credential-provider-node": "3.723.0",
-        "@aws-sdk/middleware-host-header": "3.723.0",
-        "@aws-sdk/middleware-logger": "3.723.0",
-        "@aws-sdk/middleware-recursion-detection": "3.723.0",
-        "@aws-sdk/middleware-user-agent": "3.723.0",
-        "@aws-sdk/region-config-resolver": "3.723.0",
-        "@aws-sdk/types": "3.723.0",
-        "@aws-sdk/util-endpoints": "3.723.0",
-        "@aws-sdk/util-user-agent-browser": "3.723.0",
-        "@aws-sdk/util-user-agent-node": "3.723.0",
-        "@smithy/config-resolver": "^4.0.0",
-        "@smithy/core": "^3.0.0",
-        "@smithy/fetch-http-handler": "^5.0.0",
-        "@smithy/hash-node": "^4.0.0",
-        "@smithy/invalid-dependency": "^4.0.0",
-        "@smithy/middleware-content-length": "^4.0.0",
-        "@smithy/middleware-endpoint": "^4.0.0",
-        "@smithy/middleware-retry": "^4.0.0",
-        "@smithy/middleware-serde": "^4.0.0",
-        "@smithy/middleware-stack": "^4.0.0",
-        "@smithy/node-config-provider": "^4.0.0",
-        "@smithy/node-http-handler": "^4.0.0",
-        "@smithy/protocol-http": "^5.0.0",
-        "@smithy/smithy-client": "^4.0.0",
-        "@smithy/types": "^4.0.0",
-        "@smithy/url-parser": "^4.0.0",
-        "@smithy/util-base64": "^4.0.0",
-        "@smithy/util-body-length-browser": "^4.0.0",
-        "@smithy/util-body-length-node": "^4.0.0",
-        "@smithy/util-defaults-mode-browser": "^4.0.0",
-        "@smithy/util-defaults-mode-node": "^4.0.0",
-        "@smithy/util-endpoints": "^3.0.0",
-        "@smithy/util-middleware": "^4.0.0",
-        "@smithy/util-retry": "^4.0.0",
-        "@smithy/util-utf8": "^4.0.0",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
+        "@smithy/util-base64": "^3.0.0",
+        "@smithy/util-body-length-browser": "^3.0.0",
+        "@smithy/util-body-length-node": "^3.0.0",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@tsconfig/node18": "18.2.4",
-        "@types/node": "^18.19.69",
+        "@tsconfig/node16": "16.1.3",
+        "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
         rimraf: "3.0.2",
-        typescript: "~5.2.2"
+        typescript: "~4.9.5"
       },
       engines: {
-        node: ">=18.0.0"
+        node: ">=16.0.0"
       },
       typesVersions: {
         "<4.0": {
@@ -42288,7 +42184,6 @@ var require_runtimeConfig3 = __commonJS({
       const defaultConfigProvider = () => defaultsMode().then(smithy_client_1.loadConfigsForDefaultMode);
       const clientSharedValues = (0, runtimeConfig_shared_1.getRuntimeConfig)(config);
       (0, core_1.emitWarningIfUnsupportedVersion)(process.version);
-      const profileConfig = { profile: config?.profile };
       return {
         ...clientSharedValues,
         ...config,
@@ -42309,18 +42204,18 @@ var require_runtimeConfig3 = __commonJS({
             signer: new core_2.NoAuthSigner()
           }
         ],
-        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...profileConfig }),
+        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
         retryMode: config?.retryMode ?? (0, node_config_provider_1.loadConfig)({
           ...middleware_retry_1.NODE_RETRY_MODE_CONFIG_OPTIONS,
           default: async () => (await defaultConfigProvider()).retryMode || util_retry_1.DEFAULT_RETRY_MODE
-        }, config),
+        }),
         sha256: config?.sha256 ?? hash_node_1.Hash.bind(null, "sha256"),
         streamCollector: config?.streamCollector ?? node_http_handler_1.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS, profileConfig)
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS),
+        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS)
       };
     };
     exports2.getRuntimeConfig = getRuntimeConfig;
@@ -42430,7 +42325,6 @@ var require_STSClient = __commonJS({
     var runtimeConfig_1 = require_runtimeConfig3();
     var runtimeExtensions_1 = require_runtimeExtensions();
     var STSClient2 = class extends smithy_client_1.Client {
-      config;
       constructor(...[configuration]) {
         const _config_0 = (0, runtimeConfig_1.getRuntimeConfig)(configuration || {});
         const _config_1 = (0, EndpointParameters_1.resolveClientEndpointParameters)(_config_0);
@@ -42529,24 +42423,18 @@ var require_dist_cjs58 = __commonJS({
     var import_middleware_serde2 = require_dist_cjs5();
     var import_EndpointParameters = require_EndpointParameters();
     var import_smithy_client4 = require_dist_cjs19();
-    var STSServiceException = class _STSServiceException extends import_smithy_client4.ServiceException {
-      static {
-        __name(this, "STSServiceException");
-      }
+    var _STSServiceException = class _STSServiceException2 extends import_smithy_client4.ServiceException {
       /**
        * @internal
        */
       constructor(options) {
         super(options);
-        Object.setPrototypeOf(this, _STSServiceException.prototype);
+        Object.setPrototypeOf(this, _STSServiceException2.prototype);
       }
     };
-    var ExpiredTokenException = class _ExpiredTokenException extends STSServiceException {
-      static {
-        __name(this, "ExpiredTokenException");
-      }
-      name = "ExpiredTokenException";
-      $fault = "client";
+    __name(_STSServiceException, "STSServiceException");
+    var STSServiceException = _STSServiceException;
+    var _ExpiredTokenException = class _ExpiredTokenException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42556,15 +42444,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ExpiredTokenException.prototype);
+        this.name = "ExpiredTokenException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ExpiredTokenException2.prototype);
       }
     };
-    var MalformedPolicyDocumentException = class _MalformedPolicyDocumentException extends STSServiceException {
-      static {
-        __name(this, "MalformedPolicyDocumentException");
-      }
-      name = "MalformedPolicyDocumentException";
-      $fault = "client";
+    __name(_ExpiredTokenException, "ExpiredTokenException");
+    var ExpiredTokenException = _ExpiredTokenException;
+    var _MalformedPolicyDocumentException = class _MalformedPolicyDocumentException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42574,15 +42461,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _MalformedPolicyDocumentException.prototype);
+        this.name = "MalformedPolicyDocumentException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _MalformedPolicyDocumentException2.prototype);
       }
     };
-    var PackedPolicyTooLargeException = class _PackedPolicyTooLargeException extends STSServiceException {
-      static {
-        __name(this, "PackedPolicyTooLargeException");
-      }
-      name = "PackedPolicyTooLargeException";
-      $fault = "client";
+    __name(_MalformedPolicyDocumentException, "MalformedPolicyDocumentException");
+    var MalformedPolicyDocumentException = _MalformedPolicyDocumentException;
+    var _PackedPolicyTooLargeException = class _PackedPolicyTooLargeException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42592,15 +42478,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _PackedPolicyTooLargeException.prototype);
+        this.name = "PackedPolicyTooLargeException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _PackedPolicyTooLargeException2.prototype);
       }
     };
-    var RegionDisabledException = class _RegionDisabledException extends STSServiceException {
-      static {
-        __name(this, "RegionDisabledException");
-      }
-      name = "RegionDisabledException";
-      $fault = "client";
+    __name(_PackedPolicyTooLargeException, "PackedPolicyTooLargeException");
+    var PackedPolicyTooLargeException = _PackedPolicyTooLargeException;
+    var _RegionDisabledException = class _RegionDisabledException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42610,15 +42495,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _RegionDisabledException.prototype);
+        this.name = "RegionDisabledException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _RegionDisabledException2.prototype);
       }
     };
-    var IDPRejectedClaimException = class _IDPRejectedClaimException extends STSServiceException {
-      static {
-        __name(this, "IDPRejectedClaimException");
-      }
-      name = "IDPRejectedClaimException";
-      $fault = "client";
+    __name(_RegionDisabledException, "RegionDisabledException");
+    var RegionDisabledException = _RegionDisabledException;
+    var _IDPRejectedClaimException = class _IDPRejectedClaimException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42628,15 +42512,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _IDPRejectedClaimException.prototype);
+        this.name = "IDPRejectedClaimException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _IDPRejectedClaimException2.prototype);
       }
     };
-    var InvalidIdentityTokenException = class _InvalidIdentityTokenException extends STSServiceException {
-      static {
-        __name(this, "InvalidIdentityTokenException");
-      }
-      name = "InvalidIdentityTokenException";
-      $fault = "client";
+    __name(_IDPRejectedClaimException, "IDPRejectedClaimException");
+    var IDPRejectedClaimException = _IDPRejectedClaimException;
+    var _InvalidIdentityTokenException = class _InvalidIdentityTokenException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42646,15 +42529,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidIdentityTokenException.prototype);
+        this.name = "InvalidIdentityTokenException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidIdentityTokenException2.prototype);
       }
     };
-    var IDPCommunicationErrorException = class _IDPCommunicationErrorException extends STSServiceException {
-      static {
-        __name(this, "IDPCommunicationErrorException");
-      }
-      name = "IDPCommunicationErrorException";
-      $fault = "client";
+    __name(_InvalidIdentityTokenException, "InvalidIdentityTokenException");
+    var InvalidIdentityTokenException = _InvalidIdentityTokenException;
+    var _IDPCommunicationErrorException = class _IDPCommunicationErrorException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42664,15 +42546,14 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _IDPCommunicationErrorException.prototype);
+        this.name = "IDPCommunicationErrorException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _IDPCommunicationErrorException2.prototype);
       }
     };
-    var InvalidAuthorizationMessageException = class _InvalidAuthorizationMessageException extends STSServiceException {
-      static {
-        __name(this, "InvalidAuthorizationMessageException");
-      }
-      name = "InvalidAuthorizationMessageException";
-      $fault = "client";
+    __name(_IDPCommunicationErrorException, "IDPCommunicationErrorException");
+    var IDPCommunicationErrorException = _IDPCommunicationErrorException;
+    var _InvalidAuthorizationMessageException = class _InvalidAuthorizationMessageException2 extends STSServiceException {
       /**
        * @internal
        */
@@ -42682,9 +42563,13 @@ var require_dist_cjs58 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidAuthorizationMessageException.prototype);
+        this.name = "InvalidAuthorizationMessageException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidAuthorizationMessageException2.prototype);
       }
     };
+    __name(_InvalidAuthorizationMessageException, "InvalidAuthorizationMessageException");
+    var InvalidAuthorizationMessageException = _InvalidAuthorizationMessageException;
     var CredentialsFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.SecretAccessKey && { SecretAccessKey: import_smithy_client4.SENSITIVE_STRING }
@@ -43043,6 +42928,7 @@ var require_dist_cjs58 = __commonJS({
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_RegionDisabledExceptionRes");
     var se_AssumeRoleRequest = /* @__PURE__ */ __name((input, context3) => {
+      var _a2, _b, _c, _d;
       const entries = {};
       if (input[_RA] != null) {
         entries[_RA] = input[_RA];
@@ -43052,7 +42938,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_PA] != null) {
         const memberEntries = se_policyDescriptorListType(input[_PA], context3);
-        if (input[_PA]?.length === 0) {
+        if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43068,7 +42954,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_T] != null) {
         const memberEntries = se_tagListType(input[_T], context3);
-        if (input[_T]?.length === 0) {
+        if (((_b = input[_T]) == null ? void 0 : _b.length) === 0) {
           entries.Tags = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43078,7 +42964,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_TTK] != null) {
         const memberEntries = se_tagKeyListType(input[_TTK], context3);
-        if (input[_TTK]?.length === 0) {
+        if (((_c = input[_TTK]) == null ? void 0 : _c.length) === 0) {
           entries.TransitiveTagKeys = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43100,7 +42986,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_PC] != null) {
         const memberEntries = se_ProvidedContextsListType(input[_PC], context3);
-        if (input[_PC]?.length === 0) {
+        if (((_d = input[_PC]) == null ? void 0 : _d.length) === 0) {
           entries.ProvidedContexts = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43111,6 +42997,7 @@ var require_dist_cjs58 = __commonJS({
       return entries;
     }, "se_AssumeRoleRequest");
     var se_AssumeRoleWithSAMLRequest = /* @__PURE__ */ __name((input, context3) => {
+      var _a2;
       const entries = {};
       if (input[_RA] != null) {
         entries[_RA] = input[_RA];
@@ -43123,7 +43010,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_PA] != null) {
         const memberEntries = se_policyDescriptorListType(input[_PA], context3);
-        if (input[_PA]?.length === 0) {
+        if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43140,6 +43027,7 @@ var require_dist_cjs58 = __commonJS({
       return entries;
     }, "se_AssumeRoleWithSAMLRequest");
     var se_AssumeRoleWithWebIdentityRequest = /* @__PURE__ */ __name((input, context3) => {
+      var _a2;
       const entries = {};
       if (input[_RA] != null) {
         entries[_RA] = input[_RA];
@@ -43155,7 +43043,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_PA] != null) {
         const memberEntries = se_policyDescriptorListType(input[_PA], context3);
-        if (input[_PA]?.length === 0) {
+        if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43207,6 +43095,7 @@ var require_dist_cjs58 = __commonJS({
       return entries;
     }, "se_GetCallerIdentityRequest");
     var se_GetFederationTokenRequest = /* @__PURE__ */ __name((input, context3) => {
+      var _a2, _b;
       const entries = {};
       if (input[_N] != null) {
         entries[_N] = input[_N];
@@ -43216,7 +43105,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_PA] != null) {
         const memberEntries = se_policyDescriptorListType(input[_PA], context3);
-        if (input[_PA]?.length === 0) {
+        if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43229,7 +43118,7 @@ var require_dist_cjs58 = __commonJS({
       }
       if (input[_T] != null) {
         const memberEntries = se_tagListType(input[_T], context3);
-        if (input[_T]?.length === 0) {
+        if (((_b = input[_T]) == null ? void 0 : _b.length) === 0) {
           entries.Tags = [];
         }
         Object.entries(memberEntries).forEach(([key, value]) => {
@@ -43646,111 +43535,103 @@ var require_dist_cjs58 = __commonJS({
     var _m = "message";
     var buildFormUrlencodedString = /* @__PURE__ */ __name((formEntries) => Object.entries(formEntries).map(([key, value]) => (0, import_smithy_client4.extendedEncodeURIComponent)(key) + "=" + (0, import_smithy_client4.extendedEncodeURIComponent)(value)).join("&"), "buildFormUrlencodedString");
     var loadQueryErrorCode = /* @__PURE__ */ __name((output, data) => {
-      if (data.Error?.Code !== void 0) {
+      var _a2;
+      if (((_a2 = data.Error) == null ? void 0 : _a2.Code) !== void 0) {
         return data.Error.Code;
       }
       if (output.statusCode == 404) {
         return "NotFound";
       }
     }, "loadQueryErrorCode");
-    var AssumeRoleCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters.commonParams).m(function(Command, cs, config, o) {
+    var _AssumeRoleCommand = class _AssumeRoleCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "AssumeRole", {}).n("STSClient", "AssumeRoleCommand").f(void 0, AssumeRoleResponseFilterSensitiveLog).ser(se_AssumeRoleCommand).de(de_AssumeRoleCommand).build() {
-      static {
-        __name(this, "AssumeRoleCommand");
-      }
     };
+    __name(_AssumeRoleCommand, "AssumeRoleCommand");
+    var AssumeRoleCommand = _AssumeRoleCommand;
     var import_EndpointParameters2 = require_EndpointParameters();
-    var AssumeRoleWithSAMLCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters2.commonParams).m(function(Command, cs, config, o) {
+    var _AssumeRoleWithSAMLCommand = class _AssumeRoleWithSAMLCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters2.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "AssumeRoleWithSAML", {}).n("STSClient", "AssumeRoleWithSAMLCommand").f(AssumeRoleWithSAMLRequestFilterSensitiveLog, AssumeRoleWithSAMLResponseFilterSensitiveLog).ser(se_AssumeRoleWithSAMLCommand).de(de_AssumeRoleWithSAMLCommand).build() {
-      static {
-        __name(this, "AssumeRoleWithSAMLCommand");
-      }
     };
+    __name(_AssumeRoleWithSAMLCommand, "AssumeRoleWithSAMLCommand");
+    var AssumeRoleWithSAMLCommand = _AssumeRoleWithSAMLCommand;
     var import_EndpointParameters3 = require_EndpointParameters();
-    var AssumeRoleWithWebIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters3.commonParams).m(function(Command, cs, config, o) {
+    var _AssumeRoleWithWebIdentityCommand = class _AssumeRoleWithWebIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters3.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "AssumeRoleWithWebIdentity", {}).n("STSClient", "AssumeRoleWithWebIdentityCommand").f(AssumeRoleWithWebIdentityRequestFilterSensitiveLog, AssumeRoleWithWebIdentityResponseFilterSensitiveLog).ser(se_AssumeRoleWithWebIdentityCommand).de(de_AssumeRoleWithWebIdentityCommand).build() {
-      static {
-        __name(this, "AssumeRoleWithWebIdentityCommand");
-      }
     };
+    __name(_AssumeRoleWithWebIdentityCommand, "AssumeRoleWithWebIdentityCommand");
+    var AssumeRoleWithWebIdentityCommand = _AssumeRoleWithWebIdentityCommand;
     var import_EndpointParameters4 = require_EndpointParameters();
-    var AssumeRootCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters4.commonParams).m(function(Command, cs, config, o) {
+    var _AssumeRootCommand = class _AssumeRootCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters4.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "AssumeRoot", {}).n("STSClient", "AssumeRootCommand").f(void 0, AssumeRootResponseFilterSensitiveLog).ser(se_AssumeRootCommand).de(de_AssumeRootCommand).build() {
-      static {
-        __name(this, "AssumeRootCommand");
-      }
     };
+    __name(_AssumeRootCommand, "AssumeRootCommand");
+    var AssumeRootCommand = _AssumeRootCommand;
     var import_EndpointParameters5 = require_EndpointParameters();
-    var DecodeAuthorizationMessageCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters5.commonParams).m(function(Command, cs, config, o) {
+    var _DecodeAuthorizationMessageCommand = class _DecodeAuthorizationMessageCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters5.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "DecodeAuthorizationMessage", {}).n("STSClient", "DecodeAuthorizationMessageCommand").f(void 0, void 0).ser(se_DecodeAuthorizationMessageCommand).de(de_DecodeAuthorizationMessageCommand).build() {
-      static {
-        __name(this, "DecodeAuthorizationMessageCommand");
-      }
     };
+    __name(_DecodeAuthorizationMessageCommand, "DecodeAuthorizationMessageCommand");
+    var DecodeAuthorizationMessageCommand = _DecodeAuthorizationMessageCommand;
     var import_EndpointParameters6 = require_EndpointParameters();
-    var GetAccessKeyInfoCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters6.commonParams).m(function(Command, cs, config, o) {
+    var _GetAccessKeyInfoCommand = class _GetAccessKeyInfoCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters6.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "GetAccessKeyInfo", {}).n("STSClient", "GetAccessKeyInfoCommand").f(void 0, void 0).ser(se_GetAccessKeyInfoCommand).de(de_GetAccessKeyInfoCommand).build() {
-      static {
-        __name(this, "GetAccessKeyInfoCommand");
-      }
     };
+    __name(_GetAccessKeyInfoCommand, "GetAccessKeyInfoCommand");
+    var GetAccessKeyInfoCommand = _GetAccessKeyInfoCommand;
     var import_EndpointParameters7 = require_EndpointParameters();
-    var GetCallerIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters7.commonParams).m(function(Command, cs, config, o) {
+    var _GetCallerIdentityCommand = class _GetCallerIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters7.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "GetCallerIdentity", {}).n("STSClient", "GetCallerIdentityCommand").f(void 0, void 0).ser(se_GetCallerIdentityCommand).de(de_GetCallerIdentityCommand).build() {
-      static {
-        __name(this, "GetCallerIdentityCommand");
-      }
     };
+    __name(_GetCallerIdentityCommand, "GetCallerIdentityCommand");
+    var GetCallerIdentityCommand = _GetCallerIdentityCommand;
     var import_EndpointParameters8 = require_EndpointParameters();
-    var GetFederationTokenCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters8.commonParams).m(function(Command, cs, config, o) {
+    var _GetFederationTokenCommand = class _GetFederationTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters8.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "GetFederationToken", {}).n("STSClient", "GetFederationTokenCommand").f(void 0, GetFederationTokenResponseFilterSensitiveLog).ser(se_GetFederationTokenCommand).de(de_GetFederationTokenCommand).build() {
-      static {
-        __name(this, "GetFederationTokenCommand");
-      }
     };
+    __name(_GetFederationTokenCommand, "GetFederationTokenCommand");
+    var GetFederationTokenCommand = _GetFederationTokenCommand;
     var import_EndpointParameters9 = require_EndpointParameters();
-    var GetSessionTokenCommand = class extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters9.commonParams).m(function(Command, cs, config, o) {
+    var _GetSessionTokenCommand = class _GetSessionTokenCommand extends import_smithy_client4.Command.classBuilder().ep(import_EndpointParameters9.commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSSecurityTokenServiceV20110615", "GetSessionToken", {}).n("STSClient", "GetSessionTokenCommand").f(void 0, GetSessionTokenResponseFilterSensitiveLog).ser(se_GetSessionTokenCommand).de(de_GetSessionTokenCommand).build() {
-      static {
-        __name(this, "GetSessionTokenCommand");
-      }
     };
+    __name(_GetSessionTokenCommand, "GetSessionTokenCommand");
+    var GetSessionTokenCommand = _GetSessionTokenCommand;
     var import_STSClient = require_STSClient();
     var commands = {
       AssumeRoleCommand,
@@ -43763,17 +43644,16 @@ var require_dist_cjs58 = __commonJS({
       GetFederationTokenCommand,
       GetSessionTokenCommand
     };
-    var STS = class extends import_STSClient.STSClient {
-      static {
-        __name(this, "STS");
-      }
+    var _STS = class _STS extends import_STSClient.STSClient {
     };
+    __name(_STS, "STS");
+    var STS = _STS;
     (0, import_smithy_client4.createAggregatedClient)(commands, STS);
     var import_EndpointParameters10 = require_EndpointParameters();
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var ASSUME_ROLE_DEFAULT_REGION = "us-east-1";
     var getAccountIdFromAssumedRoleUser = /* @__PURE__ */ __name((assumedRoleUser) => {
-      if (typeof assumedRoleUser?.Arn === "string") {
+      if (typeof (assumedRoleUser == null ? void 0 : assumedRoleUser.Arn) === "string") {
         const arnComponents = assumedRoleUser.Arn.split(":");
         if (arnComponents.length > 4 && arnComponents[4] !== "") {
           return arnComponents[4];
@@ -43782,9 +43662,11 @@ var require_dist_cjs58 = __commonJS({
       return void 0;
     }, "getAccountIdFromAssumedRoleUser");
     var resolveRegion = /* @__PURE__ */ __name(async (_region, _parentRegion, credentialProviderLogger) => {
+      var _a2;
       const region = typeof _region === "function" ? await _region() : _region;
       const parentRegion = typeof _parentRegion === "function" ? await _parentRegion() : _parentRegion;
-      credentialProviderLogger?.debug?.(
+      (_a2 = credentialProviderLogger == null ? void 0 : credentialProviderLogger.debug) == null ? void 0 : _a2.call(
+        credentialProviderLogger,
         "@aws-sdk/client-sts::resolveRegion",
         "accepting first of:",
         `${region} (provider)`,
@@ -43797,17 +43679,18 @@ var require_dist_cjs58 = __commonJS({
       let stsClient;
       let closureSourceCreds;
       return async (sourceCreds, params) => {
+        var _a2, _b, _c;
         closureSourceCreds = sourceCreds;
         if (!stsClient) {
           const {
-            logger = stsOptions?.parentClientConfig?.logger,
+            logger = (_a2 = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _a2.logger,
             region,
-            requestHandler = stsOptions?.parentClientConfig?.requestHandler,
+            requestHandler = (_b = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _b.requestHandler,
             credentialProviderLogger
           } = stsOptions;
           const resolvedRegion = await resolveRegion(
             region,
-            stsOptions?.parentClientConfig?.region,
+            (_c = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _c.region,
             credentialProviderLogger
           );
           const isCompatibleRequestHandler = !isH2(requestHandler);
@@ -43840,16 +43723,17 @@ var require_dist_cjs58 = __commonJS({
     var getDefaultRoleAssumerWithWebIdentity = /* @__PURE__ */ __name((stsOptions, stsClientCtor) => {
       let stsClient;
       return async (params) => {
+        var _a2, _b, _c;
         if (!stsClient) {
           const {
-            logger = stsOptions?.parentClientConfig?.logger,
+            logger = (_a2 = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _a2.logger,
             region,
-            requestHandler = stsOptions?.parentClientConfig?.requestHandler,
+            requestHandler = (_b = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _b.requestHandler,
             credentialProviderLogger
           } = stsOptions;
           const resolvedRegion = await resolveRegion(
             region,
-            stsOptions?.parentClientConfig?.region,
+            (_c = stsOptions == null ? void 0 : stsOptions.parentClientConfig) == null ? void 0 : _c.region,
             credentialProviderLogger
           );
           const isCompatibleRequestHandler = !isH2(requestHandler);
@@ -43881,24 +43765,23 @@ var require_dist_cjs58 = __commonJS({
       };
     }, "getDefaultRoleAssumerWithWebIdentity");
     var isH2 = /* @__PURE__ */ __name((requestHandler) => {
-      return requestHandler?.metadata?.handlerProtocol === "h2";
+      var _a2;
+      return ((_a2 = requestHandler == null ? void 0 : requestHandler.metadata) == null ? void 0 : _a2.handlerProtocol) === "h2";
     }, "isH2");
     var import_STSClient2 = require_STSClient();
     var getCustomizableStsClientCtor = /* @__PURE__ */ __name((baseCtor, customizations) => {
+      var _a2;
       if (!customizations)
         return baseCtor;
       else
-        return class CustomizableSTSClient extends baseCtor {
-          static {
-            __name(this, "CustomizableSTSClient");
-          }
+        return _a2 = class extends baseCtor {
           constructor(config) {
             super(config);
             for (const customization of customizations) {
               this.middlewareStack.use(customization);
             }
           }
-        };
+        }, __name(_a2, "CustomizableSTSClient"), _a2;
     }, "getCustomizableStsClientCtor");
     var getDefaultRoleAssumer2 = /* @__PURE__ */ __name((stsOptions = {}, stsPlugins) => getDefaultRoleAssumer(stsOptions, getCustomizableStsClientCtor(import_STSClient2.STSClient, stsPlugins)), "getDefaultRoleAssumer");
     var getDefaultRoleAssumerWithWebIdentity2 = /* @__PURE__ */ __name((stsOptions = {}, stsPlugins) => getDefaultRoleAssumerWithWebIdentity(stsOptions, getCustomizableStsClientCtor(import_STSClient2.STSClient, stsPlugins)), "getDefaultRoleAssumerWithWebIdentity");
@@ -43943,6 +43826,7 @@ var require_dist_cjs59 = __commonJS({
     var import_util = require("util");
     var import_client2 = (init_client(), __toCommonJS(client_exports));
     var getValidatedProcessCredentials = /* @__PURE__ */ __name((profileName, data, profiles) => {
+      var _a;
       if (data.Version !== 1) {
         throw Error(`Profile ${profileName} credential_process did not return Version 1.`);
       }
@@ -43957,7 +43841,7 @@ var require_dist_cjs59 = __commonJS({
         }
       }
       let accountId = data.AccountId;
-      if (!accountId && profiles?.[profileName]?.aws_account_id) {
+      if (!accountId && ((_a = profiles == null ? void 0 : profiles[profileName]) == null ? void 0 : _a.aws_account_id)) {
         accountId = profiles[profileName].aws_account_id;
       }
       const credentials = {
@@ -43998,16 +43882,11 @@ var require_dist_cjs59 = __commonJS({
         });
       }
     }, "resolveProcessCredentials");
-    var fromProcess = /* @__PURE__ */ __name((init = {}) => async ({ callerClientConfig } = {}) => {
-      init.logger?.debug("@aws-sdk/credential-provider-process - fromProcess");
+    var fromProcess = /* @__PURE__ */ __name((init = {}) => async () => {
+      var _a;
+      (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-process - fromProcess");
       const profiles = await (0, import_shared_ini_file_loader.parseKnownFiles)(init);
-      return resolveProcessCredentials(
-        (0, import_shared_ini_file_loader.getProfileName)({
-          profile: init.profile ?? callerClientConfig?.profile
-        }),
-        profiles,
-        init.logger
-      );
+      return resolveProcessCredentials((0, import_shared_ini_file_loader.getProfileName)(init), profiles, init.logger);
     }, "fromProcess");
   }
 });
@@ -44045,7 +43924,7 @@ var require_fromWebToken = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromWebToken = void 0;
-    var fromWebToken3 = (init) => async (awsIdentityProperties) => {
+    var fromWebToken3 = (init) => async () => {
       init.logger?.debug("@aws-sdk/credential-provider-web-identity - fromWebToken");
       const { roleArn, roleSessionName, webIdentityToken, providerId, policyArns, policy, durationSeconds } = init;
       let { roleAssumerWithWebIdentity } = init;
@@ -44054,10 +43933,7 @@ var require_fromWebToken = __commonJS({
         roleAssumerWithWebIdentity = getDefaultRoleAssumerWithWebIdentity({
           ...init.clientConfig,
           credentialProviderLogger: init.logger,
-          parentClientConfig: {
-            ...awsIdentityProperties?.callerClientConfig,
-            ...init.parentClientConfig
-          }
+          parentClientConfig: init.parentClientConfig
         }, init.clientPlugins);
       }
       return roleAssumerWithWebIdentity({
@@ -44182,16 +44058,16 @@ var require_dist_cjs61 = __commonJS({
         EcsContainer: async (options) => {
           const { fromHttp } = await Promise.resolve().then(() => __toESM2(require_dist_cjs48()));
           const { fromContainerMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs47()));
-          logger?.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
+          logger == null ? void 0 : logger.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
           return async () => (0, import_property_provider2.chain)(fromHttp(options ?? {}), fromContainerMetadata(options))().then(setNamedProvider);
         },
         Ec2InstanceMetadata: async (options) => {
-          logger?.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
+          logger == null ? void 0 : logger.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
           const { fromInstanceMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs47()));
           return async () => fromInstanceMetadata(options)().then(setNamedProvider);
         },
         Environment: async (options) => {
-          logger?.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
+          logger == null ? void 0 : logger.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
           const { fromEnv } = await Promise.resolve().then(() => __toESM2(require_dist_cjs46()));
           return async () => fromEnv(options)().then(setNamedProvider);
         }
@@ -44210,44 +44086,44 @@ var require_dist_cjs61 = __commonJS({
       return Boolean(arg) && typeof arg === "object" && typeof arg.role_arn === "string" && ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1 && ["undefined", "string"].indexOf(typeof arg.external_id) > -1 && ["undefined", "string"].indexOf(typeof arg.mfa_serial) > -1 && (isAssumeRoleWithSourceProfile(arg, { profile, logger }) || isCredentialSourceProfile(arg, { profile, logger }));
     }, "isAssumeRoleProfile");
     var isAssumeRoleWithSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger }) => {
+      var _a;
       const withSourceProfile = typeof arg.source_profile === "string" && typeof arg.credential_source === "undefined";
       if (withSourceProfile) {
-        logger?.debug?.(`    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
+        (_a = logger == null ? void 0 : logger.debug) == null ? void 0 : _a.call(logger, `    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
       }
       return withSourceProfile;
     }, "isAssumeRoleWithSourceProfile");
     var isCredentialSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger }) => {
+      var _a;
       const withProviderProfile = typeof arg.credential_source === "string" && typeof arg.source_profile === "undefined";
       if (withProviderProfile) {
-        logger?.debug?.(`    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
+        (_a = logger == null ? void 0 : logger.debug) == null ? void 0 : _a.call(logger, `    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
       }
       return withProviderProfile;
     }, "isCredentialSourceProfile");
     var resolveAssumeRoleCredentials = /* @__PURE__ */ __name(async (profileName, profiles, options, visitedProfiles = {}) => {
-      options.logger?.debug("@aws-sdk/credential-provider-ini - resolveAssumeRoleCredentials (STS)");
-      const profileData = profiles[profileName];
-      const { source_profile, region } = profileData;
+      var _a, _b;
+      (_a = options.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-ini - resolveAssumeRoleCredentials (STS)");
+      const data = profiles[profileName];
       if (!options.roleAssumer) {
         const { getDefaultRoleAssumer } = await Promise.resolve().then(() => __toESM2(require_dist_cjs58()));
         options.roleAssumer = getDefaultRoleAssumer(
           {
             ...options.clientConfig,
             credentialProviderLogger: options.logger,
-            parentClientConfig: {
-              ...options?.parentClientConfig,
-              region: region ?? options?.parentClientConfig?.region
-            }
+            parentClientConfig: options == null ? void 0 : options.parentClientConfig
           },
           options.clientPlugins
         );
       }
+      const { source_profile } = data;
       if (source_profile && source_profile in visitedProfiles) {
         throw new import_property_provider2.CredentialsProviderError(
           `Detected a cycle attempting to resolve credentials for profile ${(0, import_shared_ini_file_loader.getProfileName)(options)}. Profiles visited: ` + Object.keys(visitedProfiles).join(", "),
           { logger: options.logger }
         );
       }
-      options.logger?.debug(
+      (_b = options.logger) == null ? void 0 : _b.debug(
         `@aws-sdk/credential-provider-ini - finding credential resolver using ${source_profile ? `source_profile=[${source_profile}]` : `profile=[${profileName}]`}`
       );
       const sourceCredsProvider = source_profile ? resolveProfileData(
@@ -44259,17 +44135,17 @@ var require_dist_cjs61 = __commonJS({
           [source_profile]: true
         },
         isCredentialSourceWithoutRoleArn(profiles[source_profile] ?? {})
-      ) : (await resolveCredentialSource(profileData.credential_source, profileName, options.logger)(options))();
-      if (isCredentialSourceWithoutRoleArn(profileData)) {
+      ) : (await resolveCredentialSource(data.credential_source, profileName, options.logger)(options))();
+      if (isCredentialSourceWithoutRoleArn(data)) {
         return sourceCredsProvider.then((creds) => (0, import_client2.setCredentialFeature)(creds, "CREDENTIALS_PROFILE_SOURCE_PROFILE", "o"));
       } else {
         const params = {
-          RoleArn: profileData.role_arn,
-          RoleSessionName: profileData.role_session_name || `aws-sdk-js-${Date.now()}`,
-          ExternalId: profileData.external_id,
-          DurationSeconds: parseInt(profileData.duration_seconds || "3600", 10)
+          RoleArn: data.role_arn,
+          RoleSessionName: data.role_session_name || `aws-sdk-js-${Date.now()}`,
+          ExternalId: data.external_id,
+          DurationSeconds: parseInt(data.duration_seconds || "3600", 10)
         };
-        const { mfa_serial } = profileData;
+        const { mfa_serial } = data;
         if (mfa_serial) {
           if (!options.mfaCodeProvider) {
             throw new import_property_provider2.CredentialsProviderError(
@@ -44314,7 +44190,8 @@ var require_dist_cjs61 = __commonJS({
     var isSsoProfile = /* @__PURE__ */ __name((arg) => arg && (typeof arg.sso_start_url === "string" || typeof arg.sso_account_id === "string" || typeof arg.sso_session === "string" || typeof arg.sso_region === "string" || typeof arg.sso_role_name === "string"), "isSsoProfile");
     var isStaticCredsProfile = /* @__PURE__ */ __name((arg) => Boolean(arg) && typeof arg === "object" && typeof arg.aws_access_key_id === "string" && typeof arg.aws_secret_access_key === "string" && ["undefined", "string"].indexOf(typeof arg.aws_session_token) > -1 && ["undefined", "string"].indexOf(typeof arg.aws_account_id) > -1, "isStaticCredsProfile");
     var resolveStaticCredentials = /* @__PURE__ */ __name(async (profile, options) => {
-      options?.logger?.debug("@aws-sdk/credential-provider-ini - resolveStaticCredentials");
+      var _a;
+      (_a = options == null ? void 0 : options.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-ini - resolveStaticCredentials");
       const credentials = {
         accessKeyId: profile.aws_access_key_id,
         secretAccessKey: profile.aws_secret_access_key,
@@ -44360,23 +44237,11 @@ var require_dist_cjs61 = __commonJS({
         { logger: options.logger }
       );
     }, "resolveProfileData");
-    var fromIni = /* @__PURE__ */ __name((_init = {}) => async ({ callerClientConfig } = {}) => {
-      const init = {
-        ..._init,
-        parentClientConfig: {
-          ...callerClientConfig,
-          ..._init.parentClientConfig
-        }
-      };
-      init.logger?.debug("@aws-sdk/credential-provider-ini - fromIni");
+    var fromIni = /* @__PURE__ */ __name((init = {}) => async () => {
+      var _a;
+      (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-ini - fromIni");
       const profiles = await (0, import_shared_ini_file_loader.parseKnownFiles)(init);
-      return resolveProfileData(
-        (0, import_shared_ini_file_loader.getProfileName)({
-          profile: _init.profile ?? callerClientConfig?.profile
-        }),
-        profiles,
-        init
-      );
+      return resolveProfileData((0, import_shared_ini_file_loader.getProfileName)(init), profiles, init);
     }, "fromIni");
   }
 });
@@ -44425,9 +44290,10 @@ var require_dist_cjs62 = __commonJS({
     var import_property_provider2 = require_dist_cjs16();
     var ENV_IMDS_DISABLED = "AWS_EC2_METADATA_DISABLED";
     var remoteProvider = /* @__PURE__ */ __name(async (init) => {
+      var _a, _b;
       const { ENV_CMDS_FULL_URI, ENV_CMDS_RELATIVE_URI, fromContainerMetadata, fromInstanceMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs47()));
       if (process.env[ENV_CMDS_RELATIVE_URI] || process.env[ENV_CMDS_FULL_URI]) {
-        init.logger?.debug("@aws-sdk/credential-provider-node - remoteProvider::fromHttp/fromContainerMetadata");
+        (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - remoteProvider::fromHttp/fromContainerMetadata");
         const { fromHttp } = await Promise.resolve().then(() => __toESM2(require_dist_cjs48()));
         return (0, import_property_provider2.chain)(fromHttp(init), fromContainerMetadata(init));
       }
@@ -44436,19 +44302,20 @@ var require_dist_cjs62 = __commonJS({
           throw new import_property_provider2.CredentialsProviderError("EC2 Instance Metadata Service access disabled", { logger: init.logger });
         };
       }
-      init.logger?.debug("@aws-sdk/credential-provider-node - remoteProvider::fromInstanceMetadata");
+      (_b = init.logger) == null ? void 0 : _b.debug("@aws-sdk/credential-provider-node - remoteProvider::fromInstanceMetadata");
       return fromInstanceMetadata(init);
     }, "remoteProvider");
     var multipleCredentialSourceWarningEmitted = false;
     var defaultProvider = /* @__PURE__ */ __name((init = {}) => (0, import_property_provider2.memoize)(
       (0, import_property_provider2.chain)(
         async () => {
+          var _a, _b, _c, _d;
           const profile = init.profile ?? process.env[import_shared_ini_file_loader.ENV_PROFILE];
           if (profile) {
             const envStaticCredentialsAreSet = process.env[import_credential_provider_env.ENV_KEY] && process.env[import_credential_provider_env.ENV_SECRET];
             if (envStaticCredentialsAreSet) {
               if (!multipleCredentialSourceWarningEmitted) {
-                const warnFn = init.logger?.warn && init.logger?.constructor?.name !== "NoOpLogger" ? init.logger.warn : console.warn;
+                const warnFn = ((_a = init.logger) == null ? void 0 : _a.warn) && ((_c = (_b = init.logger) == null ? void 0 : _b.constructor) == null ? void 0 : _c.name) !== "NoOpLogger" ? init.logger.warn : console.warn;
                 warnFn(
                   `@aws-sdk/credential-provider-node - defaultProvider::fromEnv WARNING:
     Multiple credential sources detected: 
@@ -44468,11 +44335,12 @@ var require_dist_cjs62 = __commonJS({
               tryNextLink: true
             });
           }
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromEnv");
+          (_d = init.logger) == null ? void 0 : _d.debug("@aws-sdk/credential-provider-node - defaultProvider::fromEnv");
           return (0, import_credential_provider_env.fromEnv)(init)();
         },
         async () => {
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromSSO");
+          var _a;
+          (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - defaultProvider::fromSSO");
           const { ssoStartUrl, ssoAccountId, ssoRegion, ssoRoleName, ssoSession } = init;
           if (!ssoStartUrl && !ssoAccountId && !ssoRegion && !ssoRoleName && !ssoSession) {
             throw new import_property_provider2.CredentialsProviderError(
@@ -44484,22 +44352,26 @@ var require_dist_cjs62 = __commonJS({
           return fromSSO(init)();
         },
         async () => {
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromIni");
+          var _a;
+          (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - defaultProvider::fromIni");
           const { fromIni } = await Promise.resolve().then(() => __toESM2(require_dist_cjs61()));
           return fromIni(init)();
         },
         async () => {
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromProcess");
+          var _a;
+          (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - defaultProvider::fromProcess");
           const { fromProcess } = await Promise.resolve().then(() => __toESM2(require_dist_cjs59()));
           return fromProcess(init)();
         },
         async () => {
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromTokenFile");
+          var _a;
+          (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - defaultProvider::fromTokenFile");
           const { fromTokenFile: fromTokenFile2 } = await Promise.resolve().then(() => __toESM2(require_dist_cjs60()));
           return fromTokenFile2(init)();
         },
         async () => {
-          init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::remoteProvider");
+          var _a;
+          (_a = init.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-node - defaultProvider::remoteProvider");
           return (await remoteProvider(init))();
         },
         async () => {
@@ -44512,8 +44384,8 @@ var require_dist_cjs62 = __commonJS({
       credentialsTreatedAsExpired,
       credentialsWillNeedRefresh
     ), "defaultProvider");
-    var credentialsWillNeedRefresh = /* @__PURE__ */ __name((credentials) => credentials?.expiration !== void 0, "credentialsWillNeedRefresh");
-    var credentialsTreatedAsExpired = /* @__PURE__ */ __name((credentials) => credentials?.expiration !== void 0 && credentials.expiration.getTime() - Date.now() < 3e5, "credentialsTreatedAsExpired");
+    var credentialsWillNeedRefresh = /* @__PURE__ */ __name((credentials) => (credentials == null ? void 0 : credentials.expiration) !== void 0, "credentialsWillNeedRefresh");
+    var credentialsTreatedAsExpired = /* @__PURE__ */ __name((credentials) => (credentials == null ? void 0 : credentials.expiration) !== void 0 && credentials.expiration.getTime() - Date.now() < 3e5, "credentialsTreatedAsExpired");
   }
 });
 
@@ -44653,7 +44525,7 @@ var require_dist_cjs63 = __commonJS({
       }
     }, "validateAccountId");
     var validateDNSHostLabel = /* @__PURE__ */ __name((label, options = { tlsCompatible: true }) => {
-      if (label.length >= 64 || !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(label) || /(\d+\.){3}\d+/.test(label) || /[.-]{2}/.test(label) || options?.tlsCompatible && DOT_PATTERN.test(label)) {
+      if (label.length >= 64 || !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(label) || /(\d+\.){3}\d+/.test(label) || /[.-]{2}/.test(label) || (options == null ? void 0 : options.tlsCompatible) && DOT_PATTERN.test(label)) {
         throw new Error(`Invalid DNS label ${label}`);
       }
     }, "validateDNSHostLabel");
@@ -45016,15 +44888,12 @@ var require_dist_cjs64 = __commonJS({
     module2.exports = __toCommonJS2(src_exports);
     var import_crc322 = require_main4();
     var import_util_hex_encoding = require_dist_cjs14();
-    var Int64 = class _Int64 {
+    var _Int64 = class _Int642 {
       constructor(bytes) {
         this.bytes = bytes;
         if (bytes.byteLength !== 8) {
           throw new Error("Int64 buffers must be exactly 8 bytes");
         }
-      }
-      static {
-        __name(this, "Int64");
       }
       static fromNumber(number) {
         if (number > 9223372036854776e3 || number < -9223372036854776e3) {
@@ -45037,7 +44906,7 @@ var require_dist_cjs64 = __commonJS({
         if (number < 0) {
           negate(bytes);
         }
-        return new _Int64(bytes);
+        return new _Int642(bytes);
       }
       /**
        * Called implicitly by infix arithmetic operators.
@@ -45054,6 +44923,8 @@ var require_dist_cjs64 = __commonJS({
         return String(this.valueOf());
       }
     };
+    __name(_Int64, "Int64");
+    var Int64 = _Int64;
     function negate(bytes) {
       for (let i = 0; i < 8; i++) {
         bytes[i] ^= 255;
@@ -45065,13 +44936,10 @@ var require_dist_cjs64 = __commonJS({
       }
     }
     __name(negate, "negate");
-    var HeaderMarshaller = class {
+    var _HeaderMarshaller = class _HeaderMarshaller {
       constructor(toUtf8, fromUtf8) {
         this.toUtf8 = toUtf8;
         this.fromUtf8 = fromUtf8;
-      }
-      static {
-        __name(this, "HeaderMarshaller");
       }
       format(headers) {
         const chunks = [];
@@ -45246,6 +45114,8 @@ var require_dist_cjs64 = __commonJS({
         return out;
       }
     };
+    __name(_HeaderMarshaller, "HeaderMarshaller");
+    var HeaderMarshaller = _HeaderMarshaller;
     var BOOLEAN_TAG = "boolean";
     var BYTE_TAG = "byte";
     var SHORT_TAG = "short";
@@ -45297,10 +45167,7 @@ var require_dist_cjs64 = __commonJS({
       };
     }
     __name(splitMessage, "splitMessage");
-    var EventStreamCodec = class {
-      static {
-        __name(this, "EventStreamCodec");
-      }
+    var _EventStreamCodec = class _EventStreamCodec {
       constructor(toUtf8, fromUtf8) {
         this.headerMarshaller = new HeaderMarshaller(toUtf8, fromUtf8);
         this.messageBuffer = [];
@@ -45371,12 +45238,11 @@ var require_dist_cjs64 = __commonJS({
         return this.headerMarshaller.format(rawHeaders);
       }
     };
-    var MessageDecoderStream = class {
+    __name(_EventStreamCodec, "EventStreamCodec");
+    var EventStreamCodec = _EventStreamCodec;
+    var _MessageDecoderStream = class _MessageDecoderStream {
       constructor(options) {
         this.options = options;
-      }
-      static {
-        __name(this, "MessageDecoderStream");
       }
       [Symbol.asyncIterator]() {
         return this.asyncIterator();
@@ -45388,12 +45254,11 @@ var require_dist_cjs64 = __commonJS({
         }
       }
     };
-    var MessageEncoderStream = class {
+    __name(_MessageDecoderStream, "MessageDecoderStream");
+    var MessageDecoderStream = _MessageDecoderStream;
+    var _MessageEncoderStream = class _MessageEncoderStream {
       constructor(options) {
         this.options = options;
-      }
-      static {
-        __name(this, "MessageEncoderStream");
       }
       [Symbol.asyncIterator]() {
         return this.asyncIterator();
@@ -45408,12 +45273,11 @@ var require_dist_cjs64 = __commonJS({
         }
       }
     };
-    var SmithyMessageDecoderStream = class {
+    __name(_MessageEncoderStream, "MessageEncoderStream");
+    var MessageEncoderStream = _MessageEncoderStream;
+    var _SmithyMessageDecoderStream = class _SmithyMessageDecoderStream {
       constructor(options) {
         this.options = options;
-      }
-      static {
-        __name(this, "SmithyMessageDecoderStream");
       }
       [Symbol.asyncIterator]() {
         return this.asyncIterator();
@@ -45427,12 +45291,11 @@ var require_dist_cjs64 = __commonJS({
         }
       }
     };
-    var SmithyMessageEncoderStream = class {
+    __name(_SmithyMessageDecoderStream, "SmithyMessageDecoderStream");
+    var SmithyMessageDecoderStream = _SmithyMessageDecoderStream;
+    var _SmithyMessageEncoderStream = class _SmithyMessageEncoderStream {
       constructor(options) {
         this.options = options;
-      }
-      static {
-        __name(this, "SmithyMessageEncoderStream");
       }
       [Symbol.asyncIterator]() {
         return this.asyncIterator();
@@ -45444,6 +45307,8 @@ var require_dist_cjs64 = __commonJS({
         }
       }
     };
+    __name(_SmithyMessageEncoderStream, "SmithyMessageEncoderStream");
+    var SmithyMessageEncoderStream = _SmithyMessageEncoderStream;
   }
 });
 
@@ -45589,10 +45454,7 @@ var require_dist_cjs65 = __commonJS({
       };
     }
     __name(getMessageUnmarshaller, "getMessageUnmarshaller");
-    var EventStreamMarshaller = class {
-      static {
-        __name(this, "EventStreamMarshaller");
-      }
+    var _EventStreamMarshaller = class _EventStreamMarshaller {
       constructor({ utf8Encoder, utf8Decoder }) {
         this.eventStreamCodec = new import_eventstream_codec.EventStreamCodec(utf8Encoder, utf8Decoder);
         this.utfEncoder = utf8Encoder;
@@ -45613,6 +45475,8 @@ var require_dist_cjs65 = __commonJS({
         });
       }
     };
+    __name(_EventStreamMarshaller, "EventStreamMarshaller");
+    var EventStreamMarshaller = _EventStreamMarshaller;
     var eventStreamSerdeProvider = /* @__PURE__ */ __name((options) => new EventStreamMarshaller(options), "eventStreamSerdeProvider");
   }
 });
@@ -45673,10 +45537,7 @@ var require_dist_cjs66 = __commonJS({
       }
     }
     __name(readabletoIterable, "readabletoIterable");
-    var EventStreamMarshaller = class {
-      static {
-        __name(this, "EventStreamMarshaller");
-      }
+    var _EventStreamMarshaller = class _EventStreamMarshaller {
       constructor({ utf8Encoder, utf8Decoder }) {
         this.universalMarshaller = new import_eventstream_serde_universal.EventStreamMarshaller({
           utf8Decoder,
@@ -45691,6 +45552,8 @@ var require_dist_cjs66 = __commonJS({
         return import_stream.Readable.from(this.universalMarshaller.serialize(input, serializer));
       }
     };
+    __name(_EventStreamMarshaller, "EventStreamMarshaller");
+    var EventStreamMarshaller = _EventStreamMarshaller;
     var eventStreamSerdeProvider = /* @__PURE__ */ __name((options) => new EventStreamMarshaller(options), "eventStreamSerdeProvider");
   }
 });
@@ -45725,13 +45588,10 @@ var require_dist_cjs67 = __commonJS({
     var import_fs = require("fs");
     var import_util_utf8 = require_dist_cjs8();
     var import_stream = require("stream");
-    var HashCalculator = class extends import_stream.Writable {
+    var _HashCalculator = class _HashCalculator extends import_stream.Writable {
       constructor(hash, options) {
         super(options);
         this.hash = hash;
-      }
-      static {
-        __name(this, "HashCalculator");
       }
       _write(chunk, encoding, callback) {
         try {
@@ -45742,6 +45602,8 @@ var require_dist_cjs67 = __commonJS({
         callback();
       }
     };
+    __name(_HashCalculator, "HashCalculator");
+    var HashCalculator = _HashCalculator;
     var fileStreamHasher = /* @__PURE__ */ __name((hashCtor, fileStream) => new Promise((resolve, reject) => {
       if (!isReadStream(fileStream)) {
         reject(new Error("Unable to calculate hash for non-file streams."));
@@ -45870,7 +45732,6 @@ var require_runtimeConfig4 = __commonJS({
       const defaultConfigProvider = () => defaultsMode().then(smithy_client_1.loadConfigsForDefaultMode);
       const clientSharedValues = (0, runtimeConfig_shared_1.getRuntimeConfig)(config);
       (0, core_1.emitWarningIfUnsupportedVersion)(process.version);
-      const profileConfig = { profile: config?.profile };
       return {
         ...clientSharedValues,
         ...config,
@@ -45879,27 +45740,27 @@ var require_runtimeConfig4 = __commonJS({
         bodyLengthChecker: config?.bodyLengthChecker ?? util_body_length_node_1.calculateBodyLength,
         credentialDefaultProvider: config?.credentialDefaultProvider ?? credential_provider_node_1.defaultProvider,
         defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
-        disableS3ExpressSessionAuth: config?.disableS3ExpressSessionAuth ?? (0, node_config_provider_1.loadConfig)(middleware_sdk_s3_1.NODE_DISABLE_S3_EXPRESS_SESSION_AUTH_OPTIONS, profileConfig),
+        disableS3ExpressSessionAuth: config?.disableS3ExpressSessionAuth ?? (0, node_config_provider_1.loadConfig)(middleware_sdk_s3_1.NODE_DISABLE_S3_EXPRESS_SESSION_AUTH_OPTIONS),
         eventStreamSerdeProvider: config?.eventStreamSerdeProvider ?? eventstream_serde_node_1.eventStreamSerdeProvider,
-        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
+        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS),
         md5: config?.md5 ?? hash_node_1.Hash.bind(null, "md5"),
-        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...profileConfig }),
-        requestChecksumCalculation: config?.requestChecksumCalculation ?? (0, node_config_provider_1.loadConfig)(middleware_flexible_checksums_1.NODE_REQUEST_CHECKSUM_CALCULATION_CONFIG_OPTIONS, profileConfig),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS),
+        requestChecksumCalculation: config?.requestChecksumCalculation ?? (0, node_config_provider_1.loadConfig)(middleware_flexible_checksums_1.NODE_REQUEST_CHECKSUM_CALCULATION_CONFIG_OPTIONS),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
-        responseChecksumValidation: config?.responseChecksumValidation ?? (0, node_config_provider_1.loadConfig)(middleware_flexible_checksums_1.NODE_RESPONSE_CHECKSUM_VALIDATION_CONFIG_OPTIONS, profileConfig),
+        responseChecksumValidation: config?.responseChecksumValidation ?? (0, node_config_provider_1.loadConfig)(middleware_flexible_checksums_1.NODE_RESPONSE_CHECKSUM_VALIDATION_CONFIG_OPTIONS),
         retryMode: config?.retryMode ?? (0, node_config_provider_1.loadConfig)({
           ...middleware_retry_1.NODE_RETRY_MODE_CONFIG_OPTIONS,
           default: async () => (await defaultConfigProvider()).retryMode || util_retry_1.DEFAULT_RETRY_MODE
-        }, config),
+        }),
         sha1: config?.sha1 ?? hash_node_1.Hash.bind(null, "sha1"),
         sha256: config?.sha256 ?? hash_node_1.Hash.bind(null, "sha256"),
-        sigv4aSigningRegionSet: config?.sigv4aSigningRegionSet ?? (0, node_config_provider_1.loadConfig)(core_1.NODE_SIGV4A_CONFIG_OPTIONS, profileConfig),
+        sigv4aSigningRegionSet: config?.sigv4aSigningRegionSet ?? (0, node_config_provider_1.loadConfig)(core_1.NODE_SIGV4A_CONFIG_OPTIONS),
         streamCollector: config?.streamCollector ?? node_http_handler_1.streamCollector,
         streamHasher: config?.streamHasher ?? hash_stream_node_1.readableStreamHasher,
-        useArnRegion: config?.useArnRegion ?? (0, node_config_provider_1.loadConfig)(middleware_bucket_endpoint_1.NODE_USE_ARN_REGION_CONFIG_OPTIONS, profileConfig),
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS, profileConfig)
+        useArnRegion: config?.useArnRegion ?? (0, node_config_provider_1.loadConfig)(middleware_bucket_endpoint_1.NODE_USE_ARN_REGION_CONFIG_OPTIONS),
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS),
+        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS)
       };
     };
     exports2.getRuntimeConfig = getRuntimeConfig;
@@ -46035,7 +45896,7 @@ var require_dist_cjs69 = __commonJS({
       return (next) => async (args) => {
         const { CreateBucketConfiguration } = args.input;
         const region = await options.region();
-        if (!CreateBucketConfiguration?.LocationConstraint && !CreateBucketConfiguration?.Location) {
+        if (!(CreateBucketConfiguration == null ? void 0 : CreateBucketConfiguration.LocationConstraint) && !(CreateBucketConfiguration == null ? void 0 : CreateBucketConfiguration.Location)) {
           args = {
             ...args,
             input: {
@@ -46138,6 +45999,7 @@ var require_dist_cjs70 = __commonJS({
     }, "exponentialBackoffWithJitter");
     var randomInRange = /* @__PURE__ */ __name((min, max) => min + Math.random() * (max - min), "randomInRange");
     var runPolling = /* @__PURE__ */ __name(async ({ minDelay, maxDelay, maxWaitTime, abortController, client, abortSignal }, input, acceptorChecks) => {
+      var _a;
       const observedResponses = {};
       const { state: state2, reason } = await acceptorChecks(client, input);
       if (reason) {
@@ -46152,7 +46014,7 @@ var require_dist_cjs70 = __commonJS({
       const waitUntil = Date.now() + maxWaitTime * 1e3;
       const attemptCeiling = Math.log(maxDelay / minDelay) / Math.log(2) + 1;
       while (true) {
-        if (abortController?.signal?.aborted || abortSignal?.aborted) {
+        if (((_a = abortController == null ? void 0 : abortController.signal) == null ? void 0 : _a.aborted) || (abortSignal == null ? void 0 : abortSignal.aborted)) {
           const message = "AbortController signal aborted.";
           observedResponses[message] |= 0;
           observedResponses[message] += 1;
@@ -46176,16 +46038,17 @@ var require_dist_cjs70 = __commonJS({
       }
     }, "runPolling");
     var createMessageFromResponse = /* @__PURE__ */ __name((reason) => {
-      if (reason?.$responseBodyText) {
+      var _a;
+      if (reason == null ? void 0 : reason.$responseBodyText) {
         return `Deserialization error for body: ${reason.$responseBodyText}`;
       }
-      if (reason?.$metadata?.httpStatusCode) {
+      if ((_a = reason == null ? void 0 : reason.$metadata) == null ? void 0 : _a.httpStatusCode) {
         if (reason.$response || reason.message) {
           return `${reason.$response.statusCode ?? reason.$metadata.httpStatusCode ?? "Unknown"}: ${reason.message}`;
         }
         return `${reason.$metadata.httpStatusCode}: OK`;
       }
-      return String(reason?.message ?? JSON.stringify(reason) ?? "Unknown");
+      return String((reason == null ? void 0 : reason.message) ?? JSON.stringify(reason) ?? "Unknown");
     }, "createMessageFromResponse");
     var validateWaiterOptions = /* @__PURE__ */ __name((options) => {
       if (options.maxWaitTime < 1) {
@@ -46281,7 +46144,6 @@ var require_dist_cjs71 = __commonJS({
       CopyObjectOutputFilterSensitiveLog: () => CopyObjectOutputFilterSensitiveLog,
       CopyObjectRequestFilterSensitiveLog: () => CopyObjectRequestFilterSensitiveLog,
       CreateBucketCommand: () => CreateBucketCommand,
-      CreateBucketMetadataTableConfigurationCommand: () => CreateBucketMetadataTableConfigurationCommand,
       CreateMultipartUploadCommand: () => CreateMultipartUploadCommand,
       CreateMultipartUploadOutputFilterSensitiveLog: () => CreateMultipartUploadOutputFilterSensitiveLog,
       CreateMultipartUploadRequestFilterSensitiveLog: () => CreateMultipartUploadRequestFilterSensitiveLog,
@@ -46296,7 +46158,6 @@ var require_dist_cjs71 = __commonJS({
       DeleteBucketIntelligentTieringConfigurationCommand: () => DeleteBucketIntelligentTieringConfigurationCommand,
       DeleteBucketInventoryConfigurationCommand: () => DeleteBucketInventoryConfigurationCommand,
       DeleteBucketLifecycleCommand: () => DeleteBucketLifecycleCommand,
-      DeleteBucketMetadataTableConfigurationCommand: () => DeleteBucketMetadataTableConfigurationCommand,
       DeleteBucketMetricsConfigurationCommand: () => DeleteBucketMetricsConfigurationCommand,
       DeleteBucketOwnershipControlsCommand: () => DeleteBucketOwnershipControlsCommand,
       DeleteBucketPolicyCommand: () => DeleteBucketPolicyCommand,
@@ -46329,7 +46190,6 @@ var require_dist_cjs71 = __commonJS({
       GetBucketLifecycleConfigurationCommand: () => GetBucketLifecycleConfigurationCommand,
       GetBucketLocationCommand: () => GetBucketLocationCommand,
       GetBucketLoggingCommand: () => GetBucketLoggingCommand,
-      GetBucketMetadataTableConfigurationCommand: () => GetBucketMetadataTableConfigurationCommand,
       GetBucketMetricsConfigurationCommand: () => GetBucketMetricsConfigurationCommand,
       GetBucketNotificationConfigurationCommand: () => GetBucketNotificationConfigurationCommand,
       GetBucketOwnershipControlsCommand: () => GetBucketOwnershipControlsCommand,
@@ -46541,30 +46401,24 @@ var require_dist_cjs71 = __commonJS({
       UseDualStack: { type: "builtInParams", name: "useDualstackEndpoint" }
     };
     var import_smithy_client4 = require_dist_cjs19();
-    var S3ServiceException = class _S3ServiceException extends import_smithy_client4.ServiceException {
-      static {
-        __name(this, "S3ServiceException");
-      }
+    var _S3ServiceException = class _S3ServiceException2 extends import_smithy_client4.ServiceException {
       /**
        * @internal
        */
       constructor(options) {
         super(options);
-        Object.setPrototypeOf(this, _S3ServiceException.prototype);
+        Object.setPrototypeOf(this, _S3ServiceException2.prototype);
       }
     };
+    __name(_S3ServiceException, "S3ServiceException");
+    var S3ServiceException = _S3ServiceException;
     var RequestCharged = {
       requester: "requester"
     };
     var RequestPayer = {
       requester: "requester"
     };
-    var NoSuchUpload = class _NoSuchUpload extends S3ServiceException {
-      static {
-        __name(this, "NoSuchUpload");
-      }
-      name = "NoSuchUpload";
-      $fault = "client";
+    var _NoSuchUpload = class _NoSuchUpload2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46574,9 +46428,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _NoSuchUpload.prototype);
+        this.name = "NoSuchUpload";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _NoSuchUpload2.prototype);
       }
     };
+    __name(_NoSuchUpload, "NoSuchUpload");
+    var NoSuchUpload = _NoSuchUpload;
     var BucketAccelerateStatus = {
       Enabled: "Enabled",
       Suspended: "Suspended"
@@ -46645,12 +46503,7 @@ var require_dist_cjs71 = __commonJS({
       COPY: "COPY",
       REPLACE: "REPLACE"
     };
-    var ObjectNotInActiveTierError = class _ObjectNotInActiveTierError extends S3ServiceException {
-      static {
-        __name(this, "ObjectNotInActiveTierError");
-      }
-      name = "ObjectNotInActiveTierError";
-      $fault = "client";
+    var _ObjectNotInActiveTierError = class _ObjectNotInActiveTierError2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46660,15 +46513,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ObjectNotInActiveTierError.prototype);
+        this.name = "ObjectNotInActiveTierError";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ObjectNotInActiveTierError2.prototype);
       }
     };
-    var BucketAlreadyExists = class _BucketAlreadyExists extends S3ServiceException {
-      static {
-        __name(this, "BucketAlreadyExists");
-      }
-      name = "BucketAlreadyExists";
-      $fault = "client";
+    __name(_ObjectNotInActiveTierError, "ObjectNotInActiveTierError");
+    var ObjectNotInActiveTierError = _ObjectNotInActiveTierError;
+    var _BucketAlreadyExists = class _BucketAlreadyExists2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46678,15 +46530,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _BucketAlreadyExists.prototype);
+        this.name = "BucketAlreadyExists";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _BucketAlreadyExists2.prototype);
       }
     };
-    var BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou extends S3ServiceException {
-      static {
-        __name(this, "BucketAlreadyOwnedByYou");
-      }
-      name = "BucketAlreadyOwnedByYou";
-      $fault = "client";
+    __name(_BucketAlreadyExists, "BucketAlreadyExists");
+    var BucketAlreadyExists = _BucketAlreadyExists;
+    var _BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46696,9 +46547,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _BucketAlreadyOwnedByYou.prototype);
+        this.name = "BucketAlreadyOwnedByYou";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _BucketAlreadyOwnedByYou2.prototype);
       }
     };
+    __name(_BucketAlreadyOwnedByYou, "BucketAlreadyOwnedByYou");
+    var BucketAlreadyOwnedByYou = _BucketAlreadyOwnedByYou;
     var BucketCannedACL = {
       authenticated_read: "authenticated-read",
       private: "private",
@@ -46755,12 +46610,7 @@ var require_dist_cjs71 = __commonJS({
       ReadOnly: "ReadOnly",
       ReadWrite: "ReadWrite"
     };
-    var NoSuchBucket = class _NoSuchBucket extends S3ServiceException {
-      static {
-        __name(this, "NoSuchBucket");
-      }
-      name = "NoSuchBucket";
-      $fault = "client";
+    var _NoSuchBucket = class _NoSuchBucket2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46770,9 +46620,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _NoSuchBucket.prototype);
+        this.name = "NoSuchBucket";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _NoSuchBucket2.prototype);
       }
     };
+    __name(_NoSuchBucket, "NoSuchBucket");
+    var NoSuchBucket = _NoSuchBucket;
     var AnalyticsFilter;
     ((AnalyticsFilter2) => {
       AnalyticsFilter2.visit = /* @__PURE__ */ __name((value, visitor) => {
@@ -46955,14 +46809,7 @@ var require_dist_cjs71 = __commonJS({
     var ChecksumMode = {
       ENABLED: "ENABLED"
     };
-    var InvalidObjectState = class _InvalidObjectState extends S3ServiceException {
-      static {
-        __name(this, "InvalidObjectState");
-      }
-      name = "InvalidObjectState";
-      $fault = "client";
-      StorageClass;
-      AccessTier;
+    var _InvalidObjectState = class _InvalidObjectState2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46972,17 +46819,16 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidObjectState.prototype);
+        this.name = "InvalidObjectState";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidObjectState2.prototype);
         this.StorageClass = opts.StorageClass;
         this.AccessTier = opts.AccessTier;
       }
     };
-    var NoSuchKey = class _NoSuchKey extends S3ServiceException {
-      static {
-        __name(this, "NoSuchKey");
-      }
-      name = "NoSuchKey";
-      $fault = "client";
+    __name(_InvalidObjectState, "InvalidObjectState");
+    var InvalidObjectState = _InvalidObjectState;
+    var _NoSuchKey = class _NoSuchKey2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -46992,9 +46838,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _NoSuchKey.prototype);
+        this.name = "NoSuchKey";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _NoSuchKey2.prototype);
       }
     };
+    __name(_NoSuchKey, "NoSuchKey");
+    var NoSuchKey = _NoSuchKey;
     var ObjectAttributes = {
       CHECKSUM: "Checksum",
       ETAG: "ETag",
@@ -47009,12 +46859,7 @@ var require_dist_cjs71 = __commonJS({
       COMPLIANCE: "COMPLIANCE",
       GOVERNANCE: "GOVERNANCE"
     };
-    var NotFound = class _NotFound extends S3ServiceException {
-      static {
-        __name(this, "NotFound");
-      }
-      name = "NotFound";
-      $fault = "client";
+    var _NotFound = class _NotFound2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47024,9 +46869,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _NotFound.prototype);
+        this.name = "NotFound";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _NotFound2.prototype);
       }
     };
+    __name(_NotFound, "NotFound");
+    var NotFound = _NotFound;
     var ArchiveStatus = {
       ARCHIVE_ACCESS: "ARCHIVE_ACCESS",
       DEEP_ARCHIVE_ACCESS: "DEEP_ARCHIVE_ACCESS"
@@ -47187,6 +47036,20 @@ var require_dist_cjs71 = __commonJS({
       ...obj,
       ...obj.SSECustomerKey && { SSECustomerKey: import_smithy_client4.SENSITIVE_STRING }
     }), "ListPartsRequestFilterSensitiveLog");
+    var PutBucketEncryptionRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+      ...obj,
+      ...obj.ServerSideEncryptionConfiguration && {
+        ServerSideEncryptionConfiguration: ServerSideEncryptionConfigurationFilterSensitiveLog(
+          obj.ServerSideEncryptionConfiguration
+        )
+      }
+    }), "PutBucketEncryptionRequestFilterSensitiveLog");
+    var PutBucketInventoryConfigurationRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
+      ...obj,
+      ...obj.InventoryConfiguration && {
+        InventoryConfiguration: InventoryConfigurationFilterSensitiveLog(obj.InventoryConfiguration)
+      }
+    }), "PutBucketInventoryConfigurationRequestFilterSensitiveLog");
     var import_core4 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var import_xml_builder = require_dist_cjs45();
     var import_core22 = (init_dist_es(), __toCommonJS(dist_es_exports));
@@ -47195,12 +47058,7 @@ var require_dist_cjs71 = __commonJS({
       Disabled: "Disabled",
       Enabled: "Enabled"
     };
-    var EncryptionTypeMismatch = class _EncryptionTypeMismatch extends S3ServiceException {
-      static {
-        __name(this, "EncryptionTypeMismatch");
-      }
-      name = "EncryptionTypeMismatch";
-      $fault = "client";
+    var _EncryptionTypeMismatch = class _EncryptionTypeMismatch2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47210,15 +47068,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _EncryptionTypeMismatch.prototype);
+        this.name = "EncryptionTypeMismatch";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _EncryptionTypeMismatch2.prototype);
       }
     };
-    var InvalidRequest = class _InvalidRequest extends S3ServiceException {
-      static {
-        __name(this, "InvalidRequest");
-      }
-      name = "InvalidRequest";
-      $fault = "client";
+    __name(_EncryptionTypeMismatch, "EncryptionTypeMismatch");
+    var EncryptionTypeMismatch = _EncryptionTypeMismatch;
+    var _InvalidRequest = class _InvalidRequest2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47228,15 +47085,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidRequest.prototype);
+        this.name = "InvalidRequest";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidRequest2.prototype);
       }
     };
-    var InvalidWriteOffset = class _InvalidWriteOffset extends S3ServiceException {
-      static {
-        __name(this, "InvalidWriteOffset");
-      }
-      name = "InvalidWriteOffset";
-      $fault = "client";
+    __name(_InvalidRequest, "InvalidRequest");
+    var InvalidRequest = _InvalidRequest;
+    var _InvalidWriteOffset = class _InvalidWriteOffset2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47246,15 +47102,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidWriteOffset.prototype);
+        this.name = "InvalidWriteOffset";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidWriteOffset2.prototype);
       }
     };
-    var TooManyParts = class _TooManyParts extends S3ServiceException {
-      static {
-        __name(this, "TooManyParts");
-      }
-      name = "TooManyParts";
-      $fault = "client";
+    __name(_InvalidWriteOffset, "InvalidWriteOffset");
+    var InvalidWriteOffset = _InvalidWriteOffset;
+    var _TooManyParts = class _TooManyParts2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47264,15 +47119,14 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _TooManyParts.prototype);
+        this.name = "TooManyParts";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _TooManyParts2.prototype);
       }
     };
-    var ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError extends S3ServiceException {
-      static {
-        __name(this, "ObjectAlreadyInActiveTierError");
-      }
-      name = "ObjectAlreadyInActiveTierError";
-      $fault = "client";
+    __name(_TooManyParts, "TooManyParts");
+    var TooManyParts = _TooManyParts;
+    var _ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError2 extends S3ServiceException {
       /**
        * @internal
        */
@@ -47282,9 +47136,13 @@ var require_dist_cjs71 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ObjectAlreadyInActiveTierError.prototype);
+        this.name = "ObjectAlreadyInActiveTierError";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ObjectAlreadyInActiveTierError2.prototype);
       }
     };
+    __name(_ObjectAlreadyInActiveTierError, "ObjectAlreadyInActiveTierError");
+    var ObjectAlreadyInActiveTierError = _ObjectAlreadyInActiveTierError;
     var Tier = {
       Bulk: "Bulk",
       Expedited: "Expedited",
@@ -47330,20 +47188,6 @@ var require_dist_cjs71 = __commonJS({
         return visitor._(value.$unknown[0], value.$unknown[1]);
       }, "visit");
     })(SelectObjectContentEventStream || (SelectObjectContentEventStream = {}));
-    var PutBucketEncryptionRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-      ...obj,
-      ...obj.ServerSideEncryptionConfiguration && {
-        ServerSideEncryptionConfiguration: ServerSideEncryptionConfigurationFilterSensitiveLog(
-          obj.ServerSideEncryptionConfiguration
-        )
-      }
-    }), "PutBucketEncryptionRequestFilterSensitiveLog");
-    var PutBucketInventoryConfigurationRequestFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
-      ...obj,
-      ...obj.InventoryConfiguration && {
-        InventoryConfiguration: InventoryConfigurationFilterSensitiveLog(obj.InventoryConfiguration)
-      }
-    }), "PutBucketInventoryConfigurationRequestFilterSensitiveLog");
     var PutObjectOutputFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.SSEKMSKeyId && { SSEKMSKeyId: import_smithy_client4.SENSITIVE_STRING },
@@ -47552,30 +47396,6 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).b(body);
       return b.build();
     }, "se_CreateBucketCommand");
-    var se_CreateBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
-      const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
-        "content-type": "application/xml",
-        [_cm]: input[_CMD],
-        [_xasca]: input[_CA],
-        [_xaebo]: input[_EBO]
-      });
-      b.bp("/");
-      b.p("Bucket", () => input.Bucket, "{Bucket}", false);
-      const query = (0, import_smithy_client4.map)({
-        [_mT]: [, ""]
-      });
-      let body;
-      let contents;
-      if (input.MetadataTableConfiguration !== void 0) {
-        contents = se_MetadataTableConfiguration(input.MetadataTableConfiguration, context3);
-        body = _ve;
-        contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
-        body += contents.toString();
-      }
-      b.m("POST").h(headers).q(query).b(body);
-      return b.build();
-    }, "se_CreateBucketMetadataTableConfigurationCommand");
     var se_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context3) => {
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
@@ -47735,20 +47555,6 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketLifecycleCommand");
-    var se_DeleteBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
-      const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
-        [_xaebo]: input[_EBO]
-      });
-      b.bp("/");
-      b.p("Bucket", () => input.Bucket, "{Bucket}", false);
-      const query = (0, import_smithy_client4.map)({
-        [_mT]: [, ""]
-      });
-      let body;
-      b.m("DELETE").h(headers).q(query).b(body);
-      return b.build();
-    }, "se_DeleteBucketMetadataTableConfigurationCommand");
     var se_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
@@ -48057,20 +47863,6 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketLoggingCommand");
-    var se_GetBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
-      const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
-        [_xaebo]: input[_EBO]
-      });
-      b.bp("/");
-      b.p("Bucket", () => input.Bucket, "{Bucket}", false);
-      const query = (0, import_smithy_client4.map)({
-        [_mT]: [, ""]
-      });
-      let body;
-      b.m("GET").h(headers).q(query).b(body);
-      return b.build();
-    }, "se_GetBucketMetadataTableConfigurationCommand");
     var se_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
       const b = (0, import_core22.requestBuilder)(input, context3);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
@@ -49565,16 +49357,6 @@ var require_dist_cjs71 = __commonJS({
       await (0, import_smithy_client4.collectBody)(output.body, context3);
       return contents;
     }, "de_CreateBucketCommand");
-    var de_CreateBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
-      }
-      const contents = (0, import_smithy_client4.map)({
-        $metadata: deserializeMetadata(output)
-      });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
-      return contents;
-    }, "de_CreateBucketMetadataTableConfigurationCommand");
     var de_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context3) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
         return de_CommandError(output, context3);
@@ -49694,16 +49476,6 @@ var require_dist_cjs71 = __commonJS({
       await (0, import_smithy_client4.collectBody)(output.body, context3);
       return contents;
     }, "de_DeleteBucketLifecycleCommand");
-    var de_DeleteBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
-      if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
-      }
-      const contents = (0, import_smithy_client4.map)({
-        $metadata: deserializeMetadata(output)
-      });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
-      return contents;
-    }, "de_DeleteBucketMetadataTableConfigurationCommand");
     var de_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
         return de_CommandError(output, context3);
@@ -49952,17 +49724,6 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_GetBucketLoggingCommand");
-    var de_GetBucketMetadataTableConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
-      if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
-      }
-      const contents = (0, import_smithy_client4.map)({
-        $metadata: deserializeMetadata(output)
-      });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.GetBucketMetadataTableConfigurationResult = de_GetBucketMetadataTableConfigurationResult(data, context3);
-      return contents;
-    }, "de_GetBucketMetadataTableConfigurationCommand");
     var de_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
         return de_CommandError(output, context3);
@@ -51961,13 +51722,6 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_MetadataEntry");
-    var se_MetadataTableConfiguration = /* @__PURE__ */ __name((input, context3) => {
-      const bn = new import_xml_builder.XmlNode(_MTC);
-      if (input[_STD] != null) {
-        bn.c(se_S3TablesDestination(input[_STD], context3).n(_STD));
-      }
-      return bn;
-    }, "se_MetadataTableConfiguration");
     var se_Metrics = /* @__PURE__ */ __name((input, context3) => {
       const bn = new import_xml_builder.XmlNode(_Me);
       if (input[_S] != null) {
@@ -52386,16 +52140,6 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _SC);
       return bn;
     }, "se_S3Location");
-    var se_S3TablesDestination = /* @__PURE__ */ __name((input, context3) => {
-      const bn = new import_xml_builder.XmlNode(_STD);
-      if (input[_TBA] != null) {
-        bn.c(import_xml_builder.XmlNode.of(_STBA, input[_TBA]).n(_TBA));
-      }
-      if (input[_TN] != null) {
-        bn.c(import_xml_builder.XmlNode.of(_STN, input[_TN]).n(_TN));
-      }
-      return bn;
-    }, "se_S3TablesDestination");
     var se_ScanRange = /* @__PURE__ */ __name((input, context3) => {
       const bn = new import_xml_builder.XmlNode(_SR);
       if (input[_St] != null) {
@@ -52992,16 +52736,6 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de__Error");
-    var de_ErrorDetails = /* @__PURE__ */ __name((output, context3) => {
-      const contents = {};
-      if (output[_EC] != null) {
-        contents[_EC] = (0, import_smithy_client4.expectString)(output[_EC]);
-      }
-      if (output[_EM] != null) {
-        contents[_EM] = (0, import_smithy_client4.expectString)(output[_EM]);
-      }
-      return contents;
-    }, "de_ErrorDetails");
     var de_ErrorDocument = /* @__PURE__ */ __name((output, context3) => {
       const contents = {};
       if (output[_K] != null) {
@@ -53050,19 +52784,6 @@ var require_dist_cjs71 = __commonJS({
         return de_FilterRule(entry, context3);
       });
     }, "de_FilterRuleList");
-    var de_GetBucketMetadataTableConfigurationResult = /* @__PURE__ */ __name((output, context3) => {
-      const contents = {};
-      if (output[_MTCR] != null) {
-        contents[_MTCR] = de_MetadataTableConfigurationResult(output[_MTCR], context3);
-      }
-      if (output[_S] != null) {
-        contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
-      }
-      if (output[_Er] != null) {
-        contents[_Er] = de_ErrorDetails(output[_Er], context3);
-      }
-      return contents;
-    }, "de_GetBucketMetadataTableConfigurationResult");
     var de_GetObjectAttributesParts = /* @__PURE__ */ __name((output, context3) => {
       const contents = {};
       if (output[_PC] != null) {
@@ -53404,13 +53125,6 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_LoggingEnabled");
-    var de_MetadataTableConfigurationResult = /* @__PURE__ */ __name((output, context3) => {
-      const contents = {};
-      if (output[_STDR] != null) {
-        contents[_STDR] = de_S3TablesDestinationResult(output[_STDR], context3);
-      }
-      return contents;
-    }, "de_MetadataTableConfigurationResult");
     var de_Metrics = /* @__PURE__ */ __name((output, context3) => {
       const contents = {};
       if (output[_S] != null) {
@@ -53967,22 +53681,6 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_S3KeyFilter");
-    var de_S3TablesDestinationResult = /* @__PURE__ */ __name((output, context3) => {
-      const contents = {};
-      if (output[_TBA] != null) {
-        contents[_TBA] = (0, import_smithy_client4.expectString)(output[_TBA]);
-      }
-      if (output[_TN] != null) {
-        contents[_TN] = (0, import_smithy_client4.expectString)(output[_TN]);
-      }
-      if (output[_TAa] != null) {
-        contents[_TAa] = (0, import_smithy_client4.expectString)(output[_TAa]);
-      }
-      if (output[_TNa] != null) {
-        contents[_TNa] = (0, import_smithy_client4.expectString)(output[_TNa]);
-      }
-      return contents;
-    }, "de_S3TablesDestinationResult");
     var de_ServerSideEncryptionByDefault = /* @__PURE__ */ __name((output, context3) => {
       const contents = {};
       if (output[_SSEA] != null) {
@@ -54458,8 +54156,6 @@ var require_dist_cjs71 = __commonJS({
     var _MM = "MissingMeta";
     var _MP = "MaxParts";
     var _MS = "MetricsStatus";
-    var _MTC = "MetadataTableConfiguration";
-    var _MTCR = "MetadataTableConfigurationResult";
     var _MU = "MaxUploads";
     var _MV = "MetadataValue";
     var _Me = "Metrics";
@@ -54615,10 +54311,6 @@ var require_dist_cjs71 = __commonJS({
     var _SSER = "ServerSideEncryptionRule";
     var _SSES = "SSES3";
     var _ST = "SessionToken";
-    var _STBA = "S3TablesBucketArn";
-    var _STD = "S3TablesDestination";
-    var _STDR = "S3TablesDestinationResult";
-    var _STN = "S3TablesName";
     var _S_ = "S3";
     var _Sc = "Schedule";
     var _Se = "Setting";
@@ -54627,9 +54319,7 @@ var require_dist_cjs71 = __commonJS({
     var _Su = "Suffix";
     var _T = "Tagging";
     var _TA = "TopicArn";
-    var _TAa = "TableArn";
     var _TB = "TargetBucket";
-    var _TBA = "TableBucketArn";
     var _TC = "TagCount";
     var _TCo = "TopicConfiguration";
     var _TCop = "TopicConfigurations";
@@ -54637,8 +54327,6 @@ var require_dist_cjs71 = __commonJS({
     var _TDMOS = "TransitionDefaultMinimumObjectSize";
     var _TG = "TargetGrants";
     var _TGa = "TargetGrant";
-    var _TN = "TableName";
-    var _TNa = "TableNamespace";
     var _TOKF = "TargetObjectKeyFormat";
     var _TP = "TargetPrefix";
     var _TPC = "TotalPartsCount";
@@ -54711,7 +54399,6 @@ var require_dist_cjs71 = __commonJS({
     var _log = "logging";
     var _lt = "list-type";
     var _m = "metrics";
-    var _mT = "metadataTable";
     var _ma = "marker";
     var _mb = "max-buckets";
     var _mdb = "max-directory-buckets";
@@ -54869,7 +54556,7 @@ var require_dist_cjs71 = __commonJS({
     var _xawob = "x-amz-write-offset-bytes";
     var _xawrl = "x-amz-website-redirect-location";
     var _xi = "x-id";
-    var CreateSessionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _CreateSessionCommand = class _CreateSessionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       DisableS3ExpressSessionAuth: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -54880,10 +54567,9 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s3.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "CreateSession", {}).n("S3Client", "CreateSessionCommand").f(CreateSessionRequestFilterSensitiveLog, CreateSessionOutputFilterSensitiveLog).ser(se_CreateSessionCommand).de(de_CreateSessionCommand).build() {
-      static {
-        __name(this, "CreateSessionCommand");
-      }
     };
+    __name(_CreateSessionCommand, "CreateSessionCommand");
+    var CreateSessionCommand = _CreateSessionCommand;
     var import_runtimeConfig = require_runtimeConfig4();
     var import_region_config_resolver = require_dist_cjs53();
     var getHttpAuthExtensionConfiguration = /* @__PURE__ */ __name((runtimeConfig) => {
@@ -54940,14 +54626,7 @@ var require_dist_cjs71 = __commonJS({
         ...resolveHttpAuthRuntimeConfig(extensionConfiguration)
       };
     }, "resolveRuntimeExtensions");
-    var S3Client2 = class extends import_smithy_client4.Client {
-      static {
-        __name(this, "S3Client");
-      }
-      /**
-       * The resolved configuration of S3Client class. This is resolved and normalized from the {@link S3ClientConfig | constructor configuration interface}.
-       */
-      config;
+    var _S3Client = class _S3Client extends import_smithy_client4.Client {
       constructor(...[configuration]) {
         const _config_0 = (0, import_runtimeConfig.getRuntimeConfig)(configuration || {});
         const _config_1 = resolveClientEndpointParameters(_config_0);
@@ -54960,7 +54639,7 @@ var require_dist_cjs71 = __commonJS({
         const _config_8 = (0, import_eventstream_serde_config_resolver.resolveEventStreamSerdeConfig)(_config_7);
         const _config_9 = (0, import_httpAuthSchemeProvider.resolveHttpAuthSchemeConfig)(_config_8);
         const _config_10 = (0, import_middleware_sdk_s32.resolveS3Config)(_config_9, { session: [() => this, CreateSessionCommand] });
-        const _config_11 = resolveRuntimeExtensions(_config_10, configuration?.extensions || []);
+        const _config_11 = resolveRuntimeExtensions(_config_10, (configuration == null ? void 0 : configuration.extensions) || []);
         super(_config_11);
         this.config = _config_11;
         this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
@@ -54994,8 +54673,10 @@ var require_dist_cjs71 = __commonJS({
         super.destroy();
       }
     };
+    __name(_S3Client, "S3Client");
+    var S3Client2 = _S3Client;
     var import_middleware_sdk_s33 = require_dist_cjs29();
-    var AbortMultipartUploadCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _AbortMultipartUploadCommand = class _AbortMultipartUploadCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55006,13 +54687,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s33.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "AbortMultipartUpload", {}).n("S3Client", "AbortMultipartUploadCommand").f(void 0, void 0).ser(se_AbortMultipartUploadCommand).de(de_AbortMultipartUploadCommand).build() {
-      static {
-        __name(this, "AbortMultipartUploadCommand");
-      }
     };
+    __name(_AbortMultipartUploadCommand, "AbortMultipartUploadCommand");
+    var AbortMultipartUploadCommand = _AbortMultipartUploadCommand;
     var import_middleware_sdk_s34 = require_dist_cjs29();
     var import_middleware_ssec = require_dist_cjs68();
-    var CompleteMultipartUploadCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _CompleteMultipartUploadCommand = class _CompleteMultipartUploadCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55024,12 +54704,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "CompleteMultipartUpload", {}).n("S3Client", "CompleteMultipartUploadCommand").f(CompleteMultipartUploadRequestFilterSensitiveLog, CompleteMultipartUploadOutputFilterSensitiveLog).ser(se_CompleteMultipartUploadCommand).de(de_CompleteMultipartUploadCommand).build() {
-      static {
-        __name(this, "CompleteMultipartUploadCommand");
-      }
     };
+    __name(_CompleteMultipartUploadCommand, "CompleteMultipartUploadCommand");
+    var CompleteMultipartUploadCommand = _CompleteMultipartUploadCommand;
     var import_middleware_sdk_s35 = require_dist_cjs29();
-    var CopyObjectCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _CopyObjectCommand = class _CopyObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       DisableS3ExpressSessionAuth: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" },
@@ -55043,13 +54722,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "CopyObject", {}).n("S3Client", "CopyObjectCommand").f(CopyObjectRequestFilterSensitiveLog, CopyObjectOutputFilterSensitiveLog).ser(se_CopyObjectCommand).de(de_CopyObjectCommand).build() {
-      static {
-        __name(this, "CopyObjectCommand");
-      }
     };
+    __name(_CopyObjectCommand, "CopyObjectCommand");
+    var CopyObjectCommand = _CopyObjectCommand;
     var import_middleware_location_constraint = require_dist_cjs69();
     var import_middleware_sdk_s36 = require_dist_cjs29();
-    var CreateBucketCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _CreateBucketCommand = class _CreateBucketCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       DisableAccessPoints: { type: "staticContextParams", value: true },
@@ -55062,30 +54740,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_location_constraint.getLocationConstraintPlugin)(config)
       ];
     }).s("AmazonS3", "CreateBucket", {}).n("S3Client", "CreateBucketCommand").f(void 0, void 0).ser(se_CreateBucketCommand).de(de_CreateBucketCommand).build() {
-      static {
-        __name(this, "CreateBucketCommand");
-      }
     };
-    var CreateBucketMetadataTableConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
-          requestChecksumRequired: true
-        })
-      ];
-    }).s("AmazonS3", "CreateBucketMetadataTableConfiguration", {}).n("S3Client", "CreateBucketMetadataTableConfigurationCommand").f(void 0, void 0).ser(se_CreateBucketMetadataTableConfigurationCommand).de(de_CreateBucketMetadataTableConfigurationCommand).build() {
-      static {
-        __name(this, "CreateBucketMetadataTableConfigurationCommand");
-      }
-    };
+    __name(_CreateBucketCommand, "CreateBucketCommand");
+    var CreateBucketCommand = _CreateBucketCommand;
     var import_middleware_sdk_s37 = require_dist_cjs29();
-    var CreateMultipartUploadCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _CreateMultipartUploadCommand = class _CreateMultipartUploadCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55097,11 +54756,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "CreateMultipartUpload", {}).n("S3Client", "CreateMultipartUploadCommand").f(CreateMultipartUploadRequestFilterSensitiveLog, CreateMultipartUploadOutputFilterSensitiveLog).ser(se_CreateMultipartUploadCommand).de(de_CreateMultipartUploadCommand).build() {
-      static {
-        __name(this, "CreateMultipartUploadCommand");
-      }
     };
-    var DeleteBucketAnalyticsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_CreateMultipartUploadCommand, "CreateMultipartUploadCommand");
+    var CreateMultipartUploadCommand = _CreateMultipartUploadCommand;
+    var _DeleteBucketAnalyticsConfigurationCommand = class _DeleteBucketAnalyticsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55111,11 +54769,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketAnalyticsConfiguration", {}).n("S3Client", "DeleteBucketAnalyticsConfigurationCommand").f(void 0, void 0).ser(se_DeleteBucketAnalyticsConfigurationCommand).de(de_DeleteBucketAnalyticsConfigurationCommand).build() {
-      static {
-        __name(this, "DeleteBucketAnalyticsConfigurationCommand");
-      }
     };
-    var DeleteBucketCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketAnalyticsConfigurationCommand, "DeleteBucketAnalyticsConfigurationCommand");
+    var DeleteBucketAnalyticsConfigurationCommand = _DeleteBucketAnalyticsConfigurationCommand;
+    var _DeleteBucketCommand = class _DeleteBucketCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55125,11 +54782,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucket", {}).n("S3Client", "DeleteBucketCommand").f(void 0, void 0).ser(se_DeleteBucketCommand).de(de_DeleteBucketCommand).build() {
-      static {
-        __name(this, "DeleteBucketCommand");
-      }
     };
-    var DeleteBucketCorsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketCommand, "DeleteBucketCommand");
+    var DeleteBucketCommand = _DeleteBucketCommand;
+    var _DeleteBucketCorsCommand = class _DeleteBucketCorsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55139,11 +54795,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketCors", {}).n("S3Client", "DeleteBucketCorsCommand").f(void 0, void 0).ser(se_DeleteBucketCorsCommand).de(de_DeleteBucketCorsCommand).build() {
-      static {
-        __name(this, "DeleteBucketCorsCommand");
-      }
     };
-    var DeleteBucketEncryptionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketCorsCommand, "DeleteBucketCorsCommand");
+    var DeleteBucketCorsCommand = _DeleteBucketCorsCommand;
+    var _DeleteBucketEncryptionCommand = class _DeleteBucketEncryptionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55153,11 +54808,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketEncryption", {}).n("S3Client", "DeleteBucketEncryptionCommand").f(void 0, void 0).ser(se_DeleteBucketEncryptionCommand).de(de_DeleteBucketEncryptionCommand).build() {
-      static {
-        __name(this, "DeleteBucketEncryptionCommand");
-      }
     };
-    var DeleteBucketIntelligentTieringConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketEncryptionCommand, "DeleteBucketEncryptionCommand");
+    var DeleteBucketEncryptionCommand = _DeleteBucketEncryptionCommand;
+    var _DeleteBucketIntelligentTieringConfigurationCommand = class _DeleteBucketIntelligentTieringConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55167,11 +54821,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketIntelligentTieringConfiguration", {}).n("S3Client", "DeleteBucketIntelligentTieringConfigurationCommand").f(void 0, void 0).ser(se_DeleteBucketIntelligentTieringConfigurationCommand).de(de_DeleteBucketIntelligentTieringConfigurationCommand).build() {
-      static {
-        __name(this, "DeleteBucketIntelligentTieringConfigurationCommand");
-      }
     };
-    var DeleteBucketInventoryConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketIntelligentTieringConfigurationCommand, "DeleteBucketIntelligentTieringConfigurationCommand");
+    var DeleteBucketIntelligentTieringConfigurationCommand = _DeleteBucketIntelligentTieringConfigurationCommand;
+    var _DeleteBucketInventoryConfigurationCommand = class _DeleteBucketInventoryConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55181,11 +54834,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketInventoryConfiguration", {}).n("S3Client", "DeleteBucketInventoryConfigurationCommand").f(void 0, void 0).ser(se_DeleteBucketInventoryConfigurationCommand).de(de_DeleteBucketInventoryConfigurationCommand).build() {
-      static {
-        __name(this, "DeleteBucketInventoryConfigurationCommand");
-      }
     };
-    var DeleteBucketLifecycleCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketInventoryConfigurationCommand, "DeleteBucketInventoryConfigurationCommand");
+    var DeleteBucketInventoryConfigurationCommand = _DeleteBucketInventoryConfigurationCommand;
+    var _DeleteBucketLifecycleCommand = class _DeleteBucketLifecycleCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55195,25 +54847,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketLifecycle", {}).n("S3Client", "DeleteBucketLifecycleCommand").f(void 0, void 0).ser(se_DeleteBucketLifecycleCommand).de(de_DeleteBucketLifecycleCommand).build() {
-      static {
-        __name(this, "DeleteBucketLifecycleCommand");
-      }
     };
-    var DeleteBucketMetadataTableConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
-      ];
-    }).s("AmazonS3", "DeleteBucketMetadataTableConfiguration", {}).n("S3Client", "DeleteBucketMetadataTableConfigurationCommand").f(void 0, void 0).ser(se_DeleteBucketMetadataTableConfigurationCommand).de(de_DeleteBucketMetadataTableConfigurationCommand).build() {
-      static {
-        __name(this, "DeleteBucketMetadataTableConfigurationCommand");
-      }
-    };
-    var DeleteBucketMetricsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketLifecycleCommand, "DeleteBucketLifecycleCommand");
+    var DeleteBucketLifecycleCommand = _DeleteBucketLifecycleCommand;
+    var _DeleteBucketMetricsConfigurationCommand = class _DeleteBucketMetricsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55223,11 +54860,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketMetricsConfiguration", {}).n("S3Client", "DeleteBucketMetricsConfigurationCommand").f(void 0, void 0).ser(se_DeleteBucketMetricsConfigurationCommand).de(de_DeleteBucketMetricsConfigurationCommand).build() {
-      static {
-        __name(this, "DeleteBucketMetricsConfigurationCommand");
-      }
     };
-    var DeleteBucketOwnershipControlsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketMetricsConfigurationCommand, "DeleteBucketMetricsConfigurationCommand");
+    var DeleteBucketMetricsConfigurationCommand = _DeleteBucketMetricsConfigurationCommand;
+    var _DeleteBucketOwnershipControlsCommand = class _DeleteBucketOwnershipControlsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55237,11 +54873,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketOwnershipControls", {}).n("S3Client", "DeleteBucketOwnershipControlsCommand").f(void 0, void 0).ser(se_DeleteBucketOwnershipControlsCommand).de(de_DeleteBucketOwnershipControlsCommand).build() {
-      static {
-        __name(this, "DeleteBucketOwnershipControlsCommand");
-      }
     };
-    var DeleteBucketPolicyCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketOwnershipControlsCommand, "DeleteBucketOwnershipControlsCommand");
+    var DeleteBucketOwnershipControlsCommand = _DeleteBucketOwnershipControlsCommand;
+    var _DeleteBucketPolicyCommand = class _DeleteBucketPolicyCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55251,11 +54886,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketPolicy", {}).n("S3Client", "DeleteBucketPolicyCommand").f(void 0, void 0).ser(se_DeleteBucketPolicyCommand).de(de_DeleteBucketPolicyCommand).build() {
-      static {
-        __name(this, "DeleteBucketPolicyCommand");
-      }
     };
-    var DeleteBucketReplicationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketPolicyCommand, "DeleteBucketPolicyCommand");
+    var DeleteBucketPolicyCommand = _DeleteBucketPolicyCommand;
+    var _DeleteBucketReplicationCommand = class _DeleteBucketReplicationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55265,11 +54899,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketReplication", {}).n("S3Client", "DeleteBucketReplicationCommand").f(void 0, void 0).ser(se_DeleteBucketReplicationCommand).de(de_DeleteBucketReplicationCommand).build() {
-      static {
-        __name(this, "DeleteBucketReplicationCommand");
-      }
     };
-    var DeleteBucketTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketReplicationCommand, "DeleteBucketReplicationCommand");
+    var DeleteBucketReplicationCommand = _DeleteBucketReplicationCommand;
+    var _DeleteBucketTaggingCommand = class _DeleteBucketTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55279,11 +54912,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketTagging", {}).n("S3Client", "DeleteBucketTaggingCommand").f(void 0, void 0).ser(se_DeleteBucketTaggingCommand).de(de_DeleteBucketTaggingCommand).build() {
-      static {
-        __name(this, "DeleteBucketTaggingCommand");
-      }
     };
-    var DeleteBucketWebsiteCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteBucketTaggingCommand, "DeleteBucketTaggingCommand");
+    var DeleteBucketTaggingCommand = _DeleteBucketTaggingCommand;
+    var _DeleteBucketWebsiteCommand = class _DeleteBucketWebsiteCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55293,12 +54925,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeleteBucketWebsite", {}).n("S3Client", "DeleteBucketWebsiteCommand").f(void 0, void 0).ser(se_DeleteBucketWebsiteCommand).de(de_DeleteBucketWebsiteCommand).build() {
-      static {
-        __name(this, "DeleteBucketWebsiteCommand");
-      }
     };
+    __name(_DeleteBucketWebsiteCommand, "DeleteBucketWebsiteCommand");
+    var DeleteBucketWebsiteCommand = _DeleteBucketWebsiteCommand;
     var import_middleware_sdk_s38 = require_dist_cjs29();
-    var DeleteObjectCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _DeleteObjectCommand = class _DeleteObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55309,12 +54940,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s38.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "DeleteObject", {}).n("S3Client", "DeleteObjectCommand").f(void 0, void 0).ser(se_DeleteObjectCommand).de(de_DeleteObjectCommand).build() {
-      static {
-        __name(this, "DeleteObjectCommand");
-      }
     };
+    __name(_DeleteObjectCommand, "DeleteObjectCommand");
+    var DeleteObjectCommand = _DeleteObjectCommand;
     var import_middleware_sdk_s39 = require_dist_cjs29();
-    var DeleteObjectsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _DeleteObjectsCommand = class _DeleteObjectsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55322,18 +54952,18 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s39.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "DeleteObjects", {}).n("S3Client", "DeleteObjectsCommand").f(void 0, void 0).ser(se_DeleteObjectsCommand).de(de_DeleteObjectsCommand).build() {
-      static {
-        __name(this, "DeleteObjectsCommand");
-      }
     };
+    __name(_DeleteObjectsCommand, "DeleteObjectsCommand");
+    var DeleteObjectsCommand = _DeleteObjectsCommand;
     var import_middleware_sdk_s310 = require_dist_cjs29();
-    var DeleteObjectTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _DeleteObjectTaggingCommand = class _DeleteObjectTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55343,11 +54973,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s310.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "DeleteObjectTagging", {}).n("S3Client", "DeleteObjectTaggingCommand").f(void 0, void 0).ser(se_DeleteObjectTaggingCommand).de(de_DeleteObjectTaggingCommand).build() {
-      static {
-        __name(this, "DeleteObjectTaggingCommand");
-      }
     };
-    var DeletePublicAccessBlockCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_DeleteObjectTaggingCommand, "DeleteObjectTaggingCommand");
+    var DeleteObjectTaggingCommand = _DeleteObjectTaggingCommand;
+    var _DeletePublicAccessBlockCommand = class _DeletePublicAccessBlockCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55357,12 +54986,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "DeletePublicAccessBlock", {}).n("S3Client", "DeletePublicAccessBlockCommand").f(void 0, void 0).ser(se_DeletePublicAccessBlockCommand).de(de_DeletePublicAccessBlockCommand).build() {
-      static {
-        __name(this, "DeletePublicAccessBlockCommand");
-      }
     };
+    __name(_DeletePublicAccessBlockCommand, "DeletePublicAccessBlockCommand");
+    var DeletePublicAccessBlockCommand = _DeletePublicAccessBlockCommand;
     var import_middleware_sdk_s311 = require_dist_cjs29();
-    var GetBucketAccelerateConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketAccelerateConfigurationCommand = class _GetBucketAccelerateConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55373,12 +55001,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s311.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketAccelerateConfiguration", {}).n("S3Client", "GetBucketAccelerateConfigurationCommand").f(void 0, void 0).ser(se_GetBucketAccelerateConfigurationCommand).de(de_GetBucketAccelerateConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketAccelerateConfigurationCommand");
-      }
     };
+    __name(_GetBucketAccelerateConfigurationCommand, "GetBucketAccelerateConfigurationCommand");
+    var GetBucketAccelerateConfigurationCommand = _GetBucketAccelerateConfigurationCommand;
     var import_middleware_sdk_s312 = require_dist_cjs29();
-    var GetBucketAclCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketAclCommand = class _GetBucketAclCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55389,12 +55016,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s312.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketAcl", {}).n("S3Client", "GetBucketAclCommand").f(void 0, void 0).ser(se_GetBucketAclCommand).de(de_GetBucketAclCommand).build() {
-      static {
-        __name(this, "GetBucketAclCommand");
-      }
     };
+    __name(_GetBucketAclCommand, "GetBucketAclCommand");
+    var GetBucketAclCommand = _GetBucketAclCommand;
     var import_middleware_sdk_s313 = require_dist_cjs29();
-    var GetBucketAnalyticsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketAnalyticsConfigurationCommand = class _GetBucketAnalyticsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55405,12 +55031,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s313.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketAnalyticsConfiguration", {}).n("S3Client", "GetBucketAnalyticsConfigurationCommand").f(void 0, void 0).ser(se_GetBucketAnalyticsConfigurationCommand).de(de_GetBucketAnalyticsConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketAnalyticsConfigurationCommand");
-      }
     };
+    __name(_GetBucketAnalyticsConfigurationCommand, "GetBucketAnalyticsConfigurationCommand");
+    var GetBucketAnalyticsConfigurationCommand = _GetBucketAnalyticsConfigurationCommand;
     var import_middleware_sdk_s314 = require_dist_cjs29();
-    var GetBucketCorsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketCorsCommand = class _GetBucketCorsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55421,12 +55046,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s314.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketCors", {}).n("S3Client", "GetBucketCorsCommand").f(void 0, void 0).ser(se_GetBucketCorsCommand).de(de_GetBucketCorsCommand).build() {
-      static {
-        __name(this, "GetBucketCorsCommand");
-      }
     };
+    __name(_GetBucketCorsCommand, "GetBucketCorsCommand");
+    var GetBucketCorsCommand = _GetBucketCorsCommand;
     var import_middleware_sdk_s315 = require_dist_cjs29();
-    var GetBucketEncryptionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketEncryptionCommand = class _GetBucketEncryptionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55437,12 +55061,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s315.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketEncryption", {}).n("S3Client", "GetBucketEncryptionCommand").f(void 0, GetBucketEncryptionOutputFilterSensitiveLog).ser(se_GetBucketEncryptionCommand).de(de_GetBucketEncryptionCommand).build() {
-      static {
-        __name(this, "GetBucketEncryptionCommand");
-      }
     };
+    __name(_GetBucketEncryptionCommand, "GetBucketEncryptionCommand");
+    var GetBucketEncryptionCommand = _GetBucketEncryptionCommand;
     var import_middleware_sdk_s316 = require_dist_cjs29();
-    var GetBucketIntelligentTieringConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketIntelligentTieringConfigurationCommand = class _GetBucketIntelligentTieringConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55453,12 +55076,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s316.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketIntelligentTieringConfiguration", {}).n("S3Client", "GetBucketIntelligentTieringConfigurationCommand").f(void 0, void 0).ser(se_GetBucketIntelligentTieringConfigurationCommand).de(de_GetBucketIntelligentTieringConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketIntelligentTieringConfigurationCommand");
-      }
     };
+    __name(_GetBucketIntelligentTieringConfigurationCommand, "GetBucketIntelligentTieringConfigurationCommand");
+    var GetBucketIntelligentTieringConfigurationCommand = _GetBucketIntelligentTieringConfigurationCommand;
     var import_middleware_sdk_s317 = require_dist_cjs29();
-    var GetBucketInventoryConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketInventoryConfigurationCommand = class _GetBucketInventoryConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55469,12 +55091,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s317.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketInventoryConfiguration", {}).n("S3Client", "GetBucketInventoryConfigurationCommand").f(void 0, GetBucketInventoryConfigurationOutputFilterSensitiveLog).ser(se_GetBucketInventoryConfigurationCommand).de(de_GetBucketInventoryConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketInventoryConfigurationCommand");
-      }
     };
+    __name(_GetBucketInventoryConfigurationCommand, "GetBucketInventoryConfigurationCommand");
+    var GetBucketInventoryConfigurationCommand = _GetBucketInventoryConfigurationCommand;
     var import_middleware_sdk_s318 = require_dist_cjs29();
-    var GetBucketLifecycleConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketLifecycleConfigurationCommand = class _GetBucketLifecycleConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55485,12 +55106,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s318.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketLifecycleConfiguration", {}).n("S3Client", "GetBucketLifecycleConfigurationCommand").f(void 0, void 0).ser(se_GetBucketLifecycleConfigurationCommand).de(de_GetBucketLifecycleConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketLifecycleConfigurationCommand");
-      }
     };
+    __name(_GetBucketLifecycleConfigurationCommand, "GetBucketLifecycleConfigurationCommand");
+    var GetBucketLifecycleConfigurationCommand = _GetBucketLifecycleConfigurationCommand;
     var import_middleware_sdk_s319 = require_dist_cjs29();
-    var GetBucketLocationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketLocationCommand = class _GetBucketLocationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55501,12 +55121,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s319.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketLocation", {}).n("S3Client", "GetBucketLocationCommand").f(void 0, void 0).ser(se_GetBucketLocationCommand).de(de_GetBucketLocationCommand).build() {
-      static {
-        __name(this, "GetBucketLocationCommand");
-      }
     };
+    __name(_GetBucketLocationCommand, "GetBucketLocationCommand");
+    var GetBucketLocationCommand = _GetBucketLocationCommand;
     var import_middleware_sdk_s320 = require_dist_cjs29();
-    var GetBucketLoggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketLoggingCommand = class _GetBucketLoggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55517,12 +55136,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_sdk_s320.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetBucketLogging", {}).n("S3Client", "GetBucketLoggingCommand").f(void 0, void 0).ser(se_GetBucketLoggingCommand).de(de_GetBucketLoggingCommand).build() {
-      static {
-        __name(this, "GetBucketLoggingCommand");
-      }
     };
+    __name(_GetBucketLoggingCommand, "GetBucketLoggingCommand");
+    var GetBucketLoggingCommand = _GetBucketLoggingCommand;
     var import_middleware_sdk_s321 = require_dist_cjs29();
-    var GetBucketMetadataTableConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketMetricsConfigurationCommand = class _GetBucketMetricsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55532,13 +55150,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s321.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketMetadataTableConfiguration", {}).n("S3Client", "GetBucketMetadataTableConfigurationCommand").f(void 0, void 0).ser(se_GetBucketMetadataTableConfigurationCommand).de(de_GetBucketMetadataTableConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketMetadataTableConfigurationCommand");
-      }
+    }).s("AmazonS3", "GetBucketMetricsConfiguration", {}).n("S3Client", "GetBucketMetricsConfigurationCommand").f(void 0, void 0).ser(se_GetBucketMetricsConfigurationCommand).de(de_GetBucketMetricsConfigurationCommand).build() {
     };
+    __name(_GetBucketMetricsConfigurationCommand, "GetBucketMetricsConfigurationCommand");
+    var GetBucketMetricsConfigurationCommand = _GetBucketMetricsConfigurationCommand;
     var import_middleware_sdk_s322 = require_dist_cjs29();
-    var GetBucketMetricsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketNotificationConfigurationCommand = class _GetBucketNotificationConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55548,13 +55165,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s322.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketMetricsConfiguration", {}).n("S3Client", "GetBucketMetricsConfigurationCommand").f(void 0, void 0).ser(se_GetBucketMetricsConfigurationCommand).de(de_GetBucketMetricsConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketMetricsConfigurationCommand");
-      }
+    }).s("AmazonS3", "GetBucketNotificationConfiguration", {}).n("S3Client", "GetBucketNotificationConfigurationCommand").f(void 0, void 0).ser(se_GetBucketNotificationConfigurationCommand).de(de_GetBucketNotificationConfigurationCommand).build() {
     };
+    __name(_GetBucketNotificationConfigurationCommand, "GetBucketNotificationConfigurationCommand");
+    var GetBucketNotificationConfigurationCommand = _GetBucketNotificationConfigurationCommand;
     var import_middleware_sdk_s323 = require_dist_cjs29();
-    var GetBucketNotificationConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketOwnershipControlsCommand = class _GetBucketOwnershipControlsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55564,13 +55180,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s323.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketNotificationConfiguration", {}).n("S3Client", "GetBucketNotificationConfigurationCommand").f(void 0, void 0).ser(se_GetBucketNotificationConfigurationCommand).de(de_GetBucketNotificationConfigurationCommand).build() {
-      static {
-        __name(this, "GetBucketNotificationConfigurationCommand");
-      }
+    }).s("AmazonS3", "GetBucketOwnershipControls", {}).n("S3Client", "GetBucketOwnershipControlsCommand").f(void 0, void 0).ser(se_GetBucketOwnershipControlsCommand).de(de_GetBucketOwnershipControlsCommand).build() {
     };
+    __name(_GetBucketOwnershipControlsCommand, "GetBucketOwnershipControlsCommand");
+    var GetBucketOwnershipControlsCommand = _GetBucketOwnershipControlsCommand;
     var import_middleware_sdk_s324 = require_dist_cjs29();
-    var GetBucketOwnershipControlsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketPolicyCommand = class _GetBucketPolicyCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55580,13 +55195,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s324.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketOwnershipControls", {}).n("S3Client", "GetBucketOwnershipControlsCommand").f(void 0, void 0).ser(se_GetBucketOwnershipControlsCommand).de(de_GetBucketOwnershipControlsCommand).build() {
-      static {
-        __name(this, "GetBucketOwnershipControlsCommand");
-      }
+    }).s("AmazonS3", "GetBucketPolicy", {}).n("S3Client", "GetBucketPolicyCommand").f(void 0, void 0).ser(se_GetBucketPolicyCommand).de(de_GetBucketPolicyCommand).build() {
     };
+    __name(_GetBucketPolicyCommand, "GetBucketPolicyCommand");
+    var GetBucketPolicyCommand = _GetBucketPolicyCommand;
     var import_middleware_sdk_s325 = require_dist_cjs29();
-    var GetBucketPolicyCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketPolicyStatusCommand = class _GetBucketPolicyStatusCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55596,13 +55210,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s325.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketPolicy", {}).n("S3Client", "GetBucketPolicyCommand").f(void 0, void 0).ser(se_GetBucketPolicyCommand).de(de_GetBucketPolicyCommand).build() {
-      static {
-        __name(this, "GetBucketPolicyCommand");
-      }
+    }).s("AmazonS3", "GetBucketPolicyStatus", {}).n("S3Client", "GetBucketPolicyStatusCommand").f(void 0, void 0).ser(se_GetBucketPolicyStatusCommand).de(de_GetBucketPolicyStatusCommand).build() {
     };
+    __name(_GetBucketPolicyStatusCommand, "GetBucketPolicyStatusCommand");
+    var GetBucketPolicyStatusCommand = _GetBucketPolicyStatusCommand;
     var import_middleware_sdk_s326 = require_dist_cjs29();
-    var GetBucketPolicyStatusCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketReplicationCommand = class _GetBucketReplicationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55612,13 +55225,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s326.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketPolicyStatus", {}).n("S3Client", "GetBucketPolicyStatusCommand").f(void 0, void 0).ser(se_GetBucketPolicyStatusCommand).de(de_GetBucketPolicyStatusCommand).build() {
-      static {
-        __name(this, "GetBucketPolicyStatusCommand");
-      }
+    }).s("AmazonS3", "GetBucketReplication", {}).n("S3Client", "GetBucketReplicationCommand").f(void 0, void 0).ser(se_GetBucketReplicationCommand).de(de_GetBucketReplicationCommand).build() {
     };
+    __name(_GetBucketReplicationCommand, "GetBucketReplicationCommand");
+    var GetBucketReplicationCommand = _GetBucketReplicationCommand;
     var import_middleware_sdk_s327 = require_dist_cjs29();
-    var GetBucketReplicationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketRequestPaymentCommand = class _GetBucketRequestPaymentCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55628,13 +55240,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s327.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketReplication", {}).n("S3Client", "GetBucketReplicationCommand").f(void 0, void 0).ser(se_GetBucketReplicationCommand).de(de_GetBucketReplicationCommand).build() {
-      static {
-        __name(this, "GetBucketReplicationCommand");
-      }
+    }).s("AmazonS3", "GetBucketRequestPayment", {}).n("S3Client", "GetBucketRequestPaymentCommand").f(void 0, void 0).ser(se_GetBucketRequestPaymentCommand).de(de_GetBucketRequestPaymentCommand).build() {
     };
+    __name(_GetBucketRequestPaymentCommand, "GetBucketRequestPaymentCommand");
+    var GetBucketRequestPaymentCommand = _GetBucketRequestPaymentCommand;
     var import_middleware_sdk_s328 = require_dist_cjs29();
-    var GetBucketRequestPaymentCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketTaggingCommand = class _GetBucketTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55644,13 +55255,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s328.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketRequestPayment", {}).n("S3Client", "GetBucketRequestPaymentCommand").f(void 0, void 0).ser(se_GetBucketRequestPaymentCommand).de(de_GetBucketRequestPaymentCommand).build() {
-      static {
-        __name(this, "GetBucketRequestPaymentCommand");
-      }
+    }).s("AmazonS3", "GetBucketTagging", {}).n("S3Client", "GetBucketTaggingCommand").f(void 0, void 0).ser(se_GetBucketTaggingCommand).de(de_GetBucketTaggingCommand).build() {
     };
+    __name(_GetBucketTaggingCommand, "GetBucketTaggingCommand");
+    var GetBucketTaggingCommand = _GetBucketTaggingCommand;
     var import_middleware_sdk_s329 = require_dist_cjs29();
-    var GetBucketTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketVersioningCommand = class _GetBucketVersioningCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55660,13 +55270,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s329.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketTagging", {}).n("S3Client", "GetBucketTaggingCommand").f(void 0, void 0).ser(se_GetBucketTaggingCommand).de(de_GetBucketTaggingCommand).build() {
-      static {
-        __name(this, "GetBucketTaggingCommand");
-      }
+    }).s("AmazonS3", "GetBucketVersioning", {}).n("S3Client", "GetBucketVersioningCommand").f(void 0, void 0).ser(se_GetBucketVersioningCommand).de(de_GetBucketVersioningCommand).build() {
     };
+    __name(_GetBucketVersioningCommand, "GetBucketVersioningCommand");
+    var GetBucketVersioningCommand = _GetBucketVersioningCommand;
     var import_middleware_sdk_s330 = require_dist_cjs29();
-    var GetBucketVersioningCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetBucketWebsiteCommand = class _GetBucketWebsiteCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55676,29 +55285,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s330.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetBucketVersioning", {}).n("S3Client", "GetBucketVersioningCommand").f(void 0, void 0).ser(se_GetBucketVersioningCommand).de(de_GetBucketVersioningCommand).build() {
-      static {
-        __name(this, "GetBucketVersioningCommand");
-      }
-    };
-    var import_middleware_sdk_s331 = require_dist_cjs29();
-    var GetBucketWebsiteCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s331.getThrow200ExceptionsPlugin)(config)
-      ];
     }).s("AmazonS3", "GetBucketWebsite", {}).n("S3Client", "GetBucketWebsiteCommand").f(void 0, void 0).ser(se_GetBucketWebsiteCommand).de(de_GetBucketWebsiteCommand).build() {
-      static {
-        __name(this, "GetBucketWebsiteCommand");
-      }
     };
-    var import_middleware_sdk_s332 = require_dist_cjs29();
-    var GetObjectAclCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetBucketWebsiteCommand, "GetBucketWebsiteCommand");
+    var GetBucketWebsiteCommand = _GetBucketWebsiteCommand;
+    var import_middleware_sdk_s331 = require_dist_cjs29();
+    var _GetObjectAclCommand = class _GetObjectAclCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55706,31 +55298,29 @@ var require_dist_cjs71 = __commonJS({
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s332.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s331.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetObjectAcl", {}).n("S3Client", "GetObjectAclCommand").f(void 0, void 0).ser(se_GetObjectAclCommand).de(de_GetObjectAclCommand).build() {
-      static {
-        __name(this, "GetObjectAclCommand");
-      }
     };
-    var import_middleware_sdk_s333 = require_dist_cjs29();
-    var GetObjectAttributesCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetObjectAclCommand, "GetObjectAclCommand");
+    var GetObjectAclCommand = _GetObjectAclCommand;
+    var import_middleware_sdk_s332 = require_dist_cjs29();
+    var _GetObjectAttributesCommand = class _GetObjectAttributesCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s333.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s332.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "GetObjectAttributes", {}).n("S3Client", "GetObjectAttributesCommand").f(GetObjectAttributesRequestFilterSensitiveLog, void 0).ser(se_GetObjectAttributesCommand).de(de_GetObjectAttributesCommand).build() {
-      static {
-        __name(this, "GetObjectAttributesCommand");
-      }
     };
-    var import_middleware_sdk_s334 = require_dist_cjs29();
-    var GetObjectCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetObjectAttributesCommand, "GetObjectAttributesCommand");
+    var GetObjectAttributesCommand = _GetObjectAttributesCommand;
+    var import_middleware_sdk_s333 = require_dist_cjs29();
+    var _GetObjectCommand = class _GetObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55744,15 +55334,28 @@ var require_dist_cjs71 = __commonJS({
           responseAlgorithms: ["CRC32", "CRC32C", "SHA256", "SHA1"]
         }),
         (0, import_middleware_ssec.getSsecPlugin)(config),
-        (0, import_middleware_sdk_s334.getS3ExpiresMiddlewarePlugin)(config)
+        (0, import_middleware_sdk_s333.getS3ExpiresMiddlewarePlugin)(config)
       ];
     }).s("AmazonS3", "GetObject", {}).n("S3Client", "GetObjectCommand").f(GetObjectRequestFilterSensitiveLog, GetObjectOutputFilterSensitiveLog).ser(se_GetObjectCommand).de(de_GetObjectCommand).build() {
-      static {
-        __name(this, "GetObjectCommand");
-      }
     };
+    __name(_GetObjectCommand, "GetObjectCommand");
+    var GetObjectCommand = _GetObjectCommand;
+    var import_middleware_sdk_s334 = require_dist_cjs29();
+    var _GetObjectLegalHoldCommand = class _GetObjectLegalHoldCommand extends import_smithy_client4.Command.classBuilder().ep({
+      ...commonParams,
+      Bucket: { type: "contextParams", name: "Bucket" }
+    }).m(function(Command, cs, config, o) {
+      return [
+        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
+        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
+        (0, import_middleware_sdk_s334.getThrow200ExceptionsPlugin)(config)
+      ];
+    }).s("AmazonS3", "GetObjectLegalHold", {}).n("S3Client", "GetObjectLegalHoldCommand").f(void 0, void 0).ser(se_GetObjectLegalHoldCommand).de(de_GetObjectLegalHoldCommand).build() {
+    };
+    __name(_GetObjectLegalHoldCommand, "GetObjectLegalHoldCommand");
+    var GetObjectLegalHoldCommand = _GetObjectLegalHoldCommand;
     var import_middleware_sdk_s335 = require_dist_cjs29();
-    var GetObjectLegalHoldCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetObjectLockConfigurationCommand = class _GetObjectLockConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55761,13 +55364,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s335.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetObjectLegalHold", {}).n("S3Client", "GetObjectLegalHoldCommand").f(void 0, void 0).ser(se_GetObjectLegalHoldCommand).de(de_GetObjectLegalHoldCommand).build() {
-      static {
-        __name(this, "GetObjectLegalHoldCommand");
-      }
+    }).s("AmazonS3", "GetObjectLockConfiguration", {}).n("S3Client", "GetObjectLockConfigurationCommand").f(void 0, void 0).ser(se_GetObjectLockConfigurationCommand).de(de_GetObjectLockConfigurationCommand).build() {
     };
+    __name(_GetObjectLockConfigurationCommand, "GetObjectLockConfigurationCommand");
+    var GetObjectLockConfigurationCommand = _GetObjectLockConfigurationCommand;
     var import_middleware_sdk_s336 = require_dist_cjs29();
-    var GetObjectLockConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetObjectRetentionCommand = class _GetObjectRetentionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55776,13 +55378,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s336.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetObjectLockConfiguration", {}).n("S3Client", "GetObjectLockConfigurationCommand").f(void 0, void 0).ser(se_GetObjectLockConfigurationCommand).de(de_GetObjectLockConfigurationCommand).build() {
-      static {
-        __name(this, "GetObjectLockConfigurationCommand");
-      }
+    }).s("AmazonS3", "GetObjectRetention", {}).n("S3Client", "GetObjectRetentionCommand").f(void 0, void 0).ser(se_GetObjectRetentionCommand).de(de_GetObjectRetentionCommand).build() {
     };
+    __name(_GetObjectRetentionCommand, "GetObjectRetentionCommand");
+    var GetObjectRetentionCommand = _GetObjectRetentionCommand;
     var import_middleware_sdk_s337 = require_dist_cjs29();
-    var GetObjectRetentionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _GetObjectTaggingCommand = class _GetObjectTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55791,27 +55392,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s337.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "GetObjectRetention", {}).n("S3Client", "GetObjectRetentionCommand").f(void 0, void 0).ser(se_GetObjectRetentionCommand).de(de_GetObjectRetentionCommand).build() {
-      static {
-        __name(this, "GetObjectRetentionCommand");
-      }
-    };
-    var import_middleware_sdk_s338 = require_dist_cjs29();
-    var GetObjectTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s338.getThrow200ExceptionsPlugin)(config)
-      ];
     }).s("AmazonS3", "GetObjectTagging", {}).n("S3Client", "GetObjectTaggingCommand").f(void 0, void 0).ser(se_GetObjectTaggingCommand).de(de_GetObjectTaggingCommand).build() {
-      static {
-        __name(this, "GetObjectTaggingCommand");
-      }
     };
-    var GetObjectTorrentCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetObjectTaggingCommand, "GetObjectTaggingCommand");
+    var GetObjectTaggingCommand = _GetObjectTaggingCommand;
+    var _GetObjectTorrentCommand = class _GetObjectTorrentCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -55820,12 +55405,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "GetObjectTorrent", {}).n("S3Client", "GetObjectTorrentCommand").f(void 0, GetObjectTorrentOutputFilterSensitiveLog).ser(se_GetObjectTorrentCommand).de(de_GetObjectTorrentCommand).build() {
-      static {
-        __name(this, "GetObjectTorrentCommand");
-      }
     };
-    var import_middleware_sdk_s339 = require_dist_cjs29();
-    var GetPublicAccessBlockCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetObjectTorrentCommand, "GetObjectTorrentCommand");
+    var GetObjectTorrentCommand = _GetObjectTorrentCommand;
+    var import_middleware_sdk_s338 = require_dist_cjs29();
+    var _GetPublicAccessBlockCommand = class _GetPublicAccessBlockCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55833,30 +55417,28 @@ var require_dist_cjs71 = __commonJS({
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s339.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s338.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "GetPublicAccessBlock", {}).n("S3Client", "GetPublicAccessBlockCommand").f(void 0, void 0).ser(se_GetPublicAccessBlockCommand).de(de_GetPublicAccessBlockCommand).build() {
-      static {
-        __name(this, "GetPublicAccessBlockCommand");
-      }
     };
-    var import_middleware_sdk_s340 = require_dist_cjs29();
-    var HeadBucketCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_GetPublicAccessBlockCommand, "GetPublicAccessBlockCommand");
+    var GetPublicAccessBlockCommand = _GetPublicAccessBlockCommand;
+    var import_middleware_sdk_s339 = require_dist_cjs29();
+    var _HeadBucketCommand = class _HeadBucketCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s340.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s339.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "HeadBucket", {}).n("S3Client", "HeadBucketCommand").f(void 0, void 0).ser(se_HeadBucketCommand).de(de_HeadBucketCommand).build() {
-      static {
-        __name(this, "HeadBucketCommand");
-      }
     };
-    var import_middleware_sdk_s341 = require_dist_cjs29();
-    var HeadObjectCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_HeadBucketCommand, "HeadBucketCommand");
+    var HeadBucketCommand = _HeadBucketCommand;
+    var import_middleware_sdk_s340 = require_dist_cjs29();
+    var _HeadObjectCommand = class _HeadObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -55864,17 +55446,31 @@ var require_dist_cjs71 = __commonJS({
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s341.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s340.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config),
-        (0, import_middleware_sdk_s341.getS3ExpiresMiddlewarePlugin)(config)
+        (0, import_middleware_sdk_s340.getS3ExpiresMiddlewarePlugin)(config)
       ];
     }).s("AmazonS3", "HeadObject", {}).n("S3Client", "HeadObjectCommand").f(HeadObjectRequestFilterSensitiveLog, HeadObjectOutputFilterSensitiveLog).ser(se_HeadObjectCommand).de(de_HeadObjectCommand).build() {
-      static {
-        __name(this, "HeadObjectCommand");
-      }
     };
+    __name(_HeadObjectCommand, "HeadObjectCommand");
+    var HeadObjectCommand = _HeadObjectCommand;
+    var import_middleware_sdk_s341 = require_dist_cjs29();
+    var _ListBucketAnalyticsConfigurationsCommand = class _ListBucketAnalyticsConfigurationsCommand extends import_smithy_client4.Command.classBuilder().ep({
+      ...commonParams,
+      UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
+      Bucket: { type: "contextParams", name: "Bucket" }
+    }).m(function(Command, cs, config, o) {
+      return [
+        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
+        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
+        (0, import_middleware_sdk_s341.getThrow200ExceptionsPlugin)(config)
+      ];
+    }).s("AmazonS3", "ListBucketAnalyticsConfigurations", {}).n("S3Client", "ListBucketAnalyticsConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketAnalyticsConfigurationsCommand).de(de_ListBucketAnalyticsConfigurationsCommand).build() {
+    };
+    __name(_ListBucketAnalyticsConfigurationsCommand, "ListBucketAnalyticsConfigurationsCommand");
+    var ListBucketAnalyticsConfigurationsCommand = _ListBucketAnalyticsConfigurationsCommand;
     var import_middleware_sdk_s342 = require_dist_cjs29();
-    var ListBucketAnalyticsConfigurationsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListBucketIntelligentTieringConfigurationsCommand = class _ListBucketIntelligentTieringConfigurationsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55884,13 +55480,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s342.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListBucketAnalyticsConfigurations", {}).n("S3Client", "ListBucketAnalyticsConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketAnalyticsConfigurationsCommand).de(de_ListBucketAnalyticsConfigurationsCommand).build() {
-      static {
-        __name(this, "ListBucketAnalyticsConfigurationsCommand");
-      }
+    }).s("AmazonS3", "ListBucketIntelligentTieringConfigurations", {}).n("S3Client", "ListBucketIntelligentTieringConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketIntelligentTieringConfigurationsCommand).de(de_ListBucketIntelligentTieringConfigurationsCommand).build() {
     };
+    __name(_ListBucketIntelligentTieringConfigurationsCommand, "ListBucketIntelligentTieringConfigurationsCommand");
+    var ListBucketIntelligentTieringConfigurationsCommand = _ListBucketIntelligentTieringConfigurationsCommand;
     var import_middleware_sdk_s343 = require_dist_cjs29();
-    var ListBucketIntelligentTieringConfigurationsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListBucketInventoryConfigurationsCommand = class _ListBucketInventoryConfigurationsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -55900,15 +55495,13 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s343.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListBucketIntelligentTieringConfigurations", {}).n("S3Client", "ListBucketIntelligentTieringConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketIntelligentTieringConfigurationsCommand).de(de_ListBucketIntelligentTieringConfigurationsCommand).build() {
-      static {
-        __name(this, "ListBucketIntelligentTieringConfigurationsCommand");
-      }
+    }).s("AmazonS3", "ListBucketInventoryConfigurations", {}).n("S3Client", "ListBucketInventoryConfigurationsCommand").f(void 0, ListBucketInventoryConfigurationsOutputFilterSensitiveLog).ser(se_ListBucketInventoryConfigurationsCommand).de(de_ListBucketInventoryConfigurationsCommand).build() {
     };
+    __name(_ListBucketInventoryConfigurationsCommand, "ListBucketInventoryConfigurationsCommand");
+    var ListBucketInventoryConfigurationsCommand = _ListBucketInventoryConfigurationsCommand;
     var import_middleware_sdk_s344 = require_dist_cjs29();
-    var ListBucketInventoryConfigurationsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListBucketMetricsConfigurationsCommand = class _ListBucketMetricsConfigurationsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
-      UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
       return [
@@ -55916,55 +55509,52 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s344.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListBucketInventoryConfigurations", {}).n("S3Client", "ListBucketInventoryConfigurationsCommand").f(void 0, ListBucketInventoryConfigurationsOutputFilterSensitiveLog).ser(se_ListBucketInventoryConfigurationsCommand).de(de_ListBucketInventoryConfigurationsCommand).build() {
-      static {
-        __name(this, "ListBucketInventoryConfigurationsCommand");
-      }
+    }).s("AmazonS3", "ListBucketMetricsConfigurations", {}).n("S3Client", "ListBucketMetricsConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketMetricsConfigurationsCommand).de(de_ListBucketMetricsConfigurationsCommand).build() {
     };
+    __name(_ListBucketMetricsConfigurationsCommand, "ListBucketMetricsConfigurationsCommand");
+    var ListBucketMetricsConfigurationsCommand = _ListBucketMetricsConfigurationsCommand;
     var import_middleware_sdk_s345 = require_dist_cjs29();
-    var ListBucketMetricsConfigurationsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
+    var _ListBucketsCommand = class _ListBucketsCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s345.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListBucketMetricsConfigurations", {}).n("S3Client", "ListBucketMetricsConfigurationsCommand").f(void 0, void 0).ser(se_ListBucketMetricsConfigurationsCommand).de(de_ListBucketMetricsConfigurationsCommand).build() {
-      static {
-        __name(this, "ListBucketMetricsConfigurationsCommand");
-      }
-    };
-    var import_middleware_sdk_s346 = require_dist_cjs29();
-    var ListBucketsCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s346.getThrow200ExceptionsPlugin)(config)
-      ];
     }).s("AmazonS3", "ListBuckets", {}).n("S3Client", "ListBucketsCommand").f(void 0, void 0).ser(se_ListBucketsCommand).de(de_ListBucketsCommand).build() {
-      static {
-        __name(this, "ListBucketsCommand");
-      }
     };
-    var import_middleware_sdk_s347 = require_dist_cjs29();
-    var ListDirectoryBucketsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_ListBucketsCommand, "ListBucketsCommand");
+    var ListBucketsCommand = _ListBucketsCommand;
+    var import_middleware_sdk_s346 = require_dist_cjs29();
+    var _ListDirectoryBucketsCommand = class _ListDirectoryBucketsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true }
     }).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s347.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s346.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "ListDirectoryBuckets", {}).n("S3Client", "ListDirectoryBucketsCommand").f(void 0, void 0).ser(se_ListDirectoryBucketsCommand).de(de_ListDirectoryBucketsCommand).build() {
-      static {
-        __name(this, "ListDirectoryBucketsCommand");
-      }
     };
+    __name(_ListDirectoryBucketsCommand, "ListDirectoryBucketsCommand");
+    var ListDirectoryBucketsCommand = _ListDirectoryBucketsCommand;
+    var import_middleware_sdk_s347 = require_dist_cjs29();
+    var _ListMultipartUploadsCommand = class _ListMultipartUploadsCommand extends import_smithy_client4.Command.classBuilder().ep({
+      ...commonParams,
+      Bucket: { type: "contextParams", name: "Bucket" },
+      Prefix: { type: "contextParams", name: "Prefix" }
+    }).m(function(Command, cs, config, o) {
+      return [
+        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
+        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
+        (0, import_middleware_sdk_s347.getThrow200ExceptionsPlugin)(config)
+      ];
+    }).s("AmazonS3", "ListMultipartUploads", {}).n("S3Client", "ListMultipartUploadsCommand").f(void 0, void 0).ser(se_ListMultipartUploadsCommand).de(de_ListMultipartUploadsCommand).build() {
+    };
+    __name(_ListMultipartUploadsCommand, "ListMultipartUploadsCommand");
+    var ListMultipartUploadsCommand = _ListMultipartUploadsCommand;
     var import_middleware_sdk_s348 = require_dist_cjs29();
-    var ListMultipartUploadsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListObjectsCommand = class _ListObjectsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Prefix: { type: "contextParams", name: "Prefix" }
@@ -55974,13 +55564,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s348.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListMultipartUploads", {}).n("S3Client", "ListMultipartUploadsCommand").f(void 0, void 0).ser(se_ListMultipartUploadsCommand).de(de_ListMultipartUploadsCommand).build() {
-      static {
-        __name(this, "ListMultipartUploadsCommand");
-      }
+    }).s("AmazonS3", "ListObjects", {}).n("S3Client", "ListObjectsCommand").f(void 0, void 0).ser(se_ListObjectsCommand).de(de_ListObjectsCommand).build() {
     };
+    __name(_ListObjectsCommand, "ListObjectsCommand");
+    var ListObjectsCommand = _ListObjectsCommand;
     var import_middleware_sdk_s349 = require_dist_cjs29();
-    var ListObjectsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListObjectsV2Command = class _ListObjectsV2Command extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Prefix: { type: "contextParams", name: "Prefix" }
@@ -55990,13 +55579,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s349.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListObjects", {}).n("S3Client", "ListObjectsCommand").f(void 0, void 0).ser(se_ListObjectsCommand).de(de_ListObjectsCommand).build() {
-      static {
-        __name(this, "ListObjectsCommand");
-      }
+    }).s("AmazonS3", "ListObjectsV2", {}).n("S3Client", "ListObjectsV2Command").f(void 0, void 0).ser(se_ListObjectsV2Command).de(de_ListObjectsV2Command).build() {
     };
+    __name(_ListObjectsV2Command, "ListObjectsV2Command");
+    var ListObjectsV2Command = _ListObjectsV2Command;
     var import_middleware_sdk_s350 = require_dist_cjs29();
-    var ListObjectsV2Command = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _ListObjectVersionsCommand = class _ListObjectVersionsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Prefix: { type: "contextParams", name: "Prefix" }
@@ -56006,29 +55594,12 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_sdk_s350.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "ListObjectsV2", {}).n("S3Client", "ListObjectsV2Command").f(void 0, void 0).ser(se_ListObjectsV2Command).de(de_ListObjectsV2Command).build() {
-      static {
-        __name(this, "ListObjectsV2Command");
-      }
-    };
-    var import_middleware_sdk_s351 = require_dist_cjs29();
-    var ListObjectVersionsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      Bucket: { type: "contextParams", name: "Bucket" },
-      Prefix: { type: "contextParams", name: "Prefix" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s351.getThrow200ExceptionsPlugin)(config)
-      ];
     }).s("AmazonS3", "ListObjectVersions", {}).n("S3Client", "ListObjectVersionsCommand").f(void 0, void 0).ser(se_ListObjectVersionsCommand).de(de_ListObjectVersionsCommand).build() {
-      static {
-        __name(this, "ListObjectVersionsCommand");
-      }
     };
-    var import_middleware_sdk_s352 = require_dist_cjs29();
-    var ListPartsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_ListObjectVersionsCommand, "ListObjectVersionsCommand");
+    var ListObjectVersionsCommand = _ListObjectVersionsCommand;
+    var import_middleware_sdk_s351 = require_dist_cjs29();
+    var _ListPartsCommand = class _ListPartsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -56036,15 +55607,14 @@ var require_dist_cjs71 = __commonJS({
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s352.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s351.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "ListParts", {}).n("S3Client", "ListPartsCommand").f(ListPartsRequestFilterSensitiveLog, void 0).ser(se_ListPartsCommand).de(de_ListPartsCommand).build() {
-      static {
-        __name(this, "ListPartsCommand");
-      }
     };
-    var PutBucketAccelerateConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_ListPartsCommand, "ListPartsCommand");
+    var ListPartsCommand = _ListPartsCommand;
+    var _PutBucketAccelerateConfigurationCommand = class _PutBucketAccelerateConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56053,16 +55623,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         })
       ];
     }).s("AmazonS3", "PutBucketAccelerateConfiguration", {}).n("S3Client", "PutBucketAccelerateConfigurationCommand").f(void 0, void 0).ser(se_PutBucketAccelerateConfigurationCommand).de(de_PutBucketAccelerateConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketAccelerateConfigurationCommand");
-      }
     };
-    var PutBucketAclCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketAccelerateConfigurationCommand, "PutBucketAccelerateConfigurationCommand");
+    var PutBucketAccelerateConfigurationCommand = _PutBucketAccelerateConfigurationCommand;
+    var _PutBucketAclCommand = class _PutBucketAclCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56071,16 +55641,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketAcl", {}).n("S3Client", "PutBucketAclCommand").f(void 0, void 0).ser(se_PutBucketAclCommand).de(de_PutBucketAclCommand).build() {
-      static {
-        __name(this, "PutBucketAclCommand");
-      }
     };
-    var PutBucketAnalyticsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketAclCommand, "PutBucketAclCommand");
+    var PutBucketAclCommand = _PutBucketAclCommand;
+    var _PutBucketAnalyticsConfigurationCommand = class _PutBucketAnalyticsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56090,11 +55660,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "PutBucketAnalyticsConfiguration", {}).n("S3Client", "PutBucketAnalyticsConfigurationCommand").f(void 0, void 0).ser(se_PutBucketAnalyticsConfigurationCommand).de(de_PutBucketAnalyticsConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketAnalyticsConfigurationCommand");
-      }
     };
-    var PutBucketCorsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketAnalyticsConfigurationCommand, "PutBucketAnalyticsConfigurationCommand");
+    var PutBucketAnalyticsConfigurationCommand = _PutBucketAnalyticsConfigurationCommand;
+    var _PutBucketCorsCommand = class _PutBucketCorsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56103,16 +55672,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketCors", {}).n("S3Client", "PutBucketCorsCommand").f(void 0, void 0).ser(se_PutBucketCorsCommand).de(de_PutBucketCorsCommand).build() {
-      static {
-        __name(this, "PutBucketCorsCommand");
-      }
     };
-    var PutBucketEncryptionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketCorsCommand, "PutBucketCorsCommand");
+    var PutBucketCorsCommand = _PutBucketCorsCommand;
+    var _PutBucketEncryptionCommand = class _PutBucketEncryptionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56121,16 +55690,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketEncryption", {}).n("S3Client", "PutBucketEncryptionCommand").f(PutBucketEncryptionRequestFilterSensitiveLog, void 0).ser(se_PutBucketEncryptionCommand).de(de_PutBucketEncryptionCommand).build() {
-      static {
-        __name(this, "PutBucketEncryptionCommand");
-      }
     };
-    var PutBucketIntelligentTieringConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketEncryptionCommand, "PutBucketEncryptionCommand");
+    var PutBucketEncryptionCommand = _PutBucketEncryptionCommand;
+    var _PutBucketIntelligentTieringConfigurationCommand = class _PutBucketIntelligentTieringConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56140,11 +55709,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "PutBucketIntelligentTieringConfiguration", {}).n("S3Client", "PutBucketIntelligentTieringConfigurationCommand").f(void 0, void 0).ser(se_PutBucketIntelligentTieringConfigurationCommand).de(de_PutBucketIntelligentTieringConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketIntelligentTieringConfigurationCommand");
-      }
     };
-    var PutBucketInventoryConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketIntelligentTieringConfigurationCommand, "PutBucketIntelligentTieringConfigurationCommand");
+    var PutBucketIntelligentTieringConfigurationCommand = _PutBucketIntelligentTieringConfigurationCommand;
+    var _PutBucketInventoryConfigurationCommand = class _PutBucketInventoryConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56154,12 +55722,11 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "PutBucketInventoryConfiguration", {}).n("S3Client", "PutBucketInventoryConfigurationCommand").f(PutBucketInventoryConfigurationRequestFilterSensitiveLog, void 0).ser(se_PutBucketInventoryConfigurationCommand).de(de_PutBucketInventoryConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketInventoryConfigurationCommand");
-      }
     };
-    var import_middleware_sdk_s353 = require_dist_cjs29();
-    var PutBucketLifecycleConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketInventoryConfigurationCommand, "PutBucketInventoryConfigurationCommand");
+    var PutBucketInventoryConfigurationCommand = _PutBucketInventoryConfigurationCommand;
+    var import_middleware_sdk_s352 = require_dist_cjs29();
+    var _PutBucketLifecycleConfigurationCommand = class _PutBucketLifecycleConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56168,17 +55735,17 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
-        (0, import_middleware_sdk_s353.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s352.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "PutBucketLifecycleConfiguration", {}).n("S3Client", "PutBucketLifecycleConfigurationCommand").f(void 0, void 0).ser(se_PutBucketLifecycleConfigurationCommand).de(de_PutBucketLifecycleConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketLifecycleConfigurationCommand");
-      }
     };
-    var PutBucketLoggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketLifecycleConfigurationCommand, "PutBucketLifecycleConfigurationCommand");
+    var PutBucketLifecycleConfigurationCommand = _PutBucketLifecycleConfigurationCommand;
+    var _PutBucketLoggingCommand = class _PutBucketLoggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56187,16 +55754,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketLogging", {}).n("S3Client", "PutBucketLoggingCommand").f(void 0, void 0).ser(se_PutBucketLoggingCommand).de(de_PutBucketLoggingCommand).build() {
-      static {
-        __name(this, "PutBucketLoggingCommand");
-      }
     };
-    var PutBucketMetricsConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketLoggingCommand, "PutBucketLoggingCommand");
+    var PutBucketLoggingCommand = _PutBucketLoggingCommand;
+    var _PutBucketMetricsConfigurationCommand = class _PutBucketMetricsConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56206,11 +55773,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "PutBucketMetricsConfiguration", {}).n("S3Client", "PutBucketMetricsConfigurationCommand").f(void 0, void 0).ser(se_PutBucketMetricsConfigurationCommand).de(de_PutBucketMetricsConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketMetricsConfigurationCommand");
-      }
     };
-    var PutBucketNotificationConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketMetricsConfigurationCommand, "PutBucketMetricsConfigurationCommand");
+    var PutBucketMetricsConfigurationCommand = _PutBucketMetricsConfigurationCommand;
+    var _PutBucketNotificationConfigurationCommand = class _PutBucketNotificationConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56220,11 +55786,10 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "PutBucketNotificationConfiguration", {}).n("S3Client", "PutBucketNotificationConfigurationCommand").f(void 0, void 0).ser(se_PutBucketNotificationConfigurationCommand).de(de_PutBucketNotificationConfigurationCommand).build() {
-      static {
-        __name(this, "PutBucketNotificationConfigurationCommand");
-      }
     };
-    var PutBucketOwnershipControlsCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketNotificationConfigurationCommand, "PutBucketNotificationConfigurationCommand");
+    var PutBucketNotificationConfigurationCommand = _PutBucketNotificationConfigurationCommand;
+    var _PutBucketOwnershipControlsCommand = class _PutBucketOwnershipControlsCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56237,11 +55802,10 @@ var require_dist_cjs71 = __commonJS({
         })
       ];
     }).s("AmazonS3", "PutBucketOwnershipControls", {}).n("S3Client", "PutBucketOwnershipControlsCommand").f(void 0, void 0).ser(se_PutBucketOwnershipControlsCommand).de(de_PutBucketOwnershipControlsCommand).build() {
-      static {
-        __name(this, "PutBucketOwnershipControlsCommand");
-      }
     };
-    var PutBucketPolicyCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketOwnershipControlsCommand, "PutBucketOwnershipControlsCommand");
+    var PutBucketOwnershipControlsCommand = _PutBucketOwnershipControlsCommand;
+    var _PutBucketPolicyCommand = class _PutBucketPolicyCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56250,16 +55814,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketPolicy", {}).n("S3Client", "PutBucketPolicyCommand").f(void 0, void 0).ser(se_PutBucketPolicyCommand).de(de_PutBucketPolicyCommand).build() {
-      static {
-        __name(this, "PutBucketPolicyCommand");
-      }
     };
-    var PutBucketReplicationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketPolicyCommand, "PutBucketPolicyCommand");
+    var PutBucketPolicyCommand = _PutBucketPolicyCommand;
+    var _PutBucketReplicationCommand = class _PutBucketReplicationCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56268,16 +55832,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketReplication", {}).n("S3Client", "PutBucketReplicationCommand").f(void 0, void 0).ser(se_PutBucketReplicationCommand).de(de_PutBucketReplicationCommand).build() {
-      static {
-        __name(this, "PutBucketReplicationCommand");
-      }
     };
-    var PutBucketRequestPaymentCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketReplicationCommand, "PutBucketReplicationCommand");
+    var PutBucketReplicationCommand = _PutBucketReplicationCommand;
+    var _PutBucketRequestPaymentCommand = class _PutBucketRequestPaymentCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56286,16 +55850,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketRequestPayment", {}).n("S3Client", "PutBucketRequestPaymentCommand").f(void 0, void 0).ser(se_PutBucketRequestPaymentCommand).de(de_PutBucketRequestPaymentCommand).build() {
-      static {
-        __name(this, "PutBucketRequestPaymentCommand");
-      }
     };
-    var PutBucketTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketRequestPaymentCommand, "PutBucketRequestPaymentCommand");
+    var PutBucketRequestPaymentCommand = _PutBucketRequestPaymentCommand;
+    var _PutBucketTaggingCommand = class _PutBucketTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56304,16 +55868,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketTagging", {}).n("S3Client", "PutBucketTaggingCommand").f(void 0, void 0).ser(se_PutBucketTaggingCommand).de(de_PutBucketTaggingCommand).build() {
-      static {
-        __name(this, "PutBucketTaggingCommand");
-      }
     };
-    var PutBucketVersioningCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketTaggingCommand, "PutBucketTaggingCommand");
+    var PutBucketTaggingCommand = _PutBucketTaggingCommand;
+    var _PutBucketVersioningCommand = class _PutBucketVersioningCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56322,16 +55886,16 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketVersioning", {}).n("S3Client", "PutBucketVersioningCommand").f(void 0, void 0).ser(se_PutBucketVersioningCommand).de(de_PutBucketVersioningCommand).build() {
-      static {
-        __name(this, "PutBucketVersioningCommand");
-      }
     };
-    var PutBucketWebsiteCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketVersioningCommand, "PutBucketVersioningCommand");
+    var PutBucketVersioningCommand = _PutBucketVersioningCommand;
+    var _PutBucketWebsiteCommand = class _PutBucketWebsiteCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56340,17 +55904,17 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutBucketWebsite", {}).n("S3Client", "PutBucketWebsiteCommand").f(void 0, void 0).ser(se_PutBucketWebsiteCommand).de(de_PutBucketWebsiteCommand).build() {
-      static {
-        __name(this, "PutBucketWebsiteCommand");
-      }
     };
-    var import_middleware_sdk_s354 = require_dist_cjs29();
-    var PutObjectAclCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutBucketWebsiteCommand, "PutBucketWebsiteCommand");
+    var PutBucketWebsiteCommand = _PutBucketWebsiteCommand;
+    var import_middleware_sdk_s353 = require_dist_cjs29();
+    var _PutObjectAclCommand = class _PutObjectAclCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -56359,18 +55923,18 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
-        (0, import_middleware_sdk_s354.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s353.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "PutObjectAcl", {}).n("S3Client", "PutObjectAclCommand").f(void 0, void 0).ser(se_PutObjectAclCommand).de(de_PutObjectAclCommand).build() {
-      static {
-        __name(this, "PutObjectAclCommand");
-      }
     };
-    var import_middleware_sdk_s355 = require_dist_cjs29();
-    var PutObjectCommand2 = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutObjectAclCommand, "PutObjectAclCommand");
+    var PutObjectAclCommand = _PutObjectAclCommand;
+    var import_middleware_sdk_s354 = require_dist_cjs29();
+    var _PutObjectCommand = class _PutObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -56379,20 +55943,20 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
-        (0, import_middleware_sdk_s355.getCheckContentLengthHeaderPlugin)(config),
-        (0, import_middleware_sdk_s355.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s354.getCheckContentLengthHeaderPlugin)(config),
+        (0, import_middleware_sdk_s354.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "PutObject", {}).n("S3Client", "PutObjectCommand").f(PutObjectRequestFilterSensitiveLog, PutObjectOutputFilterSensitiveLog).ser(se_PutObjectCommand).de(de_PutObjectCommand).build() {
-      static {
-        __name(this, "PutObjectCommand");
-      }
     };
-    var import_middleware_sdk_s356 = require_dist_cjs29();
-    var PutObjectLegalHoldCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutObjectCommand, "PutObjectCommand");
+    var PutObjectCommand2 = _PutObjectCommand;
+    var import_middleware_sdk_s355 = require_dist_cjs29();
+    var _PutObjectLegalHoldCommand = class _PutObjectLegalHoldCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -56400,18 +55964,37 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
+          requestChecksumRequired: true
+        }),
+        (0, import_middleware_sdk_s355.getThrow200ExceptionsPlugin)(config)
+      ];
+    }).s("AmazonS3", "PutObjectLegalHold", {}).n("S3Client", "PutObjectLegalHoldCommand").f(void 0, void 0).ser(se_PutObjectLegalHoldCommand).de(de_PutObjectLegalHoldCommand).build() {
+    };
+    __name(_PutObjectLegalHoldCommand, "PutObjectLegalHoldCommand");
+    var PutObjectLegalHoldCommand = _PutObjectLegalHoldCommand;
+    var import_middleware_sdk_s356 = require_dist_cjs29();
+    var _PutObjectLockConfigurationCommand = class _PutObjectLockConfigurationCommand extends import_smithy_client4.Command.classBuilder().ep({
+      ...commonParams,
+      Bucket: { type: "contextParams", name: "Bucket" }
+    }).m(function(Command, cs, config, o) {
+      return [
+        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
+        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
+        (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s356.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "PutObjectLegalHold", {}).n("S3Client", "PutObjectLegalHoldCommand").f(void 0, void 0).ser(se_PutObjectLegalHoldCommand).de(de_PutObjectLegalHoldCommand).build() {
-      static {
-        __name(this, "PutObjectLegalHoldCommand");
-      }
+    }).s("AmazonS3", "PutObjectLockConfiguration", {}).n("S3Client", "PutObjectLockConfigurationCommand").f(void 0, void 0).ser(se_PutObjectLockConfigurationCommand).de(de_PutObjectLockConfigurationCommand).build() {
     };
+    __name(_PutObjectLockConfigurationCommand, "PutObjectLockConfigurationCommand");
+    var PutObjectLockConfigurationCommand = _PutObjectLockConfigurationCommand;
     var import_middleware_sdk_s357 = require_dist_cjs29();
-    var PutObjectLockConfigurationCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _PutObjectRetentionCommand = class _PutObjectRetentionCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -56419,18 +56002,18 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s357.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "PutObjectLockConfiguration", {}).n("S3Client", "PutObjectLockConfigurationCommand").f(void 0, void 0).ser(se_PutObjectLockConfigurationCommand).de(de_PutObjectLockConfigurationCommand).build() {
-      static {
-        __name(this, "PutObjectLockConfigurationCommand");
-      }
+    }).s("AmazonS3", "PutObjectRetention", {}).n("S3Client", "PutObjectRetentionCommand").f(void 0, void 0).ser(se_PutObjectRetentionCommand).de(de_PutObjectRetentionCommand).build() {
     };
+    __name(_PutObjectRetentionCommand, "PutObjectRetentionCommand");
+    var PutObjectRetentionCommand = _PutObjectRetentionCommand;
     var import_middleware_sdk_s358 = require_dist_cjs29();
-    var PutObjectRetentionCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    var _PutObjectTaggingCommand = class _PutObjectTaggingCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -56438,36 +56021,17 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         }),
         (0, import_middleware_sdk_s358.getThrow200ExceptionsPlugin)(config)
       ];
-    }).s("AmazonS3", "PutObjectRetention", {}).n("S3Client", "PutObjectRetentionCommand").f(void 0, void 0).ser(se_PutObjectRetentionCommand).de(de_PutObjectRetentionCommand).build() {
-      static {
-        __name(this, "PutObjectRetentionCommand");
-      }
-    };
-    var import_middleware_sdk_s359 = require_dist_cjs29();
-    var PutObjectTaggingCommand = class extends import_smithy_client4.Command.classBuilder().ep({
-      ...commonParams,
-      Bucket: { type: "contextParams", name: "Bucket" }
-    }).m(function(Command, cs, config, o) {
-      return [
-        (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
-        (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
-          requestChecksumRequired: true
-        }),
-        (0, import_middleware_sdk_s359.getThrow200ExceptionsPlugin)(config)
-      ];
     }).s("AmazonS3", "PutObjectTagging", {}).n("S3Client", "PutObjectTaggingCommand").f(void 0, void 0).ser(se_PutObjectTaggingCommand).de(de_PutObjectTaggingCommand).build() {
-      static {
-        __name(this, "PutObjectTaggingCommand");
-      }
     };
-    var PutPublicAccessBlockCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutObjectTaggingCommand, "PutObjectTaggingCommand");
+    var PutObjectTaggingCommand = _PutObjectTaggingCommand;
+    var _PutPublicAccessBlockCommand = class _PutPublicAccessBlockCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseS3ExpressControlEndpoint: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56476,17 +56040,17 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: true
         })
       ];
     }).s("AmazonS3", "PutPublicAccessBlock", {}).n("S3Client", "PutPublicAccessBlockCommand").f(void 0, void 0).ser(se_PutPublicAccessBlockCommand).de(de_PutPublicAccessBlockCommand).build() {
-      static {
-        __name(this, "PutPublicAccessBlockCommand");
-      }
     };
-    var import_middleware_sdk_s360 = require_dist_cjs29();
-    var RestoreObjectCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_PutPublicAccessBlockCommand, "PutPublicAccessBlockCommand");
+    var PutPublicAccessBlockCommand = _PutPublicAccessBlockCommand;
+    var import_middleware_sdk_s359 = require_dist_cjs29();
+    var _RestoreObjectCommand = class _RestoreObjectCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
@@ -56494,25 +56058,25 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
-        (0, import_middleware_sdk_s360.getThrow200ExceptionsPlugin)(config)
+        (0, import_middleware_sdk_s359.getThrow200ExceptionsPlugin)(config)
       ];
     }).s("AmazonS3", "RestoreObject", {}).n("S3Client", "RestoreObjectCommand").f(RestoreObjectRequestFilterSensitiveLog, void 0).ser(se_RestoreObjectCommand).de(de_RestoreObjectCommand).build() {
-      static {
-        __name(this, "RestoreObjectCommand");
-      }
     };
-    var import_middleware_sdk_s361 = require_dist_cjs29();
-    var SelectObjectContentCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_RestoreObjectCommand, "RestoreObjectCommand");
+    var RestoreObjectCommand = _RestoreObjectCommand;
+    var import_middleware_sdk_s360 = require_dist_cjs29();
+    var _SelectObjectContentCommand = class _SelectObjectContentCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s361.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s360.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "SelectObjectContent", {
@@ -56523,12 +56087,11 @@ var require_dist_cjs71 = __commonJS({
         output: true
       }
     }).n("S3Client", "SelectObjectContentCommand").f(SelectObjectContentRequestFilterSensitiveLog, SelectObjectContentOutputFilterSensitiveLog).ser(se_SelectObjectContentCommand).de(de_SelectObjectContentCommand).build() {
-      static {
-        __name(this, "SelectObjectContentCommand");
-      }
     };
-    var import_middleware_sdk_s362 = require_dist_cjs29();
-    var UploadPartCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_SelectObjectContentCommand, "SelectObjectContentCommand");
+    var SelectObjectContentCommand = _SelectObjectContentCommand;
+    var import_middleware_sdk_s361 = require_dist_cjs29();
+    var _UploadPartCommand = class _UploadPartCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       Bucket: { type: "contextParams", name: "Bucket" },
       Key: { type: "contextParams", name: "Key" }
@@ -56537,19 +56100,19 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
         (0, import_middleware_flexible_checksums.getFlexibleChecksumsPlugin)(config, {
-          requestAlgorithmMember: { httpHeader: "x-amz-sdk-checksum-algorithm", name: "ChecksumAlgorithm" },
+          requestAlgorithmMember: "ChecksumAlgorithm",
+          requestAlgorithmMemberHttpHeader: "x-amz-sdk-checksum-algorithm",
           requestChecksumRequired: false
         }),
-        (0, import_middleware_sdk_s362.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s361.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "UploadPart", {}).n("S3Client", "UploadPartCommand").f(UploadPartRequestFilterSensitiveLog, UploadPartOutputFilterSensitiveLog).ser(se_UploadPartCommand).de(de_UploadPartCommand).build() {
-      static {
-        __name(this, "UploadPartCommand");
-      }
     };
-    var import_middleware_sdk_s363 = require_dist_cjs29();
-    var UploadPartCopyCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_UploadPartCommand, "UploadPartCommand");
+    var UploadPartCommand = _UploadPartCommand;
+    var import_middleware_sdk_s362 = require_dist_cjs29();
+    var _UploadPartCopyCommand = class _UploadPartCopyCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       DisableS3ExpressSessionAuth: { type: "staticContextParams", value: true },
       Bucket: { type: "contextParams", name: "Bucket" }
@@ -56557,15 +56120,14 @@ var require_dist_cjs71 = __commonJS({
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions()),
-        (0, import_middleware_sdk_s363.getThrow200ExceptionsPlugin)(config),
+        (0, import_middleware_sdk_s362.getThrow200ExceptionsPlugin)(config),
         (0, import_middleware_ssec.getSsecPlugin)(config)
       ];
     }).s("AmazonS3", "UploadPartCopy", {}).n("S3Client", "UploadPartCopyCommand").f(UploadPartCopyRequestFilterSensitiveLog, UploadPartCopyOutputFilterSensitiveLog).ser(se_UploadPartCopyCommand).de(de_UploadPartCopyCommand).build() {
-      static {
-        __name(this, "UploadPartCopyCommand");
-      }
     };
-    var WriteGetObjectResponseCommand = class extends import_smithy_client4.Command.classBuilder().ep({
+    __name(_UploadPartCopyCommand, "UploadPartCopyCommand");
+    var UploadPartCopyCommand = _UploadPartCopyCommand;
+    var _WriteGetObjectResponseCommand = class _WriteGetObjectResponseCommand extends import_smithy_client4.Command.classBuilder().ep({
       ...commonParams,
       UseObjectLambdaEndpoint: { type: "staticContextParams", value: true }
     }).m(function(Command, cs, config, o) {
@@ -56574,16 +56136,14 @@ var require_dist_cjs71 = __commonJS({
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AmazonS3", "WriteGetObjectResponse", {}).n("S3Client", "WriteGetObjectResponseCommand").f(WriteGetObjectResponseRequestFilterSensitiveLog, void 0).ser(se_WriteGetObjectResponseCommand).de(de_WriteGetObjectResponseCommand).build() {
-      static {
-        __name(this, "WriteGetObjectResponseCommand");
-      }
     };
+    __name(_WriteGetObjectResponseCommand, "WriteGetObjectResponseCommand");
+    var WriteGetObjectResponseCommand = _WriteGetObjectResponseCommand;
     var commands = {
       AbortMultipartUploadCommand,
       CompleteMultipartUploadCommand,
       CopyObjectCommand,
       CreateBucketCommand,
-      CreateBucketMetadataTableConfigurationCommand,
       CreateMultipartUploadCommand,
       CreateSessionCommand,
       DeleteBucketCommand,
@@ -56593,7 +56153,6 @@ var require_dist_cjs71 = __commonJS({
       DeleteBucketIntelligentTieringConfigurationCommand,
       DeleteBucketInventoryConfigurationCommand,
       DeleteBucketLifecycleCommand,
-      DeleteBucketMetadataTableConfigurationCommand,
       DeleteBucketMetricsConfigurationCommand,
       DeleteBucketOwnershipControlsCommand,
       DeleteBucketPolicyCommand,
@@ -56614,7 +56173,6 @@ var require_dist_cjs71 = __commonJS({
       GetBucketLifecycleConfigurationCommand,
       GetBucketLocationCommand,
       GetBucketLoggingCommand,
-      GetBucketMetadataTableConfigurationCommand,
       GetBucketMetricsConfigurationCommand,
       GetBucketNotificationConfigurationCommand,
       GetBucketOwnershipControlsCommand,
@@ -56678,11 +56236,10 @@ var require_dist_cjs71 = __commonJS({
       UploadPartCopyCommand,
       WriteGetObjectResponseCommand
     };
-    var S3 = class extends S3Client2 {
-      static {
-        __name(this, "S3");
-      }
+    var _S3 = class _S3 extends S3Client2 {
     };
+    __name(_S3, "S3");
+    var S3 = _S3;
     (0, import_smithy_client4.createAggregatedClient)(commands, S3);
     var import_core42 = (init_dist_es(), __toCommonJS(dist_es_exports));
     var paginateListBuckets = (0, import_core42.createPaginator)(S3Client2, ListBucketsCommand, "ContinuationToken", "ContinuationToken", "MaxBuckets");
@@ -56791,12 +56348,12 @@ var require_createCredentialChain = __commonJS({
   "node_modules/@aws-sdk/credential-providers/dist-cjs/createCredentialChain.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.propertyProviderChain = exports2.createCredentialChain = void 0;
+    exports2.createCredentialChain = void 0;
     var property_provider_1 = require_dist_cjs16();
     var createCredentialChain = (...credentialProviders) => {
       let expireAfter = -1;
-      const baseFunction = async (awsIdentityProperties) => {
-        const credentials = await (0, exports2.propertyProviderChain)(...credentialProviders)(awsIdentityProperties);
+      const baseFunction = async () => {
+        const credentials = await (0, property_provider_1.chain)(...credentialProviders)();
         if (!credentials.expiration && expireAfter !== -1) {
           credentials.expiration = new Date(Date.now() + expireAfter);
         }
@@ -56814,26 +56371,6 @@ var require_createCredentialChain = __commonJS({
       return withOptions;
     };
     exports2.createCredentialChain = createCredentialChain;
-    var propertyProviderChain = (...providers) => async (awsIdentityProperties) => {
-      if (providers.length === 0) {
-        throw new property_provider_1.ProviderError("No providers in chain");
-      }
-      let lastProviderError;
-      for (const provider of providers) {
-        try {
-          const credentials = await provider(awsIdentityProperties);
-          return credentials;
-        } catch (err) {
-          lastProviderError = err;
-          if (err?.tryNextLink) {
-            continue;
-          }
-          throw err;
-        }
-      }
-      throw lastProviderError;
-    };
-    exports2.propertyProviderChain = propertyProviderChain;
   }
 });
 
@@ -56916,7 +56453,7 @@ var require_package5 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-cognito-identity",
       description: "AWS SDK for JavaScript Cognito Identity Client for Node.js, Browser and React Native",
-      version: "3.723.0",
+      version: "3.699.0",
       scripts: {
         build: "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types'",
         "build:cjs": "node ../../scripts/compilation/inline client-cognito-identity",
@@ -56937,58 +56474,58 @@ var require_package5 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/client-sso-oidc": "3.723.0",
-        "@aws-sdk/client-sts": "3.723.0",
-        "@aws-sdk/core": "3.723.0",
-        "@aws-sdk/credential-provider-node": "3.723.0",
-        "@aws-sdk/middleware-host-header": "3.723.0",
-        "@aws-sdk/middleware-logger": "3.723.0",
-        "@aws-sdk/middleware-recursion-detection": "3.723.0",
-        "@aws-sdk/middleware-user-agent": "3.723.0",
-        "@aws-sdk/region-config-resolver": "3.723.0",
-        "@aws-sdk/types": "3.723.0",
-        "@aws-sdk/util-endpoints": "3.723.0",
-        "@aws-sdk/util-user-agent-browser": "3.723.0",
-        "@aws-sdk/util-user-agent-node": "3.723.0",
-        "@smithy/config-resolver": "^4.0.0",
-        "@smithy/core": "^3.0.0",
-        "@smithy/fetch-http-handler": "^5.0.0",
-        "@smithy/hash-node": "^4.0.0",
-        "@smithy/invalid-dependency": "^4.0.0",
-        "@smithy/middleware-content-length": "^4.0.0",
-        "@smithy/middleware-endpoint": "^4.0.0",
-        "@smithy/middleware-retry": "^4.0.0",
-        "@smithy/middleware-serde": "^4.0.0",
-        "@smithy/middleware-stack": "^4.0.0",
-        "@smithy/node-config-provider": "^4.0.0",
-        "@smithy/node-http-handler": "^4.0.0",
-        "@smithy/protocol-http": "^5.0.0",
-        "@smithy/smithy-client": "^4.0.0",
-        "@smithy/types": "^4.0.0",
-        "@smithy/url-parser": "^4.0.0",
-        "@smithy/util-base64": "^4.0.0",
-        "@smithy/util-body-length-browser": "^4.0.0",
-        "@smithy/util-body-length-node": "^4.0.0",
-        "@smithy/util-defaults-mode-browser": "^4.0.0",
-        "@smithy/util-defaults-mode-node": "^4.0.0",
-        "@smithy/util-endpoints": "^3.0.0",
-        "@smithy/util-middleware": "^4.0.0",
-        "@smithy/util-retry": "^4.0.0",
-        "@smithy/util-utf8": "^4.0.0",
+        "@aws-sdk/client-sso-oidc": "3.699.0",
+        "@aws-sdk/client-sts": "3.699.0",
+        "@aws-sdk/core": "3.696.0",
+        "@aws-sdk/credential-provider-node": "3.699.0",
+        "@aws-sdk/middleware-host-header": "3.696.0",
+        "@aws-sdk/middleware-logger": "3.696.0",
+        "@aws-sdk/middleware-recursion-detection": "3.696.0",
+        "@aws-sdk/middleware-user-agent": "3.696.0",
+        "@aws-sdk/region-config-resolver": "3.696.0",
+        "@aws-sdk/types": "3.696.0",
+        "@aws-sdk/util-endpoints": "3.696.0",
+        "@aws-sdk/util-user-agent-browser": "3.696.0",
+        "@aws-sdk/util-user-agent-node": "3.696.0",
+        "@smithy/config-resolver": "^3.0.12",
+        "@smithy/core": "^2.5.3",
+        "@smithy/fetch-http-handler": "^4.1.1",
+        "@smithy/hash-node": "^3.0.10",
+        "@smithy/invalid-dependency": "^3.0.10",
+        "@smithy/middleware-content-length": "^3.0.12",
+        "@smithy/middleware-endpoint": "^3.2.3",
+        "@smithy/middleware-retry": "^3.0.27",
+        "@smithy/middleware-serde": "^3.0.10",
+        "@smithy/middleware-stack": "^3.0.10",
+        "@smithy/node-config-provider": "^3.1.11",
+        "@smithy/node-http-handler": "^3.3.1",
+        "@smithy/protocol-http": "^4.1.7",
+        "@smithy/smithy-client": "^3.4.4",
+        "@smithy/types": "^3.7.1",
+        "@smithy/url-parser": "^3.0.10",
+        "@smithy/util-base64": "^3.0.0",
+        "@smithy/util-body-length-browser": "^3.0.0",
+        "@smithy/util-body-length-node": "^3.0.0",
+        "@smithy/util-defaults-mode-browser": "^3.0.27",
+        "@smithy/util-defaults-mode-node": "^3.0.27",
+        "@smithy/util-endpoints": "^2.1.6",
+        "@smithy/util-middleware": "^3.0.10",
+        "@smithy/util-retry": "^3.0.10",
+        "@smithy/util-utf8": "^3.0.0",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/client-iam": "3.723.0",
-        "@tsconfig/node18": "18.2.4",
+        "@aws-sdk/client-iam": "3.699.0",
+        "@tsconfig/node16": "16.1.3",
         "@types/chai": "^4.2.11",
-        "@types/node": "^18.19.69",
+        "@types/node": "^16.18.96",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
         rimraf: "3.0.2",
-        typescript: "~5.2.2"
+        typescript: "~4.9.5"
       },
       engines: {
-        node: ">=18.0.0"
+        node: ">=16.0.0"
       },
       typesVersions: {
         "<4.0": {
@@ -57152,7 +56689,6 @@ var require_runtimeConfig5 = __commonJS({
       const defaultConfigProvider = () => defaultsMode().then(smithy_client_1.loadConfigsForDefaultMode);
       const clientSharedValues = (0, runtimeConfig_shared_1.getRuntimeConfig)(config);
       (0, core_1.emitWarningIfUnsupportedVersion)(process.version);
-      const profileConfig = { profile: config?.profile };
       return {
         ...clientSharedValues,
         ...config,
@@ -57161,18 +56697,18 @@ var require_runtimeConfig5 = __commonJS({
         bodyLengthChecker: config?.bodyLengthChecker ?? util_body_length_node_1.calculateBodyLength,
         credentialDefaultProvider: config?.credentialDefaultProvider ?? credential_provider_node_1.defaultProvider,
         defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
-        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...profileConfig }),
+        maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
         retryMode: config?.retryMode ?? (0, node_config_provider_1.loadConfig)({
           ...middleware_retry_1.NODE_RETRY_MODE_CONFIG_OPTIONS,
           default: async () => (await defaultConfigProvider()).retryMode || util_retry_1.DEFAULT_RETRY_MODE
-        }, config),
+        }),
         sha256: config?.sha256 ?? hash_node_1.Hash.bind(null, "sha256"),
         streamCollector: config?.streamCollector ?? node_http_handler_1.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, profileConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS, profileConfig)
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS),
+        userAgentAppId: config?.userAgentAppId ?? (0, node_config_provider_1.loadConfig)(util_user_agent_node_1.NODE_APP_ID_CONFIG_OPTIONS)
       };
     };
     exports2.getRuntimeConfig = getRuntimeConfig;
@@ -57339,14 +56875,7 @@ var require_dist_cjs72 = __commonJS({
         ...resolveHttpAuthRuntimeConfig(extensionConfiguration)
       };
     }, "resolveRuntimeExtensions");
-    var CognitoIdentityClient = class extends import_smithy_client4.Client {
-      static {
-        __name(this, "CognitoIdentityClient");
-      }
-      /**
-       * The resolved configuration of CognitoIdentityClient class. This is resolved and normalized from the {@link CognitoIdentityClientConfig | constructor configuration interface}.
-       */
-      config;
+    var _CognitoIdentityClient = class _CognitoIdentityClient extends import_smithy_client4.Client {
       constructor(...[configuration]) {
         const _config_0 = (0, import_runtimeConfig.getRuntimeConfig)(configuration || {});
         const _config_1 = resolveClientEndpointParameters(_config_0);
@@ -57356,7 +56885,7 @@ var require_dist_cjs72 = __commonJS({
         const _config_5 = (0, import_middleware_host_header.resolveHostHeaderConfig)(_config_4);
         const _config_6 = (0, import_middleware_endpoint.resolveEndpointConfig)(_config_5);
         const _config_7 = (0, import_httpAuthSchemeProvider.resolveHttpAuthSchemeConfig)(_config_6);
-        const _config_8 = resolveRuntimeExtensions(_config_7, configuration?.extensions || []);
+        const _config_8 = resolveRuntimeExtensions(_config_7, (configuration == null ? void 0 : configuration.extensions) || []);
         super(_config_8);
         this.config = _config_8;
         this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
@@ -57384,30 +56913,26 @@ var require_dist_cjs72 = __commonJS({
         super.destroy();
       }
     };
+    __name(_CognitoIdentityClient, "CognitoIdentityClient");
+    var CognitoIdentityClient = _CognitoIdentityClient;
     var import_middleware_serde2 = require_dist_cjs5();
     var import_core22 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
-    var CognitoIdentityServiceException = class _CognitoIdentityServiceException extends import_smithy_client4.ServiceException {
-      static {
-        __name(this, "CognitoIdentityServiceException");
-      }
+    var _CognitoIdentityServiceException = class _CognitoIdentityServiceException2 extends import_smithy_client4.ServiceException {
       /**
        * @internal
        */
       constructor(options) {
         super(options);
-        Object.setPrototypeOf(this, _CognitoIdentityServiceException.prototype);
+        Object.setPrototypeOf(this, _CognitoIdentityServiceException2.prototype);
       }
     };
+    __name(_CognitoIdentityServiceException, "CognitoIdentityServiceException");
+    var CognitoIdentityServiceException = _CognitoIdentityServiceException;
     var AmbiguousRoleResolutionType = {
       AUTHENTICATED_ROLE: "AuthenticatedRole",
       DENY: "Deny"
     };
-    var InternalErrorException = class _InternalErrorException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "InternalErrorException");
-      }
-      name = "InternalErrorException";
-      $fault = "server";
+    var _InternalErrorException = class _InternalErrorException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57417,15 +56942,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "server",
           ...opts
         });
-        Object.setPrototypeOf(this, _InternalErrorException.prototype);
+        this.name = "InternalErrorException";
+        this.$fault = "server";
+        Object.setPrototypeOf(this, _InternalErrorException2.prototype);
       }
     };
-    var InvalidParameterException = class _InvalidParameterException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "InvalidParameterException");
-      }
-      name = "InvalidParameterException";
-      $fault = "client";
+    __name(_InternalErrorException, "InternalErrorException");
+    var InternalErrorException = _InternalErrorException;
+    var _InvalidParameterException = class _InvalidParameterException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57435,15 +56959,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidParameterException.prototype);
+        this.name = "InvalidParameterException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidParameterException2.prototype);
       }
     };
-    var LimitExceededException = class _LimitExceededException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "LimitExceededException");
-      }
-      name = "LimitExceededException";
-      $fault = "client";
+    __name(_InvalidParameterException, "InvalidParameterException");
+    var InvalidParameterException = _InvalidParameterException;
+    var _LimitExceededException = class _LimitExceededException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57453,15 +56976,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _LimitExceededException.prototype);
+        this.name = "LimitExceededException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _LimitExceededException2.prototype);
       }
     };
-    var NotAuthorizedException = class _NotAuthorizedException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "NotAuthorizedException");
-      }
-      name = "NotAuthorizedException";
-      $fault = "client";
+    __name(_LimitExceededException, "LimitExceededException");
+    var LimitExceededException = _LimitExceededException;
+    var _NotAuthorizedException = class _NotAuthorizedException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57471,15 +56993,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _NotAuthorizedException.prototype);
+        this.name = "NotAuthorizedException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _NotAuthorizedException2.prototype);
       }
     };
-    var ResourceConflictException = class _ResourceConflictException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "ResourceConflictException");
-      }
-      name = "ResourceConflictException";
-      $fault = "client";
+    __name(_NotAuthorizedException, "NotAuthorizedException");
+    var NotAuthorizedException = _NotAuthorizedException;
+    var _ResourceConflictException = class _ResourceConflictException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57489,15 +57010,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ResourceConflictException.prototype);
+        this.name = "ResourceConflictException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ResourceConflictException2.prototype);
       }
     };
-    var TooManyRequestsException = class _TooManyRequestsException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "TooManyRequestsException");
-      }
-      name = "TooManyRequestsException";
-      $fault = "client";
+    __name(_ResourceConflictException, "ResourceConflictException");
+    var ResourceConflictException = _ResourceConflictException;
+    var _TooManyRequestsException = class _TooManyRequestsException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57507,19 +57027,18 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _TooManyRequestsException.prototype);
+        this.name = "TooManyRequestsException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _TooManyRequestsException2.prototype);
       }
     };
+    __name(_TooManyRequestsException, "TooManyRequestsException");
+    var TooManyRequestsException = _TooManyRequestsException;
     var ErrorCode = {
       ACCESS_DENIED: "AccessDenied",
       INTERNAL_SERVER_ERROR: "InternalServerError"
     };
-    var ResourceNotFoundException = class _ResourceNotFoundException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "ResourceNotFoundException");
-      }
-      name = "ResourceNotFoundException";
-      $fault = "client";
+    var _ResourceNotFoundException = class _ResourceNotFoundException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57529,15 +57048,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ResourceNotFoundException.prototype);
+        this.name = "ResourceNotFoundException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ResourceNotFoundException2.prototype);
       }
     };
-    var ExternalServiceException = class _ExternalServiceException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "ExternalServiceException");
-      }
-      name = "ExternalServiceException";
-      $fault = "client";
+    __name(_ResourceNotFoundException, "ResourceNotFoundException");
+    var ResourceNotFoundException = _ResourceNotFoundException;
+    var _ExternalServiceException = class _ExternalServiceException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57547,15 +57065,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ExternalServiceException.prototype);
+        this.name = "ExternalServiceException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ExternalServiceException2.prototype);
       }
     };
-    var InvalidIdentityPoolConfigurationException = class _InvalidIdentityPoolConfigurationException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "InvalidIdentityPoolConfigurationException");
-      }
-      name = "InvalidIdentityPoolConfigurationException";
-      $fault = "client";
+    __name(_ExternalServiceException, "ExternalServiceException");
+    var ExternalServiceException = _ExternalServiceException;
+    var _InvalidIdentityPoolConfigurationException = class _InvalidIdentityPoolConfigurationException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57565,9 +57082,13 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _InvalidIdentityPoolConfigurationException.prototype);
+        this.name = "InvalidIdentityPoolConfigurationException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _InvalidIdentityPoolConfigurationException2.prototype);
       }
     };
+    __name(_InvalidIdentityPoolConfigurationException, "InvalidIdentityPoolConfigurationException");
+    var InvalidIdentityPoolConfigurationException = _InvalidIdentityPoolConfigurationException;
     var MappingRuleMatchType = {
       CONTAINS: "Contains",
       EQUALS: "Equals",
@@ -57578,12 +57099,7 @@ var require_dist_cjs72 = __commonJS({
       RULES: "Rules",
       TOKEN: "Token"
     };
-    var DeveloperUserAlreadyRegisteredException = class _DeveloperUserAlreadyRegisteredException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "DeveloperUserAlreadyRegisteredException");
-      }
-      name = "DeveloperUserAlreadyRegisteredException";
-      $fault = "client";
+    var _DeveloperUserAlreadyRegisteredException = class _DeveloperUserAlreadyRegisteredException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57593,15 +57109,14 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _DeveloperUserAlreadyRegisteredException.prototype);
+        this.name = "DeveloperUserAlreadyRegisteredException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _DeveloperUserAlreadyRegisteredException2.prototype);
       }
     };
-    var ConcurrentModificationException = class _ConcurrentModificationException extends CognitoIdentityServiceException {
-      static {
-        __name(this, "ConcurrentModificationException");
-      }
-      name = "ConcurrentModificationException";
-      $fault = "client";
+    __name(_DeveloperUserAlreadyRegisteredException, "DeveloperUserAlreadyRegisteredException");
+    var DeveloperUserAlreadyRegisteredException = _DeveloperUserAlreadyRegisteredException;
+    var _ConcurrentModificationException = class _ConcurrentModificationException2 extends CognitoIdentityServiceException {
       /**
        * @internal
        */
@@ -57611,9 +57126,13 @@ var require_dist_cjs72 = __commonJS({
           $fault: "client",
           ...opts
         });
-        Object.setPrototypeOf(this, _ConcurrentModificationException.prototype);
+        this.name = "ConcurrentModificationException";
+        this.$fault = "client";
+        Object.setPrototypeOf(this, _ConcurrentModificationException2.prototype);
       }
     };
+    __name(_ConcurrentModificationException, "ConcurrentModificationException");
+    var ConcurrentModificationException = _ConcurrentModificationException;
     var GetCredentialsForIdentityInputFilterSensitiveLog = /* @__PURE__ */ __name((obj) => ({
       ...obj,
       ...obj.Logins && { Logins: import_smithy_client4.SENSITIVE_STRING }
@@ -58290,97 +57809,88 @@ var require_dist_cjs72 = __commonJS({
       };
     }
     __name(sharedHeaders, "sharedHeaders");
-    var CreateIdentityPoolCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    var _CreateIdentityPoolCommand = class _CreateIdentityPoolCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "CreateIdentityPool", {}).n("CognitoIdentityClient", "CreateIdentityPoolCommand").f(void 0, void 0).ser(se_CreateIdentityPoolCommand).de(de_CreateIdentityPoolCommand).build() {
-      static {
-        __name(this, "CreateIdentityPoolCommand");
-      }
     };
-    var DeleteIdentitiesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_CreateIdentityPoolCommand, "CreateIdentityPoolCommand");
+    var CreateIdentityPoolCommand = _CreateIdentityPoolCommand;
+    var _DeleteIdentitiesCommand = class _DeleteIdentitiesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "DeleteIdentities", {}).n("CognitoIdentityClient", "DeleteIdentitiesCommand").f(void 0, void 0).ser(se_DeleteIdentitiesCommand).de(de_DeleteIdentitiesCommand).build() {
-      static {
-        __name(this, "DeleteIdentitiesCommand");
-      }
     };
-    var DeleteIdentityPoolCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_DeleteIdentitiesCommand, "DeleteIdentitiesCommand");
+    var DeleteIdentitiesCommand = _DeleteIdentitiesCommand;
+    var _DeleteIdentityPoolCommand = class _DeleteIdentityPoolCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "DeleteIdentityPool", {}).n("CognitoIdentityClient", "DeleteIdentityPoolCommand").f(void 0, void 0).ser(se_DeleteIdentityPoolCommand).de(de_DeleteIdentityPoolCommand).build() {
-      static {
-        __name(this, "DeleteIdentityPoolCommand");
-      }
     };
-    var DescribeIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_DeleteIdentityPoolCommand, "DeleteIdentityPoolCommand");
+    var DeleteIdentityPoolCommand = _DeleteIdentityPoolCommand;
+    var _DescribeIdentityCommand = class _DescribeIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "DescribeIdentity", {}).n("CognitoIdentityClient", "DescribeIdentityCommand").f(void 0, void 0).ser(se_DescribeIdentityCommand).de(de_DescribeIdentityCommand).build() {
-      static {
-        __name(this, "DescribeIdentityCommand");
-      }
     };
-    var DescribeIdentityPoolCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_DescribeIdentityCommand, "DescribeIdentityCommand");
+    var DescribeIdentityCommand = _DescribeIdentityCommand;
+    var _DescribeIdentityPoolCommand = class _DescribeIdentityPoolCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "DescribeIdentityPool", {}).n("CognitoIdentityClient", "DescribeIdentityPoolCommand").f(void 0, void 0).ser(se_DescribeIdentityPoolCommand).de(de_DescribeIdentityPoolCommand).build() {
-      static {
-        __name(this, "DescribeIdentityPoolCommand");
-      }
     };
-    var GetCredentialsForIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_DescribeIdentityPoolCommand, "DescribeIdentityPoolCommand");
+    var DescribeIdentityPoolCommand = _DescribeIdentityPoolCommand;
+    var _GetCredentialsForIdentityCommand = class _GetCredentialsForIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "GetCredentialsForIdentity", {}).n("CognitoIdentityClient", "GetCredentialsForIdentityCommand").f(GetCredentialsForIdentityInputFilterSensitiveLog, GetCredentialsForIdentityResponseFilterSensitiveLog).ser(se_GetCredentialsForIdentityCommand).de(de_GetCredentialsForIdentityCommand).build() {
-      static {
-        __name(this, "GetCredentialsForIdentityCommand");
-      }
     };
-    var GetIdCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetCredentialsForIdentityCommand, "GetCredentialsForIdentityCommand");
+    var GetCredentialsForIdentityCommand = _GetCredentialsForIdentityCommand;
+    var _GetIdCommand = class _GetIdCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "GetId", {}).n("CognitoIdentityClient", "GetIdCommand").f(GetIdInputFilterSensitiveLog, void 0).ser(se_GetIdCommand).de(de_GetIdCommand).build() {
-      static {
-        __name(this, "GetIdCommand");
-      }
     };
-    var GetIdentityPoolRolesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetIdCommand, "GetIdCommand");
+    var GetIdCommand = _GetIdCommand;
+    var _GetIdentityPoolRolesCommand = class _GetIdentityPoolRolesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "GetIdentityPoolRoles", {}).n("CognitoIdentityClient", "GetIdentityPoolRolesCommand").f(void 0, void 0).ser(se_GetIdentityPoolRolesCommand).de(de_GetIdentityPoolRolesCommand).build() {
-      static {
-        __name(this, "GetIdentityPoolRolesCommand");
-      }
     };
-    var GetOpenIdTokenCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetIdentityPoolRolesCommand, "GetIdentityPoolRolesCommand");
+    var GetIdentityPoolRolesCommand = _GetIdentityPoolRolesCommand;
+    var _GetOpenIdTokenCommand = class _GetOpenIdTokenCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "GetOpenIdToken", {}).n("CognitoIdentityClient", "GetOpenIdTokenCommand").f(GetOpenIdTokenInputFilterSensitiveLog, GetOpenIdTokenResponseFilterSensitiveLog).ser(se_GetOpenIdTokenCommand).de(de_GetOpenIdTokenCommand).build() {
-      static {
-        __name(this, "GetOpenIdTokenCommand");
-      }
     };
-    var GetOpenIdTokenForDeveloperIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetOpenIdTokenCommand, "GetOpenIdTokenCommand");
+    var GetOpenIdTokenCommand = _GetOpenIdTokenCommand;
+    var _GetOpenIdTokenForDeveloperIdentityCommand = class _GetOpenIdTokenForDeveloperIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
@@ -58389,140 +57899,126 @@ var require_dist_cjs72 = __commonJS({
       GetOpenIdTokenForDeveloperIdentityInputFilterSensitiveLog,
       GetOpenIdTokenForDeveloperIdentityResponseFilterSensitiveLog
     ).ser(se_GetOpenIdTokenForDeveloperIdentityCommand).de(de_GetOpenIdTokenForDeveloperIdentityCommand).build() {
-      static {
-        __name(this, "GetOpenIdTokenForDeveloperIdentityCommand");
-      }
     };
-    var GetPrincipalTagAttributeMapCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetOpenIdTokenForDeveloperIdentityCommand, "GetOpenIdTokenForDeveloperIdentityCommand");
+    var GetOpenIdTokenForDeveloperIdentityCommand = _GetOpenIdTokenForDeveloperIdentityCommand;
+    var _GetPrincipalTagAttributeMapCommand = class _GetPrincipalTagAttributeMapCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "GetPrincipalTagAttributeMap", {}).n("CognitoIdentityClient", "GetPrincipalTagAttributeMapCommand").f(void 0, void 0).ser(se_GetPrincipalTagAttributeMapCommand).de(de_GetPrincipalTagAttributeMapCommand).build() {
-      static {
-        __name(this, "GetPrincipalTagAttributeMapCommand");
-      }
     };
-    var ListIdentitiesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_GetPrincipalTagAttributeMapCommand, "GetPrincipalTagAttributeMapCommand");
+    var GetPrincipalTagAttributeMapCommand = _GetPrincipalTagAttributeMapCommand;
+    var _ListIdentitiesCommand = class _ListIdentitiesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "ListIdentities", {}).n("CognitoIdentityClient", "ListIdentitiesCommand").f(void 0, void 0).ser(se_ListIdentitiesCommand).de(de_ListIdentitiesCommand).build() {
-      static {
-        __name(this, "ListIdentitiesCommand");
-      }
     };
-    var ListIdentityPoolsCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_ListIdentitiesCommand, "ListIdentitiesCommand");
+    var ListIdentitiesCommand = _ListIdentitiesCommand;
+    var _ListIdentityPoolsCommand = class _ListIdentityPoolsCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "ListIdentityPools", {}).n("CognitoIdentityClient", "ListIdentityPoolsCommand").f(void 0, void 0).ser(se_ListIdentityPoolsCommand).de(de_ListIdentityPoolsCommand).build() {
-      static {
-        __name(this, "ListIdentityPoolsCommand");
-      }
     };
-    var ListTagsForResourceCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_ListIdentityPoolsCommand, "ListIdentityPoolsCommand");
+    var ListIdentityPoolsCommand = _ListIdentityPoolsCommand;
+    var _ListTagsForResourceCommand = class _ListTagsForResourceCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "ListTagsForResource", {}).n("CognitoIdentityClient", "ListTagsForResourceCommand").f(void 0, void 0).ser(se_ListTagsForResourceCommand).de(de_ListTagsForResourceCommand).build() {
-      static {
-        __name(this, "ListTagsForResourceCommand");
-      }
     };
-    var LookupDeveloperIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_ListTagsForResourceCommand, "ListTagsForResourceCommand");
+    var ListTagsForResourceCommand = _ListTagsForResourceCommand;
+    var _LookupDeveloperIdentityCommand = class _LookupDeveloperIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "LookupDeveloperIdentity", {}).n("CognitoIdentityClient", "LookupDeveloperIdentityCommand").f(void 0, void 0).ser(se_LookupDeveloperIdentityCommand).de(de_LookupDeveloperIdentityCommand).build() {
-      static {
-        __name(this, "LookupDeveloperIdentityCommand");
-      }
     };
-    var MergeDeveloperIdentitiesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_LookupDeveloperIdentityCommand, "LookupDeveloperIdentityCommand");
+    var LookupDeveloperIdentityCommand = _LookupDeveloperIdentityCommand;
+    var _MergeDeveloperIdentitiesCommand = class _MergeDeveloperIdentitiesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "MergeDeveloperIdentities", {}).n("CognitoIdentityClient", "MergeDeveloperIdentitiesCommand").f(void 0, void 0).ser(se_MergeDeveloperIdentitiesCommand).de(de_MergeDeveloperIdentitiesCommand).build() {
-      static {
-        __name(this, "MergeDeveloperIdentitiesCommand");
-      }
     };
-    var SetIdentityPoolRolesCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_MergeDeveloperIdentitiesCommand, "MergeDeveloperIdentitiesCommand");
+    var MergeDeveloperIdentitiesCommand = _MergeDeveloperIdentitiesCommand;
+    var _SetIdentityPoolRolesCommand = class _SetIdentityPoolRolesCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "SetIdentityPoolRoles", {}).n("CognitoIdentityClient", "SetIdentityPoolRolesCommand").f(void 0, void 0).ser(se_SetIdentityPoolRolesCommand).de(de_SetIdentityPoolRolesCommand).build() {
-      static {
-        __name(this, "SetIdentityPoolRolesCommand");
-      }
     };
-    var SetPrincipalTagAttributeMapCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_SetIdentityPoolRolesCommand, "SetIdentityPoolRolesCommand");
+    var SetIdentityPoolRolesCommand = _SetIdentityPoolRolesCommand;
+    var _SetPrincipalTagAttributeMapCommand = class _SetPrincipalTagAttributeMapCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "SetPrincipalTagAttributeMap", {}).n("CognitoIdentityClient", "SetPrincipalTagAttributeMapCommand").f(void 0, void 0).ser(se_SetPrincipalTagAttributeMapCommand).de(de_SetPrincipalTagAttributeMapCommand).build() {
-      static {
-        __name(this, "SetPrincipalTagAttributeMapCommand");
-      }
     };
-    var TagResourceCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_SetPrincipalTagAttributeMapCommand, "SetPrincipalTagAttributeMapCommand");
+    var SetPrincipalTagAttributeMapCommand = _SetPrincipalTagAttributeMapCommand;
+    var _TagResourceCommand = class _TagResourceCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "TagResource", {}).n("CognitoIdentityClient", "TagResourceCommand").f(void 0, void 0).ser(se_TagResourceCommand).de(de_TagResourceCommand).build() {
-      static {
-        __name(this, "TagResourceCommand");
-      }
     };
-    var UnlinkDeveloperIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_TagResourceCommand, "TagResourceCommand");
+    var TagResourceCommand = _TagResourceCommand;
+    var _UnlinkDeveloperIdentityCommand = class _UnlinkDeveloperIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "UnlinkDeveloperIdentity", {}).n("CognitoIdentityClient", "UnlinkDeveloperIdentityCommand").f(void 0, void 0).ser(se_UnlinkDeveloperIdentityCommand).de(de_UnlinkDeveloperIdentityCommand).build() {
-      static {
-        __name(this, "UnlinkDeveloperIdentityCommand");
-      }
     };
-    var UnlinkIdentityCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_UnlinkDeveloperIdentityCommand, "UnlinkDeveloperIdentityCommand");
+    var UnlinkDeveloperIdentityCommand = _UnlinkDeveloperIdentityCommand;
+    var _UnlinkIdentityCommand = class _UnlinkIdentityCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "UnlinkIdentity", {}).n("CognitoIdentityClient", "UnlinkIdentityCommand").f(UnlinkIdentityInputFilterSensitiveLog, void 0).ser(se_UnlinkIdentityCommand).de(de_UnlinkIdentityCommand).build() {
-      static {
-        __name(this, "UnlinkIdentityCommand");
-      }
     };
-    var UntagResourceCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_UnlinkIdentityCommand, "UnlinkIdentityCommand");
+    var UnlinkIdentityCommand = _UnlinkIdentityCommand;
+    var _UntagResourceCommand = class _UntagResourceCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "UntagResource", {}).n("CognitoIdentityClient", "UntagResourceCommand").f(void 0, void 0).ser(se_UntagResourceCommand).de(de_UntagResourceCommand).build() {
-      static {
-        __name(this, "UntagResourceCommand");
-      }
     };
-    var UpdateIdentityPoolCommand = class extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
+    __name(_UntagResourceCommand, "UntagResourceCommand");
+    var UntagResourceCommand = _UntagResourceCommand;
+    var _UpdateIdentityPoolCommand = class _UpdateIdentityPoolCommand extends import_smithy_client4.Command.classBuilder().ep(commonParams).m(function(Command, cs, config, o) {
       return [
         (0, import_middleware_serde2.getSerdePlugin)(config, this.serialize, this.deserialize),
         (0, import_middleware_endpoint.getEndpointPlugin)(config, Command.getEndpointParameterInstructions())
       ];
     }).s("AWSCognitoIdentityService", "UpdateIdentityPool", {}).n("CognitoIdentityClient", "UpdateIdentityPoolCommand").f(void 0, void 0).ser(se_UpdateIdentityPoolCommand).de(de_UpdateIdentityPoolCommand).build() {
-      static {
-        __name(this, "UpdateIdentityPoolCommand");
-      }
     };
+    __name(_UpdateIdentityPoolCommand, "UpdateIdentityPoolCommand");
+    var UpdateIdentityPoolCommand = _UpdateIdentityPoolCommand;
     var commands = {
       CreateIdentityPoolCommand,
       DeleteIdentitiesCommand,
@@ -58548,11 +58044,10 @@ var require_dist_cjs72 = __commonJS({
       UntagResourceCommand,
       UpdateIdentityPoolCommand
     };
-    var CognitoIdentity = class extends CognitoIdentityClient {
-      static {
-        __name(this, "CognitoIdentity");
-      }
+    var _CognitoIdentity = class _CognitoIdentity extends CognitoIdentityClient {
     };
+    __name(_CognitoIdentity, "CognitoIdentity");
+    var CognitoIdentity = _CognitoIdentity;
     (0, import_smithy_client4.createAggregatedClient)(commands, CognitoIdentity);
     var paginateListIdentityPools = (0, import_core4.createPaginator)(CognitoIdentityClient, ListIdentityPoolsCommand, "NextToken", "NextToken", "MaxResults");
   }
@@ -58623,10 +58118,10 @@ var require_dist_cjs73 = __commonJS({
     }
     __name(resolveLogins, "resolveLogins");
     function fromCognitoIdentity(parameters) {
-      return async (awsIdentityProperties) => {
-        parameters.logger?.debug("@aws-sdk/credential-provider-cognito-identity - fromCognitoIdentity");
+      return async () => {
+        var _a, _b, _c;
+        (_a = parameters.logger) == null ? void 0 : _a.debug("@aws-sdk/credential-provider-cognito-identity - fromCognitoIdentity");
         const { GetCredentialsForIdentityCommand: GetCredentialsForIdentityCommand2, CognitoIdentityClient: CognitoIdentityClient2 } = await Promise.resolve().then(() => (init_loadCognitoIdentity(), loadCognitoIdentity_exports));
-        const fromConfigs = /* @__PURE__ */ __name((property) => parameters.clientConfig?.[property] ?? parameters.parentClientConfig?.[property] ?? awsIdentityProperties?.callerClientConfig?.[property], "fromConfigs");
         const {
           Credentials: {
             AccessKeyId = throwOnMissingAccessKeyId(parameters.logger),
@@ -58636,8 +58131,7 @@ var require_dist_cjs73 = __commonJS({
           } = throwOnMissingCredentials(parameters.logger)
         } = await (parameters.client ?? new CognitoIdentityClient2(
           Object.assign({}, parameters.clientConfig ?? {}, {
-            region: fromConfigs("region"),
-            profile: fromConfigs("profile")
+            region: ((_b = parameters.clientConfig) == null ? void 0 : _b.region) ?? ((_c = parameters.parentClientConfig) == null ? void 0 : _c.region)
           })
         )).send(
           new GetCredentialsForIdentityCommand2({
@@ -58669,12 +58163,9 @@ var require_dist_cjs73 = __commonJS({
     }
     __name(throwOnMissingSecretKey, "throwOnMissingSecretKey");
     var STORE_NAME = "IdentityIds";
-    var IndexedDbStorage = class {
+    var _IndexedDbStorage = class _IndexedDbStorage {
       constructor(dbName = "aws:cognito-identity-ids") {
         this.dbName = dbName;
-      }
-      static {
-        __name(this, "IndexedDbStorage");
       }
       getItem(key) {
         return this.withObjectStore("readonly", (store) => {
@@ -58738,12 +58229,11 @@ var require_dist_cjs73 = __commonJS({
         });
       }
     };
-    var InMemoryStorage = class {
+    __name(_IndexedDbStorage, "IndexedDbStorage");
+    var IndexedDbStorage = _IndexedDbStorage;
+    var _InMemoryStorage = class _InMemoryStorage {
       constructor(store = {}) {
         this.store = store;
-      }
-      static {
-        __name(this, "InMemoryStorage");
       }
       getItem(key) {
         if (key in this.store) {
@@ -58758,6 +58248,8 @@ var require_dist_cjs73 = __commonJS({
         this.store[key] = value;
       }
     };
+    __name(_InMemoryStorage, "InMemoryStorage");
+    var InMemoryStorage = _InMemoryStorage;
     var inMemoryStorage = new InMemoryStorage();
     function localStorage() {
       if (typeof self === "object" && self.indexedDB) {
@@ -58781,16 +58273,12 @@ var require_dist_cjs73 = __commonJS({
       logger,
       parentClientConfig
     }) {
-      logger?.debug("@aws-sdk/credential-provider-cognito-identity - fromCognitoIdentity");
+      logger == null ? void 0 : logger.debug("@aws-sdk/credential-provider-cognito-identity - fromCognitoIdentity");
       const cacheKey = userIdentifier ? `aws:cognito-identity-credentials:${identityPoolId}:${userIdentifier}` : void 0;
-      let provider = /* @__PURE__ */ __name(async (awsIdentityProperties) => {
+      let provider = /* @__PURE__ */ __name(async () => {
         const { GetIdCommand: GetIdCommand2, CognitoIdentityClient: CognitoIdentityClient2 } = await Promise.resolve().then(() => (init_loadCognitoIdentity(), loadCognitoIdentity_exports));
-        const fromConfigs = /* @__PURE__ */ __name((property) => clientConfig?.[property] ?? parentClientConfig?.[property] ?? awsIdentityProperties?.callerClientConfig?.[property], "fromConfigs");
         const _client = client ?? new CognitoIdentityClient2(
-          Object.assign({}, clientConfig ?? {}, {
-            region: fromConfigs("region"),
-            profile: fromConfigs("profile")
-          })
+          Object.assign({}, clientConfig ?? {}, { region: (clientConfig == null ? void 0 : clientConfig.region) ?? (parentClientConfig == null ? void 0 : parentClientConfig.region) })
         );
         let identityId = cacheKey && await cache.getItem(cacheKey);
         if (!identityId) {
@@ -58813,9 +58301,9 @@ var require_dist_cjs73 = __commonJS({
           logins,
           identityId
         });
-        return provider(awsIdentityProperties);
+        return provider();
       }, "provider");
-      return (awsIdentityProperties) => provider(awsIdentityProperties).catch(async (err) => {
+      return () => provider().catch(async (err) => {
         if (cacheKey) {
           Promise.resolve(cache.removeItem(cacheKey)).catch(() => {
           });
@@ -62122,19 +61610,7 @@ var main = async (options) => {
       credentials: (0, import_credential_providers.fromWebToken)({
         roleArn,
         webIdentityToken: idToken
-      }),
-      /*
-            Increase the timeout. Since updating `@aws-sdk/client-s3` to v3.717.0 we've seen an increase of timeouts:
-            > RequestTimeout: Your socket connection to the server was not read from or written to within the timeout period. Idle connections will be closed.
-      
-            See https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/node-configuring-maxsockets.html
-             */
-      requestHandler: {
-        requestTimeout: 10 * 1e3
-        // 10 seconds
-      },
-      // Enable AWS SDK logging if the action is run in debug mode
-      ...core4.isDebug() && { logger: { ...console } }
+      })
     })
   );
   const keyPrefix = riffraffPrefix(mfest);
@@ -62193,14 +61669,6 @@ undici/lib/fetch/body.js:
 
 undici/lib/websocket/frame.js:
   (*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> *)
-
-is-plain-object/dist/is-plain-object.js:
-  (*!
-   * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
-   *
-   * Copyright (c) 2014-2017, Jon Schlinkert.
-   * Released under the MIT License.
-   *)
 
 js-yaml/dist/js-yaml.mjs:
   (*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT *)
