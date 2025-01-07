@@ -7,10 +7,16 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
-    groups:
-      aws-sdk:
-        patterns:
-          - '@aws-sdk/*'
+
+    # We've seen issues with versions of `@aws-sdk/client-s3` later than 3.703.0 where put object requests fail with:
+    #  > RequestTimeout: Your socket connection to the server was not read from or written to within the timeout period. Idle connections will be closed.
+    # Attempts to increase the timeout to 10 seconds was not successful for all cases.
+    # Prevent Dependabot from issuing updates to any of the AWS SDK libraries being used (listed individually, as Dependabot cannot ignore wildcards).
+    # Once we've identified and patched the root cause, we can revert this.
+    ignore:
+      - dependency-name: "@aws-sdk/client-s3"
+      - dependency-name: "@aws-sdk/credential-providers"
+
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
