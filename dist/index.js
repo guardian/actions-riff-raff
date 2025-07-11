@@ -61554,7 +61554,7 @@ async function getPullRequestNumber(octokit) {
 }
 
 // src/riffraff.ts
-var manifest = (projectName, buildNumber, branch, vcsURL2, revision, buildTool) => {
+var getManifest = (projectName, buildNumber, branch, vcsURL2, revision, buildTool) => {
   return {
     branch,
     vcsURL: vcsURL2,
@@ -61633,7 +61633,7 @@ var main = async (options) => {
     githubToken: githubToken2
   } = config;
   const octokit = (0, import_github3.getOctokit)(githubToken2);
-  const mfest = manifest(
+  const manifest = getManifest(
     projectName,
     buildNumber,
     branchName2,
@@ -61641,7 +61641,7 @@ var main = async (options) => {
     revision,
     "guardian/actions-riff-raff"
   );
-  const manifestJSON = JSON.stringify(mfest);
+  const manifestJSON = JSON.stringify(manifest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
   core5.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
@@ -61663,7 +61663,7 @@ var main = async (options) => {
       })
     })
   );
-  const keyPrefix = riffraffPrefix(mfest);
+  const keyPrefix = riffraffPrefix(manifest);
   core5.info(`S3 prefix: ${keyPrefix}`);
   try {
     await sync(store, stagingDir, "riffraff-artifact", keyPrefix);

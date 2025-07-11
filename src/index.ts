@@ -9,7 +9,7 @@ import { handleS3UploadError } from './error-handling';
 import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
-import { manifest, riffraffPrefix } from './riffraff';
+import { getManifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
 import type { Octokit } from './types';
 
@@ -67,7 +67,7 @@ export const main = async (options: Options): Promise<void> => {
 
 	const octokit: Octokit = getOctokit(githubToken);
 
-	const mfest = manifest(
+	const manifest = getManifest(
 		projectName,
 		buildNumber,
 		branchName,
@@ -75,7 +75,7 @@ export const main = async (options: Options): Promise<void> => {
 		revision,
 		'guardian/actions-riff-raff',
 	);
-	const manifestJSON = JSON.stringify(mfest);
+	const manifestJSON = JSON.stringify(manifest);
 
 	// Ensure unique name as multiple steps may run using this action within the
 	// same workflow (this has happened!).
@@ -105,7 +105,7 @@ export const main = async (options: Options): Promise<void> => {
 			}),
 		}),
 	);
-	const keyPrefix = riffraffPrefix(mfest);
+	const keyPrefix = riffraffPrefix(manifest);
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 

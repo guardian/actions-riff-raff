@@ -8,7 +8,7 @@ export type Manifest = {
 	buildTool: string;
 };
 
-export const manifest = (
+export const getManifest = (
 	projectName: string,
 	buildNumber: string,
 	branch: string,
