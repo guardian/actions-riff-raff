@@ -426,18 +426,18 @@ var require_tunnel = __commonJS({
             res.statusCode
           );
           socket.destroy();
-          var error2 = new Error("tunneling socket could not be established, statusCode=" + res.statusCode);
-          error2.code = "ECONNRESET";
-          options.request.emit("error", error2);
+          var error3 = new Error("tunneling socket could not be established, statusCode=" + res.statusCode);
+          error3.code = "ECONNRESET";
+          options.request.emit("error", error3);
           self2.removeSocket(placeholder);
           return;
         }
         if (head.length > 0) {
           debug3("got illegal response body from proxy");
           socket.destroy();
-          var error2 = new Error("got illegal response body from proxy");
-          error2.code = "ECONNRESET";
-          options.request.emit("error", error2);
+          var error3 = new Error("got illegal response body from proxy");
+          error3.code = "ECONNRESET";
+          options.request.emit("error", error3);
           self2.removeSocket(placeholder);
           return;
         }
@@ -452,9 +452,9 @@ var require_tunnel = __commonJS({
           cause.message,
           cause.stack
         );
-        var error2 = new Error("tunneling socket could not be established, cause=" + cause.message);
-        error2.code = "ECONNRESET";
-        options.request.emit("error", error2);
+        var error3 = new Error("tunneling socket could not be established, cause=" + cause.message);
+        error3.code = "ECONNRESET";
+        options.request.emit("error", error3);
         self2.removeSocket(placeholder);
       }
     };
@@ -4269,18 +4269,18 @@ var require_webidl = __commonJS({
     webidl.errors.exception = function(message) {
       return new TypeError(`${message.header}: ${message.message}`);
     };
-    webidl.errors.conversionFailed = function(context3) {
-      const plural = context3.types.length === 1 ? "" : " one of";
-      const message = `${context3.argument} could not be converted to${plural}: ${context3.types.join(", ")}.`;
+    webidl.errors.conversionFailed = function(context4) {
+      const plural = context4.types.length === 1 ? "" : " one of";
+      const message = `${context4.argument} could not be converted to${plural}: ${context4.types.join(", ")}.`;
       return webidl.errors.exception({
-        header: context3.prefix,
+        header: context4.prefix,
         message
       });
     };
-    webidl.errors.invalidArgument = function(context3) {
+    webidl.errors.invalidArgument = function(context4) {
       return webidl.errors.exception({
-        header: context3.prefix,
-        message: `"${context3.value}" is an invalid ${context3.type}.`
+        header: context4.prefix,
+        message: `"${context4.value}" is an invalid ${context4.type}.`
       });
     };
     webidl.brandCheck = function(V, I, opts = void 0) {
@@ -5582,7 +5582,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
         throw new TypeError("Body is unusable");
       }
       const promise = createDeferredPromise();
-      const errorSteps = (error2) => promise.reject(error2);
+      const errorSteps = (error3) => promise.reject(error3);
       const successSteps = (data) => {
         try {
           promise.resolve(convertBytesToJSValue(data));
@@ -5868,16 +5868,16 @@ var require_request = __commonJS({
           this.onError(err);
         }
       }
-      onError(error2) {
+      onError(error3) {
         this.onFinally();
         if (channels.error.hasSubscribers) {
-          channels.error.publish({ request: this, error: error2 });
+          channels.error.publish({ request: this, error: error3 });
         }
         if (this.aborted) {
           return;
         }
         this.aborted = true;
-        return this[kHandler].onError(error2);
+        return this[kHandler].onError(error3);
       }
       onFinally() {
         if (this.errorHandler) {
@@ -6740,8 +6740,8 @@ var require_RedirectHandler = __commonJS({
       onUpgrade(statusCode, headers, socket) {
         this.handler.onUpgrade(statusCode, headers, socket);
       }
-      onError(error2) {
-        this.handler.onError(error2);
+      onError(error3) {
+        this.handler.onError(error3);
       }
       onHeaders(statusCode, headers, resume, statusText) {
         this.location = this.history.length >= this.maxRedirections || util.isDisturbed(this.opts.body) ? null : parseLocation(statusCode, headers);
@@ -8882,7 +8882,7 @@ var require_pool = __commonJS({
         this[kOptions] = { ...util.deepClone(options), connect, allowH2 };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kFactory] = factory;
-        this.on("connectionError", (origin2, targets, error2) => {
+        this.on("connectionError", (origin2, targets, error3) => {
           for (const target of targets) {
             const idx = this[kClients].indexOf(target);
             if (idx !== -1) {
@@ -9606,15 +9606,15 @@ var require_api_request = __commonJS({
         }
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context4) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context4;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { callback, opaque, abort, context: context3, responseHeaders, highWaterMark } = this;
+        const { callback, opaque, abort, context: context4, responseHeaders, highWaterMark } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9641,7 +9641,7 @@ var require_api_request = __commonJS({
               trailers: this.trailers,
               opaque,
               body,
-              context: context3
+              context: context4
             });
           }
         }
@@ -9761,15 +9761,15 @@ var require_api_stream = __commonJS({
         }
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context4) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context4;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { factory, opaque, context: context3, callback, responseHeaders } = this;
+        const { factory, opaque, context: context4, callback, responseHeaders } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9797,7 +9797,7 @@ var require_api_stream = __commonJS({
             statusCode,
             headers,
             opaque,
-            context: context3
+            context: context4
           });
           if (!res || typeof res.write !== "function" || typeof res.end !== "function" || typeof res.on !== "function") {
             throw new InvalidReturnValueError("expected Writable");
@@ -9989,17 +9989,17 @@ var require_api_pipeline = __commonJS({
         this.res = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context4) {
         const { ret, res } = this;
         assert(!res, "pipeline cannot be retried");
         if (ret.destroyed) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context4;
       }
       onHeaders(statusCode, rawHeaders, resume) {
-        const { opaque, handler, context: context3 } = this;
+        const { opaque, handler, context: context4 } = this;
         if (statusCode < 200) {
           if (this.onInfo) {
             const headers = this.responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
@@ -10017,7 +10017,7 @@ var require_api_pipeline = __commonJS({
             headers,
             opaque,
             body: this.res,
-            context: context3
+            context: context4
           });
         } catch (err) {
           this.res.on("error", util.nop);
@@ -10101,7 +10101,7 @@ var require_api_upgrade = __commonJS({
         this.context = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context4) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
@@ -10112,7 +10112,7 @@ var require_api_upgrade = __commonJS({
         throw new SocketError("bad upgrade", null);
       }
       onUpgrade(statusCode, rawHeaders, socket) {
-        const { callback, opaque, context: context3 } = this;
+        const { callback, opaque, context: context4 } = this;
         assert.strictEqual(statusCode, 101);
         removeSignal(this);
         this.callback = null;
@@ -10121,7 +10121,7 @@ var require_api_upgrade = __commonJS({
           headers,
           socket,
           opaque,
-          context: context3
+          context: context4
         });
       }
       onError(err) {
@@ -10189,18 +10189,18 @@ var require_api_connect = __commonJS({
         this.abort = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context3) {
+      onConnect(abort, context4) {
         if (!this.callback) {
           throw new RequestAbortedError();
         }
         this.abort = abort;
-        this.context = context3;
+        this.context = context4;
       }
       onHeaders() {
         throw new SocketError("bad connect", null);
       }
       onUpgrade(statusCode, rawHeaders, socket) {
-        const { callback, opaque, context: context3 } = this;
+        const { callback, opaque, context: context4 } = this;
         removeSignal(this);
         this.callback = null;
         let headers = rawHeaders;
@@ -10212,7 +10212,7 @@ var require_api_connect = __commonJS({
           headers,
           socket,
           opaque,
-          context: context3
+          context: context4
         });
       }
       onError(err) {
@@ -10491,13 +10491,13 @@ var require_mock_utils = __commonJS({
       if (mockDispatch2.data.callback) {
         mockDispatch2.data = { ...mockDispatch2.data, ...mockDispatch2.data.callback(opts) };
       }
-      const { data: { statusCode, data, headers, trailers, error: error2 }, delay, persist } = mockDispatch2;
+      const { data: { statusCode, data, headers, trailers, error: error3 }, delay, persist } = mockDispatch2;
       const { timesInvoked, times } = mockDispatch2;
       mockDispatch2.consumed = !persist && timesInvoked >= times;
       mockDispatch2.pending = timesInvoked < times;
-      if (error2 !== null) {
+      if (error3 !== null) {
         deleteMockDispatch(this[kDispatches], key);
-        handler.onError(error2);
+        handler.onError(error3);
         return true;
       }
       if (typeof delay === "number" && delay > 0) {
@@ -10535,19 +10535,19 @@ var require_mock_utils = __commonJS({
         if (agent.isMockActive) {
           try {
             mockDispatch.call(this, opts, handler);
-          } catch (error2) {
-            if (error2 instanceof MockNotMatchedError) {
+          } catch (error3) {
+            if (error3 instanceof MockNotMatchedError) {
               const netConnect = agent[kGetNetConnect]();
               if (netConnect === false) {
-                throw new MockNotMatchedError(`${error2.message}: subsequent request to origin ${origin} was not allowed (net.connect disabled)`);
+                throw new MockNotMatchedError(`${error3.message}: subsequent request to origin ${origin} was not allowed (net.connect disabled)`);
               }
               if (checkNetConnect(netConnect, origin)) {
                 originalDispatch.call(this, opts, handler);
               } else {
-                throw new MockNotMatchedError(`${error2.message}: subsequent request to origin ${origin} was not allowed (net.connect is not enabled for this origin)`);
+                throw new MockNotMatchedError(`${error3.message}: subsequent request to origin ${origin} was not allowed (net.connect is not enabled for this origin)`);
               }
             } else {
-              throw error2;
+              throw error3;
             }
           }
         } else {
@@ -10710,11 +10710,11 @@ var require_mock_interceptor = __commonJS({
       /**
        * Mock an undici request with a defined error.
        */
-      replyWithError(error2) {
-        if (typeof error2 === "undefined") {
+      replyWithError(error3) {
+        if (typeof error3 === "undefined") {
           throw new InvalidArgumentError("error must be defined");
         }
-        const newMockDispatch = addMockDispatch(this[kDispatches], this[kDispatchKey], { error: error2 });
+        const newMockDispatch = addMockDispatch(this[kDispatches], this[kDispatchKey], { error: error3 });
         return new MockScope(newMockDispatch);
       }
       /**
@@ -13041,17 +13041,17 @@ var require_fetch = __commonJS({
         this.emit("terminated", reason);
       }
       // https://fetch.spec.whatwg.org/#fetch-controller-abort
-      abort(error2) {
+      abort(error3) {
         if (this.state !== "ongoing") {
           return;
         }
         this.state = "aborted";
-        if (!error2) {
-          error2 = new DOMException2("The operation was aborted.", "AbortError");
+        if (!error3) {
+          error3 = new DOMException2("The operation was aborted.", "AbortError");
         }
-        this.serializedAbortReason = error2;
-        this.connection?.destroy(error2);
-        this.emit("terminated", error2);
+        this.serializedAbortReason = error3;
+        this.connection?.destroy(error3);
+        this.emit("terminated", error3);
       }
     };
     function fetch2(input, init = {}) {
@@ -13155,13 +13155,13 @@ var require_fetch = __commonJS({
         performance.markResourceTiming(timingInfo, originalURL.href, initiatorType, globalThis2, cacheState);
       }
     }
-    function abortFetch(p, request, responseObject, error2) {
-      if (!error2) {
-        error2 = new DOMException2("The operation was aborted.", "AbortError");
+    function abortFetch(p, request, responseObject, error3) {
+      if (!error3) {
+        error3 = new DOMException2("The operation was aborted.", "AbortError");
       }
-      p.reject(error2);
+      p.reject(error3);
       if (request.body != null && isReadable(request.body?.stream)) {
-        request.body.stream.cancel(error2).catch((err) => {
+        request.body.stream.cancel(error3).catch((err) => {
           if (err.code === "ERR_INVALID_STATE") {
             return;
           }
@@ -13173,7 +13173,7 @@ var require_fetch = __commonJS({
       }
       const response = responseObject[kState];
       if (response.body != null && isReadable(response.body?.stream)) {
-        response.body.stream.cancel(error2).catch((err) => {
+        response.body.stream.cancel(error3).catch((err) => {
           if (err.code === "ERR_INVALID_STATE") {
             return;
           }
@@ -13953,13 +13953,13 @@ var require_fetch = __commonJS({
               fetchParams.controller.ended = true;
               this.body.push(null);
             },
-            onError(error2) {
+            onError(error3) {
               if (this.abort) {
                 fetchParams.controller.off("terminated", this.abort);
               }
-              this.body?.destroy(error2);
-              fetchParams.controller.terminate(error2);
-              reject(error2);
+              this.body?.destroy(error3);
+              fetchParams.controller.terminate(error3);
+              reject(error3);
             },
             onUpgrade(status, headersList, socket) {
               if (status !== 101) {
@@ -14425,8 +14425,8 @@ var require_util4 = __commonJS({
                   }
                   fr[kResult] = result;
                   fireAProgressEvent("load", fr);
-                } catch (error2) {
-                  fr[kError] = error2;
+                } catch (error3) {
+                  fr[kError] = error3;
                   fireAProgressEvent("error", fr);
                 }
                 if (fr[kState] !== "loading") {
@@ -14435,13 +14435,13 @@ var require_util4 = __commonJS({
               });
               break;
             }
-          } catch (error2) {
+          } catch (error3) {
             if (fr[kAborted]) {
               return;
             }
             queueMicrotask(() => {
               fr[kState] = "done";
-              fr[kError] = error2;
+              fr[kError] = error3;
               fireAProgressEvent("error", fr);
               if (fr[kState] !== "loading") {
                 fireAProgressEvent("loadend", fr);
@@ -16441,11 +16441,11 @@ var require_connection = __commonJS({
         });
       }
     }
-    function onSocketError(error2) {
+    function onSocketError(error3) {
       const { ws } = this;
       ws[kReadyState] = states.CLOSING;
       if (channels.socketError.hasSubscribers) {
-        channels.socketError.publish(error2);
+        channels.socketError.publish(error3);
       }
       this.destroy();
     }
@@ -18077,12 +18077,12 @@ var require_oidc_utils = __commonJS({
         var _a;
         return __awaiter2(this, void 0, void 0, function* () {
           const httpclient = _OidcClient.createHttpClient();
-          const res = yield httpclient.getJson(id_token_url).catch((error2) => {
+          const res = yield httpclient.getJson(id_token_url).catch((error3) => {
             throw new Error(`Failed to get ID Token. 
  
-        Error Code : ${error2.statusCode}
+        Error Code : ${error3.statusCode}
  
-        Error Message: ${error2.message}`);
+        Error Message: ${error3.message}`);
           });
           const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
           if (!id_token) {
@@ -18103,8 +18103,8 @@ var require_oidc_utils = __commonJS({
             const id_token = yield _OidcClient.getCall(id_token_url);
             (0, core_1.setSecret)(id_token);
             return id_token;
-          } catch (error2) {
-            throw new Error(`Error message: ${error2.message}`);
+          } catch (error3) {
+            throw new Error(`Error message: ${error3.message}`);
           }
         });
       }
@@ -19226,7 +19226,7 @@ var require_toolrunner = __commonJS({
               this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
               state2.CheckComplete();
             });
-            state2.on("done", (error2, exitCode) => {
+            state2.on("done", (error3, exitCode) => {
               if (stdbuffer.length > 0) {
                 this.emit("stdline", stdbuffer);
               }
@@ -19234,8 +19234,8 @@ var require_toolrunner = __commonJS({
                 this.emit("errline", errbuffer);
               }
               cp2.removeAllListeners();
-              if (error2) {
-                reject(error2);
+              if (error3) {
+                reject(error3);
               } else {
                 resolve(exitCode);
               }
@@ -19330,14 +19330,14 @@ var require_toolrunner = __commonJS({
         this.emit("debug", message);
       }
       _setResult() {
-        let error2;
+        let error3;
         if (this.processExited) {
           if (this.processError) {
-            error2 = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+            error3 = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
           } else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
-            error2 = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+            error3 = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
           } else if (this.processStderr && this.options.failOnStdErr) {
-            error2 = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+            error3 = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
           }
         }
         if (this.timeout) {
@@ -19345,7 +19345,7 @@ var require_toolrunner = __commonJS({
           this.timeout = null;
         }
         this.done = true;
-        this.emit("done", error2, this.processExitCode);
+        this.emit("done", error3, this.processExitCode);
       }
       static HandleTimeout(state2) {
         if (state2.done) {
@@ -19728,7 +19728,7 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     exports2.setCommandEcho = setCommandEcho;
     function setFailed2(message) {
       process.exitCode = ExitCode.Failure;
-      error2(message);
+      error3(message);
     }
     exports2.setFailed = setFailed2;
     function isDebug() {
@@ -19739,10 +19739,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       (0, command_1.issueCommand)("debug", {}, message);
     }
     exports2.debug = debug3;
-    function error2(message, properties = {}) {
+    function error3(message, properties = {}) {
       (0, command_1.issueCommand)("error", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
-    exports2.error = error2;
+    exports2.error = error3;
     function warning(message, properties = {}) {
       (0, command_1.issueCommand)("warning", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
@@ -20044,8 +20044,8 @@ var require_add = __commonJS({
       }
       if (kind === "error") {
         hook = function(method, options) {
-          return Promise.resolve().then(method.bind(null, options)).catch(function(error2) {
-            return orig(error2, options);
+          return Promise.resolve().then(method.bind(null, options)).catch(function(error3) {
+            return orig(error3, options);
           });
         };
       }
@@ -20295,8 +20295,8 @@ var require_dist_node2 = __commonJS({
     function isKeyOperator(operator) {
       return operator === ";" || operator === "&" || operator === "?";
     }
-    function getValues(context3, operator, key, modifier) {
-      var value = context3[key], result = [];
+    function getValues(context4, operator, key, modifier) {
+      var value = context4[key], result = [];
       if (isDefined(value) && value !== "") {
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
           value = value.toString();
@@ -20360,7 +20360,7 @@ var require_dist_node2 = __commonJS({
         expand: expand.bind(null, template)
       };
     }
-    function expand(template, context3) {
+    function expand(template, context4) {
       var operators = ["+", "#", ".", "/", ";", "?", "&"];
       template = template.replace(
         /\{([^\{\}]+)\}|([^\{\}]+)/g,
@@ -20374,7 +20374,7 @@ var require_dist_node2 = __commonJS({
             }
             expression.split(/,/g).forEach(function(variable) {
               var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
-              values.push(getValues(context3, operator, tmp[1], tmp[2] || tmp[3]));
+              values.push(getValues(context4, operator, tmp[1], tmp[2] || tmp[3]));
             });
             if (operator && operator !== "+") {
               var separator = ",";
@@ -20777,7 +20777,7 @@ var require_dist_node5 = __commonJS({
         }
         if (status >= 400) {
           const data = await getResponseData(response);
-          const error2 = new import_request_error.RequestError(toErrorMessage(data), status, {
+          const error3 = new import_request_error.RequestError(toErrorMessage(data), status, {
             response: {
               url,
               status,
@@ -20786,7 +20786,7 @@ var require_dist_node5 = __commonJS({
             },
             request: requestOptions
           });
-          throw error2;
+          throw error3;
         }
         return parseSuccessResponseBody ? await getResponseData(response) : response.body;
       }).then((data) => {
@@ -20796,17 +20796,17 @@ var require_dist_node5 = __commonJS({
           headers,
           data
         };
-      }).catch((error2) => {
-        if (error2 instanceof import_request_error.RequestError)
-          throw error2;
-        else if (error2.name === "AbortError")
-          throw error2;
-        let message = error2.message;
-        if (error2.name === "TypeError" && "cause" in error2) {
-          if (error2.cause instanceof Error) {
-            message = error2.cause.message;
-          } else if (typeof error2.cause === "string") {
-            message = error2.cause;
+      }).catch((error3) => {
+        if (error3 instanceof import_request_error.RequestError)
+          throw error3;
+        else if (error3.name === "AbortError")
+          throw error3;
+        let message = error3.message;
+        if (error3.name === "TypeError" && "cause" in error3) {
+          if (error3.cause instanceof Error) {
+            message = error3.cause.message;
+          } else if (typeof error3.cause === "string") {
+            message = error3.cause;
           }
         }
         throw new import_request_error.RequestError(message, 500, {
@@ -23472,9 +23472,9 @@ var require_dist_node10 = __commonJS({
                 /<([^<>]+)>;\s*rel="next"/
               ) || [])[1];
               return { value: normalizedResponse };
-            } catch (error2) {
-              if (error2.status !== 409)
-                throw error2;
+            } catch (error3) {
+              if (error3.status !== 409)
+                throw error3;
               url = "";
               return {
                 value: {
@@ -24336,15 +24336,15 @@ var init_setCredentialFeature = __esm({
 });
 
 // node_modules/@aws-sdk/core/dist-es/submodules/client/setFeature.js
-function setFeature(context3, feature, value) {
-  if (!context3.__aws_sdk_context) {
-    context3.__aws_sdk_context = {
+function setFeature(context4, feature, value) {
+  if (!context4.__aws_sdk_context) {
+    context4.__aws_sdk_context = {
       features: {}
     };
-  } else if (!context3.__aws_sdk_context.features) {
-    context3.__aws_sdk_context.features = {};
+  } else if (!context4.__aws_sdk_context.features) {
+    context4.__aws_sdk_context.features = {};
   }
-  context3.__aws_sdk_context.features[feature] = value;
+  context4.__aws_sdk_context.features[feature] = value;
 }
 var init_setFeature = __esm({
   "node_modules/@aws-sdk/core/dist-es/submodules/client/setFeature.js"() {
@@ -24430,9 +24430,9 @@ var init_AwsSdkSigV4Signer = __esm({
       return property;
     };
     validateSigningProperties = async (signingProperties) => {
-      const context3 = throwSigningPropertyError("context", signingProperties.context);
+      const context4 = throwSigningPropertyError("context", signingProperties.context);
       const config = throwSigningPropertyError("config", signingProperties.config);
-      const authScheme = context3.endpointV2?.properties?.authSchemes?.[0];
+      const authScheme = context4.endpointV2?.properties?.authSchemes?.[0];
       const signerFunction = throwSigningPropertyError("signer", config.signer);
       const signer = await signerFunction(authScheme);
       const signingRegion = signingProperties?.signingRegion;
@@ -24470,18 +24470,18 @@ var init_AwsSdkSigV4Signer = __esm({
         return signedRequest;
       }
       errorHandler(signingProperties) {
-        return (error2) => {
-          const serverTime = error2.ServerTime ?? getDateHeader(error2.$response);
+        return (error3) => {
+          const serverTime = error3.ServerTime ?? getDateHeader(error3.$response);
           if (serverTime) {
             const config = throwSigningPropertyError("config", signingProperties.config);
             const initialSystemClockOffset = config.systemClockOffset;
             config.systemClockOffset = getUpdatedSystemClockOffset(serverTime, config.systemClockOffset);
             const clockSkewCorrected = config.systemClockOffset !== initialSystemClockOffset;
-            if (clockSkewCorrected && error2.$metadata) {
-              error2.$metadata.clockSkewCorrected = true;
+            if (clockSkewCorrected && error3.$metadata) {
+              error3.$metadata.clockSkewCorrected = true;
             }
           }
-          throw error2;
+          throw error3;
         };
       }
       successHandler(httpResponse, signingProperties) {
@@ -24527,7 +24527,7 @@ var import_types, getSmithyContext;
 var init_getSmithyContext = __esm({
   "node_modules/@smithy/core/dist-es/getSmithyContext.js"() {
     import_types = __toESM(require_dist_cjs());
-    getSmithyContext = (context3) => context3[import_types.SMITHY_CONTEXT_KEY] || (context3[import_types.SMITHY_CONTEXT_KEY] = {});
+    getSmithyContext = (context4) => context4[import_types.SMITHY_CONTEXT_KEY] || (context4[import_types.SMITHY_CONTEXT_KEY] = {});
   }
 });
 
@@ -24559,7 +24559,7 @@ var require_dist_cjs4 = __commonJS({
     });
     module2.exports = __toCommonJS2(src_exports);
     var import_types5 = require_dist_cjs();
-    var getSmithyContext4 = /* @__PURE__ */ __name((context3) => context3[import_types5.SMITHY_CONTEXT_KEY] || (context3[import_types5.SMITHY_CONTEXT_KEY] = {}), "getSmithyContext");
+    var getSmithyContext4 = /* @__PURE__ */ __name((context4) => context4[import_types5.SMITHY_CONTEXT_KEY] || (context4[import_types5.SMITHY_CONTEXT_KEY] = {}), "getSmithyContext");
     var normalizeProvider2 = /* @__PURE__ */ __name((input) => {
       if (typeof input === "function")
         return input;
@@ -24582,10 +24582,10 @@ var init_httpAuthSchemeMiddleware = __esm({
   "node_modules/@smithy/core/dist-es/middleware-http-auth-scheme/httpAuthSchemeMiddleware.js"() {
     import_types2 = __toESM(require_dist_cjs());
     import_util_middleware = __toESM(require_dist_cjs4());
-    httpAuthSchemeMiddleware = (config, mwOptions) => (next, context3) => async (args) => {
-      const options = config.httpAuthSchemeProvider(await mwOptions.httpAuthSchemeParametersProvider(config, context3, args.input));
+    httpAuthSchemeMiddleware = (config, mwOptions) => (next, context4) => async (args) => {
+      const options = config.httpAuthSchemeProvider(await mwOptions.httpAuthSchemeParametersProvider(config, context4, args.input));
       const authSchemes = convertHttpAuthSchemesToMap(config.httpAuthSchemes);
-      const smithyContext = (0, import_util_middleware.getSmithyContext)(context3);
+      const smithyContext = (0, import_util_middleware.getSmithyContext)(context4);
       const failureReasons = [];
       for (const option of options) {
         const scheme = authSchemes.get(option.schemeId);
@@ -24598,7 +24598,7 @@ var init_httpAuthSchemeMiddleware = __esm({
           failureReasons.push(`HttpAuthScheme \`${option.schemeId}\` did not have an IdentityProvider configured.`);
           continue;
         }
-        const { identityProperties = {}, signingProperties = {} } = option.propertiesExtractor?.(config, context3) || {};
+        const { identityProperties = {}, signingProperties = {} } = option.propertiesExtractor?.(config, context4) || {};
         option.identityProperties = Object.assign(option.identityProperties || {}, identityProperties);
         option.signingProperties = Object.assign(option.signingProperties || {}, signingProperties);
         smithyContext.selectedHttpAuthScheme = {
@@ -24678,25 +24678,25 @@ var require_dist_cjs5 = __commonJS({
           response,
           output: parsed
         };
-      } catch (error2) {
-        Object.defineProperty(error2, "$response", {
+      } catch (error3) {
+        Object.defineProperty(error3, "$response", {
           value: response
         });
-        if (!("$metadata" in error2)) {
+        if (!("$metadata" in error3)) {
           const hint = `Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.`;
-          error2.message += "\n  " + hint;
-          if (typeof error2.$responseBodyText !== "undefined") {
-            if (error2.$response) {
-              error2.$response.body = error2.$responseBodyText;
+          error3.message += "\n  " + hint;
+          if (typeof error3.$responseBodyText !== "undefined") {
+            if (error3.$response) {
+              error3.$response.body = error3.$responseBodyText;
             }
           }
         }
-        throw error2;
+        throw error3;
       }
     }, "deserializerMiddleware");
-    var serializerMiddleware = /* @__PURE__ */ __name((options, serializer) => (next, context3) => async (args) => {
+    var serializerMiddleware = /* @__PURE__ */ __name((options, serializer) => (next, context4) => async (args) => {
       var _a;
-      const endpoint = ((_a = context3.endpointV2) == null ? void 0 : _a.url) && options.urlParser ? async () => options.urlParser(context3.endpointV2.url) : options.endpoint;
+      const endpoint = ((_a = context4.endpointV2) == null ? void 0 : _a.url) && options.urlParser ? async () => options.urlParser(context4.endpointV2.url) : options.endpoint;
       if (!endpoint) {
         throw new Error("No valid endpoint provider available.");
       }
@@ -24771,16 +24771,16 @@ var init_httpSigningMiddleware = __esm({
     import_protocol_http4 = __toESM(require_dist_cjs2());
     import_types3 = __toESM(require_dist_cjs());
     import_util_middleware2 = __toESM(require_dist_cjs4());
-    defaultErrorHandler = (signingProperties) => (error2) => {
-      throw error2;
+    defaultErrorHandler = (signingProperties) => (error3) => {
+      throw error3;
     };
     defaultSuccessHandler = (httpResponse, signingProperties) => {
     };
-    httpSigningMiddleware = (config) => (next, context3) => async (args) => {
+    httpSigningMiddleware = (config) => (next, context4) => async (args) => {
       if (!import_protocol_http4.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
-      const smithyContext = (0, import_util_middleware2.getSmithyContext)(context3);
+      const smithyContext = (0, import_util_middleware2.getSmithyContext)(context4);
       const scheme = smithyContext.selectedHttpAuthScheme;
       if (!scheme) {
         throw new Error(`No HttpAuthScheme was selected: unable to sign request`);
@@ -26657,8 +26657,8 @@ var require_createChecksumStream_browser = __commonJS({
           const digest = await checksum.digest();
           const received = encoder(digest);
           if (expectedChecksum !== received) {
-            const error2 = new Error(`Checksum mismatch: expected "${expectedChecksum}" but received "${received}" in response header "${checksumSourceLocation}".`);
-            controller.error(error2);
+            const error3 = new Error(`Checksum mismatch: expected "${expectedChecksum}" but received "${received}" in response header "${checksumSourceLocation}".`);
+            controller.error(error3);
           } else {
             controller.terminate();
           }
@@ -26781,14 +26781,14 @@ var import_util_stream, collectBody2;
 var init_collect_stream_body = __esm({
   "node_modules/@smithy/core/dist-es/submodules/protocols/collect-stream-body.js"() {
     import_util_stream = __toESM(require_dist_cjs15());
-    collectBody2 = async (streamBody = new Uint8Array(), context3) => {
+    collectBody2 = async (streamBody = new Uint8Array(), context4) => {
       if (streamBody instanceof Uint8Array) {
         return import_util_stream.Uint8ArrayBlobAdapter.mutate(streamBody);
       }
       if (!streamBody) {
         return import_util_stream.Uint8ArrayBlobAdapter.mutate(new Uint8Array());
       }
-      const fromContext = context3.streamCollector(streamBody);
+      const fromContext = context4.streamCollector(streamBody);
       return import_util_stream.Uint8ArrayBlobAdapter.mutate(await fromContext);
     };
   }
@@ -26826,8 +26826,8 @@ var init_resolve_path = __esm({
 });
 
 // node_modules/@smithy/core/dist-es/submodules/protocols/requestBuilder.js
-function requestBuilder(input, context3) {
-  return new RequestBuilder(input, context3);
+function requestBuilder(input, context4) {
+  return new RequestBuilder(input, context4);
 }
 var import_protocol_http5, RequestBuilder;
 var init_requestBuilder = __esm({
@@ -26835,9 +26835,9 @@ var init_requestBuilder = __esm({
     import_protocol_http5 = __toESM(require_dist_cjs2());
     init_resolve_path();
     RequestBuilder = class {
-      constructor(input, context3) {
+      constructor(input, context4) {
         this.input = input;
-        this.context = context3;
+        this.context = context4;
         this.query = {};
         this.method = "";
         this.headers = {};
@@ -26925,15 +26925,15 @@ var init_requestBuilder2 = __esm({
 });
 
 // node_modules/@smithy/core/dist-es/setFeature.js
-function setFeature2(context3, feature, value) {
-  if (!context3.__smithy_context) {
-    context3.__smithy_context = {
+function setFeature2(context4, feature, value) {
+  if (!context4.__smithy_context) {
+    context4.__smithy_context = {
       features: {}
     };
-  } else if (!context3.__smithy_context.features) {
-    context3.__smithy_context.features = {};
+  } else if (!context4.__smithy_context.features) {
+    context4.__smithy_context.features = {};
   }
-  context3.__smithy_context.features[feature] = value;
+  context4.__smithy_context.features[feature] = value;
 }
 var init_setFeature2 = __esm({
   "node_modules/@smithy/core/dist-es/setFeature.js"() {
@@ -27192,8 +27192,8 @@ var require_dist_cjs16 = __commonJS({
       /**
        * @deprecated use new operator.
        */
-      static from(error2, options = true) {
-        return Object.assign(new this(error2.message, options), error2);
+      static from(error3, options = true) {
+        return Object.assign(new this(error3.message, options), error3);
       }
     };
     __name(_ProviderError, "ProviderError");
@@ -28331,9 +28331,9 @@ var require_dist_cjs18 = __commonJS({
             identifyOnResolve = toggle;
           return identifyOnResolve;
         },
-        resolve: (handler, context3) => {
+        resolve: (handler, context4) => {
           for (const middleware of getMiddlewareList().map((entry) => entry.middleware).reverse()) {
-            handler = middleware(handler, context3);
+            handler = middleware(handler, context4);
           }
           if (identifyOnResolve) {
             console.log(stack.identify());
@@ -29557,7 +29557,7 @@ var import_smithy_client2, collectBodyString;
 var init_common = __esm({
   "node_modules/@aws-sdk/core/dist-es/submodules/protocols/common.js"() {
     import_smithy_client2 = __toESM(require_dist_cjs19());
-    collectBodyString = (streamBody, context3) => (0, import_smithy_client2.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body));
+    collectBodyString = (streamBody, context4) => (0, import_smithy_client2.collectBody)(streamBody, context4).then((body) => context4.utf8Encoder(body));
   }
 });
 
@@ -29566,7 +29566,7 @@ var parseJsonBody, parseJsonErrorBody, loadRestJsonErrorCode;
 var init_parseJsonBody = __esm({
   "node_modules/@aws-sdk/core/dist-es/submodules/protocols/json/parseJsonBody.js"() {
     init_common();
-    parseJsonBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    parseJsonBody = (streamBody, context4) => collectBodyString(streamBody, context4).then((encoded) => {
       if (encoded.length) {
         try {
           return JSON.parse(encoded);
@@ -29581,8 +29581,8 @@ var init_parseJsonBody = __esm({
       }
       return {};
     });
-    parseJsonErrorBody = async (errorBody, context3) => {
-      const value = await parseJsonBody(errorBody, context3);
+    parseJsonErrorBody = async (errorBody, context4) => {
+      const value = await parseJsonBody(errorBody, context4);
       value.message = value.message ?? value.Message;
       return value;
     };
@@ -31269,7 +31269,7 @@ var init_parseXmlBody = __esm({
     import_smithy_client3 = __toESM(require_dist_cjs19());
     import_fast_xml_parser = __toESM(require_fxp());
     init_common();
-    parseXmlBody = (streamBody, context3) => collectBodyString(streamBody, context3).then((encoded) => {
+    parseXmlBody = (streamBody, context4) => collectBodyString(streamBody, context4).then((encoded) => {
       if (encoded.length) {
         const parser = new import_fast_xml_parser.XMLParser({
           attributeNamePrefix: "",
@@ -31304,8 +31304,8 @@ var init_parseXmlBody = __esm({
       }
       return {};
     });
-    parseXmlErrorBody = async (errorBody, context3) => {
-      const value = await parseXmlBody(errorBody, context3);
+    parseXmlErrorBody = async (errorBody, context4) => {
+      const value = await parseXmlBody(errorBody, context4);
       if (value.Error) {
         value.Error.message = value.Error.message ?? value.Error.Message;
       }
@@ -31447,14 +31447,14 @@ function __esDecorate(ctor, descriptorIn, decorators, contextIn, initializers, e
   var descriptor = descriptorIn || (target ? Object.getOwnPropertyDescriptor(target, contextIn.name) : {});
   var _, done = false;
   for (var i = decorators.length - 1; i >= 0; i--) {
-    var context3 = {};
-    for (var p in contextIn) context3[p] = p === "access" ? {} : contextIn[p];
-    for (var p in contextIn.access) context3.access[p] = contextIn.access[p];
-    context3.addInitializer = function(f) {
+    var context4 = {};
+    for (var p in contextIn) context4[p] = p === "access" ? {} : contextIn[p];
+    for (var p in contextIn.access) context4.access[p] = contextIn.access[p];
+    context4.addInitializer = function(f) {
       if (done) throw new TypeError("Cannot add initializers after decoration has completed");
       extraInitializers.push(accept(f || null));
     };
-    var result = (0, decorators[i])(kind === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context3);
+    var result = (0, decorators[i])(kind === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context4);
     if (kind === "accessor") {
       if (result === void 0) continue;
       if (result === null || typeof result !== "object") throw new TypeError("Object expected");
@@ -31602,8 +31602,8 @@ function __read(o, n) {
   var i = m.call(o), r, ar = [], e;
   try {
     while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-  } catch (error2) {
-    e = { error: error2 };
+  } catch (error3) {
+    e = { error: error3 };
   } finally {
     try {
       if (r && !r.done && (m = i["return"])) m.call(i);
@@ -31853,9 +31853,9 @@ var init_tslib_es6 = __esm({
       };
       return ownKeys(o);
     };
-    _SuppressedError = typeof SuppressedError === "function" ? SuppressedError : function(error2, suppressed, message) {
+    _SuppressedError = typeof SuppressedError === "function" ? SuppressedError : function(error3, suppressed, message) {
       var e = new Error(message);
-      return e.name = "SuppressedError", e.error = error2, e.suppressed = suppressed, e;
+      return e.name = "SuppressedError", e.error = error3, e.suppressed = suppressed, e;
     };
     tslib_es6_default = {
       __extends,
@@ -33088,7 +33088,7 @@ var require_dist_cjs23 = __commonJS({
       tags: ["BODY_CHECKSUM"],
       override: true
     };
-    var flexibleChecksumsMiddleware = /* @__PURE__ */ __name((config, middlewareConfig) => (next, context3) => async (args) => {
+    var flexibleChecksumsMiddleware = /* @__PURE__ */ __name((config, middlewareConfig) => (next, context4) => async (args) => {
       if (!import_protocol_http8.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
@@ -33102,23 +33102,23 @@ var require_dist_cjs23 = __commonJS({
           requestChecksumRequired,
           requestAlgorithmMember
         },
-        !!context3.isS3ExpressBucket
+        !!context4.isS3ExpressBucket
       );
       let updatedBody = requestBody;
       let updatedHeaders = headers;
       if (checksumAlgorithm) {
         switch (checksumAlgorithm) {
           case "CRC32":
-            (0, import_core4.setFeature)(context3, "FLEXIBLE_CHECKSUMS_REQ_CRC32", "U");
+            (0, import_core4.setFeature)(context4, "FLEXIBLE_CHECKSUMS_REQ_CRC32", "U");
             break;
           case "CRC32C":
-            (0, import_core4.setFeature)(context3, "FLEXIBLE_CHECKSUMS_REQ_CRC32C", "V");
+            (0, import_core4.setFeature)(context4, "FLEXIBLE_CHECKSUMS_REQ_CRC32C", "V");
             break;
           case "SHA1":
-            (0, import_core4.setFeature)(context3, "FLEXIBLE_CHECKSUMS_REQ_SHA1", "X");
+            (0, import_core4.setFeature)(context4, "FLEXIBLE_CHECKSUMS_REQ_SHA1", "X");
             break;
           case "SHA256":
-            (0, import_core4.setFeature)(context3, "FLEXIBLE_CHECKSUMS_REQ_SHA256", "Y");
+            (0, import_core4.setFeature)(context4, "FLEXIBLE_CHECKSUMS_REQ_SHA256", "Y");
             break;
         }
         const checksumLocationName = getChecksumLocationName(checksumAlgorithm);
@@ -33221,7 +33221,7 @@ var require_dist_cjs23 = __commonJS({
       tags: ["BODY_CHECKSUM"],
       override: true
     };
-    var flexibleChecksumsResponseMiddleware = /* @__PURE__ */ __name((config, middlewareConfig) => (next, context3) => async (args) => {
+    var flexibleChecksumsResponseMiddleware = /* @__PURE__ */ __name((config, middlewareConfig) => (next, context4) => async (args) => {
       if (!import_protocol_http8.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
@@ -33231,7 +33231,7 @@ var require_dist_cjs23 = __commonJS({
       let collectedStream = void 0;
       const { requestValidationModeMember, responseAlgorithms } = middlewareConfig;
       if (requestValidationModeMember && input[requestValidationModeMember] === "ENABLED") {
-        const { clientName, commandName } = context3;
+        const { clientName, commandName } = context4;
         const isS3WholeObjectMultipartGetResponseChecksum = clientName === "S3Client" && commandName === "GetObjectCommand" && getChecksumAlgorithmListForResponse(responseAlgorithms).every((algorithm) => {
           const responseHeader = getChecksumLocationName(algorithm);
           const checksumFromResponse = response.headers[responseHeader];
@@ -33372,14 +33372,14 @@ var require_dist_cjs25 = __commonJS({
       loggerMiddlewareOptions: () => loggerMiddlewareOptions
     });
     module2.exports = __toCommonJS2(src_exports);
-    var loggerMiddleware = /* @__PURE__ */ __name(() => (next, context3) => async (args) => {
+    var loggerMiddleware = /* @__PURE__ */ __name(() => (next, context4) => async (args) => {
       var _a, _b;
       try {
         const response = await next(args);
-        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
+        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context4;
         const { overrideInputFilterSensitiveLog, overrideOutputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
-        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context3.inputFilterSensitiveLog;
-        const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog ?? context3.outputFilterSensitiveLog;
+        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context4.inputFilterSensitiveLog;
+        const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog ?? context4.outputFilterSensitiveLog;
         const { $metadata, ...outputWithoutMetadata } = response.output;
         (_a = logger == null ? void 0 : logger.info) == null ? void 0 : _a.call(logger, {
           clientName,
@@ -33389,18 +33389,18 @@ var require_dist_cjs25 = __commonJS({
           metadata: $metadata
         });
         return response;
-      } catch (error2) {
-        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context3;
+      } catch (error3) {
+        const { clientName, commandName, logger, dynamoDbDocumentClientOptions = {} } = context4;
         const { overrideInputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
-        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context3.inputFilterSensitiveLog;
+        const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context4.inputFilterSensitiveLog;
         (_b = logger == null ? void 0 : logger.error) == null ? void 0 : _b.call(logger, {
           clientName,
           commandName,
           input: inputFilterSensitiveLog(args.input),
-          error: error2,
-          metadata: error2.$metadata
+          error: error3,
+          metadata: error3.$metadata
         });
-        throw error2;
+        throw error3;
       }
     }, "loggerMiddleware");
     var loggerMiddlewareOptions = {
@@ -33655,14 +33655,14 @@ var require_dist_cjs29 = __commonJS({
     var import_smithy_client4 = require_dist_cjs19();
     var CONTENT_LENGTH_HEADER = "content-length";
     function checkContentLengthHeader() {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a;
         const { request } = args;
         if (import_protocol_http8.HttpRequest.isInstance(request)) {
           if (!(CONTENT_LENGTH_HEADER in request.headers)) {
             const message = `Are you using a Stream of unknown length as the Body of a PutObject request? Consider using Upload instead from @aws-sdk/lib-storage.`;
-            if (typeof ((_a = context3 == null ? void 0 : context3.logger) == null ? void 0 : _a.warn) === "function" && !(context3.logger instanceof import_smithy_client4.NoOpLogger)) {
-              context3.logger.warn(message);
+            if (typeof ((_a = context4 == null ? void 0 : context4.logger) == null ? void 0 : _a.warn) === "function" && !(context4.logger instanceof import_smithy_client4.NoOpLogger)) {
+              context4.logger.warn(message);
             } else {
               console.warn(message);
             }
@@ -33684,16 +33684,16 @@ var require_dist_cjs29 = __commonJS({
       }
     }), "getCheckContentLengthHeaderPlugin");
     var regionRedirectEndpointMiddleware = /* @__PURE__ */ __name((config) => {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         const originalRegion = await config.region();
         const regionProviderRef = config.region;
         let unlock = /* @__PURE__ */ __name(() => {
         }, "unlock");
-        if (context3.__s3RegionRedirect) {
+        if (context4.__s3RegionRedirect) {
           Object.defineProperty(config, "region", {
             writable: false,
             value: async () => {
-              return context3.__s3RegionRedirect;
+              return context4.__s3RegionRedirect;
             }
           });
           unlock = /* @__PURE__ */ __name(() => Object.defineProperty(config, "region", {
@@ -33703,7 +33703,7 @@ var require_dist_cjs29 = __commonJS({
         }
         try {
           const result = await next(args);
-          if (context3.__s3RegionRedirect) {
+          if (context4.__s3RegionRedirect) {
             unlock();
             const region = await config.region();
             if (originalRegion !== region) {
@@ -33725,7 +33725,7 @@ var require_dist_cjs29 = __commonJS({
       toMiddleware: "endpointV2Middleware"
     };
     function regionRedirectMiddleware(clientConfig) {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a, _b, _c;
         try {
           return await next(args);
@@ -33735,8 +33735,8 @@ var require_dist_cjs29 = __commonJS({
             ((_b = err == null ? void 0 : err.$metadata) == null ? void 0 : _b.httpStatusCode) === 400 && (err == null ? void 0 : err.name) === "IllegalLocationConstraintException") {
               try {
                 const actualRegion = err.$response.headers["x-amz-bucket-region"];
-                (_c = context3.logger) == null ? void 0 : _c.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
-                context3.__s3RegionRedirect = actualRegion;
+                (_c = context4.logger) == null ? void 0 : _c.debug(`Redirecting from ${await clientConfig.region()} to ${actualRegion}`);
+                context4.__s3RegionRedirect = actualRegion;
               } catch (e) {
                 throw new Error("Region redirect failed: " + e);
               }
@@ -33761,7 +33761,7 @@ var require_dist_cjs29 = __commonJS({
       }
     }), "getRegionRedirectMiddlewarePlugin");
     var s3ExpiresMiddleware = /* @__PURE__ */ __name((config) => {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a;
         const result = await next(args);
         const { response } = result;
@@ -33771,8 +33771,8 @@ var require_dist_cjs29 = __commonJS({
             try {
               (0, import_smithy_client4.parseRfc7231DateTime)(response.headers.expires);
             } catch (e) {
-              (_a = context3.logger) == null ? void 0 : _a.warn(
-                `AWS SDK Warning for ${context3.clientName}::${context3.commandName} response parsing (${response.headers.expires}): ${e}`
+              (_a = context4.logger) == null ? void 0 : _a.warn(
+                `AWS SDK Warning for ${context4.clientName}::${context4.commandName} response parsing (${response.headers.expires}): ${e}`
               );
               delete response.headers.expires;
             }
@@ -33881,8 +33881,8 @@ var require_dist_cjs29 = __commonJS({
       }
       async getIdentity(key) {
         var _a, _b;
-        await this.cache.purgeExpired().catch((error2) => {
-          console.warn("Error while clearing expired entries in S3ExpressIdentityCache: \n" + error2);
+        await this.cache.purgeExpired().catch((error3) => {
+          console.warn("Error while clearing expired entries in S3ExpressIdentityCache: \n" + error3);
         });
         const session = await this.createSessionFn(key);
         if (!((_a = session.Credentials) == null ? void 0 : _a.AccessKeyId) || !((_b = session.Credentials) == null ? void 0 : _b.SecretAccessKey)) {
@@ -33969,15 +33969,15 @@ var require_dist_cjs29 = __commonJS({
     __name(setSingleOverride, "setSingleOverride");
     var import_core4 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var s3ExpressMiddleware = /* @__PURE__ */ __name((options) => {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a, _b, _c, _d, _e;
-        if (context3.endpointV2) {
-          const endpoint = context3.endpointV2;
+        if (context4.endpointV2) {
+          const endpoint = context4.endpointV2;
           const isS3ExpressAuth = ((_c = (_b = (_a = endpoint.properties) == null ? void 0 : _a.authSchemes) == null ? void 0 : _b[0]) == null ? void 0 : _c.name) === S3_EXPRESS_AUTH_SCHEME;
           const isS3ExpressBucket = ((_d = endpoint.properties) == null ? void 0 : _d.backend) === S3_EXPRESS_BACKEND || ((_e = endpoint.properties) == null ? void 0 : _e.bucketType) === S3_EXPRESS_BUCKET_TYPE;
           if (isS3ExpressBucket) {
-            (0, import_core4.setFeature)(context3, "S3_EXPRESS_BUCKET", "J");
-            context3.isS3ExpressBucket = true;
+            (0, import_core4.setFeature)(context4, "S3_EXPRESS_BUCKET", "J");
+            context4.isS3ExpressBucket = true;
           }
           if (isS3ExpressAuth) {
             const requestBucket = args.input.Bucket;
@@ -33988,7 +33988,7 @@ var require_dist_cjs29 = __commonJS({
                   Bucket: requestBucket
                 }
               );
-              context3.s3ExpressIdentity = s3ExpressIdentity;
+              context4.s3ExpressIdentity = s3ExpressIdentity;
               if (import_protocol_http8.HttpRequest.isInstance(args.request) && s3ExpressIdentity.sessionToken) {
                 args.request.headers[SESSION_TOKEN_HEADER] = s3ExpressIdentity.sessionToken;
               }
@@ -34018,17 +34018,17 @@ var require_dist_cjs29 = __commonJS({
       }
       return signedRequest;
     }, "signS3Express");
-    var defaultErrorHandler2 = /* @__PURE__ */ __name((signingProperties) => (error2) => {
-      throw error2;
+    var defaultErrorHandler2 = /* @__PURE__ */ __name((signingProperties) => (error3) => {
+      throw error3;
     }, "defaultErrorHandler");
     var defaultSuccessHandler2 = /* @__PURE__ */ __name((httpResponse, signingProperties) => {
     }, "defaultSuccessHandler");
     var s3ExpressHttpSigningMiddlewareOptions = import_core22.httpSigningMiddlewareOptions;
-    var s3ExpressHttpSigningMiddleware = /* @__PURE__ */ __name((config) => (next, context3) => async (args) => {
+    var s3ExpressHttpSigningMiddleware = /* @__PURE__ */ __name((config) => (next, context4) => async (args) => {
       if (!import_protocol_http8.HttpRequest.isInstance(args.request)) {
         return next(args);
       }
-      const smithyContext = (0, import_util_middleware3.getSmithyContext)(context3);
+      const smithyContext = (0, import_util_middleware3.getSmithyContext)(context4);
       const scheme = smithyContext.selectedHttpAuthScheme;
       if (!scheme) {
         throw new Error(`No HttpAuthScheme was selected: unable to sign request`);
@@ -34039,9 +34039,9 @@ var require_dist_cjs29 = __commonJS({
         signer
       } = scheme;
       let request;
-      if (context3.s3ExpressIdentity) {
+      if (context4.s3ExpressIdentity) {
         request = await signS3Express(
-          context3.s3ExpressIdentity,
+          context4.s3ExpressIdentity,
           signingProperties,
           args.request,
           await config.signer()
@@ -34092,7 +34092,7 @@ var require_dist_cjs29 = __commonJS({
       CompleteMultipartUploadCommand: true
     };
     var MAX_BYTES_TO_INSPECT = 3e3;
-    var throw200ExceptionsMiddleware = /* @__PURE__ */ __name((config) => (next, context3) => async (args) => {
+    var throw200ExceptionsMiddleware = /* @__PURE__ */ __name((config) => (next, context4) => async (args) => {
       const result = await next(args);
       const { response } = result;
       if (!import_protocol_http8.HttpResponse.isInstance(response)) {
@@ -34121,7 +34121,7 @@ var require_dist_cjs29 = __commonJS({
         bodyCopy.destroy();
       }
       const bodyStringTail = config.utf8Encoder(bodyBytes.subarray(bodyBytes.length - 16));
-      if (bodyBytes.length === 0 && THROW_IF_EMPTY_BODY[context3.commandName]) {
+      if (bodyBytes.length === 0 && THROW_IF_EMPTY_BODY[context4.commandName]) {
         const err = new Error("S3 aborted request");
         err.name = "InternalError";
         throw err;
@@ -34131,11 +34131,11 @@ var require_dist_cjs29 = __commonJS({
       }
       return result;
     }, "throw200ExceptionsMiddleware");
-    var collectBody4 = /* @__PURE__ */ __name((streamBody = new Uint8Array(), context3) => {
+    var collectBody4 = /* @__PURE__ */ __name((streamBody = new Uint8Array(), context4) => {
       if (streamBody instanceof Uint8Array) {
         return Promise.resolve(streamBody);
       }
-      return context3.streamCollector(streamBody) || Promise.resolve(new Uint8Array());
+      return context4.streamCollector(streamBody) || Promise.resolve(new Uint8Array());
     }, "collectBody");
     var throw200ExceptionsMiddlewareOptions = {
       relation: "after",
@@ -34151,25 +34151,25 @@ var require_dist_cjs29 = __commonJS({
     }), "getThrow200ExceptionsPlugin");
     var import_util_arn_parser = require_dist_cjs28();
     function bucketEndpointMiddleware(options) {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a, _b, _c, _d;
         if (options.bucketEndpoint) {
-          const endpoint = context3.endpointV2;
+          const endpoint = context4.endpointV2;
           if (endpoint) {
             const bucket = args.input.Bucket;
             if (typeof bucket === "string") {
               try {
                 const bucketEndpointUrl = new URL(bucket);
-                context3.endpointV2 = {
+                context4.endpointV2 = {
                   ...endpoint,
                   url: bucketEndpointUrl
                 };
               } catch (e) {
                 const warning = `@aws-sdk/middleware-sdk-s3: bucketEndpoint=true was set but Bucket=${bucket} could not be parsed as URL.`;
-                if (((_b = (_a = context3.logger) == null ? void 0 : _a.constructor) == null ? void 0 : _b.name) === "NoOpLogger") {
+                if (((_b = (_a = context4.logger) == null ? void 0 : _a.constructor) == null ? void 0 : _b.name) === "NoOpLogger") {
                   console.warn(warning);
                 } else {
-                  (_d = (_c = context3.logger) == null ? void 0 : _c.warn) == null ? void 0 : _d.call(_c, warning);
+                  (_d = (_c = context4.logger) == null ? void 0 : _c.warn) == null ? void 0 : _d.call(_c, warning);
                 }
                 throw e;
               }
@@ -34405,7 +34405,7 @@ var require_dist_cjs30 = __commonJS({
             return url;
           }
           return new URL(value);
-        } catch (error2) {
+        } catch (error3) {
           return null;
         }
       })();
@@ -34592,9 +34592,9 @@ var require_dist_cjs30 = __commonJS({
       if (typeof expression === "string") {
         try {
           return new URL(expression);
-        } catch (error2) {
-          console.error(`Failed to construct URL with ${expression}`, error2);
-          throw error2;
+        } catch (error3) {
+          console.error(`Failed to construct URL with ${expression}`, error3);
+          throw error3;
         }
       }
       throw new EndpointError2(`Endpoint URL must be a string, got ${typeof expression}`);
@@ -34623,13 +34623,13 @@ var require_dist_cjs30 = __commonJS({
       };
     }, "evaluateEndpointRule");
     var evaluateErrorRule = /* @__PURE__ */ __name((errorRule, options) => {
-      const { conditions, error: error2 } = errorRule;
+      const { conditions, error: error3 } = errorRule;
       const { result, referenceRecord } = evaluateConditions(conditions, options);
       if (!result) {
         return;
       }
       throw new EndpointError2(
-        evaluateExpression(error2, "Error", {
+        evaluateExpression(error3, "Error", {
           ...options,
           referenceRecord: { ...options.referenceRecord, ...referenceRecord }
         })
@@ -35124,49 +35124,49 @@ var require_dist_cjs32 = __commonJS({
     var import_protocol_http8 = require_dist_cjs2();
     var import_core22 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var ACCOUNT_ID_ENDPOINT_REGEX = /\d{12}\.ddb/;
-    async function checkFeatures(context3, config, args) {
+    async function checkFeatures(context4, config, args) {
       var _a, _b, _c, _d, _e, _f, _g;
       const request = args.request;
       if (((_a = request == null ? void 0 : request.headers) == null ? void 0 : _a["smithy-protocol"]) === "rpc-v2-cbor") {
-        (0, import_core22.setFeature)(context3, "PROTOCOL_RPC_V2_CBOR", "M");
+        (0, import_core22.setFeature)(context4, "PROTOCOL_RPC_V2_CBOR", "M");
       }
       if (typeof config.retryStrategy === "function") {
         const retryStrategy = await config.retryStrategy();
         if (typeof retryStrategy.acquireInitialRetryToken === "function") {
           if ((_c = (_b = retryStrategy.constructor) == null ? void 0 : _b.name) == null ? void 0 : _c.includes("Adaptive")) {
-            (0, import_core22.setFeature)(context3, "RETRY_MODE_ADAPTIVE", "F");
+            (0, import_core22.setFeature)(context4, "RETRY_MODE_ADAPTIVE", "F");
           } else {
-            (0, import_core22.setFeature)(context3, "RETRY_MODE_STANDARD", "E");
+            (0, import_core22.setFeature)(context4, "RETRY_MODE_STANDARD", "E");
           }
         } else {
-          (0, import_core22.setFeature)(context3, "RETRY_MODE_LEGACY", "D");
+          (0, import_core22.setFeature)(context4, "RETRY_MODE_LEGACY", "D");
         }
       }
       if (typeof config.accountIdEndpointMode === "function") {
-        const endpointV2 = context3.endpointV2;
+        const endpointV2 = context4.endpointV2;
         if (String((_d = endpointV2 == null ? void 0 : endpointV2.url) == null ? void 0 : _d.hostname).match(ACCOUNT_ID_ENDPOINT_REGEX)) {
-          (0, import_core22.setFeature)(context3, "ACCOUNT_ID_ENDPOINT", "O");
+          (0, import_core22.setFeature)(context4, "ACCOUNT_ID_ENDPOINT", "O");
         }
         switch (await ((_e = config.accountIdEndpointMode) == null ? void 0 : _e.call(config))) {
           case "disabled":
-            (0, import_core22.setFeature)(context3, "ACCOUNT_ID_MODE_DISABLED", "Q");
+            (0, import_core22.setFeature)(context4, "ACCOUNT_ID_MODE_DISABLED", "Q");
             break;
           case "preferred":
-            (0, import_core22.setFeature)(context3, "ACCOUNT_ID_MODE_PREFERRED", "P");
+            (0, import_core22.setFeature)(context4, "ACCOUNT_ID_MODE_PREFERRED", "P");
             break;
           case "required":
-            (0, import_core22.setFeature)(context3, "ACCOUNT_ID_MODE_REQUIRED", "R");
+            (0, import_core22.setFeature)(context4, "ACCOUNT_ID_MODE_REQUIRED", "R");
             break;
         }
       }
-      const identity = (_g = (_f = context3.__smithy_context) == null ? void 0 : _f.selectedHttpAuthScheme) == null ? void 0 : _g.identity;
+      const identity = (_g = (_f = context4.__smithy_context) == null ? void 0 : _f.selectedHttpAuthScheme) == null ? void 0 : _g.identity;
       if (identity == null ? void 0 : identity.$source) {
         const credentials = identity;
         if (credentials.accountId) {
-          (0, import_core22.setFeature)(context3, "RESOLVED_ACCOUNT_ID", "T");
+          (0, import_core22.setFeature)(context4, "RESOLVED_ACCOUNT_ID", "T");
         }
         for (const [key, value] of Object.entries(credentials.$source ?? {})) {
-          (0, import_core22.setFeature)(context3, key, value);
+          (0, import_core22.setFeature)(context4, key, value);
         }
       }
     }
@@ -35196,20 +35196,20 @@ var require_dist_cjs32 = __commonJS({
       return buffer;
     }
     __name(encodeFeatures, "encodeFeatures");
-    var userAgentMiddleware = /* @__PURE__ */ __name((options) => (next, context3) => async (args) => {
+    var userAgentMiddleware = /* @__PURE__ */ __name((options) => (next, context4) => async (args) => {
       var _a, _b, _c, _d;
       const { request } = args;
       if (!import_protocol_http8.HttpRequest.isInstance(request)) {
         return next(args);
       }
       const { headers } = request;
-      const userAgent = ((_a = context3 == null ? void 0 : context3.userAgent) == null ? void 0 : _a.map(escapeUserAgent)) || [];
+      const userAgent = ((_a = context4 == null ? void 0 : context4.userAgent) == null ? void 0 : _a.map(escapeUserAgent)) || [];
       const defaultUserAgent = (await options.defaultUserAgentProvider()).map(escapeUserAgent);
-      await checkFeatures(context3, options, args);
-      const awsContext = context3;
+      await checkFeatures(context4, options, args);
+      const awsContext = context4;
       defaultUserAgent.push(
         `m/${encodeFeatures(
-          Object.assign({}, (_b = context3.__smithy_context) == null ? void 0 : _b.features, (_c = awsContext.__aws_sdk_context) == null ? void 0 : _c.features)
+          Object.assign({}, (_b = context4.__smithy_context) == null ? void 0 : _b.features, (_c = awsContext.__aws_sdk_context) == null ? void 0 : _c.features)
         )}`
       );
       const customUserAgent = ((_d = options == null ? void 0 : options.customUserAgent) == null ? void 0 : _d.map(escapeUserAgent)) || [];
@@ -35533,7 +35533,7 @@ var require_dist_cjs35 = __commonJS({
                 ...request.headers,
                 [CONTENT_LENGTH_HEADER]: String(length)
               };
-            } catch (error2) {
+            } catch (error3) {
             }
           }
         }
@@ -35969,25 +35969,25 @@ var require_dist_cjs36 = __commonJS({
     var TRANSIENT_ERROR_CODES = ["TimeoutError", "RequestTimeout", "RequestTimeoutException"];
     var TRANSIENT_ERROR_STATUS_CODES = [500, 502, 503, 504];
     var NODEJS_TIMEOUT_ERROR_CODES = ["ECONNRESET", "ECONNREFUSED", "EPIPE", "ETIMEDOUT"];
-    var isRetryableByTrait = /* @__PURE__ */ __name((error2) => error2.$retryable !== void 0, "isRetryableByTrait");
-    var isClockSkewError = /* @__PURE__ */ __name((error2) => CLOCK_SKEW_ERROR_CODES.includes(error2.name), "isClockSkewError");
-    var isClockSkewCorrectedError = /* @__PURE__ */ __name((error2) => {
+    var isRetryableByTrait = /* @__PURE__ */ __name((error3) => error3.$retryable !== void 0, "isRetryableByTrait");
+    var isClockSkewError = /* @__PURE__ */ __name((error3) => CLOCK_SKEW_ERROR_CODES.includes(error3.name), "isClockSkewError");
+    var isClockSkewCorrectedError = /* @__PURE__ */ __name((error3) => {
       var _a;
-      return (_a = error2.$metadata) == null ? void 0 : _a.clockSkewCorrected;
+      return (_a = error3.$metadata) == null ? void 0 : _a.clockSkewCorrected;
     }, "isClockSkewCorrectedError");
-    var isThrottlingError = /* @__PURE__ */ __name((error2) => {
+    var isThrottlingError = /* @__PURE__ */ __name((error3) => {
       var _a, _b;
-      return ((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) === 429 || THROTTLING_ERROR_CODES.includes(error2.name) || ((_b = error2.$retryable) == null ? void 0 : _b.throttling) == true;
+      return ((_a = error3.$metadata) == null ? void 0 : _a.httpStatusCode) === 429 || THROTTLING_ERROR_CODES.includes(error3.name) || ((_b = error3.$retryable) == null ? void 0 : _b.throttling) == true;
     }, "isThrottlingError");
-    var isTransientError = /* @__PURE__ */ __name((error2, depth = 0) => {
+    var isTransientError = /* @__PURE__ */ __name((error3, depth = 0) => {
       var _a;
-      return isClockSkewCorrectedError(error2) || TRANSIENT_ERROR_CODES.includes(error2.name) || NODEJS_TIMEOUT_ERROR_CODES.includes((error2 == null ? void 0 : error2.code) || "") || TRANSIENT_ERROR_STATUS_CODES.includes(((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) || 0) || error2.cause !== void 0 && depth <= 10 && isTransientError(error2.cause, depth + 1);
+      return isClockSkewCorrectedError(error3) || TRANSIENT_ERROR_CODES.includes(error3.name) || NODEJS_TIMEOUT_ERROR_CODES.includes((error3 == null ? void 0 : error3.code) || "") || TRANSIENT_ERROR_STATUS_CODES.includes(((_a = error3.$metadata) == null ? void 0 : _a.httpStatusCode) || 0) || error3.cause !== void 0 && depth <= 10 && isTransientError(error3.cause, depth + 1);
     }, "isTransientError");
-    var isServerError = /* @__PURE__ */ __name((error2) => {
+    var isServerError = /* @__PURE__ */ __name((error3) => {
       var _a;
-      if (((_a = error2.$metadata) == null ? void 0 : _a.httpStatusCode) !== void 0) {
-        const statusCode = error2.$metadata.httpStatusCode;
-        if (500 <= statusCode && statusCode <= 599 && !isTransientError(error2)) {
+      if (((_a = error3.$metadata) == null ? void 0 : _a.httpStatusCode) !== void 0) {
+        const statusCode = error3.$metadata.httpStatusCode;
+        if (500 <= statusCode && statusCode <= 599 && !isTransientError(error3)) {
           return true;
         }
         return false;
@@ -36232,7 +36232,7 @@ var require_dist_cjs37 = __commonJS({
       async getMaxAttempts() {
         try {
           return await this.maxAttemptsProvider();
-        } catch (error2) {
+        } catch (error3) {
           console.warn(`Max attempts provider could not resolve. Using default of ${DEFAULT_MAX_ATTEMPTS}`);
           return DEFAULT_MAX_ATTEMPTS;
         }
@@ -36376,13 +36376,13 @@ var require_dist_cjs38 = __commonJS({
       const retryCost = (options == null ? void 0 : options.retryCost) ?? import_util_retry.RETRY_COST;
       const timeoutRetryCost = (options == null ? void 0 : options.timeoutRetryCost) ?? import_util_retry.TIMEOUT_RETRY_COST;
       let availableCapacity = initialRetryTokens;
-      const getCapacityAmount = /* @__PURE__ */ __name((error2) => error2.name === "TimeoutError" ? timeoutRetryCost : retryCost, "getCapacityAmount");
-      const hasRetryTokens = /* @__PURE__ */ __name((error2) => getCapacityAmount(error2) <= availableCapacity, "hasRetryTokens");
-      const retrieveRetryTokens = /* @__PURE__ */ __name((error2) => {
-        if (!hasRetryTokens(error2)) {
+      const getCapacityAmount = /* @__PURE__ */ __name((error3) => error3.name === "TimeoutError" ? timeoutRetryCost : retryCost, "getCapacityAmount");
+      const hasRetryTokens = /* @__PURE__ */ __name((error3) => getCapacityAmount(error3) <= availableCapacity, "hasRetryTokens");
+      const retrieveRetryTokens = /* @__PURE__ */ __name((error3) => {
+        if (!hasRetryTokens(error3)) {
           throw new Error("No retry token available");
         }
-        const capacityAmount = getCapacityAmount(error2);
+        const capacityAmount = getCapacityAmount(error3);
         availableCapacity -= capacityAmount;
         return capacityAmount;
       }, "retrieveRetryTokens");
@@ -36398,20 +36398,20 @@ var require_dist_cjs38 = __commonJS({
     }, "getDefaultRetryQuota");
     var defaultDelayDecider = /* @__PURE__ */ __name((delayBase, attempts) => Math.floor(Math.min(import_util_retry.MAXIMUM_RETRY_DELAY, Math.random() * 2 ** attempts * delayBase)), "defaultDelayDecider");
     var import_service_error_classification = require_dist_cjs36();
-    var defaultRetryDecider = /* @__PURE__ */ __name((error2) => {
-      if (!error2) {
+    var defaultRetryDecider = /* @__PURE__ */ __name((error3) => {
+      if (!error3) {
         return false;
       }
-      return (0, import_service_error_classification.isRetryableByTrait)(error2) || (0, import_service_error_classification.isClockSkewError)(error2) || (0, import_service_error_classification.isThrottlingError)(error2) || (0, import_service_error_classification.isTransientError)(error2);
+      return (0, import_service_error_classification.isRetryableByTrait)(error3) || (0, import_service_error_classification.isClockSkewError)(error3) || (0, import_service_error_classification.isThrottlingError)(error3) || (0, import_service_error_classification.isTransientError)(error3);
     }, "defaultRetryDecider");
-    var asSdkError = /* @__PURE__ */ __name((error2) => {
-      if (error2 instanceof Error)
-        return error2;
-      if (error2 instanceof Object)
-        return Object.assign(new Error(), error2);
-      if (typeof error2 === "string")
-        return new Error(error2);
-      return new Error(`AWS SDK error wrapper for ${error2}`);
+    var asSdkError = /* @__PURE__ */ __name((error3) => {
+      if (error3 instanceof Error)
+        return error3;
+      if (error3 instanceof Object)
+        return Object.assign(new Error(), error3);
+      if (typeof error3 === "string")
+        return new Error(error3);
+      return new Error(`AWS SDK error wrapper for ${error3}`);
     }, "asSdkError");
     var _StandardRetryStrategy = class _StandardRetryStrategy {
       constructor(maxAttemptsProvider, options) {
@@ -36421,14 +36421,14 @@ var require_dist_cjs38 = __commonJS({
         this.delayDecider = (options == null ? void 0 : options.delayDecider) ?? defaultDelayDecider;
         this.retryQuota = (options == null ? void 0 : options.retryQuota) ?? getDefaultRetryQuota(import_util_retry.INITIAL_RETRY_TOKENS);
       }
-      shouldRetry(error2, attempts, maxAttempts) {
-        return attempts < maxAttempts && this.retryDecider(error2) && this.retryQuota.hasRetryTokens(error2);
+      shouldRetry(error3, attempts, maxAttempts) {
+        return attempts < maxAttempts && this.retryDecider(error3) && this.retryQuota.hasRetryTokens(error3);
       }
       async getMaxAttempts() {
         let maxAttempts;
         try {
           maxAttempts = await this.maxAttemptsProvider();
-        } catch (error2) {
+        } catch (error3) {
           maxAttempts = import_util_retry.DEFAULT_MAX_ATTEMPTS;
         }
         return maxAttempts;
@@ -36591,13 +36591,13 @@ var require_dist_cjs38 = __commonJS({
     }), "getOmitRetryHeadersPlugin");
     var import_smithy_client4 = require_dist_cjs19();
     var import_isStreamingPayload = require_isStreamingPayload();
-    var retryMiddleware = /* @__PURE__ */ __name((options) => (next, context3) => async (args) => {
+    var retryMiddleware = /* @__PURE__ */ __name((options) => (next, context4) => async (args) => {
       var _a;
       let retryStrategy = await options.retryStrategy();
       const maxAttempts = await options.maxAttempts();
       if (isRetryStrategyV2(retryStrategy)) {
         retryStrategy = retryStrategy;
-        let retryToken = await retryStrategy.acquireInitialRetryToken(context3["partition_id"]);
+        let retryToken = await retryStrategy.acquireInitialRetryToken(context4["partition_id"]);
         let lastError = new Error();
         let attempts = 0;
         let totalRetryDelay = 0;
@@ -36620,7 +36620,7 @@ var require_dist_cjs38 = __commonJS({
             const retryErrorInfo = getRetryErrorInfo(e);
             lastError = asSdkError(e);
             if (isRequest && (0, import_isStreamingPayload.isStreamingPayload)(request)) {
-              (_a = context3.logger instanceof import_smithy_client4.NoOpLogger ? console : context3.logger) == null ? void 0 : _a.warn(
+              (_a = context4.logger instanceof import_smithy_client4.NoOpLogger ? console : context4.logger) == null ? void 0 : _a.warn(
                 "An error was encountered in a non-retryable streaming request."
               );
               throw lastError;
@@ -36644,28 +36644,28 @@ var require_dist_cjs38 = __commonJS({
       } else {
         retryStrategy = retryStrategy;
         if (retryStrategy == null ? void 0 : retryStrategy.mode)
-          context3.userAgent = [...context3.userAgent || [], ["cfg/retry-mode", retryStrategy.mode]];
+          context4.userAgent = [...context4.userAgent || [], ["cfg/retry-mode", retryStrategy.mode]];
         return retryStrategy.retry(next, args);
       }
     }, "retryMiddleware");
     var isRetryStrategyV2 = /* @__PURE__ */ __name((retryStrategy) => typeof retryStrategy.acquireInitialRetryToken !== "undefined" && typeof retryStrategy.refreshRetryTokenForRetry !== "undefined" && typeof retryStrategy.recordSuccess !== "undefined", "isRetryStrategyV2");
-    var getRetryErrorInfo = /* @__PURE__ */ __name((error2) => {
+    var getRetryErrorInfo = /* @__PURE__ */ __name((error3) => {
       const errorInfo = {
-        error: error2,
-        errorType: getRetryErrorType(error2)
+        error: error3,
+        errorType: getRetryErrorType(error3)
       };
-      const retryAfterHint = getRetryAfterHint(error2.$response);
+      const retryAfterHint = getRetryAfterHint(error3.$response);
       if (retryAfterHint) {
         errorInfo.retryAfterHint = retryAfterHint;
       }
       return errorInfo;
     }, "getRetryErrorInfo");
-    var getRetryErrorType = /* @__PURE__ */ __name((error2) => {
-      if ((0, import_service_error_classification.isThrottlingError)(error2))
+    var getRetryErrorType = /* @__PURE__ */ __name((error3) => {
+      if ((0, import_service_error_classification.isThrottlingError)(error3))
         return "THROTTLING";
-      if ((0, import_service_error_classification.isTransientError)(error2))
+      if ((0, import_service_error_classification.isTransientError)(error3))
         return "TRANSIENT";
-      if ((0, import_service_error_classification.isServerError)(error2))
+      if ((0, import_service_error_classification.isServerError)(error3))
         return "SERVER_ERROR";
       return "CLIENT_ERROR";
     }, "getRetryErrorType");
@@ -37397,7 +37397,7 @@ var require_dist_cjs44 = __commonJS({
       }
       return (0, import_url_parser.parseUrl)(endpoint);
     }, "toEndpointV1");
-    var getEndpointFromInstructions = /* @__PURE__ */ __name(async (commandInput, instructionsSupplier, clientConfig, context3) => {
+    var getEndpointFromInstructions = /* @__PURE__ */ __name(async (commandInput, instructionsSupplier, clientConfig, context4) => {
       if (!clientConfig.endpoint) {
         let endpointFromConfig;
         if (clientConfig.serviceConfiguredEndpoint) {
@@ -37413,7 +37413,7 @@ var require_dist_cjs44 = __commonJS({
       if (typeof clientConfig.endpointProvider !== "function") {
         throw new Error("config.endpointProvider is not set.");
       }
-      const endpoint = clientConfig.endpointProvider(endpointParams, context3);
+      const endpoint = clientConfig.endpointProvider(endpointParams, context4);
       return endpoint;
     }, "getEndpointFromInstructions");
     var resolveParams = /* @__PURE__ */ __name(async (commandInput, instructionsSupplier, clientConfig) => {
@@ -37453,10 +37453,10 @@ var require_dist_cjs44 = __commonJS({
       config,
       instructions
     }) => {
-      return (next, context3) => async (args) => {
+      return (next, context4) => async (args) => {
         var _a, _b, _c;
         if (config.endpoint) {
-          (0, import_core4.setFeature)(context3, "ENDPOINT_OVERRIDE", "N");
+          (0, import_core4.setFeature)(context4, "ENDPOINT_OVERRIDE", "N");
         }
         const endpoint = await getEndpointFromInstructions(
           args.input,
@@ -37466,15 +37466,15 @@ var require_dist_cjs44 = __commonJS({
             }
           },
           { ...config },
-          context3
+          context4
         );
-        context3.endpointV2 = endpoint;
-        context3.authSchemes = (_a = endpoint.properties) == null ? void 0 : _a.authSchemes;
-        const authScheme = (_b = context3.authSchemes) == null ? void 0 : _b[0];
+        context4.endpointV2 = endpoint;
+        context4.authSchemes = (_a = endpoint.properties) == null ? void 0 : _a.authSchemes;
+        const authScheme = (_b = context4.authSchemes) == null ? void 0 : _b[0];
         if (authScheme) {
-          context3["signing_region"] = authScheme.signingRegion;
-          context3["signing_service"] = authScheme.signingName;
-          const smithyContext = (0, import_util_middleware3.getSmithyContext)(context3);
+          context4["signing_region"] = authScheme.signingRegion;
+          context4["signing_service"] = authScheme.signingName;
+          const smithyContext = (0, import_util_middleware3.getSmithyContext)(context4);
           const httpAuthOption = (_c = smithyContext == null ? void 0 : smithyContext.selectedHttpAuthScheme) == null ? void 0 : _c.httpAuthOption;
           if (httpAuthOption) {
             httpAuthOption.signingProperties = Object.assign(
@@ -37760,10 +37760,10 @@ var require_endpointResolver = __commonJS({
         "UseS3ExpressControlEndpoint"
       ]
     });
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context4 = {}) => {
       return cache.get(endpointParams, () => (0, util_endpoints_2.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context4.logger
       }));
     };
     exports2.defaultEndpointResolver = defaultEndpointResolver;
@@ -37782,21 +37782,21 @@ var require_httpAuthSchemeProvider = __commonJS({
     var middleware_endpoint_1 = require_dist_cjs44();
     var util_middleware_1 = require_dist_cjs4();
     var endpointResolver_1 = require_endpointResolver();
-    var createEndpointRuleSetHttpAuthSchemeParametersProvider = (defaultHttpAuthSchemeParametersProvider) => async (config, context3, input) => {
+    var createEndpointRuleSetHttpAuthSchemeParametersProvider = (defaultHttpAuthSchemeParametersProvider) => async (config, context4, input) => {
       if (!input) {
         throw new Error(`Could not find \`input\` for \`defaultEndpointRuleSetHttpAuthSchemeParametersProvider\``);
       }
-      const defaultParameters = await defaultHttpAuthSchemeParametersProvider(config, context3, input);
-      const instructionsFn = (0, util_middleware_1.getSmithyContext)(context3)?.commandInstance?.constructor?.getEndpointParameterInstructions;
+      const defaultParameters = await defaultHttpAuthSchemeParametersProvider(config, context4, input);
+      const instructionsFn = (0, util_middleware_1.getSmithyContext)(context4)?.commandInstance?.constructor?.getEndpointParameterInstructions;
       if (!instructionsFn) {
-        throw new Error(`getEndpointParameterInstructions() is not defined on \`${context3.commandName}\``);
+        throw new Error(`getEndpointParameterInstructions() is not defined on \`${context4.commandName}\``);
       }
       const endpointParameters = await (0, middleware_endpoint_1.resolveParams)(input, { getEndpointParameterInstructions: instructionsFn }, config);
       return Object.assign(defaultParameters, endpointParameters);
     };
-    var _defaultS3HttpAuthSchemeParametersProvider = async (config, context3, input) => {
+    var _defaultS3HttpAuthSchemeParametersProvider = async (config, context4, input) => {
       return {
-        operation: (0, util_middleware_1.getSmithyContext)(context3).operation,
+        operation: (0, util_middleware_1.getSmithyContext)(context4).operation,
         region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
           throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
         })()
@@ -37810,10 +37810,10 @@ var require_httpAuthSchemeProvider = __commonJS({
           name: "s3",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -37825,10 +37825,10 @@ var require_httpAuthSchemeProvider = __commonJS({
           name: "s3",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -38608,12 +38608,12 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
           let token;
           try {
             token = (await getMetadataToken({ ...endpoint, timeout })).toString();
-          } catch (error2) {
-            if ((error2 == null ? void 0 : error2.statusCode) === 400) {
-              throw Object.assign(error2, {
+          } catch (error3) {
+            if ((error3 == null ? void 0 : error3.statusCode) === 400) {
+              throw Object.assign(error3, {
                 message: "EC2 Metadata token request returned error"
               });
-            } else if (error2.message === "TimeoutError" || [403, 404, 405].includes(error2.statusCode)) {
+            } else if (error3.message === "TimeoutError" || [403, 404, 405].includes(error3.statusCode)) {
               disableFetchToken = true;
             }
             logger == null ? void 0 : logger.debug("AWS SDK Instance Metadata", "using v1 fallback (initial)");
@@ -38865,9 +38865,9 @@ var require_httpAuthSchemeProvider2 = __commonJS({
     exports2.resolveHttpAuthSchemeConfig = exports2.defaultSSOHttpAuthSchemeProvider = exports2.defaultSSOHttpAuthSchemeParametersProvider = void 0;
     var core_1 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var util_middleware_1 = require_dist_cjs4();
-    var defaultSSOHttpAuthSchemeParametersProvider = async (config, context3, input) => {
+    var defaultSSOHttpAuthSchemeParametersProvider = async (config, context4, input) => {
       return {
-        operation: (0, util_middleware_1.getSmithyContext)(context3).operation,
+        operation: (0, util_middleware_1.getSmithyContext)(context4).operation,
         region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
           throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
         })()
@@ -38881,10 +38881,10 @@ var require_httpAuthSchemeProvider2 = __commonJS({
           name: "awsssoportal",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -39280,10 +39280,10 @@ var require_endpointResolver2 = __commonJS({
       size: 50,
       params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"]
     });
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context4 = {}) => {
       return cache.get(endpointParams, () => (0, util_endpoints_2.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context4.logger
       }));
     };
     exports2.defaultEndpointResolver = defaultEndpointResolver;
@@ -39870,8 +39870,8 @@ var require_dist_cjs54 = __commonJS({
       ...obj.accessToken && { accessToken: import_smithy_client4.SENSITIVE_STRING }
     }), "LogoutRequestFilterSensitiveLog");
     var import_core22 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
-    var se_GetRoleCredentialsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_GetRoleCredentialsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xasbt]: input[_aT]
       });
@@ -39884,8 +39884,8 @@ var require_dist_cjs54 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetRoleCredentialsCommand");
-    var se_ListAccountRolesCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_ListAccountRolesCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xasbt]: input[_aT]
       });
@@ -39899,8 +39899,8 @@ var require_dist_cjs54 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListAccountRolesCommand");
-    var se_ListAccountsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_ListAccountsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xasbt]: input[_aT]
       });
@@ -39913,8 +39913,8 @@ var require_dist_cjs54 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListAccountsCommand");
-    var se_LogoutCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_LogoutCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xasbt]: input[_aT]
       });
@@ -39923,28 +39923,28 @@ var require_dist_cjs54 = __commonJS({
       b.m("POST").h(headers).b(body);
       return b.build();
     }, "se_LogoutCommand");
-    var de_GetRoleCredentialsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetRoleCredentialsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         roleCredentials: import_smithy_client4._json
       });
       Object.assign(contents, doc);
       return contents;
     }, "de_GetRoleCredentialsCommand");
-    var de_ListAccountRolesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListAccountRolesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         nextToken: import_smithy_client4.expectString,
         roleList: import_smithy_client4._json
@@ -39952,14 +39952,14 @@ var require_dist_cjs54 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_ListAccountRolesCommand");
-    var de_ListAccountsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListAccountsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         accountList: import_smithy_client4._json,
         nextToken: import_smithy_client4.expectString
@@ -39967,35 +39967,35 @@ var require_dist_cjs54 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_ListAccountsCommand");
-    var de_LogoutCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_LogoutCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_LogoutCommand");
-    var de_CommandError = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CommandError = /* @__PURE__ */ __name(async (output, context4) => {
       const parsedOutput = {
         ...output,
-        body: await (0, import_core22.parseJsonErrorBody)(output.body, context3)
+        body: await (0, import_core22.parseJsonErrorBody)(output.body, context4)
       };
       const errorCode = (0, import_core22.loadRestJsonErrorCode)(output, parsedOutput.body);
       switch (errorCode) {
         case "InvalidRequestException":
         case "com.amazonaws.sso#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context4);
         case "ResourceNotFoundException":
         case "com.amazonaws.sso#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context3);
+          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context4);
         case "TooManyRequestsException":
         case "com.amazonaws.sso#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context4);
         case "UnauthorizedException":
         case "com.amazonaws.sso#UnauthorizedException":
-          throw await de_UnauthorizedExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedExceptionRes(parsedOutput, context4);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -40006,7 +40006,7 @@ var require_dist_cjs54 = __commonJS({
       }
     }, "de_CommandError");
     var throwDefaultError = (0, import_smithy_client4.withBaseException)(SSOServiceException);
-    var de_InvalidRequestExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidRequestExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -40019,7 +40019,7 @@ var require_dist_cjs54 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidRequestExceptionRes");
-    var de_ResourceNotFoundExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ResourceNotFoundExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -40032,7 +40032,7 @@ var require_dist_cjs54 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_ResourceNotFoundExceptionRes");
-    var de_TooManyRequestsExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_TooManyRequestsExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -40045,7 +40045,7 @@ var require_dist_cjs54 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_TooManyRequestsExceptionRes");
-    var de_UnauthorizedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_UnauthorizedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -40134,9 +40134,9 @@ var require_httpAuthSchemeProvider3 = __commonJS({
     exports2.resolveHttpAuthSchemeConfig = exports2.defaultSSOOIDCHttpAuthSchemeProvider = exports2.defaultSSOOIDCHttpAuthSchemeParametersProvider = void 0;
     var core_1 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var util_middleware_1 = require_dist_cjs4();
-    var defaultSSOOIDCHttpAuthSchemeParametersProvider = async (config, context3, input) => {
+    var defaultSSOOIDCHttpAuthSchemeParametersProvider = async (config, context4, input) => {
       return {
-        operation: (0, util_middleware_1.getSmithyContext)(context3).operation,
+        operation: (0, util_middleware_1.getSmithyContext)(context4).operation,
         region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
           throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
         })()
@@ -40150,10 +40150,10 @@ var require_httpAuthSchemeProvider3 = __commonJS({
           name: "sso-oauth",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -40351,10 +40351,10 @@ var require_endpointResolver3 = __commonJS({
       size: 50,
       params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"]
     });
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context4 = {}) => {
       return cache.get(endpointParams, () => (0, util_endpoints_2.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context4.logger
       }));
     };
     exports2.defaultEndpointResolver = defaultEndpointResolver;
@@ -40952,8 +40952,8 @@ var require_dist_cjs55 = __commonJS({
       ...obj.clientSecret && { clientSecret: import_smithy_client4.SENSITIVE_STRING }
     }), "StartDeviceAuthorizationRequestFilterSensitiveLog");
     var import_core22 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
-    var se_CreateTokenCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_CreateTokenCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = {
         "content-type": "application/json"
       };
@@ -40975,8 +40975,8 @@ var require_dist_cjs55 = __commonJS({
       b.m("POST").h(headers).b(body);
       return b.build();
     }, "se_CreateTokenCommand");
-    var se_CreateTokenWithIAMCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_CreateTokenWithIAMCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = {
         "content-type": "application/json"
       };
@@ -41003,8 +41003,8 @@ var require_dist_cjs55 = __commonJS({
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_CreateTokenWithIAMCommand");
-    var se_RegisterClientCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_RegisterClientCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = {
         "content-type": "application/json"
       };
@@ -41024,8 +41024,8 @@ var require_dist_cjs55 = __commonJS({
       b.m("POST").h(headers).b(body);
       return b.build();
     }, "se_RegisterClientCommand");
-    var se_StartDeviceAuthorizationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core4.requestBuilder)(input, context3);
+    var se_StartDeviceAuthorizationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core4.requestBuilder)(input, context4);
       const headers = {
         "content-type": "application/json"
       };
@@ -41041,14 +41041,14 @@ var require_dist_cjs55 = __commonJS({
       b.m("POST").h(headers).b(body);
       return b.build();
     }, "se_StartDeviceAuthorizationCommand");
-    var de_CreateTokenCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateTokenCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         accessToken: import_smithy_client4.expectString,
         expiresIn: import_smithy_client4.expectInt32,
@@ -41059,14 +41059,14 @@ var require_dist_cjs55 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_CreateTokenCommand");
-    var de_CreateTokenWithIAMCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateTokenWithIAMCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         accessToken: import_smithy_client4.expectString,
         expiresIn: import_smithy_client4.expectInt32,
@@ -41079,14 +41079,14 @@ var require_dist_cjs55 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_CreateTokenWithIAMCommand");
-    var de_RegisterClientCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_RegisterClientCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         authorizationEndpoint: import_smithy_client4.expectString,
         clientId: import_smithy_client4.expectString,
@@ -41098,14 +41098,14 @@ var require_dist_cjs55 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_RegisterClientCommand");
-    var de_StartDeviceAuthorizationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_StartDeviceAuthorizationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core22.parseJsonBody)(output.body, context4)), "body");
       const doc = (0, import_smithy_client4.take)(data, {
         deviceCode: import_smithy_client4.expectString,
         expiresIn: import_smithy_client4.expectInt32,
@@ -41117,55 +41117,55 @@ var require_dist_cjs55 = __commonJS({
       Object.assign(contents, doc);
       return contents;
     }, "de_StartDeviceAuthorizationCommand");
-    var de_CommandError = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CommandError = /* @__PURE__ */ __name(async (output, context4) => {
       const parsedOutput = {
         ...output,
-        body: await (0, import_core22.parseJsonErrorBody)(output.body, context3)
+        body: await (0, import_core22.parseJsonErrorBody)(output.body, context4)
       };
       const errorCode = (0, import_core22.loadRestJsonErrorCode)(output, parsedOutput.body);
       switch (errorCode) {
         case "AccessDeniedException":
         case "com.amazonaws.ssooidc#AccessDeniedException":
-          throw await de_AccessDeniedExceptionRes(parsedOutput, context3);
+          throw await de_AccessDeniedExceptionRes(parsedOutput, context4);
         case "AuthorizationPendingException":
         case "com.amazonaws.ssooidc#AuthorizationPendingException":
-          throw await de_AuthorizationPendingExceptionRes(parsedOutput, context3);
+          throw await de_AuthorizationPendingExceptionRes(parsedOutput, context4);
         case "ExpiredTokenException":
         case "com.amazonaws.ssooidc#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context4);
         case "InternalServerException":
         case "com.amazonaws.ssooidc#InternalServerException":
-          throw await de_InternalServerExceptionRes(parsedOutput, context3);
+          throw await de_InternalServerExceptionRes(parsedOutput, context4);
         case "InvalidClientException":
         case "com.amazonaws.ssooidc#InvalidClientException":
-          throw await de_InvalidClientExceptionRes(parsedOutput, context3);
+          throw await de_InvalidClientExceptionRes(parsedOutput, context4);
         case "InvalidGrantException":
         case "com.amazonaws.ssooidc#InvalidGrantException":
-          throw await de_InvalidGrantExceptionRes(parsedOutput, context3);
+          throw await de_InvalidGrantExceptionRes(parsedOutput, context4);
         case "InvalidRequestException":
         case "com.amazonaws.ssooidc#InvalidRequestException":
-          throw await de_InvalidRequestExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestExceptionRes(parsedOutput, context4);
         case "InvalidScopeException":
         case "com.amazonaws.ssooidc#InvalidScopeException":
-          throw await de_InvalidScopeExceptionRes(parsedOutput, context3);
+          throw await de_InvalidScopeExceptionRes(parsedOutput, context4);
         case "SlowDownException":
         case "com.amazonaws.ssooidc#SlowDownException":
-          throw await de_SlowDownExceptionRes(parsedOutput, context3);
+          throw await de_SlowDownExceptionRes(parsedOutput, context4);
         case "UnauthorizedClientException":
         case "com.amazonaws.ssooidc#UnauthorizedClientException":
-          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context3);
+          throw await de_UnauthorizedClientExceptionRes(parsedOutput, context4);
         case "UnsupportedGrantTypeException":
         case "com.amazonaws.ssooidc#UnsupportedGrantTypeException":
-          throw await de_UnsupportedGrantTypeExceptionRes(parsedOutput, context3);
+          throw await de_UnsupportedGrantTypeExceptionRes(parsedOutput, context4);
         case "InvalidRequestRegionException":
         case "com.amazonaws.ssooidc#InvalidRequestRegionException":
-          throw await de_InvalidRequestRegionExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRequestRegionExceptionRes(parsedOutput, context4);
         case "InvalidClientMetadataException":
         case "com.amazonaws.ssooidc#InvalidClientMetadataException":
-          throw await de_InvalidClientMetadataExceptionRes(parsedOutput, context3);
+          throw await de_InvalidClientMetadataExceptionRes(parsedOutput, context4);
         case "InvalidRedirectUriException":
         case "com.amazonaws.ssooidc#InvalidRedirectUriException":
-          throw await de_InvalidRedirectUriExceptionRes(parsedOutput, context3);
+          throw await de_InvalidRedirectUriExceptionRes(parsedOutput, context4);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -41176,7 +41176,7 @@ var require_dist_cjs55 = __commonJS({
       }
     }, "de_CommandError");
     var throwDefaultError = (0, import_smithy_client4.withBaseException)(SSOOIDCServiceException);
-    var de_AccessDeniedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_AccessDeniedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41190,7 +41190,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_AccessDeniedExceptionRes");
-    var de_AuthorizationPendingExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_AuthorizationPendingExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41204,7 +41204,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_AuthorizationPendingExceptionRes");
-    var de_ExpiredTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ExpiredTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41218,7 +41218,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_ExpiredTokenExceptionRes");
-    var de_InternalServerExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InternalServerExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41232,7 +41232,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InternalServerExceptionRes");
-    var de_InvalidClientExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidClientExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41246,7 +41246,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidClientExceptionRes");
-    var de_InvalidClientMetadataExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidClientMetadataExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41260,7 +41260,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidClientMetadataExceptionRes");
-    var de_InvalidGrantExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidGrantExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41274,7 +41274,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidGrantExceptionRes");
-    var de_InvalidRedirectUriExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidRedirectUriExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41288,7 +41288,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidRedirectUriExceptionRes");
-    var de_InvalidRequestExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidRequestExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41302,7 +41302,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidRequestExceptionRes");
-    var de_InvalidRequestRegionExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidRequestRegionExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41318,7 +41318,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidRequestRegionExceptionRes");
-    var de_InvalidScopeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidScopeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41332,7 +41332,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidScopeExceptionRes");
-    var de_SlowDownExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_SlowDownExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41346,7 +41346,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_SlowDownExceptionRes");
-    var de_UnauthorizedClientExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_UnauthorizedClientExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41360,7 +41360,7 @@ var require_dist_cjs55 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_UnauthorizedClientExceptionRes");
-    var de_UnsupportedGrantTypeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_UnsupportedGrantTypeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const doc = (0, import_smithy_client4.take)(data, {
@@ -41584,13 +41584,13 @@ var require_dist_cjs56 = __commonJS({
             expiresAt: newTokenExpiration.toISOString(),
             refreshToken: newSsoOidcToken.refreshToken
           });
-        } catch (error2) {
+        } catch (error3) {
         }
         return {
           token: newSsoOidcToken.accessToken,
           expiration: newTokenExpiration
         };
-      } catch (error2) {
+      } catch (error3) {
         validateTokenExpiry(existingToken);
         return existingToken;
       }
@@ -41847,9 +41847,9 @@ var require_httpAuthSchemeProvider4 = __commonJS({
     var core_1 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var util_middleware_1 = require_dist_cjs4();
     var STSClient_1 = require_STSClient();
-    var defaultSTSHttpAuthSchemeParametersProvider = async (config, context3, input) => {
+    var defaultSTSHttpAuthSchemeParametersProvider = async (config, context4, input) => {
       return {
-        operation: (0, util_middleware_1.getSmithyContext)(context3).operation,
+        operation: (0, util_middleware_1.getSmithyContext)(context4).operation,
         region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
           throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
         })()
@@ -41863,10 +41863,10 @@ var require_httpAuthSchemeProvider4 = __commonJS({
           name: "sts",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -42104,10 +42104,10 @@ var require_endpointResolver4 = __commonJS({
       size: 50,
       params: ["Endpoint", "Region", "UseDualStack", "UseFIPS", "UseGlobalEndpoint"]
     });
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context4 = {}) => {
       return cache.get(endpointParams, () => (0, util_endpoints_2.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context4.logger
       }));
     };
     exports2.defaultEndpointResolver = defaultEndpointResolver;
@@ -42614,244 +42614,244 @@ var require_dist_cjs58 = __commonJS({
     }), "GetSessionTokenResponseFilterSensitiveLog");
     var import_core4 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var import_protocol_http8 = require_dist_cjs2();
-    var se_AssumeRoleCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_AssumeRoleCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleRequest(input, context3),
+        ...se_AssumeRoleRequest(input, context4),
         [_A]: _AR,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_AssumeRoleCommand");
-    var se_AssumeRoleWithSAMLCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_AssumeRoleWithSAMLCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleWithSAMLRequest(input, context3),
+        ...se_AssumeRoleWithSAMLRequest(input, context4),
         [_A]: _ARWSAML,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_AssumeRoleWithSAMLCommand");
-    var se_AssumeRoleWithWebIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_AssumeRoleWithWebIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRoleWithWebIdentityRequest(input, context3),
+        ...se_AssumeRoleWithWebIdentityRequest(input, context4),
         [_A]: _ARWWI,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_AssumeRoleWithWebIdentityCommand");
-    var se_AssumeRootCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_AssumeRootCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_AssumeRootRequest(input, context3),
+        ...se_AssumeRootRequest(input, context4),
         [_A]: _ARs,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_AssumeRootCommand");
-    var se_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_DecodeAuthorizationMessageRequest(input, context3),
+        ...se_DecodeAuthorizationMessageRequest(input, context4),
         [_A]: _DAM,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_DecodeAuthorizationMessageCommand");
-    var se_GetAccessKeyInfoCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetAccessKeyInfoCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetAccessKeyInfoRequest(input, context3),
+        ...se_GetAccessKeyInfoRequest(input, context4),
         [_A]: _GAKI,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetAccessKeyInfoCommand");
-    var se_GetCallerIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetCallerIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetCallerIdentityRequest(input, context3),
+        ...se_GetCallerIdentityRequest(input, context4),
         [_A]: _GCI,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetCallerIdentityCommand");
-    var se_GetFederationTokenCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetFederationTokenCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetFederationTokenRequest(input, context3),
+        ...se_GetFederationTokenRequest(input, context4),
         [_A]: _GFT,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetFederationTokenCommand");
-    var se_GetSessionTokenCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetSessionTokenCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = SHARED_HEADERS;
       let body;
       body = buildFormUrlencodedString({
-        ...se_GetSessionTokenRequest(input, context3),
+        ...se_GetSessionTokenRequest(input, context4),
         [_A]: _GST,
         [_V]: _
       });
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetSessionTokenCommand");
-    var de_AssumeRoleCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_AssumeRoleCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_AssumeRoleResponse(data.AssumeRoleResult, context3);
+      contents = de_AssumeRoleResponse(data.AssumeRoleResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_AssumeRoleCommand");
-    var de_AssumeRoleWithSAMLCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_AssumeRoleWithSAMLCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_AssumeRoleWithSAMLResponse(data.AssumeRoleWithSAMLResult, context3);
+      contents = de_AssumeRoleWithSAMLResponse(data.AssumeRoleWithSAMLResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_AssumeRoleWithSAMLCommand");
-    var de_AssumeRoleWithWebIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_AssumeRoleWithWebIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_AssumeRoleWithWebIdentityResponse(data.AssumeRoleWithWebIdentityResult, context3);
+      contents = de_AssumeRoleWithWebIdentityResponse(data.AssumeRoleWithWebIdentityResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_AssumeRoleWithWebIdentityCommand");
-    var de_AssumeRootCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_AssumeRootCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_AssumeRootResponse(data.AssumeRootResult, context3);
+      contents = de_AssumeRootResponse(data.AssumeRootResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_AssumeRootCommand");
-    var de_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DecodeAuthorizationMessageCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_DecodeAuthorizationMessageResponse(data.DecodeAuthorizationMessageResult, context3);
+      contents = de_DecodeAuthorizationMessageResponse(data.DecodeAuthorizationMessageResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_DecodeAuthorizationMessageCommand");
-    var de_GetAccessKeyInfoCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetAccessKeyInfoCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_GetAccessKeyInfoResponse(data.GetAccessKeyInfoResult, context3);
+      contents = de_GetAccessKeyInfoResponse(data.GetAccessKeyInfoResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_GetAccessKeyInfoCommand");
-    var de_GetCallerIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetCallerIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_GetCallerIdentityResponse(data.GetCallerIdentityResult, context3);
+      contents = de_GetCallerIdentityResponse(data.GetCallerIdentityResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_GetCallerIdentityCommand");
-    var de_GetFederationTokenCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetFederationTokenCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_GetFederationTokenResponse(data.GetFederationTokenResult, context3);
+      contents = de_GetFederationTokenResponse(data.GetFederationTokenResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_GetFederationTokenCommand");
-    var de_GetSessionTokenCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetSessionTokenCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
       let contents = {};
-      contents = de_GetSessionTokenResponse(data.GetSessionTokenResult, context3);
+      contents = de_GetSessionTokenResponse(data.GetSessionTokenResult, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_GetSessionTokenCommand");
-    var de_CommandError = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CommandError = /* @__PURE__ */ __name(async (output, context4) => {
       const parsedOutput = {
         ...output,
-        body: await (0, import_core4.parseXmlErrorBody)(output.body, context3)
+        body: await (0, import_core4.parseXmlErrorBody)(output.body, context4)
       };
       const errorCode = loadQueryErrorCode(output, parsedOutput.body);
       switch (errorCode) {
         case "ExpiredTokenException":
         case "com.amazonaws.sts#ExpiredTokenException":
-          throw await de_ExpiredTokenExceptionRes(parsedOutput, context3);
+          throw await de_ExpiredTokenExceptionRes(parsedOutput, context4);
         case "MalformedPolicyDocument":
         case "com.amazonaws.sts#MalformedPolicyDocumentException":
-          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context3);
+          throw await de_MalformedPolicyDocumentExceptionRes(parsedOutput, context4);
         case "PackedPolicyTooLarge":
         case "com.amazonaws.sts#PackedPolicyTooLargeException":
-          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context3);
+          throw await de_PackedPolicyTooLargeExceptionRes(parsedOutput, context4);
         case "RegionDisabledException":
         case "com.amazonaws.sts#RegionDisabledException":
-          throw await de_RegionDisabledExceptionRes(parsedOutput, context3);
+          throw await de_RegionDisabledExceptionRes(parsedOutput, context4);
         case "IDPRejectedClaim":
         case "com.amazonaws.sts#IDPRejectedClaimException":
-          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context3);
+          throw await de_IDPRejectedClaimExceptionRes(parsedOutput, context4);
         case "InvalidIdentityToken":
         case "com.amazonaws.sts#InvalidIdentityTokenException":
-          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context3);
+          throw await de_InvalidIdentityTokenExceptionRes(parsedOutput, context4);
         case "IDPCommunicationError":
         case "com.amazonaws.sts#IDPCommunicationErrorException":
-          throw await de_IDPCommunicationErrorExceptionRes(parsedOutput, context3);
+          throw await de_IDPCommunicationErrorExceptionRes(parsedOutput, context4);
         case "InvalidAuthorizationMessageException":
         case "com.amazonaws.sts#InvalidAuthorizationMessageException":
-          throw await de_InvalidAuthorizationMessageExceptionRes(parsedOutput, context3);
+          throw await de_InvalidAuthorizationMessageExceptionRes(parsedOutput, context4);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -42861,79 +42861,79 @@ var require_dist_cjs58 = __commonJS({
           });
       }
     }, "de_CommandError");
-    var de_ExpiredTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ExpiredTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_ExpiredTokenException(body.Error, context3);
+      const deserialized = de_ExpiredTokenException(body.Error, context4);
       const exception2 = new ExpiredTokenException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_ExpiredTokenExceptionRes");
-    var de_IDPCommunicationErrorExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_IDPCommunicationErrorExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_IDPCommunicationErrorException(body.Error, context3);
+      const deserialized = de_IDPCommunicationErrorException(body.Error, context4);
       const exception2 = new IDPCommunicationErrorException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_IDPCommunicationErrorExceptionRes");
-    var de_IDPRejectedClaimExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_IDPRejectedClaimExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_IDPRejectedClaimException(body.Error, context3);
+      const deserialized = de_IDPRejectedClaimException(body.Error, context4);
       const exception2 = new IDPRejectedClaimException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_IDPRejectedClaimExceptionRes");
-    var de_InvalidAuthorizationMessageExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidAuthorizationMessageExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_InvalidAuthorizationMessageException(body.Error, context3);
+      const deserialized = de_InvalidAuthorizationMessageException(body.Error, context4);
       const exception2 = new InvalidAuthorizationMessageException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_InvalidAuthorizationMessageExceptionRes");
-    var de_InvalidIdentityTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidIdentityTokenExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_InvalidIdentityTokenException(body.Error, context3);
+      const deserialized = de_InvalidIdentityTokenException(body.Error, context4);
       const exception2 = new InvalidIdentityTokenException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_InvalidIdentityTokenExceptionRes");
-    var de_MalformedPolicyDocumentExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_MalformedPolicyDocumentExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_MalformedPolicyDocumentException(body.Error, context3);
+      const deserialized = de_MalformedPolicyDocumentException(body.Error, context4);
       const exception2 = new MalformedPolicyDocumentException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_MalformedPolicyDocumentExceptionRes");
-    var de_PackedPolicyTooLargeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_PackedPolicyTooLargeExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_PackedPolicyTooLargeException(body.Error, context3);
+      const deserialized = de_PackedPolicyTooLargeException(body.Error, context4);
       const exception2 = new PackedPolicyTooLargeException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_PackedPolicyTooLargeExceptionRes");
-    var de_RegionDisabledExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_RegionDisabledExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
-      const deserialized = de_RegionDisabledException(body.Error, context3);
+      const deserialized = de_RegionDisabledException(body.Error, context4);
       const exception2 = new RegionDisabledException({
         $metadata: deserializeMetadata(parsedOutput),
         ...deserialized
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_RegionDisabledExceptionRes");
-    var se_AssumeRoleRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_AssumeRoleRequest = /* @__PURE__ */ __name((input, context4) => {
       var _a2, _b, _c, _d;
       const entries = {};
       if (input[_RA] != null) {
@@ -42943,7 +42943,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_RSN] = input[_RSN];
       }
       if (input[_PA] != null) {
-        const memberEntries = se_policyDescriptorListType(input[_PA], context3);
+        const memberEntries = se_policyDescriptorListType(input[_PA], context4);
         if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
@@ -42959,7 +42959,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_DS] = input[_DS];
       }
       if (input[_T] != null) {
-        const memberEntries = se_tagListType(input[_T], context3);
+        const memberEntries = se_tagListType(input[_T], context4);
         if (((_b = input[_T]) == null ? void 0 : _b.length) === 0) {
           entries.Tags = [];
         }
@@ -42969,7 +42969,7 @@ var require_dist_cjs58 = __commonJS({
         });
       }
       if (input[_TTK] != null) {
-        const memberEntries = se_tagKeyListType(input[_TTK], context3);
+        const memberEntries = se_tagKeyListType(input[_TTK], context4);
         if (((_c = input[_TTK]) == null ? void 0 : _c.length) === 0) {
           entries.TransitiveTagKeys = [];
         }
@@ -42991,7 +42991,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_SI] = input[_SI];
       }
       if (input[_PC] != null) {
-        const memberEntries = se_ProvidedContextsListType(input[_PC], context3);
+        const memberEntries = se_ProvidedContextsListType(input[_PC], context4);
         if (((_d = input[_PC]) == null ? void 0 : _d.length) === 0) {
           entries.ProvidedContexts = [];
         }
@@ -43002,7 +43002,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_AssumeRoleRequest");
-    var se_AssumeRoleWithSAMLRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_AssumeRoleWithSAMLRequest = /* @__PURE__ */ __name((input, context4) => {
       var _a2;
       const entries = {};
       if (input[_RA] != null) {
@@ -43015,7 +43015,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_SAMLA] = input[_SAMLA];
       }
       if (input[_PA] != null) {
-        const memberEntries = se_policyDescriptorListType(input[_PA], context3);
+        const memberEntries = se_policyDescriptorListType(input[_PA], context4);
         if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
@@ -43032,7 +43032,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_AssumeRoleWithSAMLRequest");
-    var se_AssumeRoleWithWebIdentityRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_AssumeRoleWithWebIdentityRequest = /* @__PURE__ */ __name((input, context4) => {
       var _a2;
       const entries = {};
       if (input[_RA] != null) {
@@ -43048,7 +43048,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_PI] = input[_PI];
       }
       if (input[_PA] != null) {
-        const memberEntries = se_policyDescriptorListType(input[_PA], context3);
+        const memberEntries = se_policyDescriptorListType(input[_PA], context4);
         if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
@@ -43065,13 +43065,13 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_AssumeRoleWithWebIdentityRequest");
-    var se_AssumeRootRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_AssumeRootRequest = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_TP] != null) {
         entries[_TP] = input[_TP];
       }
       if (input[_TPA] != null) {
-        const memberEntries = se_PolicyDescriptorType(input[_TPA], context3);
+        const memberEntries = se_PolicyDescriptorType(input[_TPA], context4);
         Object.entries(memberEntries).forEach(([key, value]) => {
           const loc = `TaskPolicyArn.${key}`;
           entries[loc] = value;
@@ -43082,25 +43082,25 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_AssumeRootRequest");
-    var se_DecodeAuthorizationMessageRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_DecodeAuthorizationMessageRequest = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_EM] != null) {
         entries[_EM] = input[_EM];
       }
       return entries;
     }, "se_DecodeAuthorizationMessageRequest");
-    var se_GetAccessKeyInfoRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_GetAccessKeyInfoRequest = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_AKI] != null) {
         entries[_AKI] = input[_AKI];
       }
       return entries;
     }, "se_GetAccessKeyInfoRequest");
-    var se_GetCallerIdentityRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_GetCallerIdentityRequest = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       return entries;
     }, "se_GetCallerIdentityRequest");
-    var se_GetFederationTokenRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_GetFederationTokenRequest = /* @__PURE__ */ __name((input, context4) => {
       var _a2, _b;
       const entries = {};
       if (input[_N] != null) {
@@ -43110,7 +43110,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_P] = input[_P];
       }
       if (input[_PA] != null) {
-        const memberEntries = se_policyDescriptorListType(input[_PA], context3);
+        const memberEntries = se_policyDescriptorListType(input[_PA], context4);
         if (((_a2 = input[_PA]) == null ? void 0 : _a2.length) === 0) {
           entries.PolicyArns = [];
         }
@@ -43123,7 +43123,7 @@ var require_dist_cjs58 = __commonJS({
         entries[_DS] = input[_DS];
       }
       if (input[_T] != null) {
-        const memberEntries = se_tagListType(input[_T], context3);
+        const memberEntries = se_tagListType(input[_T], context4);
         if (((_b = input[_T]) == null ? void 0 : _b.length) === 0) {
           entries.Tags = [];
         }
@@ -43134,7 +43134,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_GetFederationTokenRequest");
-    var se_GetSessionTokenRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_GetSessionTokenRequest = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_DS] != null) {
         entries[_DS] = input[_DS];
@@ -43147,14 +43147,14 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_GetSessionTokenRequest");
-    var se_policyDescriptorListType = /* @__PURE__ */ __name((input, context3) => {
+    var se_policyDescriptorListType = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_PolicyDescriptorType(entry, context3);
+        const memberEntries = se_PolicyDescriptorType(entry, context4);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -43162,14 +43162,14 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_policyDescriptorListType");
-    var se_PolicyDescriptorType = /* @__PURE__ */ __name((input, context3) => {
+    var se_PolicyDescriptorType = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_a] != null) {
         entries[_a] = input[_a];
       }
       return entries;
     }, "se_PolicyDescriptorType");
-    var se_ProvidedContext = /* @__PURE__ */ __name((input, context3) => {
+    var se_ProvidedContext = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_PAro] != null) {
         entries[_PAro] = input[_PAro];
@@ -43179,14 +43179,14 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_ProvidedContext");
-    var se_ProvidedContextsListType = /* @__PURE__ */ __name((input, context3) => {
+    var se_ProvidedContextsListType = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_ProvidedContext(entry, context3);
+        const memberEntries = se_ProvidedContext(entry, context4);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -43194,7 +43194,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_ProvidedContextsListType");
-    var se_Tag = /* @__PURE__ */ __name((input, context3) => {
+    var se_Tag = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       if (input[_K] != null) {
         entries[_K] = input[_K];
@@ -43204,7 +43204,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_Tag");
-    var se_tagKeyListType = /* @__PURE__ */ __name((input, context3) => {
+    var se_tagKeyListType = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
@@ -43216,14 +43216,14 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_tagKeyListType");
-    var se_tagListType = /* @__PURE__ */ __name((input, context3) => {
+    var se_tagListType = /* @__PURE__ */ __name((input, context4) => {
       const entries = {};
       let counter = 1;
       for (const entry of input) {
         if (entry === null) {
           continue;
         }
-        const memberEntries = se_Tag(entry, context3);
+        const memberEntries = se_Tag(entry, context4);
         Object.entries(memberEntries).forEach(([key, value]) => {
           entries[`member.${counter}.${key}`] = value;
         });
@@ -43231,7 +43231,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return entries;
     }, "se_tagListType");
-    var de_AssumedRoleUser = /* @__PURE__ */ __name((output, context3) => {
+    var de_AssumedRoleUser = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ARI] != null) {
         contents[_ARI] = (0, import_smithy_client4.expectString)(output[_ARI]);
@@ -43241,13 +43241,13 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_AssumedRoleUser");
-    var de_AssumeRoleResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_AssumeRoleResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       if (output[_ARU] != null) {
-        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context3);
+        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context4);
       }
       if (output[_PPS] != null) {
         contents[_PPS] = (0, import_smithy_client4.strictParseInt32)(output[_PPS]);
@@ -43257,13 +43257,13 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_AssumeRoleResponse");
-    var de_AssumeRoleWithSAMLResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_AssumeRoleWithSAMLResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       if (output[_ARU] != null) {
-        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context3);
+        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context4);
       }
       if (output[_PPS] != null) {
         contents[_PPS] = (0, import_smithy_client4.strictParseInt32)(output[_PPS]);
@@ -43288,16 +43288,16 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_AssumeRoleWithSAMLResponse");
-    var de_AssumeRoleWithWebIdentityResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_AssumeRoleWithWebIdentityResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       if (output[_SFWIT] != null) {
         contents[_SFWIT] = (0, import_smithy_client4.expectString)(output[_SFWIT]);
       }
       if (output[_ARU] != null) {
-        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context3);
+        contents[_ARU] = de_AssumedRoleUser(output[_ARU], context4);
       }
       if (output[_PPS] != null) {
         contents[_PPS] = (0, import_smithy_client4.strictParseInt32)(output[_PPS]);
@@ -43313,17 +43313,17 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_AssumeRoleWithWebIdentityResponse");
-    var de_AssumeRootResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_AssumeRootResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       if (output[_SI] != null) {
         contents[_SI] = (0, import_smithy_client4.expectString)(output[_SI]);
       }
       return contents;
     }, "de_AssumeRootResponse");
-    var de_Credentials = /* @__PURE__ */ __name((output, context3) => {
+    var de_Credentials = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_AKI] != null) {
         contents[_AKI] = (0, import_smithy_client4.expectString)(output[_AKI]);
@@ -43339,21 +43339,21 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_Credentials");
-    var de_DecodeAuthorizationMessageResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_DecodeAuthorizationMessageResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DM] != null) {
         contents[_DM] = (0, import_smithy_client4.expectString)(output[_DM]);
       }
       return contents;
     }, "de_DecodeAuthorizationMessageResponse");
-    var de_ExpiredTokenException = /* @__PURE__ */ __name((output, context3) => {
+    var de_ExpiredTokenException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_ExpiredTokenException");
-    var de_FederatedUser = /* @__PURE__ */ __name((output, context3) => {
+    var de_FederatedUser = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_FUI] != null) {
         contents[_FUI] = (0, import_smithy_client4.expectString)(output[_FUI]);
@@ -43363,14 +43363,14 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_FederatedUser");
-    var de_GetAccessKeyInfoResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetAccessKeyInfoResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Ac] != null) {
         contents[_Ac] = (0, import_smithy_client4.expectString)(output[_Ac]);
       }
       return contents;
     }, "de_GetAccessKeyInfoResponse");
-    var de_GetCallerIdentityResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetCallerIdentityResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_UI] != null) {
         contents[_UI] = (0, import_smithy_client4.expectString)(output[_UI]);
@@ -43383,69 +43383,69 @@ var require_dist_cjs58 = __commonJS({
       }
       return contents;
     }, "de_GetCallerIdentityResponse");
-    var de_GetFederationTokenResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetFederationTokenResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       if (output[_FU] != null) {
-        contents[_FU] = de_FederatedUser(output[_FU], context3);
+        contents[_FU] = de_FederatedUser(output[_FU], context4);
       }
       if (output[_PPS] != null) {
         contents[_PPS] = (0, import_smithy_client4.strictParseInt32)(output[_PPS]);
       }
       return contents;
     }, "de_GetFederationTokenResponse");
-    var de_GetSessionTokenResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetSessionTokenResponse = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_C] != null) {
-        contents[_C] = de_Credentials(output[_C], context3);
+        contents[_C] = de_Credentials(output[_C], context4);
       }
       return contents;
     }, "de_GetSessionTokenResponse");
-    var de_IDPCommunicationErrorException = /* @__PURE__ */ __name((output, context3) => {
+    var de_IDPCommunicationErrorException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_IDPCommunicationErrorException");
-    var de_IDPRejectedClaimException = /* @__PURE__ */ __name((output, context3) => {
+    var de_IDPRejectedClaimException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_IDPRejectedClaimException");
-    var de_InvalidAuthorizationMessageException = /* @__PURE__ */ __name((output, context3) => {
+    var de_InvalidAuthorizationMessageException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_InvalidAuthorizationMessageException");
-    var de_InvalidIdentityTokenException = /* @__PURE__ */ __name((output, context3) => {
+    var de_InvalidIdentityTokenException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_InvalidIdentityTokenException");
-    var de_MalformedPolicyDocumentException = /* @__PURE__ */ __name((output, context3) => {
+    var de_MalformedPolicyDocumentException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_MalformedPolicyDocumentException");
-    var de_PackedPolicyTooLargeException = /* @__PURE__ */ __name((output, context3) => {
+    var de_PackedPolicyTooLargeException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
       }
       return contents;
     }, "de_PackedPolicyTooLargeException");
-    var de_RegionDisabledException = /* @__PURE__ */ __name((output, context3) => {
+    var de_RegionDisabledException = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_m] != null) {
         contents[_m] = (0, import_smithy_client4.expectString)(output[_m]);
@@ -43459,8 +43459,8 @@ var require_dist_cjs58 = __commonJS({
       cfId: output.headers["x-amz-cf-id"]
     }), "deserializeMetadata");
     var throwDefaultError = (0, import_smithy_client4.withBaseException)(STSServiceException);
-    var buildHttpRpcRequest = /* @__PURE__ */ __name(async (context3, headers, path2, resolvedHostname, body) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var buildHttpRpcRequest = /* @__PURE__ */ __name(async (context4, headers, path2, resolvedHostname, body) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context4.endpoint();
       const contents = {
         protocol,
         hostname,
@@ -43876,8 +43876,8 @@ var require_dist_cjs59 = __commonJS({
               throw Error(`Profile ${profileName} credential_process returned invalid JSON.`);
             }
             return getValidatedProcessCredentials(profileName, data, profiles);
-          } catch (error2) {
-            throw new import_property_provider2.CredentialsProviderError(error2.message, { logger });
+          } catch (error3) {
+            throw new import_property_provider2.CredentialsProviderError(error3.message, { logger });
           }
         } else {
           throw new import_property_provider2.CredentialsProviderError(`Profile ${profileName} did not contain credential_process.`, { logger });
@@ -44758,7 +44758,7 @@ var require_dist_cjs63 = __commonJS({
         signingRegion
       };
     }, "getEndpointFromAccessPointArn");
-    var bucketEndpointMiddleware = /* @__PURE__ */ __name((options) => (next, context3) => async (args) => {
+    var bucketEndpointMiddleware = /* @__PURE__ */ __name((options) => (next, context4) => async (args) => {
       const { Bucket: bucketName } = args.input;
       let replaceBucketInPath = options.bucketEndpoint;
       const request = args.request;
@@ -44793,10 +44793,10 @@ var require_dist_cjs63 = __commonJS({
             disableMultiregionAccessPoints: await options.disableMultiregionAccessPoints()
           });
           if (modifiedSigningRegion && modifiedSigningRegion !== signingRegion) {
-            context3["signing_region"] = modifiedSigningRegion;
+            context4["signing_region"] = modifiedSigningRegion;
           }
           if (signingService && signingService !== "s3") {
-            context3["signing_service"] = signingService;
+            context4["signing_service"] = signingService;
           }
           request.hostname = hostname;
           replaceBucketInPath = bucketEndpoint;
@@ -45441,9 +45441,9 @@ var require_dist_cjs65 = __commonJS({
           const exception2 = { [code]: message };
           const deserializedException = await deserializer(exception2);
           if (deserializedException.$unknown) {
-            const error2 = new Error(toUtf8(message.body));
-            error2.name = code;
-            throw error2;
+            const error3 = new Error(toUtf8(message.body));
+            error3.name = code;
+            throw error3;
           }
           throw deserializedException[code];
         } else if (messageType === "event") {
@@ -46321,7 +46321,7 @@ var require_dist_cjs71 = __commonJS({
       S3: () => S3,
       S3Client: () => S3Client2,
       S3LocationFilterSensitiveLog: () => S3LocationFilterSensitiveLog,
-      S3ServiceException: () => S3ServiceException,
+      S3ServiceException: () => S3ServiceException2,
       SSEKMSFilterSensitiveLog: () => SSEKMSFilterSensitiveLog,
       SelectObjectContentCommand: () => SelectObjectContentCommand,
       SelectObjectContentEventStream: () => SelectObjectContentEventStream,
@@ -46417,14 +46417,14 @@ var require_dist_cjs71 = __commonJS({
       }
     };
     __name(_S3ServiceException, "S3ServiceException");
-    var S3ServiceException = _S3ServiceException;
+    var S3ServiceException2 = _S3ServiceException;
     var RequestCharged = {
       requester: "requester"
     };
     var RequestPayer = {
       requester: "requester"
     };
-    var _NoSuchUpload = class _NoSuchUpload2 extends S3ServiceException {
+    var _NoSuchUpload = class _NoSuchUpload2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46509,7 +46509,7 @@ var require_dist_cjs71 = __commonJS({
       COPY: "COPY",
       REPLACE: "REPLACE"
     };
-    var _ObjectNotInActiveTierError = class _ObjectNotInActiveTierError2 extends S3ServiceException {
+    var _ObjectNotInActiveTierError = class _ObjectNotInActiveTierError2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46526,7 +46526,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_ObjectNotInActiveTierError, "ObjectNotInActiveTierError");
     var ObjectNotInActiveTierError = _ObjectNotInActiveTierError;
-    var _BucketAlreadyExists = class _BucketAlreadyExists2 extends S3ServiceException {
+    var _BucketAlreadyExists = class _BucketAlreadyExists2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46543,7 +46543,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_BucketAlreadyExists, "BucketAlreadyExists");
     var BucketAlreadyExists = _BucketAlreadyExists;
-    var _BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou2 extends S3ServiceException {
+    var _BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46616,7 +46616,7 @@ var require_dist_cjs71 = __commonJS({
       ReadOnly: "ReadOnly",
       ReadWrite: "ReadWrite"
     };
-    var _NoSuchBucket = class _NoSuchBucket2 extends S3ServiceException {
+    var _NoSuchBucket = class _NoSuchBucket2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46815,7 +46815,7 @@ var require_dist_cjs71 = __commonJS({
     var ChecksumMode = {
       ENABLED: "ENABLED"
     };
-    var _InvalidObjectState = class _InvalidObjectState2 extends S3ServiceException {
+    var _InvalidObjectState = class _InvalidObjectState2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46834,7 +46834,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_InvalidObjectState, "InvalidObjectState");
     var InvalidObjectState = _InvalidObjectState;
-    var _NoSuchKey = class _NoSuchKey2 extends S3ServiceException {
+    var _NoSuchKey = class _NoSuchKey2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -46865,7 +46865,7 @@ var require_dist_cjs71 = __commonJS({
       COMPLIANCE: "COMPLIANCE",
       GOVERNANCE: "GOVERNANCE"
     };
-    var _NotFound = class _NotFound2 extends S3ServiceException {
+    var _NotFound = class _NotFound2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47064,7 +47064,7 @@ var require_dist_cjs71 = __commonJS({
       Disabled: "Disabled",
       Enabled: "Enabled"
     };
-    var _EncryptionTypeMismatch = class _EncryptionTypeMismatch2 extends S3ServiceException {
+    var _EncryptionTypeMismatch = class _EncryptionTypeMismatch2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47081,7 +47081,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_EncryptionTypeMismatch, "EncryptionTypeMismatch");
     var EncryptionTypeMismatch = _EncryptionTypeMismatch;
-    var _InvalidRequest = class _InvalidRequest2 extends S3ServiceException {
+    var _InvalidRequest = class _InvalidRequest2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47098,7 +47098,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_InvalidRequest, "InvalidRequest");
     var InvalidRequest = _InvalidRequest;
-    var _InvalidWriteOffset = class _InvalidWriteOffset2 extends S3ServiceException {
+    var _InvalidWriteOffset = class _InvalidWriteOffset2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47115,7 +47115,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_InvalidWriteOffset, "InvalidWriteOffset");
     var InvalidWriteOffset = _InvalidWriteOffset;
-    var _TooManyParts = class _TooManyParts2 extends S3ServiceException {
+    var _TooManyParts = class _TooManyParts2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47132,7 +47132,7 @@ var require_dist_cjs71 = __commonJS({
     };
     __name(_TooManyParts, "TooManyParts");
     var TooManyParts = _TooManyParts;
-    var _ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError2 extends S3ServiceException {
+    var _ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError2 extends S3ServiceException2 {
       /**
        * @internal
        */
@@ -47268,8 +47268,8 @@ var require_dist_cjs71 = __commonJS({
       ...obj,
       ...obj.SSEKMSKeyId && { SSEKMSKeyId: import_smithy_client4.SENSITIVE_STRING }
     }), "WriteGetObjectResponseRequestFilterSensitiveLog");
-    var se_AbortMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_AbortMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO],
@@ -47286,8 +47286,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_AbortMultipartUploadCommand");
-    var se_CompleteMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_CompleteMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xacc]: input[_CCRC],
@@ -47311,7 +47311,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.MultipartUpload !== void 0) {
-        contents = se_CompletedMultipartUpload(input.MultipartUpload, context3);
+        contents = se_CompletedMultipartUpload(input.MultipartUpload, context4);
         contents = contents.n("CompleteMultipartUpload");
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -47320,8 +47320,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_CompleteMultipartUploadCommand");
-    var se_CopyObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_CopyObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaa]: input[_ACL],
         [_cc]: input[_CC],
@@ -47376,8 +47376,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_CopyObjectCommand");
-    var se_CreateBucketCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_CreateBucketCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaa]: input[_ACL],
@@ -47394,7 +47394,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.CreateBucketConfiguration !== void 0) {
-        contents = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context3);
+        contents = se_CreateBucketConfiguration(input.CreateBucketConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -47402,8 +47402,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).b(body);
       return b.build();
     }, "se_CreateBucketCommand");
-    var se_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaa]: input[_ACL],
         [_cc]: input[_CC],
@@ -47447,8 +47447,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_CreateMultipartUploadCommand");
-    var se_CreateSessionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_CreateSessionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xacsm]: input[_SM],
         [_xasse]: input[_SSE],
@@ -47465,8 +47465,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_CreateSessionCommand");
-    var se_DeleteBucketCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47476,8 +47476,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).b(body);
       return b.build();
     }, "se_DeleteBucketCommand");
-    var se_DeleteBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47491,8 +47491,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketAnalyticsConfigurationCommand");
-    var se_DeleteBucketCorsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketCorsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47505,8 +47505,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketCorsCommand");
-    var se_DeleteBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47519,8 +47519,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketEncryptionCommand");
-    var se_DeleteBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {};
       b.bp("/");
       b.p("Bucket", () => input.Bucket, "{Bucket}", false);
@@ -47532,8 +47532,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketIntelligentTieringConfigurationCommand");
-    var se_DeleteBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47547,8 +47547,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketInventoryConfigurationCommand");
-    var se_DeleteBucketLifecycleCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketLifecycleCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47561,8 +47561,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketLifecycleCommand");
-    var se_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47576,8 +47576,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketMetricsConfigurationCommand");
-    var se_DeleteBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47590,8 +47590,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketOwnershipControlsCommand");
-    var se_DeleteBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47604,8 +47604,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketPolicyCommand");
-    var se_DeleteBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47618,8 +47618,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketReplicationCommand");
-    var se_DeleteBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47632,8 +47632,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketTaggingCommand");
-    var se_DeleteBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47646,8 +47646,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteBucketWebsiteCommand");
-    var se_DeleteObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xam]: input[_MFA],
         [_xarp]: input[_RP],
@@ -47668,8 +47668,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteObjectCommand");
-    var se_DeleteObjectsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteObjectsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xam]: input[_MFA],
@@ -47686,7 +47686,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.Delete !== void 0) {
-        contents = se_Delete(input.Delete, context3);
+        contents = se_Delete(input.Delete, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -47694,8 +47694,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteObjectsCommand");
-    var se_DeleteObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeleteObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47710,8 +47710,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeleteObjectTaggingCommand");
-    var se_DeletePublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_DeletePublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47724,8 +47724,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("DELETE").h(headers).q(query).b(body);
       return b.build();
     }, "se_DeletePublicAccessBlockCommand");
-    var se_GetBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO],
         [_xarp]: input[_RP]
@@ -47739,8 +47739,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketAccelerateConfigurationCommand");
-    var se_GetBucketAclCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketAclCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47753,8 +47753,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketAclCommand");
-    var se_GetBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47769,8 +47769,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketAnalyticsConfigurationCommand");
-    var se_GetBucketCorsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketCorsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47783,8 +47783,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketCorsCommand");
-    var se_GetBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47797,8 +47797,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketEncryptionCommand");
-    var se_GetBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {};
       b.bp("/");
       b.p("Bucket", () => input.Bucket, "{Bucket}", false);
@@ -47811,8 +47811,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketIntelligentTieringConfigurationCommand");
-    var se_GetBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47827,8 +47827,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketInventoryConfigurationCommand");
-    var se_GetBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47841,8 +47841,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketLifecycleConfigurationCommand");
-    var se_GetBucketLocationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketLocationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47855,8 +47855,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketLocationCommand");
-    var se_GetBucketLoggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketLoggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47869,8 +47869,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketLoggingCommand");
-    var se_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47885,8 +47885,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketMetricsConfigurationCommand");
-    var se_GetBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47899,8 +47899,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketNotificationConfigurationCommand");
-    var se_GetBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47913,8 +47913,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketOwnershipControlsCommand");
-    var se_GetBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47927,8 +47927,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketPolicyCommand");
-    var se_GetBucketPolicyStatusCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketPolicyStatusCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47941,8 +47941,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketPolicyStatusCommand");
-    var se_GetBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47955,8 +47955,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketReplicationCommand");
-    var se_GetBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47969,8 +47969,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketRequestPaymentCommand");
-    var se_GetBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47983,8 +47983,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketTaggingCommand");
-    var se_GetBucketVersioningCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketVersioningCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -47997,8 +47997,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketVersioningCommand");
-    var se_GetBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48011,8 +48011,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetBucketWebsiteCommand");
-    var se_GetObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_im]: input[_IM],
         [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMSf]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMSf]).toString()],
@@ -48044,8 +48044,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectCommand");
-    var se_GetObjectAclCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectAclCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO]
@@ -48061,8 +48061,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectAclCommand");
-    var se_GetObjectAttributesCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectAttributesCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xamp]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_MP]), () => input[_MP].toString()],
         [_xapnm]: input[_PNM],
@@ -48084,8 +48084,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectAttributesCommand");
-    var se_GetObjectLegalHoldCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectLegalHoldCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO]
@@ -48101,8 +48101,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectLegalHoldCommand");
-    var se_GetObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48115,8 +48115,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectLockConfigurationCommand");
-    var se_GetObjectRetentionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectRetentionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO]
@@ -48132,8 +48132,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectRetentionCommand");
-    var se_GetObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO],
         [_xarp]: input[_RP]
@@ -48149,8 +48149,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectTaggingCommand");
-    var se_GetObjectTorrentCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetObjectTorrentCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO]
@@ -48165,8 +48165,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetObjectTorrentCommand");
-    var se_GetPublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_GetPublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48179,8 +48179,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_GetPublicAccessBlockCommand");
-    var se_HeadBucketCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_HeadBucketCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48190,8 +48190,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("HEAD").h(headers).b(body);
       return b.build();
     }, "se_HeadBucketCommand");
-    var se_HeadObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_HeadObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_im]: input[_IM],
         [_ims]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_IMSf]), () => (0, import_smithy_client4.dateToUtcString)(input[_IMSf]).toString()],
@@ -48222,8 +48222,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("HEAD").h(headers).q(query).b(body);
       return b.build();
     }, "se_HeadObjectCommand");
-    var se_ListBucketAnalyticsConfigurationsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListBucketAnalyticsConfigurationsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48238,8 +48238,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListBucketAnalyticsConfigurationsCommand");
-    var se_ListBucketIntelligentTieringConfigurationsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListBucketIntelligentTieringConfigurationsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {};
       b.bp("/");
       b.p("Bucket", () => input.Bucket, "{Bucket}", false);
@@ -48252,8 +48252,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListBucketIntelligentTieringConfigurationsCommand");
-    var se_ListBucketInventoryConfigurationsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListBucketInventoryConfigurationsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48268,8 +48268,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListBucketInventoryConfigurationsCommand");
-    var se_ListBucketMetricsConfigurationsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListBucketMetricsConfigurationsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO]
       });
@@ -48284,8 +48284,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListBucketMetricsConfigurationsCommand");
-    var se_ListBucketsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListBucketsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {};
       b.bp("/");
       const query = (0, import_smithy_client4.map)({
@@ -48299,8 +48299,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListBucketsCommand");
-    var se_ListDirectoryBucketsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListDirectoryBucketsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {};
       b.bp("/");
       const query = (0, import_smithy_client4.map)({
@@ -48312,8 +48312,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListDirectoryBucketsCommand");
-    var se_ListMultipartUploadsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListMultipartUploadsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO],
         [_xarp]: input[_RP]
@@ -48333,8 +48333,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListMultipartUploadsCommand");
-    var se_ListObjectsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListObjectsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO],
@@ -48353,8 +48353,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListObjectsCommand");
-    var se_ListObjectsV2Command = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListObjectsV2Command = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO],
@@ -48376,8 +48376,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListObjectsV2Command");
-    var se_ListObjectVersionsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListObjectVersionsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xaebo]: input[_EBO],
         [_xarp]: input[_RP],
@@ -48398,8 +48398,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListObjectVersionsCommand");
-    var se_ListPartsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_ListPartsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xarp]: input[_RP],
         [_xaebo]: input[_EBO],
@@ -48420,8 +48420,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("GET").h(headers).q(query).b(body);
       return b.build();
     }, "se_ListPartsCommand");
-    var se_PutBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaebo]: input[_EBO],
@@ -48435,7 +48435,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.AccelerateConfiguration !== void 0) {
-        contents = se_AccelerateConfiguration(input.AccelerateConfiguration, context3);
+        contents = se_AccelerateConfiguration(input.AccelerateConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48443,8 +48443,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketAccelerateConfigurationCommand");
-    var se_PutBucketAclCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketAclCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaa]: input[_ACL],
@@ -48465,7 +48465,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.AccessControlPolicy !== void 0) {
-        contents = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        contents = se_AccessControlPolicy(input.AccessControlPolicy, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48473,8 +48473,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketAclCommand");
-    var se_PutBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaebo]: input[_EBO]
@@ -48488,7 +48488,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.AnalyticsConfiguration !== void 0) {
-        contents = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context3);
+        contents = se_AnalyticsConfiguration(input.AnalyticsConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48496,8 +48496,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketAnalyticsConfigurationCommand");
-    var se_PutBucketCorsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketCorsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48512,7 +48512,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.CORSConfiguration !== void 0) {
-        contents = se_CORSConfiguration(input.CORSConfiguration, context3);
+        contents = se_CORSConfiguration(input.CORSConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48520,8 +48520,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketCorsCommand");
-    var se_PutBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketEncryptionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48536,7 +48536,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.ServerSideEncryptionConfiguration !== void 0) {
-        contents = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context3);
+        contents = se_ServerSideEncryptionConfiguration(input.ServerSideEncryptionConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48544,8 +48544,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketEncryptionCommand");
-    var se_PutBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = {
         "content-type": "application/xml"
       };
@@ -48558,7 +48558,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.IntelligentTieringConfiguration !== void 0) {
-        contents = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context3);
+        contents = se_IntelligentTieringConfiguration(input.IntelligentTieringConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48566,8 +48566,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketIntelligentTieringConfigurationCommand");
-    var se_PutBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaebo]: input[_EBO]
@@ -48581,7 +48581,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.InventoryConfiguration !== void 0) {
-        contents = se_InventoryConfiguration(input.InventoryConfiguration, context3);
+        contents = se_InventoryConfiguration(input.InventoryConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48589,8 +48589,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketInventoryConfigurationCommand");
-    var se_PutBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xasca]: input[_CA],
@@ -48605,7 +48605,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.LifecycleConfiguration !== void 0) {
-        contents = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context3);
+        contents = se_BucketLifecycleConfiguration(input.LifecycleConfiguration, context4);
         contents = contents.n("LifecycleConfiguration");
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -48614,8 +48614,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketLifecycleConfigurationCommand");
-    var se_PutBucketLoggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketLoggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48630,7 +48630,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.BucketLoggingStatus !== void 0) {
-        contents = se_BucketLoggingStatus(input.BucketLoggingStatus, context3);
+        contents = se_BucketLoggingStatus(input.BucketLoggingStatus, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48638,8 +48638,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketLoggingCommand");
-    var se_PutBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaebo]: input[_EBO]
@@ -48653,7 +48653,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.MetricsConfiguration !== void 0) {
-        contents = se_MetricsConfiguration(input.MetricsConfiguration, context3);
+        contents = se_MetricsConfiguration(input.MetricsConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48661,8 +48661,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketMetricsConfigurationCommand");
-    var se_PutBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaebo]: input[_EBO],
@@ -48676,7 +48676,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.NotificationConfiguration !== void 0) {
-        contents = se_NotificationConfiguration(input.NotificationConfiguration, context3);
+        contents = se_NotificationConfiguration(input.NotificationConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48684,8 +48684,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketNotificationConfigurationCommand");
-    var se_PutBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48699,7 +48699,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.OwnershipControls !== void 0) {
-        contents = se_OwnershipControls(input.OwnershipControls, context3);
+        contents = se_OwnershipControls(input.OwnershipControls, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48707,8 +48707,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketOwnershipControlsCommand");
-    var se_PutBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketPolicyCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "text/plain",
         [_cm]: input[_CMD],
@@ -48730,8 +48730,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketPolicyCommand");
-    var se_PutBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketReplicationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48747,7 +48747,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.ReplicationConfiguration !== void 0) {
-        contents = se_ReplicationConfiguration(input.ReplicationConfiguration, context3);
+        contents = se_ReplicationConfiguration(input.ReplicationConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48755,8 +48755,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketReplicationCommand");
-    var se_PutBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48771,7 +48771,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.RequestPaymentConfiguration !== void 0) {
-        contents = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context3);
+        contents = se_RequestPaymentConfiguration(input.RequestPaymentConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48779,8 +48779,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketRequestPaymentCommand");
-    var se_PutBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48795,7 +48795,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.Tagging !== void 0) {
-        contents = se_Tagging(input.Tagging, context3);
+        contents = se_Tagging(input.Tagging, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48803,8 +48803,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketTaggingCommand");
-    var se_PutBucketVersioningCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketVersioningCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48820,7 +48820,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.VersioningConfiguration !== void 0) {
-        contents = se_VersioningConfiguration(input.VersioningConfiguration, context3);
+        contents = se_VersioningConfiguration(input.VersioningConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48828,8 +48828,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketVersioningCommand");
-    var se_PutBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutBucketWebsiteCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -48844,7 +48844,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.WebsiteConfiguration !== void 0) {
-        contents = se_WebsiteConfiguration(input.WebsiteConfiguration, context3);
+        contents = se_WebsiteConfiguration(input.WebsiteConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48852,8 +48852,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutBucketWebsiteCommand");
-    var se_PutObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_ct]: input[_CT] || "application/octet-stream",
         [_xaa]: input[_ACL],
@@ -48911,8 +48911,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectCommand");
-    var se_PutObjectAclCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectAclCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xaa]: input[_ACL],
@@ -48936,7 +48936,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.AccessControlPolicy !== void 0) {
-        contents = se_AccessControlPolicy(input.AccessControlPolicy, context3);
+        contents = se_AccessControlPolicy(input.AccessControlPolicy, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48944,8 +48944,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectAclCommand");
-    var se_PutObjectLegalHoldCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectLegalHoldCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xarp]: input[_RP],
@@ -48963,7 +48963,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.LegalHold !== void 0) {
-        contents = se_ObjectLockLegalHold(input.LegalHold, context3);
+        contents = se_ObjectLockLegalHold(input.LegalHold, context4);
         contents = contents.n("LegalHold");
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -48972,8 +48972,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectLegalHoldCommand");
-    var se_PutObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xarp]: input[_RP],
@@ -48990,7 +48990,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.ObjectLockConfiguration !== void 0) {
-        contents = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context3);
+        contents = se_ObjectLockConfiguration(input.ObjectLockConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -48998,8 +48998,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectLockConfigurationCommand");
-    var se_PutObjectRetentionCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectRetentionCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xarp]: input[_RP],
@@ -49018,7 +49018,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.Retention !== void 0) {
-        contents = se_ObjectLockRetention(input.Retention, context3);
+        contents = se_ObjectLockRetention(input.Retention, context4);
         contents = contents.n("Retention");
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
@@ -49027,8 +49027,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectRetentionCommand");
-    var se_PutObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutObjectTaggingCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -49046,7 +49046,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.Tagging !== void 0) {
-        contents = se_Tagging(input.Tagging, context3);
+        contents = se_Tagging(input.Tagging, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -49054,8 +49054,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutObjectTaggingCommand");
-    var se_PutPublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_PutPublicAccessBlockCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_cm]: input[_CMD],
@@ -49070,7 +49070,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.PublicAccessBlockConfiguration !== void 0) {
-        contents = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context3);
+        contents = se_PublicAccessBlockConfiguration(input.PublicAccessBlockConfiguration, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -49078,8 +49078,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_PutPublicAccessBlockCommand");
-    var se_RestoreObjectCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_RestoreObjectCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xarp]: input[_RP],
@@ -49096,7 +49096,7 @@ var require_dist_cjs71 = __commonJS({
       let body;
       let contents;
       if (input.RestoreRequest !== void 0) {
-        contents = se_RestoreRequest(input.RestoreRequest, context3);
+        contents = se_RestoreRequest(input.RestoreRequest, context4);
         body = _ve;
         contents.a("xmlns", "http://s3.amazonaws.com/doc/2006-03-01/");
         body += contents.toString();
@@ -49104,8 +49104,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_RestoreObjectCommand");
-    var se_SelectObjectContentCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_SelectObjectContentCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/xml",
         [_xasseca]: input[_SSECA],
@@ -49127,23 +49127,23 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _Ex);
       bn.cc(input, _ETx);
       if (input[_IS] != null) {
-        bn.c(se_InputSerialization(input[_IS], context3).n(_IS));
+        bn.c(se_InputSerialization(input[_IS], context4).n(_IS));
       }
       if (input[_OS] != null) {
-        bn.c(se_OutputSerialization(input[_OS], context3).n(_OS));
+        bn.c(se_OutputSerialization(input[_OS], context4).n(_OS));
       }
       if (input[_RPe] != null) {
-        bn.c(se_RequestProgress(input[_RPe], context3).n(_RPe));
+        bn.c(se_RequestProgress(input[_RPe], context4).n(_RPe));
       }
       if (input[_SR] != null) {
-        bn.c(se_ScanRange(input[_SR], context3).n(_SR));
+        bn.c(se_ScanRange(input[_SR], context4).n(_SR));
       }
       body += bn.toString();
       b.m("POST").h(headers).q(query).b(body);
       return b.build();
     }, "se_SelectObjectContentCommand");
-    var se_UploadPartCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_UploadPartCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "content-type": "application/octet-stream",
         [_cl_]: [() => (0, import_smithy_client4.isSerializableHeaderValue)(input[_CLo]), () => input[_CLo].toString()],
@@ -49176,8 +49176,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_UploadPartCommand");
-    var se_UploadPartCopyCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_UploadPartCopyCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         [_xacs__]: input[_CS],
         [_xacsim]: input[_CSIM],
@@ -49207,8 +49207,8 @@ var require_dist_cjs71 = __commonJS({
       b.m("PUT").h(headers).q(query).b(body);
       return b.build();
     }, "se_UploadPartCopyCommand");
-    var se_WriteGetObjectResponseCommand = /* @__PURE__ */ __name(async (input, context3) => {
-      const b = (0, import_core22.requestBuilder)(input, context3);
+    var se_WriteGetObjectResponseCommand = /* @__PURE__ */ __name(async (input, context4) => {
+      const b = (0, import_core22.requestBuilder)(input, context4);
       const headers = (0, import_smithy_client4.map)({}, import_smithy_client4.isSerializableHeaderValue, {
         "x-amz-content-sha256": "UNSIGNED-PAYLOAD",
         "content-type": "application/octet-stream",
@@ -49265,8 +49265,8 @@ var require_dist_cjs71 = __commonJS({
         contents = input.Body;
         body = contents;
       }
-      let { hostname: resolvedHostname } = await context3.endpoint();
-      if (context3.disableHostPrefix !== true) {
+      let { hostname: resolvedHostname } = await context4.endpoint();
+      if (context4.disableHostPrefix !== true) {
         resolvedHostname = "{RequestRoute}." + resolvedHostname;
         if (input.RequestRoute === void 0) {
           throw new Error("Empty value provided for input host prefix: RequestRoute.");
@@ -49280,20 +49280,20 @@ var require_dist_cjs71 = __commonJS({
       b.m("POST").h(headers).b(body);
       return b.build();
     }, "se_WriteGetObjectResponseCommand");
-    var de_AbortMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_AbortMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_AbortMultipartUploadCommand");
-    var de_CompleteMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CompleteMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49304,7 +49304,7 @@ var require_dist_cjs71 = __commonJS({
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])],
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_B] != null) {
         contents[_B] = (0, import_smithy_client4.expectString)(data[_B]);
       }
@@ -49331,9 +49331,9 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_CompleteMultipartUploadCommand");
-    var de_CopyObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CopyObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49348,24 +49348,24 @@ var require_dist_cjs71 = __commonJS({
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])],
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.CopyObjectResult = de_CopyObjectResult(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.CopyObjectResult = de_CopyObjectResult(data, context4);
       return contents;
     }, "de_CopyObjectCommand");
-    var de_CreateBucketCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateBucketCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_L]: [, output.headers[_lo]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_CreateBucketCommand");
-    var de_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateMultipartUploadCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49383,7 +49383,7 @@ var require_dist_cjs71 = __commonJS({
         [_RC]: [, output.headers[_xarc]],
         [_CA]: [, output.headers[_xaca]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_B] != null) {
         contents[_B] = (0, import_smithy_client4.expectString)(data[_B]);
       }
@@ -49395,9 +49395,9 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_CreateMultipartUploadCommand");
-    var de_CreateSessionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateSessionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49406,145 +49406,145 @@ var require_dist_cjs71 = __commonJS({
         [_SSEKMSEC]: [, output.headers[_xassec]],
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_C] != null) {
-        contents[_C] = de_SessionCredentials(data[_C], context3);
+        contents[_C] = de_SessionCredentials(data[_C], context4);
       }
       return contents;
     }, "de_CreateSessionCommand");
-    var de_DeleteBucketCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketCommand");
-    var de_DeleteBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketAnalyticsConfigurationCommand");
-    var de_DeleteBucketCorsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketCorsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketCorsCommand");
-    var de_DeleteBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketEncryptionCommand");
-    var de_DeleteBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketIntelligentTieringConfigurationCommand");
-    var de_DeleteBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketInventoryConfigurationCommand");
-    var de_DeleteBucketLifecycleCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketLifecycleCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketLifecycleCommand");
-    var de_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketMetricsConfigurationCommand");
-    var de_DeleteBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketOwnershipControlsCommand");
-    var de_DeleteBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketPolicyCommand");
-    var de_DeleteBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketReplicationCommand");
-    var de_DeleteBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketTaggingCommand");
-    var de_DeleteBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteBucketWebsiteCommand");
-    var de_DeleteObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49552,303 +49552,303 @@ var require_dist_cjs71 = __commonJS({
         [_VI]: [, output.headers[_xavi]],
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteObjectCommand");
-    var de_DeleteObjectsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteObjectsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.Deleted === "") {
         contents[_De] = [];
       } else if (data[_De] != null) {
-        contents[_De] = de_DeletedObjects((0, import_smithy_client4.getArrayIfSingleItem)(data[_De]), context3);
+        contents[_De] = de_DeletedObjects((0, import_smithy_client4.getArrayIfSingleItem)(data[_De]), context4);
       }
       if (data.Error === "") {
         contents[_Err] = [];
       } else if (data[_Er] != null) {
-        contents[_Err] = de_Errors((0, import_smithy_client4.getArrayIfSingleItem)(data[_Er]), context3);
+        contents[_Err] = de_Errors((0, import_smithy_client4.getArrayIfSingleItem)(data[_Er]), context4);
       }
       return contents;
     }, "de_DeleteObjectsCommand");
-    var de_DeleteObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_VI]: [, output.headers[_xavi]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeleteObjectTaggingCommand");
-    var de_DeletePublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeletePublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 204 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_DeletePublicAccessBlockCommand");
-    var de_GetBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(data[_S]);
       }
       return contents;
     }, "de_GetBucketAccelerateConfigurationCommand");
-    var de_GetBucketAclCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketAclCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.AccessControlList === "") {
         contents[_Gr] = [];
       } else if (data[_ACLc] != null && data[_ACLc][_G] != null) {
-        contents[_Gr] = de_Grants((0, import_smithy_client4.getArrayIfSingleItem)(data[_ACLc][_G]), context3);
+        contents[_Gr] = de_Grants((0, import_smithy_client4.getArrayIfSingleItem)(data[_ACLc][_G]), context4);
       }
       if (data[_O] != null) {
-        contents[_O] = de_Owner(data[_O], context3);
+        contents[_O] = de_Owner(data[_O], context4);
       }
       return contents;
     }, "de_GetBucketAclCommand");
-    var de_GetBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.AnalyticsConfiguration = de_AnalyticsConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.AnalyticsConfiguration = de_AnalyticsConfiguration(data, context4);
       return contents;
     }, "de_GetBucketAnalyticsConfigurationCommand");
-    var de_GetBucketCorsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketCorsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.CORSRule === "") {
         contents[_CORSRu] = [];
       } else if (data[_CORSR] != null) {
-        contents[_CORSRu] = de_CORSRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_CORSR]), context3);
+        contents[_CORSRu] = de_CORSRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_CORSR]), context4);
       }
       return contents;
     }, "de_GetBucketCorsCommand");
-    var de_GetBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.ServerSideEncryptionConfiguration = de_ServerSideEncryptionConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.ServerSideEncryptionConfiguration = de_ServerSideEncryptionConfiguration(data, context4);
       return contents;
     }, "de_GetBucketEncryptionCommand");
-    var de_GetBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.IntelligentTieringConfiguration = de_IntelligentTieringConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.IntelligentTieringConfiguration = de_IntelligentTieringConfiguration(data, context4);
       return contents;
     }, "de_GetBucketIntelligentTieringConfigurationCommand");
-    var de_GetBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.InventoryConfiguration = de_InventoryConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.InventoryConfiguration = de_InventoryConfiguration(data, context4);
       return contents;
     }, "de_GetBucketInventoryConfigurationCommand");
-    var de_GetBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_TDMOS]: [, output.headers[_xatdmos]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.Rule === "") {
         contents[_Rul] = [];
       } else if (data[_Ru] != null) {
-        contents[_Rul] = de_LifecycleRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_Ru]), context3);
+        contents[_Rul] = de_LifecycleRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_Ru]), context4);
       }
       return contents;
     }, "de_GetBucketLifecycleConfigurationCommand");
-    var de_GetBucketLocationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketLocationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_LC] != null) {
         contents[_LC] = (0, import_smithy_client4.expectString)(data[_LC]);
       }
       return contents;
     }, "de_GetBucketLocationCommand");
-    var de_GetBucketLoggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketLoggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_LE] != null) {
-        contents[_LE] = de_LoggingEnabled(data[_LE], context3);
+        contents[_LE] = de_LoggingEnabled(data[_LE], context4);
       }
       return contents;
     }, "de_GetBucketLoggingCommand");
-    var de_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.MetricsConfiguration = de_MetricsConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.MetricsConfiguration = de_MetricsConfiguration(data, context4);
       return contents;
     }, "de_GetBucketMetricsConfigurationCommand");
-    var de_GetBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_EBC] != null) {
-        contents[_EBC] = de_EventBridgeConfiguration(data[_EBC], context3);
+        contents[_EBC] = de_EventBridgeConfiguration(data[_EBC], context4);
       }
       if (data.CloudFunctionConfiguration === "") {
         contents[_LFC] = [];
       } else if (data[_CFC] != null) {
-        contents[_LFC] = de_LambdaFunctionConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CFC]), context3);
+        contents[_LFC] = de_LambdaFunctionConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CFC]), context4);
       }
       if (data.QueueConfiguration === "") {
         contents[_QCu] = [];
       } else if (data[_QC] != null) {
-        contents[_QCu] = de_QueueConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_QC]), context3);
+        contents[_QCu] = de_QueueConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_QC]), context4);
       }
       if (data.TopicConfiguration === "") {
         contents[_TCop] = [];
       } else if (data[_TCo] != null) {
-        contents[_TCop] = de_TopicConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_TCo]), context3);
+        contents[_TCop] = de_TopicConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_TCo]), context4);
       }
       return contents;
     }, "de_GetBucketNotificationConfigurationCommand");
-    var de_GetBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.OwnershipControls = de_OwnershipControls(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.OwnershipControls = de_OwnershipControls(data, context4);
       return contents;
     }, "de_GetBucketOwnershipControlsCommand");
-    var de_GetBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = await collectBodyString2(output.body, context3);
+      const data = await collectBodyString2(output.body, context4);
       contents.Policy = (0, import_smithy_client4.expectString)(data);
       return contents;
     }, "de_GetBucketPolicyCommand");
-    var de_GetBucketPolicyStatusCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketPolicyStatusCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.PolicyStatus = de_PolicyStatus(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.PolicyStatus = de_PolicyStatus(data, context4);
       return contents;
     }, "de_GetBucketPolicyStatusCommand");
-    var de_GetBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.ReplicationConfiguration = de_ReplicationConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.ReplicationConfiguration = de_ReplicationConfiguration(data, context4);
       return contents;
     }, "de_GetBucketReplicationCommand");
-    var de_GetBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_Pa] != null) {
         contents[_Pa] = (0, import_smithy_client4.expectString)(data[_Pa]);
       }
       return contents;
     }, "de_GetBucketRequestPaymentCommand");
-    var de_GetBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.TagSet === "") {
         contents[_TS] = [];
       } else if (data[_TS] != null && data[_TS][_Ta] != null) {
-        contents[_TS] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(data[_TS][_Ta]), context3);
+        contents[_TS] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(data[_TS][_Ta]), context4);
       }
       return contents;
     }, "de_GetBucketTaggingCommand");
-    var de_GetBucketVersioningCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketVersioningCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_MDf] != null) {
         contents[_MFAD] = (0, import_smithy_client4.expectString)(data[_MDf]);
       }
@@ -49857,33 +49857,33 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_GetBucketVersioningCommand");
-    var de_GetBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_ED] != null) {
-        contents[_ED] = de_ErrorDocument(data[_ED], context3);
+        contents[_ED] = de_ErrorDocument(data[_ED], context4);
       }
       if (data[_ID] != null) {
-        contents[_ID] = de_IndexDocument(data[_ID], context3);
+        contents[_ID] = de_IndexDocument(data[_ID], context4);
       }
       if (data[_RART] != null) {
-        contents[_RART] = de_RedirectAllRequestsTo(data[_RART], context3);
+        contents[_RART] = de_RedirectAllRequestsTo(data[_RART], context4);
       }
       if (data.RoutingRules === "") {
         contents[_RRo] = [];
       } else if (data[_RRo] != null && data[_RRo][_RRou] != null) {
-        contents[_RRo] = de_RoutingRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_RRo][_RRou]), context3);
+        contents[_RRo] = de_RoutingRules((0, import_smithy_client4.getArrayIfSingleItem)(data[_RRo][_RRou]), context4);
       }
       return contents;
     }, "de_GetBucketWebsiteCommand");
-    var de_GetObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49934,32 +49934,32 @@ var require_dist_cjs71 = __commonJS({
         ]
       });
       const data = output.body;
-      context3.sdkStreamMixin(data);
+      context4.sdkStreamMixin(data);
       contents.Body = data;
       return contents;
     }, "de_GetObjectCommand");
-    var de_GetObjectAclCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectAclCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.AccessControlList === "") {
         contents[_Gr] = [];
       } else if (data[_ACLc] != null && data[_ACLc][_G] != null) {
-        contents[_Gr] = de_Grants((0, import_smithy_client4.getArrayIfSingleItem)(data[_ACLc][_G]), context3);
+        contents[_Gr] = de_Grants((0, import_smithy_client4.getArrayIfSingleItem)(data[_ACLc][_G]), context4);
       }
       if (data[_O] != null) {
-        contents[_O] = de_Owner(data[_O], context3);
+        contents[_O] = de_Owner(data[_O], context4);
       }
       return contents;
     }, "de_GetObjectAclCommand");
-    var de_GetObjectAttributesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectAttributesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -49968,15 +49968,15 @@ var require_dist_cjs71 = __commonJS({
         [_VI]: [, output.headers[_xavi]],
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_Ch] != null) {
-        contents[_Ch] = de_Checksum(data[_Ch], context3);
+        contents[_Ch] = de_Checksum(data[_Ch], context4);
       }
       if (data[_ETa] != null) {
         contents[_ETa] = (0, import_smithy_client4.expectString)(data[_ETa]);
       }
       if (data[_OP] != null) {
-        contents[_OP] = de_GetObjectAttributesParts(data[_OP], context3);
+        contents[_OP] = de_GetObjectAttributesParts(data[_OP], context4);
       }
       if (data[_OSb] != null) {
         contents[_OSb] = (0, import_smithy_client4.strictParseLong)(data[_OSb]);
@@ -49986,82 +49986,82 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_GetObjectAttributesCommand");
-    var de_GetObjectLegalHoldCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectLegalHoldCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.LegalHold = de_ObjectLockLegalHold(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.LegalHold = de_ObjectLockLegalHold(data, context4);
       return contents;
     }, "de_GetObjectLegalHoldCommand");
-    var de_GetObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.ObjectLockConfiguration = de_ObjectLockConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.ObjectLockConfiguration = de_ObjectLockConfiguration(data, context4);
       return contents;
     }, "de_GetObjectLockConfigurationCommand");
-    var de_GetObjectRetentionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectRetentionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.Retention = de_ObjectLockRetention(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.Retention = de_ObjectLockRetention(data, context4);
       return contents;
     }, "de_GetObjectRetentionCommand");
-    var de_GetObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_VI]: [, output.headers[_xavi]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.TagSet === "") {
         contents[_TS] = [];
       } else if (data[_TS] != null && data[_TS][_Ta] != null) {
-        contents[_TS] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(data[_TS][_Ta]), context3);
+        contents[_TS] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(data[_TS][_Ta]), context4);
       }
       return contents;
     }, "de_GetObjectTaggingCommand");
-    var de_GetObjectTorrentCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetObjectTorrentCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
       const data = output.body;
-      context3.sdkStreamMixin(data);
+      context4.sdkStreamMixin(data);
       contents.Body = data;
       return contents;
     }, "de_GetObjectTorrentCommand");
-    var de_GetPublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetPublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.PublicAccessBlockConfiguration = de_PublicAccessBlockConfiguration(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.PublicAccessBlockConfiguration = de_PublicAccessBlockConfiguration(data, context4);
       return contents;
     }, "de_GetPublicAccessBlockCommand");
-    var de_HeadBucketCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_HeadBucketCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50070,12 +50070,12 @@ var require_dist_cjs71 = __commonJS({
         [_BR]: [, output.headers[_xabr]],
         [_APA]: [() => void 0 !== output.headers[_xaapa], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xaapa])]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_HeadBucketCommand");
-    var de_HeadObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_HeadObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50124,21 +50124,21 @@ var require_dist_cjs71 = __commonJS({
           }, {})
         ]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_HeadObjectCommand");
-    var de_ListBucketAnalyticsConfigurationsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListBucketAnalyticsConfigurationsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.AnalyticsConfiguration === "") {
         contents[_ACLn] = [];
       } else if (data[_AC] != null) {
-        contents[_ACLn] = de_AnalyticsConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_AC]), context3);
+        contents[_ACLn] = de_AnalyticsConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_AC]), context4);
       }
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
@@ -50151,21 +50151,21 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListBucketAnalyticsConfigurationsCommand");
-    var de_ListBucketIntelligentTieringConfigurationsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListBucketIntelligentTieringConfigurationsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
       }
       if (data.IntelligentTieringConfiguration === "") {
         contents[_ITCL] = [];
       } else if (data[_ITC] != null) {
-        contents[_ITCL] = de_IntelligentTieringConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_ITC]), context3);
+        contents[_ITCL] = de_IntelligentTieringConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_ITC]), context4);
       }
       if (data[_IT] != null) {
         contents[_IT] = (0, import_smithy_client4.parseBoolean)(data[_IT]);
@@ -50175,21 +50175,21 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListBucketIntelligentTieringConfigurationsCommand");
-    var de_ListBucketInventoryConfigurationsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListBucketInventoryConfigurationsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
       }
       if (data.InventoryConfiguration === "") {
         contents[_ICL] = [];
       } else if (data[_IC] != null) {
-        contents[_ICL] = de_InventoryConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_IC]), context3);
+        contents[_ICL] = de_InventoryConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_IC]), context4);
       }
       if (data[_IT] != null) {
         contents[_IT] = (0, import_smithy_client4.parseBoolean)(data[_IT]);
@@ -50199,14 +50199,14 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListBucketInventoryConfigurationsCommand");
-    var de_ListBucketMetricsConfigurationsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListBucketMetricsConfigurationsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
       }
@@ -50216,71 +50216,71 @@ var require_dist_cjs71 = __commonJS({
       if (data.MetricsConfiguration === "") {
         contents[_MCL] = [];
       } else if (data[_MC] != null) {
-        contents[_MCL] = de_MetricsConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_MC]), context3);
+        contents[_MCL] = de_MetricsConfigurationList((0, import_smithy_client4.getArrayIfSingleItem)(data[_MC]), context4);
       }
       if (data[_NCT] != null) {
         contents[_NCT] = (0, import_smithy_client4.expectString)(data[_NCT]);
       }
       return contents;
     }, "de_ListBucketMetricsConfigurationsCommand");
-    var de_ListBucketsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListBucketsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.Buckets === "") {
         contents[_Bu] = [];
       } else if (data[_Bu] != null && data[_Bu][_B] != null) {
-        contents[_Bu] = de_Buckets((0, import_smithy_client4.getArrayIfSingleItem)(data[_Bu][_B]), context3);
+        contents[_Bu] = de_Buckets((0, import_smithy_client4.getArrayIfSingleItem)(data[_Bu][_B]), context4);
       }
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
       }
       if (data[_O] != null) {
-        contents[_O] = de_Owner(data[_O], context3);
+        contents[_O] = de_Owner(data[_O], context4);
       }
       if (data[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(data[_P]);
       }
       return contents;
     }, "de_ListBucketsCommand");
-    var de_ListDirectoryBucketsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListDirectoryBucketsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.Buckets === "") {
         contents[_Bu] = [];
       } else if (data[_Bu] != null && data[_Bu][_B] != null) {
-        contents[_Bu] = de_Buckets((0, import_smithy_client4.getArrayIfSingleItem)(data[_Bu][_B]), context3);
+        contents[_Bu] = de_Buckets((0, import_smithy_client4.getArrayIfSingleItem)(data[_Bu][_B]), context4);
       }
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
       }
       return contents;
     }, "de_ListDirectoryBucketsCommand");
-    var de_ListMultipartUploadsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListMultipartUploadsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_B] != null) {
         contents[_B] = (0, import_smithy_client4.expectString)(data[_B]);
       }
       if (data.CommonPrefixes === "") {
         contents[_CP] = [];
       } else if (data[_CP] != null) {
-        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context3);
+        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context4);
       }
       if (data[_D] != null) {
         contents[_D] = (0, import_smithy_client4.expectString)(data[_D]);
@@ -50312,28 +50312,28 @@ var require_dist_cjs71 = __commonJS({
       if (data.Upload === "") {
         contents[_Up] = [];
       } else if (data[_U] != null) {
-        contents[_Up] = de_MultipartUploadList((0, import_smithy_client4.getArrayIfSingleItem)(data[_U]), context3);
+        contents[_Up] = de_MultipartUploadList((0, import_smithy_client4.getArrayIfSingleItem)(data[_U]), context4);
       }
       return contents;
     }, "de_ListMultipartUploadsCommand");
-    var de_ListObjectsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListObjectsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.CommonPrefixes === "") {
         contents[_CP] = [];
       } else if (data[_CP] != null) {
-        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context3);
+        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context4);
       }
       if (data.Contents === "") {
         contents[_Co] = [];
       } else if (data[_Co] != null) {
-        contents[_Co] = de_ObjectList((0, import_smithy_client4.getArrayIfSingleItem)(data[_Co]), context3);
+        contents[_Co] = de_ObjectList((0, import_smithy_client4.getArrayIfSingleItem)(data[_Co]), context4);
       }
       if (data[_D] != null) {
         contents[_D] = (0, import_smithy_client4.expectString)(data[_D]);
@@ -50361,24 +50361,24 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListObjectsCommand");
-    var de_ListObjectsV2Command = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListObjectsV2Command = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.CommonPrefixes === "") {
         contents[_CP] = [];
       } else if (data[_CP] != null) {
-        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context3);
+        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context4);
       }
       if (data.Contents === "") {
         contents[_Co] = [];
       } else if (data[_Co] != null) {
-        contents[_Co] = de_ObjectList((0, import_smithy_client4.getArrayIfSingleItem)(data[_Co]), context3);
+        contents[_Co] = de_ObjectList((0, import_smithy_client4.getArrayIfSingleItem)(data[_Co]), context4);
       }
       if (data[_CTo] != null) {
         contents[_CTo] = (0, import_smithy_client4.expectString)(data[_CTo]);
@@ -50412,24 +50412,24 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListObjectsV2Command");
-    var de_ListObjectVersionsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListObjectVersionsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data.CommonPrefixes === "") {
         contents[_CP] = [];
       } else if (data[_CP] != null) {
-        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context3);
+        contents[_CP] = de_CommonPrefixList((0, import_smithy_client4.getArrayIfSingleItem)(data[_CP]), context4);
       }
       if (data.DeleteMarker === "") {
         contents[_DMe] = [];
       } else if (data[_DM] != null) {
-        contents[_DMe] = de_DeleteMarkers((0, import_smithy_client4.getArrayIfSingleItem)(data[_DM]), context3);
+        contents[_DMe] = de_DeleteMarkers((0, import_smithy_client4.getArrayIfSingleItem)(data[_DM]), context4);
       }
       if (data[_D] != null) {
         contents[_D] = (0, import_smithy_client4.expectString)(data[_D]);
@@ -50464,13 +50464,13 @@ var require_dist_cjs71 = __commonJS({
       if (data.Version === "") {
         contents[_Ve] = [];
       } else if (data[_V] != null) {
-        contents[_Ve] = de_ObjectVersionList((0, import_smithy_client4.getArrayIfSingleItem)(data[_V]), context3);
+        contents[_Ve] = de_ObjectVersionList((0, import_smithy_client4.getArrayIfSingleItem)(data[_V]), context4);
       }
       return contents;
     }, "de_ListObjectVersionsCommand");
-    var de_ListPartsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListPartsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50481,7 +50481,7 @@ var require_dist_cjs71 = __commonJS({
         [_ARI]: [, output.headers[_xaari]],
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3)), "body");
+      const data = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4)), "body");
       if (data[_B] != null) {
         contents[_B] = (0, import_smithy_client4.expectString)(data[_B]);
       }
@@ -50489,7 +50489,7 @@ var require_dist_cjs71 = __commonJS({
         contents[_CA] = (0, import_smithy_client4.expectString)(data[_CA]);
       }
       if (data[_In] != null) {
-        contents[_In] = de_Initiator(data[_In], context3);
+        contents[_In] = de_Initiator(data[_In], context4);
       }
       if (data[_IT] != null) {
         contents[_IT] = (0, import_smithy_client4.parseBoolean)(data[_IT]);
@@ -50504,7 +50504,7 @@ var require_dist_cjs71 = __commonJS({
         contents[_NPNM] = (0, import_smithy_client4.expectString)(data[_NPNM]);
       }
       if (data[_O] != null) {
-        contents[_O] = de_Owner(data[_O], context3);
+        contents[_O] = de_Owner(data[_O], context4);
       }
       if (data[_PNM] != null) {
         contents[_PNM] = (0, import_smithy_client4.expectString)(data[_PNM]);
@@ -50512,7 +50512,7 @@ var require_dist_cjs71 = __commonJS({
       if (data.Part === "") {
         contents[_Part] = [];
       } else if (data[_Par] != null) {
-        contents[_Part] = de_Parts((0, import_smithy_client4.getArrayIfSingleItem)(data[_Par]), context3);
+        contents[_Part] = de_Parts((0, import_smithy_client4.getArrayIfSingleItem)(data[_Par]), context4);
       }
       if (data[_SC] != null) {
         contents[_SC] = (0, import_smithy_client4.expectString)(data[_SC]);
@@ -50522,190 +50522,190 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ListPartsCommand");
-    var de_PutBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketAccelerateConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketAccelerateConfigurationCommand");
-    var de_PutBucketAclCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketAclCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketAclCommand");
-    var de_PutBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketAnalyticsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketAnalyticsConfigurationCommand");
-    var de_PutBucketCorsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketCorsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketCorsCommand");
-    var de_PutBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketEncryptionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketEncryptionCommand");
-    var de_PutBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketIntelligentTieringConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketIntelligentTieringConfigurationCommand");
-    var de_PutBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketInventoryConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketInventoryConfigurationCommand");
-    var de_PutBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketLifecycleConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_TDMOS]: [, output.headers[_xatdmos]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketLifecycleConfigurationCommand");
-    var de_PutBucketLoggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketLoggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketLoggingCommand");
-    var de_PutBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketMetricsConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketMetricsConfigurationCommand");
-    var de_PutBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketNotificationConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketNotificationConfigurationCommand");
-    var de_PutBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketOwnershipControlsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketOwnershipControlsCommand");
-    var de_PutBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketPolicyCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketPolicyCommand");
-    var de_PutBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketReplicationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketReplicationCommand");
-    var de_PutBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketRequestPaymentCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketRequestPaymentCommand");
-    var de_PutBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketTaggingCommand");
-    var de_PutBucketVersioningCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketVersioningCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketVersioningCommand");
-    var de_PutBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutBucketWebsiteCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutBucketWebsiteCommand");
-    var de_PutObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50725,100 +50725,100 @@ var require_dist_cjs71 = __commonJS({
         [_Si]: [() => void 0 !== output.headers[_xaos], () => (0, import_smithy_client4.strictParseLong)(output.headers[_xaos])],
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectCommand");
-    var de_PutObjectAclCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectAclCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectAclCommand");
-    var de_PutObjectLegalHoldCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectLegalHoldCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectLegalHoldCommand");
-    var de_PutObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectLockConfigurationCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectLockConfigurationCommand");
-    var de_PutObjectRetentionCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectRetentionCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectRetentionCommand");
-    var de_PutObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutObjectTaggingCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_VI]: [, output.headers[_xavi]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutObjectTaggingCommand");
-    var de_PutPublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_PutPublicAccessBlockCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_PutPublicAccessBlockCommand");
-    var de_RestoreObjectCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_RestoreObjectCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
         [_RC]: [, output.headers[_xarc]],
         [_ROP]: [, output.headers[_xarop]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_RestoreObjectCommand");
-    var de_SelectObjectContentCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_SelectObjectContentCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
       const data = output.body;
-      contents.Payload = de_SelectObjectContentEventStream(data, context3);
+      contents.Payload = de_SelectObjectContentEventStream(data, context4);
       return contents;
     }, "de_SelectObjectContentCommand");
-    var de_UploadPartCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UploadPartCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50834,12 +50834,12 @@ var require_dist_cjs71 = __commonJS({
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])],
         [_RC]: [, output.headers[_xarc]]
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_UploadPartCommand");
-    var de_UploadPartCopyCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UploadPartCopyCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output),
@@ -50851,66 +50851,66 @@ var require_dist_cjs71 = __commonJS({
         [_BKE]: [() => void 0 !== output.headers[_xassebke], () => (0, import_smithy_client4.parseBoolean)(output.headers[_xassebke])],
         [_RC]: [, output.headers[_xarc]]
       });
-      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context3));
-      contents.CopyPartResult = de_CopyPartResult(data, context3);
+      const data = (0, import_smithy_client4.expectObject)(await (0, import_core4.parseXmlBody)(output.body, context4));
+      contents.CopyPartResult = de_CopyPartResult(data, context4);
       return contents;
     }, "de_UploadPartCopyCommand");
-    var de_WriteGetObjectResponseCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_WriteGetObjectResponseCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode !== 200 && output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
       const contents = (0, import_smithy_client4.map)({
         $metadata: deserializeMetadata(output)
       });
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       return contents;
     }, "de_WriteGetObjectResponseCommand");
-    var de_CommandError = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CommandError = /* @__PURE__ */ __name(async (output, context4) => {
       const parsedOutput = {
         ...output,
-        body: await (0, import_core4.parseXmlErrorBody)(output.body, context3)
+        body: await (0, import_core4.parseXmlErrorBody)(output.body, context4)
       };
       const errorCode = (0, import_core4.loadRestXmlErrorCode)(output, parsedOutput.body);
       switch (errorCode) {
         case "NoSuchUpload":
         case "com.amazonaws.s3#NoSuchUpload":
-          throw await de_NoSuchUploadRes(parsedOutput, context3);
+          throw await de_NoSuchUploadRes(parsedOutput, context4);
         case "ObjectNotInActiveTierError":
         case "com.amazonaws.s3#ObjectNotInActiveTierError":
-          throw await de_ObjectNotInActiveTierErrorRes(parsedOutput, context3);
+          throw await de_ObjectNotInActiveTierErrorRes(parsedOutput, context4);
         case "BucketAlreadyExists":
         case "com.amazonaws.s3#BucketAlreadyExists":
-          throw await de_BucketAlreadyExistsRes(parsedOutput, context3);
+          throw await de_BucketAlreadyExistsRes(parsedOutput, context4);
         case "BucketAlreadyOwnedByYou":
         case "com.amazonaws.s3#BucketAlreadyOwnedByYou":
-          throw await de_BucketAlreadyOwnedByYouRes(parsedOutput, context3);
+          throw await de_BucketAlreadyOwnedByYouRes(parsedOutput, context4);
         case "NoSuchBucket":
         case "com.amazonaws.s3#NoSuchBucket":
-          throw await de_NoSuchBucketRes(parsedOutput, context3);
+          throw await de_NoSuchBucketRes(parsedOutput, context4);
         case "InvalidObjectState":
         case "com.amazonaws.s3#InvalidObjectState":
-          throw await de_InvalidObjectStateRes(parsedOutput, context3);
+          throw await de_InvalidObjectStateRes(parsedOutput, context4);
         case "NoSuchKey":
         case "com.amazonaws.s3#NoSuchKey":
-          throw await de_NoSuchKeyRes(parsedOutput, context3);
+          throw await de_NoSuchKeyRes(parsedOutput, context4);
         case "NotFound":
         case "com.amazonaws.s3#NotFound":
-          throw await de_NotFoundRes(parsedOutput, context3);
+          throw await de_NotFoundRes(parsedOutput, context4);
         case "EncryptionTypeMismatch":
         case "com.amazonaws.s3#EncryptionTypeMismatch":
-          throw await de_EncryptionTypeMismatchRes(parsedOutput, context3);
+          throw await de_EncryptionTypeMismatchRes(parsedOutput, context4);
         case "InvalidRequest":
         case "com.amazonaws.s3#InvalidRequest":
-          throw await de_InvalidRequestRes(parsedOutput, context3);
+          throw await de_InvalidRequestRes(parsedOutput, context4);
         case "InvalidWriteOffset":
         case "com.amazonaws.s3#InvalidWriteOffset":
-          throw await de_InvalidWriteOffsetRes(parsedOutput, context3);
+          throw await de_InvalidWriteOffsetRes(parsedOutput, context4);
         case "TooManyParts":
         case "com.amazonaws.s3#TooManyParts":
-          throw await de_TooManyPartsRes(parsedOutput, context3);
+          throw await de_TooManyPartsRes(parsedOutput, context4);
         case "ObjectAlreadyInActiveTierError":
         case "com.amazonaws.s3#ObjectAlreadyInActiveTierError":
-          throw await de_ObjectAlreadyInActiveTierErrorRes(parsedOutput, context3);
+          throw await de_ObjectAlreadyInActiveTierErrorRes(parsedOutput, context4);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -50920,8 +50920,8 @@ var require_dist_cjs71 = __commonJS({
           });
       }
     }, "de_CommandError");
-    var throwDefaultError = (0, import_smithy_client4.withBaseException)(S3ServiceException);
-    var de_BucketAlreadyExistsRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var throwDefaultError = (0, import_smithy_client4.withBaseException)(S3ServiceException2);
+    var de_BucketAlreadyExistsRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new BucketAlreadyExists({
@@ -50930,7 +50930,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_BucketAlreadyExistsRes");
-    var de_BucketAlreadyOwnedByYouRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_BucketAlreadyOwnedByYouRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new BucketAlreadyOwnedByYou({
@@ -50939,7 +50939,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_BucketAlreadyOwnedByYouRes");
-    var de_EncryptionTypeMismatchRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_EncryptionTypeMismatchRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new EncryptionTypeMismatch({
@@ -50948,7 +50948,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_EncryptionTypeMismatchRes");
-    var de_InvalidObjectStateRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidObjectStateRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       if (data[_AT] != null) {
@@ -50963,7 +50963,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidObjectStateRes");
-    var de_InvalidRequestRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidRequestRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new InvalidRequest({
@@ -50972,7 +50972,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidRequestRes");
-    var de_InvalidWriteOffsetRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidWriteOffsetRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new InvalidWriteOffset({
@@ -50981,7 +50981,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_InvalidWriteOffsetRes");
-    var de_NoSuchBucketRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_NoSuchBucketRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new NoSuchBucket({
@@ -50990,7 +50990,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_NoSuchBucketRes");
-    var de_NoSuchKeyRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_NoSuchKeyRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new NoSuchKey({
@@ -50999,7 +50999,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_NoSuchKeyRes");
-    var de_NoSuchUploadRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_NoSuchUploadRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new NoSuchUpload({
@@ -51008,7 +51008,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_NoSuchUploadRes");
-    var de_NotFoundRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_NotFoundRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new NotFound({
@@ -51017,7 +51017,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_NotFoundRes");
-    var de_ObjectAlreadyInActiveTierErrorRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ObjectAlreadyInActiveTierErrorRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new ObjectAlreadyInActiveTierError({
@@ -51026,7 +51026,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_ObjectAlreadyInActiveTierErrorRes");
-    var de_ObjectNotInActiveTierErrorRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ObjectNotInActiveTierErrorRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new ObjectNotInActiveTierError({
@@ -51035,7 +51035,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_ObjectNotInActiveTierErrorRes");
-    var de_TooManyPartsRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_TooManyPartsRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const contents = (0, import_smithy_client4.map)({});
       const data = parsedOutput.body;
       const exception2 = new TooManyParts({
@@ -51044,139 +51044,139 @@ var require_dist_cjs71 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, parsedOutput.body);
     }, "de_TooManyPartsRes");
-    var de_SelectObjectContentEventStream = /* @__PURE__ */ __name((output, context3) => {
-      return context3.eventStreamMarshaller.deserialize(output, async (event) => {
+    var de_SelectObjectContentEventStream = /* @__PURE__ */ __name((output, context4) => {
+      return context4.eventStreamMarshaller.deserialize(output, async (event) => {
         if (event["Records"] != null) {
           return {
-            Records: await de_RecordsEvent_event(event["Records"], context3)
+            Records: await de_RecordsEvent_event(event["Records"], context4)
           };
         }
         if (event["Stats"] != null) {
           return {
-            Stats: await de_StatsEvent_event(event["Stats"], context3)
+            Stats: await de_StatsEvent_event(event["Stats"], context4)
           };
         }
         if (event["Progress"] != null) {
           return {
-            Progress: await de_ProgressEvent_event(event["Progress"], context3)
+            Progress: await de_ProgressEvent_event(event["Progress"], context4)
           };
         }
         if (event["Cont"] != null) {
           return {
-            Cont: await de_ContinuationEvent_event(event["Cont"], context3)
+            Cont: await de_ContinuationEvent_event(event["Cont"], context4)
           };
         }
         if (event["End"] != null) {
           return {
-            End: await de_EndEvent_event(event["End"], context3)
+            End: await de_EndEvent_event(event["End"], context4)
           };
         }
         return { $unknown: output };
       });
     }, "de_SelectObjectContentEventStream");
-    var de_ContinuationEvent_event = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ContinuationEvent_event = /* @__PURE__ */ __name(async (output, context4) => {
       const contents = {};
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
-      Object.assign(contents, de_ContinuationEvent(data, context3));
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
+      Object.assign(contents, de_ContinuationEvent(data, context4));
       return contents;
     }, "de_ContinuationEvent_event");
-    var de_EndEvent_event = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_EndEvent_event = /* @__PURE__ */ __name(async (output, context4) => {
       const contents = {};
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
-      Object.assign(contents, de_EndEvent(data, context3));
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
+      Object.assign(contents, de_EndEvent(data, context4));
       return contents;
     }, "de_EndEvent_event");
-    var de_ProgressEvent_event = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ProgressEvent_event = /* @__PURE__ */ __name(async (output, context4) => {
       const contents = {};
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
-      contents.Details = de_Progress(data, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
+      contents.Details = de_Progress(data, context4);
       return contents;
     }, "de_ProgressEvent_event");
-    var de_RecordsEvent_event = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_RecordsEvent_event = /* @__PURE__ */ __name(async (output, context4) => {
       const contents = {};
       contents.Payload = output.body;
       return contents;
     }, "de_RecordsEvent_event");
-    var de_StatsEvent_event = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_StatsEvent_event = /* @__PURE__ */ __name(async (output, context4) => {
       const contents = {};
-      const data = await (0, import_core4.parseXmlBody)(output.body, context3);
-      contents.Details = de_Stats(data, context3);
+      const data = await (0, import_core4.parseXmlBody)(output.body, context4);
+      contents.Details = de_Stats(data, context4);
       return contents;
     }, "de_StatsEvent_event");
-    var se_AbortIncompleteMultipartUpload = /* @__PURE__ */ __name((input, context3) => {
+    var se_AbortIncompleteMultipartUpload = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_AIMU);
       if (input[_DAI] != null) {
         bn.c(import_xml_builder.XmlNode.of(_DAI, String(input[_DAI])).n(_DAI));
       }
       return bn;
     }, "se_AbortIncompleteMultipartUpload");
-    var se_AccelerateConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_AccelerateConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ACc);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_BAS, input[_S]).n(_S));
       }
       return bn;
     }, "se_AccelerateConfiguration");
-    var se_AccessControlPolicy = /* @__PURE__ */ __name((input, context3) => {
+    var se_AccessControlPolicy = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ACP);
-      bn.lc(input, "Grants", "AccessControlList", () => se_Grants(input[_Gr], context3));
+      bn.lc(input, "Grants", "AccessControlList", () => se_Grants(input[_Gr], context4));
       if (input[_O] != null) {
-        bn.c(se_Owner(input[_O], context3).n(_O));
+        bn.c(se_Owner(input[_O], context4).n(_O));
       }
       return bn;
     }, "se_AccessControlPolicy");
-    var se_AccessControlTranslation = /* @__PURE__ */ __name((input, context3) => {
+    var se_AccessControlTranslation = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ACT);
       if (input[_O] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OOw, input[_O]).n(_O));
       }
       return bn;
     }, "se_AccessControlTranslation");
-    var se_AllowedHeaders = /* @__PURE__ */ __name((input, context3) => {
+    var se_AllowedHeaders = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_AH, entry);
         return n.n(_me);
       });
     }, "se_AllowedHeaders");
-    var se_AllowedMethods = /* @__PURE__ */ __name((input, context3) => {
+    var se_AllowedMethods = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_AM, entry);
         return n.n(_me);
       });
     }, "se_AllowedMethods");
-    var se_AllowedOrigins = /* @__PURE__ */ __name((input, context3) => {
+    var se_AllowedOrigins = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_AO, entry);
         return n.n(_me);
       });
     }, "se_AllowedOrigins");
-    var se_AnalyticsAndOperator = /* @__PURE__ */ __name((input, context3) => {
+    var se_AnalyticsAndOperator = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_AAO);
       bn.cc(input, _P);
-      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context3));
+      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context4));
       return bn;
     }, "se_AnalyticsAndOperator");
-    var se_AnalyticsConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_AnalyticsConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_AC);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_AI, input[_I]).n(_I));
       }
       if (input[_F] != null) {
-        bn.c(se_AnalyticsFilter(input[_F], context3).n(_F));
+        bn.c(se_AnalyticsFilter(input[_F], context4).n(_F));
       }
       if (input[_SCA] != null) {
-        bn.c(se_StorageClassAnalysis(input[_SCA], context3).n(_SCA));
+        bn.c(se_StorageClassAnalysis(input[_SCA], context4).n(_SCA));
       }
       return bn;
     }, "se_AnalyticsConfiguration");
-    var se_AnalyticsExportDestination = /* @__PURE__ */ __name((input, context3) => {
+    var se_AnalyticsExportDestination = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_AED);
       if (input[_SBD] != null) {
-        bn.c(se_AnalyticsS3BucketDestination(input[_SBD], context3).n(_SBD));
+        bn.c(se_AnalyticsS3BucketDestination(input[_SBD], context4).n(_SBD));
       }
       return bn;
     }, "se_AnalyticsExportDestination");
-    var se_AnalyticsFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_AnalyticsFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_AF);
       AnalyticsFilter.visit(input, {
         Prefix: (value) => {
@@ -51186,12 +51186,12 @@ var require_dist_cjs71 = __commonJS({
         },
         Tag: (value) => {
           if (input[_Ta] != null) {
-            bn.c(se_Tag(value, context3).n(_Ta));
+            bn.c(se_Tag(value, context4).n(_Ta));
           }
         },
         And: (value) => {
           if (input[_A] != null) {
-            bn.c(se_AnalyticsAndOperator(value, context3).n(_A));
+            bn.c(se_AnalyticsAndOperator(value, context4).n(_A));
           }
         },
         _: (name, value) => {
@@ -51203,7 +51203,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return bn;
     }, "se_AnalyticsFilter");
-    var se_AnalyticsS3BucketDestination = /* @__PURE__ */ __name((input, context3) => {
+    var se_AnalyticsS3BucketDestination = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ASBD);
       if (input[_Fo] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ASEFF, input[_Fo]).n(_Fo));
@@ -51217,7 +51217,7 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _P);
       return bn;
     }, "se_AnalyticsS3BucketDestination");
-    var se_BucketInfo = /* @__PURE__ */ __name((input, context3) => {
+    var se_BucketInfo = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_BI);
       bn.cc(input, _DR);
       if (input[_Ty] != null) {
@@ -51225,24 +51225,24 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_BucketInfo");
-    var se_BucketLifecycleConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_BucketLifecycleConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_BLC);
-      bn.l(input, "Rules", "Rule", () => se_LifecycleRules(input[_Rul], context3));
+      bn.l(input, "Rules", "Rule", () => se_LifecycleRules(input[_Rul], context4));
       return bn;
     }, "se_BucketLifecycleConfiguration");
-    var se_BucketLoggingStatus = /* @__PURE__ */ __name((input, context3) => {
+    var se_BucketLoggingStatus = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_BLS);
       if (input[_LE] != null) {
-        bn.c(se_LoggingEnabled(input[_LE], context3).n(_LE));
+        bn.c(se_LoggingEnabled(input[_LE], context4).n(_LE));
       }
       return bn;
     }, "se_BucketLoggingStatus");
-    var se_CompletedMultipartUpload = /* @__PURE__ */ __name((input, context3) => {
+    var se_CompletedMultipartUpload = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CMU);
-      bn.l(input, "Parts", "Part", () => se_CompletedPartList(input[_Part], context3));
+      bn.l(input, "Parts", "Part", () => se_CompletedPartList(input[_Part], context4));
       return bn;
     }, "se_CompletedMultipartUpload");
-    var se_CompletedPart = /* @__PURE__ */ __name((input, context3) => {
+    var se_CompletedPart = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CPo);
       bn.cc(input, _ETa);
       bn.cc(input, _CCRC);
@@ -51254,55 +51254,55 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_CompletedPart");
-    var se_CompletedPartList = /* @__PURE__ */ __name((input, context3) => {
+    var se_CompletedPartList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_CompletedPart(entry, context3);
+        const n = se_CompletedPart(entry, context4);
         return n.n(_me);
       });
     }, "se_CompletedPartList");
-    var se_Condition = /* @__PURE__ */ __name((input, context3) => {
+    var se_Condition = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Con);
       bn.cc(input, _HECRE);
       bn.cc(input, _KPE);
       return bn;
     }, "se_Condition");
-    var se_CORSConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_CORSConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CORSC);
-      bn.l(input, "CORSRules", "CORSRule", () => se_CORSRules(input[_CORSRu], context3));
+      bn.l(input, "CORSRules", "CORSRule", () => se_CORSRules(input[_CORSRu], context4));
       return bn;
     }, "se_CORSConfiguration");
-    var se_CORSRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_CORSRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CORSR);
       bn.cc(input, _ID_);
-      bn.l(input, "AllowedHeaders", "AllowedHeader", () => se_AllowedHeaders(input[_AHl], context3));
-      bn.l(input, "AllowedMethods", "AllowedMethod", () => se_AllowedMethods(input[_AMl], context3));
-      bn.l(input, "AllowedOrigins", "AllowedOrigin", () => se_AllowedOrigins(input[_AOl], context3));
-      bn.l(input, "ExposeHeaders", "ExposeHeader", () => se_ExposeHeaders(input[_EH], context3));
+      bn.l(input, "AllowedHeaders", "AllowedHeader", () => se_AllowedHeaders(input[_AHl], context4));
+      bn.l(input, "AllowedMethods", "AllowedMethod", () => se_AllowedMethods(input[_AMl], context4));
+      bn.l(input, "AllowedOrigins", "AllowedOrigin", () => se_AllowedOrigins(input[_AOl], context4));
+      bn.l(input, "ExposeHeaders", "ExposeHeader", () => se_ExposeHeaders(input[_EH], context4));
       if (input[_MAS] != null) {
         bn.c(import_xml_builder.XmlNode.of(_MAS, String(input[_MAS])).n(_MAS));
       }
       return bn;
     }, "se_CORSRule");
-    var se_CORSRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_CORSRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_CORSRule(entry, context3);
+        const n = se_CORSRule(entry, context4);
         return n.n(_me);
       });
     }, "se_CORSRules");
-    var se_CreateBucketConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_CreateBucketConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CBC);
       if (input[_LC] != null) {
         bn.c(import_xml_builder.XmlNode.of(_BLCu, input[_LC]).n(_LC));
       }
       if (input[_L] != null) {
-        bn.c(se_LocationInfo(input[_L], context3).n(_L));
+        bn.c(se_LocationInfo(input[_L], context4).n(_L));
       }
       if (input[_B] != null) {
-        bn.c(se_BucketInfo(input[_B], context3).n(_B));
+        bn.c(se_BucketInfo(input[_B], context4).n(_B));
       }
       return bn;
     }, "se_CreateBucketConfiguration");
-    var se_CSVInput = /* @__PURE__ */ __name((input, context3) => {
+    var se_CSVInput = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CSVIn);
       bn.cc(input, _FHI);
       bn.cc(input, _Com);
@@ -51315,7 +51315,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_CSVInput");
-    var se_CSVOutput = /* @__PURE__ */ __name((input, context3) => {
+    var se_CSVOutput = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_CSVO);
       bn.cc(input, _QF);
       bn.cc(input, _QEC);
@@ -51324,7 +51324,7 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _QCuo);
       return bn;
     }, "se_CSVOutput");
-    var se_DefaultRetention = /* @__PURE__ */ __name((input, context3) => {
+    var se_DefaultRetention = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_DRe);
       if (input[_Mo] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OLRM, input[_Mo]).n(_Mo));
@@ -51337,22 +51337,22 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_DefaultRetention");
-    var se_Delete = /* @__PURE__ */ __name((input, context3) => {
+    var se_Delete = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Del);
-      bn.l(input, "Objects", "Object", () => se_ObjectIdentifierList(input[_Ob], context3));
+      bn.l(input, "Objects", "Object", () => se_ObjectIdentifierList(input[_Ob], context4));
       if (input[_Q] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Q, String(input[_Q])).n(_Q));
       }
       return bn;
     }, "se_Delete");
-    var se_DeleteMarkerReplication = /* @__PURE__ */ __name((input, context3) => {
+    var se_DeleteMarkerReplication = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_DMR);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_DMRS, input[_S]).n(_S));
       }
       return bn;
     }, "se_DeleteMarkerReplication");
-    var se_Destination = /* @__PURE__ */ __name((input, context3) => {
+    var se_Destination = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Des);
       if (input[_B] != null) {
         bn.c(import_xml_builder.XmlNode.of(_BN, input[_B]).n(_B));
@@ -51362,20 +51362,20 @@ var require_dist_cjs71 = __commonJS({
       }
       bn.cc(input, _SC);
       if (input[_ACT] != null) {
-        bn.c(se_AccessControlTranslation(input[_ACT], context3).n(_ACT));
+        bn.c(se_AccessControlTranslation(input[_ACT], context4).n(_ACT));
       }
       if (input[_ECn] != null) {
-        bn.c(se_EncryptionConfiguration(input[_ECn], context3).n(_ECn));
+        bn.c(se_EncryptionConfiguration(input[_ECn], context4).n(_ECn));
       }
       if (input[_RTe] != null) {
-        bn.c(se_ReplicationTime(input[_RTe], context3).n(_RTe));
+        bn.c(se_ReplicationTime(input[_RTe], context4).n(_RTe));
       }
       if (input[_Me] != null) {
-        bn.c(se_Metrics(input[_Me], context3).n(_Me));
+        bn.c(se_Metrics(input[_Me], context4).n(_Me));
       }
       return bn;
     }, "se_Destination");
-    var se_Encryption = /* @__PURE__ */ __name((input, context3) => {
+    var se_Encryption = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_En);
       if (input[_ETn] != null) {
         bn.c(import_xml_builder.XmlNode.of(_SSE, input[_ETn]).n(_ETn));
@@ -51386,42 +51386,42 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _KMSC);
       return bn;
     }, "se_Encryption");
-    var se_EncryptionConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_EncryptionConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ECn);
       bn.cc(input, _RKKID);
       return bn;
     }, "se_EncryptionConfiguration");
-    var se_ErrorDocument = /* @__PURE__ */ __name((input, context3) => {
+    var se_ErrorDocument = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ED);
       if (input[_K] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OK, input[_K]).n(_K));
       }
       return bn;
     }, "se_ErrorDocument");
-    var se_EventBridgeConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_EventBridgeConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_EBC);
       return bn;
     }, "se_EventBridgeConfiguration");
-    var se_EventList = /* @__PURE__ */ __name((input, context3) => {
+    var se_EventList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_Ev, entry);
         return n.n(_me);
       });
     }, "se_EventList");
-    var se_ExistingObjectReplication = /* @__PURE__ */ __name((input, context3) => {
+    var se_ExistingObjectReplication = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_EOR);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_EORS, input[_S]).n(_S));
       }
       return bn;
     }, "se_ExistingObjectReplication");
-    var se_ExposeHeaders = /* @__PURE__ */ __name((input, context3) => {
+    var se_ExposeHeaders = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_EHx, entry);
         return n.n(_me);
       });
     }, "se_ExposeHeaders");
-    var se_FilterRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_FilterRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_FR);
       if (input[_N] != null) {
         bn.c(import_xml_builder.XmlNode.of(_FRN, input[_N]).n(_N));
@@ -51431,28 +51431,28 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_FilterRule");
-    var se_FilterRuleList = /* @__PURE__ */ __name((input, context3) => {
+    var se_FilterRuleList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_FilterRule(entry, context3);
+        const n = se_FilterRule(entry, context4);
         return n.n(_me);
       });
     }, "se_FilterRuleList");
-    var se_GlacierJobParameters = /* @__PURE__ */ __name((input, context3) => {
+    var se_GlacierJobParameters = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_GJP);
       bn.cc(input, _Ti);
       return bn;
     }, "se_GlacierJobParameters");
-    var se_Grant = /* @__PURE__ */ __name((input, context3) => {
+    var se_Grant = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_G);
       if (input[_Gra] != null) {
-        const n = se_Grantee(input[_Gra], context3).n(_Gra);
+        const n = se_Grantee(input[_Gra], context4).n(_Gra);
         n.a("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         bn.c(n);
       }
       bn.cc(input, _Pe);
       return bn;
     }, "se_Grant");
-    var se_Grantee = /* @__PURE__ */ __name((input, context3) => {
+    var se_Grantee = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Gra);
       bn.cc(input, _DN);
       bn.cc(input, _EA);
@@ -51461,72 +51461,72 @@ var require_dist_cjs71 = __commonJS({
       bn.a("xsi:type", input[_Ty]);
       return bn;
     }, "se_Grantee");
-    var se_Grants = /* @__PURE__ */ __name((input, context3) => {
+    var se_Grants = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_Grant(entry, context3);
+        const n = se_Grant(entry, context4);
         return n.n(_G);
       });
     }, "se_Grants");
-    var se_IndexDocument = /* @__PURE__ */ __name((input, context3) => {
+    var se_IndexDocument = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ID);
       bn.cc(input, _Su);
       return bn;
     }, "se_IndexDocument");
-    var se_InputSerialization = /* @__PURE__ */ __name((input, context3) => {
+    var se_InputSerialization = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_IS);
       if (input[_CSV] != null) {
-        bn.c(se_CSVInput(input[_CSV], context3).n(_CSV));
+        bn.c(se_CSVInput(input[_CSV], context4).n(_CSV));
       }
       bn.cc(input, _CTom);
       if (input[_JSON] != null) {
-        bn.c(se_JSONInput(input[_JSON], context3).n(_JSON));
+        bn.c(se_JSONInput(input[_JSON], context4).n(_JSON));
       }
       if (input[_Parq] != null) {
-        bn.c(se_ParquetInput(input[_Parq], context3).n(_Parq));
+        bn.c(se_ParquetInput(input[_Parq], context4).n(_Parq));
       }
       return bn;
     }, "se_InputSerialization");
-    var se_IntelligentTieringAndOperator = /* @__PURE__ */ __name((input, context3) => {
+    var se_IntelligentTieringAndOperator = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ITAO);
       bn.cc(input, _P);
-      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context3));
+      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context4));
       return bn;
     }, "se_IntelligentTieringAndOperator");
-    var se_IntelligentTieringConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_IntelligentTieringConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ITC);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ITI, input[_I]).n(_I));
       }
       if (input[_F] != null) {
-        bn.c(se_IntelligentTieringFilter(input[_F], context3).n(_F));
+        bn.c(se_IntelligentTieringFilter(input[_F], context4).n(_F));
       }
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ITS, input[_S]).n(_S));
       }
-      bn.l(input, "Tierings", "Tiering", () => se_TieringList(input[_Tie], context3));
+      bn.l(input, "Tierings", "Tiering", () => se_TieringList(input[_Tie], context4));
       return bn;
     }, "se_IntelligentTieringConfiguration");
-    var se_IntelligentTieringFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_IntelligentTieringFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ITF);
       bn.cc(input, _P);
       if (input[_Ta] != null) {
-        bn.c(se_Tag(input[_Ta], context3).n(_Ta));
+        bn.c(se_Tag(input[_Ta], context4).n(_Ta));
       }
       if (input[_A] != null) {
-        bn.c(se_IntelligentTieringAndOperator(input[_A], context3).n(_A));
+        bn.c(se_IntelligentTieringAndOperator(input[_A], context4).n(_A));
       }
       return bn;
     }, "se_IntelligentTieringFilter");
-    var se_InventoryConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_IC);
       if (input[_Des] != null) {
-        bn.c(se_InventoryDestination(input[_Des], context3).n(_Des));
+        bn.c(se_InventoryDestination(input[_Des], context4).n(_Des));
       }
       if (input[_IE] != null) {
         bn.c(import_xml_builder.XmlNode.of(_IE, String(input[_IE])).n(_IE));
       }
       if (input[_F] != null) {
-        bn.c(se_InventoryFilter(input[_F], context3).n(_F));
+        bn.c(se_InventoryFilter(input[_F], context4).n(_F));
       }
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_II, input[_I]).n(_I));
@@ -51534,41 +51534,41 @@ var require_dist_cjs71 = __commonJS({
       if (input[_IOV] != null) {
         bn.c(import_xml_builder.XmlNode.of(_IIOV, input[_IOV]).n(_IOV));
       }
-      bn.lc(input, "OptionalFields", "OptionalFields", () => se_InventoryOptionalFields(input[_OF], context3));
+      bn.lc(input, "OptionalFields", "OptionalFields", () => se_InventoryOptionalFields(input[_OF], context4));
       if (input[_Sc] != null) {
-        bn.c(se_InventorySchedule(input[_Sc], context3).n(_Sc));
+        bn.c(se_InventorySchedule(input[_Sc], context4).n(_Sc));
       }
       return bn;
     }, "se_InventoryConfiguration");
-    var se_InventoryDestination = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryDestination = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_IDn);
       if (input[_SBD] != null) {
-        bn.c(se_InventoryS3BucketDestination(input[_SBD], context3).n(_SBD));
+        bn.c(se_InventoryS3BucketDestination(input[_SBD], context4).n(_SBD));
       }
       return bn;
     }, "se_InventoryDestination");
-    var se_InventoryEncryption = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryEncryption = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_IEn);
       if (input[_SSES] != null) {
-        bn.c(se_SSES3(input[_SSES], context3).n(_SS));
+        bn.c(se_SSES3(input[_SSES], context4).n(_SS));
       }
       if (input[_SSEKMS] != null) {
-        bn.c(se_SSEKMS(input[_SSEKMS], context3).n(_SK));
+        bn.c(se_SSEKMS(input[_SSEKMS], context4).n(_SK));
       }
       return bn;
     }, "se_InventoryEncryption");
-    var se_InventoryFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_IF);
       bn.cc(input, _P);
       return bn;
     }, "se_InventoryFilter");
-    var se_InventoryOptionalFields = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryOptionalFields = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
         const n = import_xml_builder.XmlNode.of(_IOF, entry);
         return n.n(_Fi);
       });
     }, "se_InventoryOptionalFields");
-    var se_InventoryS3BucketDestination = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventoryS3BucketDestination = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ISBD);
       bn.cc(input, _AIc);
       if (input[_B] != null) {
@@ -51579,30 +51579,30 @@ var require_dist_cjs71 = __commonJS({
       }
       bn.cc(input, _P);
       if (input[_En] != null) {
-        bn.c(se_InventoryEncryption(input[_En], context3).n(_En));
+        bn.c(se_InventoryEncryption(input[_En], context4).n(_En));
       }
       return bn;
     }, "se_InventoryS3BucketDestination");
-    var se_InventorySchedule = /* @__PURE__ */ __name((input, context3) => {
+    var se_InventorySchedule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ISn);
       if (input[_Fr] != null) {
         bn.c(import_xml_builder.XmlNode.of(_IFnv, input[_Fr]).n(_Fr));
       }
       return bn;
     }, "se_InventorySchedule");
-    var se_JSONInput = /* @__PURE__ */ __name((input, context3) => {
+    var se_JSONInput = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_JSONI);
       if (input[_Ty] != null) {
         bn.c(import_xml_builder.XmlNode.of(_JSONT, input[_Ty]).n(_Ty));
       }
       return bn;
     }, "se_JSONInput");
-    var se_JSONOutput = /* @__PURE__ */ __name((input, context3) => {
+    var se_JSONOutput = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_JSONO);
       bn.cc(input, _RD);
       return bn;
     }, "se_JSONOutput");
-    var se_LambdaFunctionConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_LambdaFunctionConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LFCa);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_NI, input[_I]).n(_I));
@@ -51610,19 +51610,19 @@ var require_dist_cjs71 = __commonJS({
       if (input[_LFA] != null) {
         bn.c(import_xml_builder.XmlNode.of(_LFA, input[_LFA]).n(_CF));
       }
-      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context3));
+      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context4));
       if (input[_F] != null) {
-        bn.c(se_NotificationConfigurationFilter(input[_F], context3).n(_F));
+        bn.c(se_NotificationConfigurationFilter(input[_F], context4).n(_F));
       }
       return bn;
     }, "se_LambdaFunctionConfiguration");
-    var se_LambdaFunctionConfigurationList = /* @__PURE__ */ __name((input, context3) => {
+    var se_LambdaFunctionConfigurationList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_LambdaFunctionConfiguration(entry, context3);
+        const n = se_LambdaFunctionConfiguration(entry, context4);
         return n.n(_me);
       });
     }, "se_LambdaFunctionConfigurationList");
-    var se_LifecycleExpiration = /* @__PURE__ */ __name((input, context3) => {
+    var se_LifecycleExpiration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LEi);
       if (input[_Dat] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Dat, (0, import_smithy_client4.serializeDateTime)(input[_Dat]).toString()).n(_Dat));
@@ -51635,38 +51635,38 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_LifecycleExpiration");
-    var se_LifecycleRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_LifecycleRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LR);
       if (input[_Exp] != null) {
-        bn.c(se_LifecycleExpiration(input[_Exp], context3).n(_Exp));
+        bn.c(se_LifecycleExpiration(input[_Exp], context4).n(_Exp));
       }
       bn.cc(input, _ID_);
       bn.cc(input, _P);
       if (input[_F] != null) {
-        bn.c(se_LifecycleRuleFilter(input[_F], context3).n(_F));
+        bn.c(se_LifecycleRuleFilter(input[_F], context4).n(_F));
       }
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ESx, input[_S]).n(_S));
       }
-      bn.l(input, "Transitions", "Transition", () => se_TransitionList(input[_Tr], context3));
+      bn.l(input, "Transitions", "Transition", () => se_TransitionList(input[_Tr], context4));
       bn.l(
         input,
         "NoncurrentVersionTransitions",
         "NoncurrentVersionTransition",
-        () => se_NoncurrentVersionTransitionList(input[_NVT], context3)
+        () => se_NoncurrentVersionTransitionList(input[_NVT], context4)
       );
       if (input[_NVE] != null) {
-        bn.c(se_NoncurrentVersionExpiration(input[_NVE], context3).n(_NVE));
+        bn.c(se_NoncurrentVersionExpiration(input[_NVE], context4).n(_NVE));
       }
       if (input[_AIMU] != null) {
-        bn.c(se_AbortIncompleteMultipartUpload(input[_AIMU], context3).n(_AIMU));
+        bn.c(se_AbortIncompleteMultipartUpload(input[_AIMU], context4).n(_AIMU));
       }
       return bn;
     }, "se_LifecycleRule");
-    var se_LifecycleRuleAndOperator = /* @__PURE__ */ __name((input, context3) => {
+    var se_LifecycleRuleAndOperator = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LRAO);
       bn.cc(input, _P);
-      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context3));
+      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context4));
       if (input[_OSGT] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OSGTB, String(input[_OSGT])).n(_OSGT));
       }
@@ -51675,11 +51675,11 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_LifecycleRuleAndOperator");
-    var se_LifecycleRuleFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_LifecycleRuleFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LRF);
       bn.cc(input, _P);
       if (input[_Ta] != null) {
-        bn.c(se_Tag(input[_Ta], context3).n(_Ta));
+        bn.c(se_Tag(input[_Ta], context4).n(_Ta));
       }
       if (input[_OSGT] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OSGTB, String(input[_OSGT])).n(_OSGT));
@@ -51688,17 +51688,17 @@ var require_dist_cjs71 = __commonJS({
         bn.c(import_xml_builder.XmlNode.of(_OSLTB, String(input[_OSLT])).n(_OSLT));
       }
       if (input[_A] != null) {
-        bn.c(se_LifecycleRuleAndOperator(input[_A], context3).n(_A));
+        bn.c(se_LifecycleRuleAndOperator(input[_A], context4).n(_A));
       }
       return bn;
     }, "se_LifecycleRuleFilter");
-    var se_LifecycleRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_LifecycleRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_LifecycleRule(entry, context3);
+        const n = se_LifecycleRule(entry, context4);
         return n.n(_me);
       });
     }, "se_LifecycleRules");
-    var se_LocationInfo = /* @__PURE__ */ __name((input, context3) => {
+    var se_LocationInfo = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LI);
       if (input[_Ty] != null) {
         bn.c(import_xml_builder.XmlNode.of(_LT, input[_Ty]).n(_Ty));
@@ -51708,17 +51708,17 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_LocationInfo");
-    var se_LoggingEnabled = /* @__PURE__ */ __name((input, context3) => {
+    var se_LoggingEnabled = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_LE);
       bn.cc(input, _TB);
-      bn.lc(input, "TargetGrants", "TargetGrants", () => se_TargetGrants(input[_TG], context3));
+      bn.lc(input, "TargetGrants", "TargetGrants", () => se_TargetGrants(input[_TG], context4));
       bn.cc(input, _TP);
       if (input[_TOKF] != null) {
-        bn.c(se_TargetObjectKeyFormat(input[_TOKF], context3).n(_TOKF));
+        bn.c(se_TargetObjectKeyFormat(input[_TOKF], context4).n(_TOKF));
       }
       return bn;
     }, "se_LoggingEnabled");
-    var se_MetadataEntry = /* @__PURE__ */ __name((input, context3) => {
+    var se_MetadataEntry = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_ME);
       if (input[_N] != null) {
         bn.c(import_xml_builder.XmlNode.of(_MKe, input[_N]).n(_N));
@@ -51728,34 +51728,34 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_MetadataEntry");
-    var se_Metrics = /* @__PURE__ */ __name((input, context3) => {
+    var se_Metrics = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Me);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_MS, input[_S]).n(_S));
       }
       if (input[_ETv] != null) {
-        bn.c(se_ReplicationTimeValue(input[_ETv], context3).n(_ETv));
+        bn.c(se_ReplicationTimeValue(input[_ETv], context4).n(_ETv));
       }
       return bn;
     }, "se_Metrics");
-    var se_MetricsAndOperator = /* @__PURE__ */ __name((input, context3) => {
+    var se_MetricsAndOperator = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_MAO);
       bn.cc(input, _P);
-      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context3));
+      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context4));
       bn.cc(input, _APAc);
       return bn;
     }, "se_MetricsAndOperator");
-    var se_MetricsConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_MetricsConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_MC);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_MI, input[_I]).n(_I));
       }
       if (input[_F] != null) {
-        bn.c(se_MetricsFilter(input[_F], context3).n(_F));
+        bn.c(se_MetricsFilter(input[_F], context4).n(_F));
       }
       return bn;
     }, "se_MetricsConfiguration");
-    var se_MetricsFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_MetricsFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_MF);
       MetricsFilter.visit(input, {
         Prefix: (value) => {
@@ -51765,7 +51765,7 @@ var require_dist_cjs71 = __commonJS({
         },
         Tag: (value) => {
           if (input[_Ta] != null) {
-            bn.c(se_Tag(value, context3).n(_Ta));
+            bn.c(se_Tag(value, context4).n(_Ta));
           }
         },
         AccessPointArn: (value) => {
@@ -51775,7 +51775,7 @@ var require_dist_cjs71 = __commonJS({
         },
         And: (value) => {
           if (input[_A] != null) {
-            bn.c(se_MetricsAndOperator(value, context3).n(_A));
+            bn.c(se_MetricsAndOperator(value, context4).n(_A));
           }
         },
         _: (name, value) => {
@@ -51787,7 +51787,7 @@ var require_dist_cjs71 = __commonJS({
       });
       return bn;
     }, "se_MetricsFilter");
-    var se_NoncurrentVersionExpiration = /* @__PURE__ */ __name((input, context3) => {
+    var se_NoncurrentVersionExpiration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_NVE);
       if (input[_ND] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Da, String(input[_ND])).n(_ND));
@@ -51797,7 +51797,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_NoncurrentVersionExpiration");
-    var se_NoncurrentVersionTransition = /* @__PURE__ */ __name((input, context3) => {
+    var se_NoncurrentVersionTransition = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_NVTo);
       if (input[_ND] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Da, String(input[_ND])).n(_ND));
@@ -51810,35 +51810,35 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_NoncurrentVersionTransition");
-    var se_NoncurrentVersionTransitionList = /* @__PURE__ */ __name((input, context3) => {
+    var se_NoncurrentVersionTransitionList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_NoncurrentVersionTransition(entry, context3);
+        const n = se_NoncurrentVersionTransition(entry, context4);
         return n.n(_me);
       });
     }, "se_NoncurrentVersionTransitionList");
-    var se_NotificationConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_NotificationConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_NC);
-      bn.l(input, "TopicConfigurations", "TopicConfiguration", () => se_TopicConfigurationList(input[_TCop], context3));
-      bn.l(input, "QueueConfigurations", "QueueConfiguration", () => se_QueueConfigurationList(input[_QCu], context3));
+      bn.l(input, "TopicConfigurations", "TopicConfiguration", () => se_TopicConfigurationList(input[_TCop], context4));
+      bn.l(input, "QueueConfigurations", "QueueConfiguration", () => se_QueueConfigurationList(input[_QCu], context4));
       bn.l(
         input,
         "LambdaFunctionConfigurations",
         "CloudFunctionConfiguration",
-        () => se_LambdaFunctionConfigurationList(input[_LFC], context3)
+        () => se_LambdaFunctionConfigurationList(input[_LFC], context4)
       );
       if (input[_EBC] != null) {
-        bn.c(se_EventBridgeConfiguration(input[_EBC], context3).n(_EBC));
+        bn.c(se_EventBridgeConfiguration(input[_EBC], context4).n(_EBC));
       }
       return bn;
     }, "se_NotificationConfiguration");
-    var se_NotificationConfigurationFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_NotificationConfigurationFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_NCF);
       if (input[_K] != null) {
-        bn.c(se_S3KeyFilter(input[_K], context3).n(_SKe));
+        bn.c(se_S3KeyFilter(input[_K], context4).n(_SKe));
       }
       return bn;
     }, "se_NotificationConfigurationFilter");
-    var se_ObjectIdentifier = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectIdentifier = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OI);
       if (input[_K] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OK, input[_K]).n(_K));
@@ -51855,28 +51855,28 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_ObjectIdentifier");
-    var se_ObjectIdentifierList = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectIdentifierList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_ObjectIdentifier(entry, context3);
+        const n = se_ObjectIdentifier(entry, context4);
         return n.n(_me);
       });
     }, "se_ObjectIdentifierList");
-    var se_ObjectLockConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectLockConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OLC);
       bn.cc(input, _OLE);
       if (input[_Ru] != null) {
-        bn.c(se_ObjectLockRule(input[_Ru], context3).n(_Ru));
+        bn.c(se_ObjectLockRule(input[_Ru], context4).n(_Ru));
       }
       return bn;
     }, "se_ObjectLockConfiguration");
-    var se_ObjectLockLegalHold = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectLockLegalHold = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OLLH);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OLLHS, input[_S]).n(_S));
       }
       return bn;
     }, "se_ObjectLockLegalHold");
-    var se_ObjectLockRetention = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectLockRetention = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OLR);
       if (input[_Mo] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OLRM, input[_Mo]).n(_Mo));
@@ -51886,62 +51886,62 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_ObjectLockRetention");
-    var se_ObjectLockRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_ObjectLockRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OLRb);
       if (input[_DRe] != null) {
-        bn.c(se_DefaultRetention(input[_DRe], context3).n(_DRe));
+        bn.c(se_DefaultRetention(input[_DRe], context4).n(_DRe));
       }
       return bn;
     }, "se_ObjectLockRule");
-    var se_OutputLocation = /* @__PURE__ */ __name((input, context3) => {
+    var se_OutputLocation = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OL);
       if (input[_S_] != null) {
-        bn.c(se_S3Location(input[_S_], context3).n(_S_));
+        bn.c(se_S3Location(input[_S_], context4).n(_S_));
       }
       return bn;
     }, "se_OutputLocation");
-    var se_OutputSerialization = /* @__PURE__ */ __name((input, context3) => {
+    var se_OutputSerialization = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OS);
       if (input[_CSV] != null) {
-        bn.c(se_CSVOutput(input[_CSV], context3).n(_CSV));
+        bn.c(se_CSVOutput(input[_CSV], context4).n(_CSV));
       }
       if (input[_JSON] != null) {
-        bn.c(se_JSONOutput(input[_JSON], context3).n(_JSON));
+        bn.c(se_JSONOutput(input[_JSON], context4).n(_JSON));
       }
       return bn;
     }, "se_OutputSerialization");
-    var se_Owner = /* @__PURE__ */ __name((input, context3) => {
+    var se_Owner = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_O);
       bn.cc(input, _DN);
       bn.cc(input, _ID_);
       return bn;
     }, "se_Owner");
-    var se_OwnershipControls = /* @__PURE__ */ __name((input, context3) => {
+    var se_OwnershipControls = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OC);
-      bn.l(input, "Rules", "Rule", () => se_OwnershipControlsRules(input[_Rul], context3));
+      bn.l(input, "Rules", "Rule", () => se_OwnershipControlsRules(input[_Rul], context4));
       return bn;
     }, "se_OwnershipControls");
-    var se_OwnershipControlsRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_OwnershipControlsRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_OCR);
       bn.cc(input, _OO);
       return bn;
     }, "se_OwnershipControlsRule");
-    var se_OwnershipControlsRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_OwnershipControlsRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_OwnershipControlsRule(entry, context3);
+        const n = se_OwnershipControlsRule(entry, context4);
         return n.n(_me);
       });
     }, "se_OwnershipControlsRules");
-    var se_ParquetInput = /* @__PURE__ */ __name((input, context3) => {
+    var se_ParquetInput = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_PI);
       return bn;
     }, "se_ParquetInput");
-    var se_PartitionedPrefix = /* @__PURE__ */ __name((input, context3) => {
+    var se_PartitionedPrefix = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_PP);
       bn.cc(input, _PDS);
       return bn;
     }, "se_PartitionedPrefix");
-    var se_PublicAccessBlockConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_PublicAccessBlockConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_PABC);
       if (input[_BPA] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Se, String(input[_BPA])).n(_BPA));
@@ -51957,7 +51957,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_PublicAccessBlockConfiguration");
-    var se_QueueConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_QueueConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_QC);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_NI, input[_I]).n(_I));
@@ -51965,19 +51965,19 @@ var require_dist_cjs71 = __commonJS({
       if (input[_QA] != null) {
         bn.c(import_xml_builder.XmlNode.of(_QA, input[_QA]).n(_Qu));
       }
-      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context3));
+      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context4));
       if (input[_F] != null) {
-        bn.c(se_NotificationConfigurationFilter(input[_F], context3).n(_F));
+        bn.c(se_NotificationConfigurationFilter(input[_F], context4).n(_F));
       }
       return bn;
     }, "se_QueueConfiguration");
-    var se_QueueConfigurationList = /* @__PURE__ */ __name((input, context3) => {
+    var se_QueueConfigurationList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_QueueConfiguration(entry, context3);
+        const n = se_QueueConfiguration(entry, context4);
         return n.n(_me);
       });
     }, "se_QueueConfigurationList");
-    var se_Redirect = /* @__PURE__ */ __name((input, context3) => {
+    var se_Redirect = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Red);
       bn.cc(input, _HN);
       bn.cc(input, _HRC);
@@ -51986,26 +51986,26 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _RKW);
       return bn;
     }, "se_Redirect");
-    var se_RedirectAllRequestsTo = /* @__PURE__ */ __name((input, context3) => {
+    var se_RedirectAllRequestsTo = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RART);
       bn.cc(input, _HN);
       bn.cc(input, _Pr);
       return bn;
     }, "se_RedirectAllRequestsTo");
-    var se_ReplicaModifications = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicaModifications = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RM);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_RMS, input[_S]).n(_S));
       }
       return bn;
     }, "se_ReplicaModifications");
-    var se_ReplicationConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RCe);
       bn.cc(input, _Ro);
-      bn.l(input, "Rules", "Rule", () => se_ReplicationRules(input[_Rul], context3));
+      bn.l(input, "Rules", "Rule", () => se_ReplicationRules(input[_Rul], context4));
       return bn;
     }, "se_ReplicationConfiguration");
-    var se_ReplicationRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RRe);
       bn.cc(input, _ID_);
       if (input[_Pri] != null) {
@@ -52013,84 +52013,84 @@ var require_dist_cjs71 = __commonJS({
       }
       bn.cc(input, _P);
       if (input[_F] != null) {
-        bn.c(se_ReplicationRuleFilter(input[_F], context3).n(_F));
+        bn.c(se_ReplicationRuleFilter(input[_F], context4).n(_F));
       }
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_RRS, input[_S]).n(_S));
       }
       if (input[_SSC] != null) {
-        bn.c(se_SourceSelectionCriteria(input[_SSC], context3).n(_SSC));
+        bn.c(se_SourceSelectionCriteria(input[_SSC], context4).n(_SSC));
       }
       if (input[_EOR] != null) {
-        bn.c(se_ExistingObjectReplication(input[_EOR], context3).n(_EOR));
+        bn.c(se_ExistingObjectReplication(input[_EOR], context4).n(_EOR));
       }
       if (input[_Des] != null) {
-        bn.c(se_Destination(input[_Des], context3).n(_Des));
+        bn.c(se_Destination(input[_Des], context4).n(_Des));
       }
       if (input[_DMR] != null) {
-        bn.c(se_DeleteMarkerReplication(input[_DMR], context3).n(_DMR));
+        bn.c(se_DeleteMarkerReplication(input[_DMR], context4).n(_DMR));
       }
       return bn;
     }, "se_ReplicationRule");
-    var se_ReplicationRuleAndOperator = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationRuleAndOperator = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RRAO);
       bn.cc(input, _P);
-      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context3));
+      bn.l(input, "Tags", "Tag", () => se_TagSet(input[_Tag], context4));
       return bn;
     }, "se_ReplicationRuleAndOperator");
-    var se_ReplicationRuleFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationRuleFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RRF);
       bn.cc(input, _P);
       if (input[_Ta] != null) {
-        bn.c(se_Tag(input[_Ta], context3).n(_Ta));
+        bn.c(se_Tag(input[_Ta], context4).n(_Ta));
       }
       if (input[_A] != null) {
-        bn.c(se_ReplicationRuleAndOperator(input[_A], context3).n(_A));
+        bn.c(se_ReplicationRuleAndOperator(input[_A], context4).n(_A));
       }
       return bn;
     }, "se_ReplicationRuleFilter");
-    var se_ReplicationRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_ReplicationRule(entry, context3);
+        const n = se_ReplicationRule(entry, context4);
         return n.n(_me);
       });
     }, "se_ReplicationRules");
-    var se_ReplicationTime = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationTime = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RTe);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_RTS, input[_S]).n(_S));
       }
       if (input[_Tim] != null) {
-        bn.c(se_ReplicationTimeValue(input[_Tim], context3).n(_Tim));
+        bn.c(se_ReplicationTimeValue(input[_Tim], context4).n(_Tim));
       }
       return bn;
     }, "se_ReplicationTime");
-    var se_ReplicationTimeValue = /* @__PURE__ */ __name((input, context3) => {
+    var se_ReplicationTimeValue = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RTV);
       if (input[_Mi] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Mi, String(input[_Mi])).n(_Mi));
       }
       return bn;
     }, "se_ReplicationTimeValue");
-    var se_RequestPaymentConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_RequestPaymentConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RPC);
       bn.cc(input, _Pa);
       return bn;
     }, "se_RequestPaymentConfiguration");
-    var se_RequestProgress = /* @__PURE__ */ __name((input, context3) => {
+    var se_RequestProgress = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RPe);
       if (input[_Ena] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ERP, String(input[_Ena])).n(_Ena));
       }
       return bn;
     }, "se_RequestProgress");
-    var se_RestoreRequest = /* @__PURE__ */ __name((input, context3) => {
+    var se_RestoreRequest = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RRes);
       if (input[_Da] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Da, String(input[_Da])).n(_Da));
       }
       if (input[_GJP] != null) {
-        bn.c(se_GlacierJobParameters(input[_GJP], context3).n(_GJP));
+        bn.c(se_GlacierJobParameters(input[_GJP], context4).n(_GJP));
       }
       if (input[_Ty] != null) {
         bn.c(import_xml_builder.XmlNode.of(_RRT, input[_Ty]).n(_Ty));
@@ -52098,55 +52098,55 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _Ti);
       bn.cc(input, _Desc);
       if (input[_SP] != null) {
-        bn.c(se_SelectParameters(input[_SP], context3).n(_SP));
+        bn.c(se_SelectParameters(input[_SP], context4).n(_SP));
       }
       if (input[_OL] != null) {
-        bn.c(se_OutputLocation(input[_OL], context3).n(_OL));
+        bn.c(se_OutputLocation(input[_OL], context4).n(_OL));
       }
       return bn;
     }, "se_RestoreRequest");
-    var se_RoutingRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_RoutingRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_RRou);
       if (input[_Con] != null) {
-        bn.c(se_Condition(input[_Con], context3).n(_Con));
+        bn.c(se_Condition(input[_Con], context4).n(_Con));
       }
       if (input[_Red] != null) {
-        bn.c(se_Redirect(input[_Red], context3).n(_Red));
+        bn.c(se_Redirect(input[_Red], context4).n(_Red));
       }
       return bn;
     }, "se_RoutingRule");
-    var se_RoutingRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_RoutingRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_RoutingRule(entry, context3);
+        const n = se_RoutingRule(entry, context4);
         return n.n(_RRou);
       });
     }, "se_RoutingRules");
-    var se_S3KeyFilter = /* @__PURE__ */ __name((input, context3) => {
+    var se_S3KeyFilter = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SKF);
-      bn.l(input, "FilterRules", "FilterRule", () => se_FilterRuleList(input[_FRi], context3));
+      bn.l(input, "FilterRules", "FilterRule", () => se_FilterRuleList(input[_FRi], context4));
       return bn;
     }, "se_S3KeyFilter");
-    var se_S3Location = /* @__PURE__ */ __name((input, context3) => {
+    var se_S3Location = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SL);
       bn.cc(input, _BN);
       if (input[_P] != null) {
         bn.c(import_xml_builder.XmlNode.of(_LP, input[_P]).n(_P));
       }
       if (input[_En] != null) {
-        bn.c(se_Encryption(input[_En], context3).n(_En));
+        bn.c(se_Encryption(input[_En], context4).n(_En));
       }
       if (input[_CACL] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OCACL, input[_CACL]).n(_CACL));
       }
-      bn.lc(input, "AccessControlList", "AccessControlList", () => se_Grants(input[_ACLc], context3));
+      bn.lc(input, "AccessControlList", "AccessControlList", () => se_Grants(input[_ACLc], context4));
       if (input[_T] != null) {
-        bn.c(se_Tagging(input[_T], context3).n(_T));
+        bn.c(se_Tagging(input[_T], context4).n(_T));
       }
-      bn.lc(input, "UserMetadata", "UserMetadata", () => se_UserMetadata(input[_UM], context3));
+      bn.lc(input, "UserMetadata", "UserMetadata", () => se_UserMetadata(input[_UM], context4));
       bn.cc(input, _SC);
       return bn;
     }, "se_S3Location");
-    var se_ScanRange = /* @__PURE__ */ __name((input, context3) => {
+    var se_ScanRange = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SR);
       if (input[_St] != null) {
         bn.c(import_xml_builder.XmlNode.of(_St, String(input[_St])).n(_St));
@@ -52156,19 +52156,19 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_ScanRange");
-    var se_SelectParameters = /* @__PURE__ */ __name((input, context3) => {
+    var se_SelectParameters = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SP);
       if (input[_IS] != null) {
-        bn.c(se_InputSerialization(input[_IS], context3).n(_IS));
+        bn.c(se_InputSerialization(input[_IS], context4).n(_IS));
       }
       bn.cc(input, _ETx);
       bn.cc(input, _Ex);
       if (input[_OS] != null) {
-        bn.c(se_OutputSerialization(input[_OS], context3).n(_OS));
+        bn.c(se_OutputSerialization(input[_OS], context4).n(_OS));
       }
       return bn;
     }, "se_SelectParameters");
-    var se_ServerSideEncryptionByDefault = /* @__PURE__ */ __name((input, context3) => {
+    var se_ServerSideEncryptionByDefault = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SSEBD);
       if (input[_SSEA] != null) {
         bn.c(import_xml_builder.XmlNode.of(_SSE, input[_SSEA]).n(_SSEA));
@@ -52178,77 +52178,77 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_ServerSideEncryptionByDefault");
-    var se_ServerSideEncryptionConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_ServerSideEncryptionConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SSEC);
-      bn.l(input, "Rules", "Rule", () => se_ServerSideEncryptionRules(input[_Rul], context3));
+      bn.l(input, "Rules", "Rule", () => se_ServerSideEncryptionRules(input[_Rul], context4));
       return bn;
     }, "se_ServerSideEncryptionConfiguration");
-    var se_ServerSideEncryptionRule = /* @__PURE__ */ __name((input, context3) => {
+    var se_ServerSideEncryptionRule = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SSER);
       if (input[_ASSEBD] != null) {
-        bn.c(se_ServerSideEncryptionByDefault(input[_ASSEBD], context3).n(_ASSEBD));
+        bn.c(se_ServerSideEncryptionByDefault(input[_ASSEBD], context4).n(_ASSEBD));
       }
       if (input[_BKE] != null) {
         bn.c(import_xml_builder.XmlNode.of(_BKE, String(input[_BKE])).n(_BKE));
       }
       return bn;
     }, "se_ServerSideEncryptionRule");
-    var se_ServerSideEncryptionRules = /* @__PURE__ */ __name((input, context3) => {
+    var se_ServerSideEncryptionRules = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_ServerSideEncryptionRule(entry, context3);
+        const n = se_ServerSideEncryptionRule(entry, context4);
         return n.n(_me);
       });
     }, "se_ServerSideEncryptionRules");
-    var se_SimplePrefix = /* @__PURE__ */ __name((input, context3) => {
+    var se_SimplePrefix = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SPi);
       return bn;
     }, "se_SimplePrefix");
-    var se_SourceSelectionCriteria = /* @__PURE__ */ __name((input, context3) => {
+    var se_SourceSelectionCriteria = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SSC);
       if (input[_SKEO] != null) {
-        bn.c(se_SseKmsEncryptedObjects(input[_SKEO], context3).n(_SKEO));
+        bn.c(se_SseKmsEncryptedObjects(input[_SKEO], context4).n(_SKEO));
       }
       if (input[_RM] != null) {
-        bn.c(se_ReplicaModifications(input[_RM], context3).n(_RM));
+        bn.c(se_ReplicaModifications(input[_RM], context4).n(_RM));
       }
       return bn;
     }, "se_SourceSelectionCriteria");
-    var se_SSEKMS = /* @__PURE__ */ __name((input, context3) => {
+    var se_SSEKMS = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SK);
       if (input[_KI] != null) {
         bn.c(import_xml_builder.XmlNode.of(_SSEKMSKI, input[_KI]).n(_KI));
       }
       return bn;
     }, "se_SSEKMS");
-    var se_SseKmsEncryptedObjects = /* @__PURE__ */ __name((input, context3) => {
+    var se_SseKmsEncryptedObjects = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SKEO);
       if (input[_S] != null) {
         bn.c(import_xml_builder.XmlNode.of(_SKEOS, input[_S]).n(_S));
       }
       return bn;
     }, "se_SseKmsEncryptedObjects");
-    var se_SSES3 = /* @__PURE__ */ __name((input, context3) => {
+    var se_SSES3 = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SS);
       return bn;
     }, "se_SSES3");
-    var se_StorageClassAnalysis = /* @__PURE__ */ __name((input, context3) => {
+    var se_StorageClassAnalysis = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SCA);
       if (input[_DE] != null) {
-        bn.c(se_StorageClassAnalysisDataExport(input[_DE], context3).n(_DE));
+        bn.c(se_StorageClassAnalysisDataExport(input[_DE], context4).n(_DE));
       }
       return bn;
     }, "se_StorageClassAnalysis");
-    var se_StorageClassAnalysisDataExport = /* @__PURE__ */ __name((input, context3) => {
+    var se_StorageClassAnalysisDataExport = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_SCADE);
       if (input[_OSV] != null) {
         bn.c(import_xml_builder.XmlNode.of(_SCASV, input[_OSV]).n(_OSV));
       }
       if (input[_Des] != null) {
-        bn.c(se_AnalyticsExportDestination(input[_Des], context3).n(_Des));
+        bn.c(se_AnalyticsExportDestination(input[_Des], context4).n(_Des));
       }
       return bn;
     }, "se_StorageClassAnalysisDataExport");
-    var se_Tag = /* @__PURE__ */ __name((input, context3) => {
+    var se_Tag = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Ta);
       if (input[_K] != null) {
         bn.c(import_xml_builder.XmlNode.of(_OK, input[_K]).n(_K));
@@ -52256,21 +52256,21 @@ var require_dist_cjs71 = __commonJS({
       bn.cc(input, _Va);
       return bn;
     }, "se_Tag");
-    var se_Tagging = /* @__PURE__ */ __name((input, context3) => {
+    var se_Tagging = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_T);
-      bn.lc(input, "TagSet", "TagSet", () => se_TagSet(input[_TS], context3));
+      bn.lc(input, "TagSet", "TagSet", () => se_TagSet(input[_TS], context4));
       return bn;
     }, "se_Tagging");
-    var se_TagSet = /* @__PURE__ */ __name((input, context3) => {
+    var se_TagSet = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_Tag(entry, context3);
+        const n = se_Tag(entry, context4);
         return n.n(_Ta);
       });
     }, "se_TagSet");
-    var se_TargetGrant = /* @__PURE__ */ __name((input, context3) => {
+    var se_TargetGrant = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_TGa);
       if (input[_Gra] != null) {
-        const n = se_Grantee(input[_Gra], context3).n(_Gra);
+        const n = se_Grantee(input[_Gra], context4).n(_Gra);
         n.a("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         bn.c(n);
       }
@@ -52279,23 +52279,23 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_TargetGrant");
-    var se_TargetGrants = /* @__PURE__ */ __name((input, context3) => {
+    var se_TargetGrants = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_TargetGrant(entry, context3);
+        const n = se_TargetGrant(entry, context4);
         return n.n(_G);
       });
     }, "se_TargetGrants");
-    var se_TargetObjectKeyFormat = /* @__PURE__ */ __name((input, context3) => {
+    var se_TargetObjectKeyFormat = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_TOKF);
       if (input[_SPi] != null) {
-        bn.c(se_SimplePrefix(input[_SPi], context3).n(_SPi));
+        bn.c(se_SimplePrefix(input[_SPi], context4).n(_SPi));
       }
       if (input[_PP] != null) {
-        bn.c(se_PartitionedPrefix(input[_PP], context3).n(_PP));
+        bn.c(se_PartitionedPrefix(input[_PP], context4).n(_PP));
       }
       return bn;
     }, "se_TargetObjectKeyFormat");
-    var se_Tiering = /* @__PURE__ */ __name((input, context3) => {
+    var se_Tiering = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Tier);
       if (input[_Da] != null) {
         bn.c(import_xml_builder.XmlNode.of(_ITD, String(input[_Da])).n(_Da));
@@ -52305,13 +52305,13 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_Tiering");
-    var se_TieringList = /* @__PURE__ */ __name((input, context3) => {
+    var se_TieringList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_Tiering(entry, context3);
+        const n = se_Tiering(entry, context4);
         return n.n(_me);
       });
     }, "se_TieringList");
-    var se_TopicConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_TopicConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_TCo);
       if (input[_I] != null) {
         bn.c(import_xml_builder.XmlNode.of(_NI, input[_I]).n(_I));
@@ -52319,19 +52319,19 @@ var require_dist_cjs71 = __commonJS({
       if (input[_TA] != null) {
         bn.c(import_xml_builder.XmlNode.of(_TA, input[_TA]).n(_Top));
       }
-      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context3));
+      bn.l(input, "Events", "Event", () => se_EventList(input[_Eve], context4));
       if (input[_F] != null) {
-        bn.c(se_NotificationConfigurationFilter(input[_F], context3).n(_F));
+        bn.c(se_NotificationConfigurationFilter(input[_F], context4).n(_F));
       }
       return bn;
     }, "se_TopicConfiguration");
-    var se_TopicConfigurationList = /* @__PURE__ */ __name((input, context3) => {
+    var se_TopicConfigurationList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_TopicConfiguration(entry, context3);
+        const n = se_TopicConfiguration(entry, context4);
         return n.n(_me);
       });
     }, "se_TopicConfigurationList");
-    var se_Transition = /* @__PURE__ */ __name((input, context3) => {
+    var se_Transition = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_Tra);
       if (input[_Dat] != null) {
         bn.c(import_xml_builder.XmlNode.of(_Dat, (0, import_smithy_client4.serializeDateTime)(input[_Dat]).toString()).n(_Dat));
@@ -52344,19 +52344,19 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_Transition");
-    var se_TransitionList = /* @__PURE__ */ __name((input, context3) => {
+    var se_TransitionList = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_Transition(entry, context3);
+        const n = se_Transition(entry, context4);
         return n.n(_me);
       });
     }, "se_TransitionList");
-    var se_UserMetadata = /* @__PURE__ */ __name((input, context3) => {
+    var se_UserMetadata = /* @__PURE__ */ __name((input, context4) => {
       return input.filter((e) => e != null).map((entry) => {
-        const n = se_MetadataEntry(entry, context3);
+        const n = se_MetadataEntry(entry, context4);
         return n.n(_ME);
       });
     }, "se_UserMetadata");
-    var se_VersioningConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_VersioningConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_VCe);
       if (input[_MFAD] != null) {
         bn.c(import_xml_builder.XmlNode.of(_MFAD, input[_MFAD]).n(_MDf));
@@ -52366,50 +52366,50 @@ var require_dist_cjs71 = __commonJS({
       }
       return bn;
     }, "se_VersioningConfiguration");
-    var se_WebsiteConfiguration = /* @__PURE__ */ __name((input, context3) => {
+    var se_WebsiteConfiguration = /* @__PURE__ */ __name((input, context4) => {
       const bn = new import_xml_builder.XmlNode(_WC);
       if (input[_ED] != null) {
-        bn.c(se_ErrorDocument(input[_ED], context3).n(_ED));
+        bn.c(se_ErrorDocument(input[_ED], context4).n(_ED));
       }
       if (input[_ID] != null) {
-        bn.c(se_IndexDocument(input[_ID], context3).n(_ID));
+        bn.c(se_IndexDocument(input[_ID], context4).n(_ID));
       }
       if (input[_RART] != null) {
-        bn.c(se_RedirectAllRequestsTo(input[_RART], context3).n(_RART));
+        bn.c(se_RedirectAllRequestsTo(input[_RART], context4).n(_RART));
       }
-      bn.lc(input, "RoutingRules", "RoutingRules", () => se_RoutingRules(input[_RRo], context3));
+      bn.lc(input, "RoutingRules", "RoutingRules", () => se_RoutingRules(input[_RRo], context4));
       return bn;
     }, "se_WebsiteConfiguration");
-    var de_AbortIncompleteMultipartUpload = /* @__PURE__ */ __name((output, context3) => {
+    var de_AbortIncompleteMultipartUpload = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DAI] != null) {
         contents[_DAI] = (0, import_smithy_client4.strictParseInt32)(output[_DAI]);
       }
       return contents;
     }, "de_AbortIncompleteMultipartUpload");
-    var de_AccessControlTranslation = /* @__PURE__ */ __name((output, context3) => {
+    var de_AccessControlTranslation = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_O] != null) {
         contents[_O] = (0, import_smithy_client4.expectString)(output[_O]);
       }
       return contents;
     }, "de_AccessControlTranslation");
-    var de_AllowedHeaders = /* @__PURE__ */ __name((output, context3) => {
+    var de_AllowedHeaders = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_AllowedHeaders");
-    var de_AllowedMethods = /* @__PURE__ */ __name((output, context3) => {
+    var de_AllowedMethods = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_AllowedMethods");
-    var de_AllowedOrigins = /* @__PURE__ */ __name((output, context3) => {
+    var de_AllowedOrigins = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_AllowedOrigins");
-    var de_AnalyticsAndOperator = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsAndOperator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
@@ -52417,37 +52417,37 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tag === "") {
         contents[_Tag] = [];
       } else if (output[_Ta] != null) {
-        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context3);
+        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context4);
       }
       return contents;
     }, "de_AnalyticsAndOperator");
-    var de_AnalyticsConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
       }
       if (output.Filter === "") {
       } else if (output[_F] != null) {
-        contents[_F] = de_AnalyticsFilter((0, import_smithy_client4.expectUnion)(output[_F]), context3);
+        contents[_F] = de_AnalyticsFilter((0, import_smithy_client4.expectUnion)(output[_F]), context4);
       }
       if (output[_SCA] != null) {
-        contents[_SCA] = de_StorageClassAnalysis(output[_SCA], context3);
+        contents[_SCA] = de_StorageClassAnalysis(output[_SCA], context4);
       }
       return contents;
     }, "de_AnalyticsConfiguration");
-    var de_AnalyticsConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_AnalyticsConfiguration(entry, context3);
+        return de_AnalyticsConfiguration(entry, context4);
       });
     }, "de_AnalyticsConfigurationList");
-    var de_AnalyticsExportDestination = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsExportDestination = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SBD] != null) {
-        contents[_SBD] = de_AnalyticsS3BucketDestination(output[_SBD], context3);
+        contents[_SBD] = de_AnalyticsS3BucketDestination(output[_SBD], context4);
       }
       return contents;
     }, "de_AnalyticsExportDestination");
-    var de_AnalyticsFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsFilter = /* @__PURE__ */ __name((output, context4) => {
       if (output[_P] != null) {
         return {
           Prefix: (0, import_smithy_client4.expectString)(output[_P])
@@ -52455,17 +52455,17 @@ var require_dist_cjs71 = __commonJS({
       }
       if (output[_Ta] != null) {
         return {
-          Tag: de_Tag(output[_Ta], context3)
+          Tag: de_Tag(output[_Ta], context4)
         };
       }
       if (output[_A] != null) {
         return {
-          And: de_AnalyticsAndOperator(output[_A], context3)
+          And: de_AnalyticsAndOperator(output[_A], context4)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     }, "de_AnalyticsFilter");
-    var de_AnalyticsS3BucketDestination = /* @__PURE__ */ __name((output, context3) => {
+    var de_AnalyticsS3BucketDestination = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Fo] != null) {
         contents[_Fo] = (0, import_smithy_client4.expectString)(output[_Fo]);
@@ -52481,7 +52481,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_AnalyticsS3BucketDestination");
-    var de_Bucket = /* @__PURE__ */ __name((output, context3) => {
+    var de_Bucket = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_N] != null) {
         contents[_N] = (0, import_smithy_client4.expectString)(output[_N]);
@@ -52494,12 +52494,12 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Bucket");
-    var de_Buckets = /* @__PURE__ */ __name((output, context3) => {
+    var de_Buckets = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Bucket(entry, context3);
+        return de_Bucket(entry, context4);
       });
     }, "de_Buckets");
-    var de_Checksum = /* @__PURE__ */ __name((output, context3) => {
+    var de_Checksum = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_CCRC] != null) {
         contents[_CCRC] = (0, import_smithy_client4.expectString)(output[_CCRC]);
@@ -52515,24 +52515,24 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Checksum");
-    var de_ChecksumAlgorithmList = /* @__PURE__ */ __name((output, context3) => {
+    var de_ChecksumAlgorithmList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_ChecksumAlgorithmList");
-    var de_CommonPrefix = /* @__PURE__ */ __name((output, context3) => {
+    var de_CommonPrefix = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       return contents;
     }, "de_CommonPrefix");
-    var de_CommonPrefixList = /* @__PURE__ */ __name((output, context3) => {
+    var de_CommonPrefixList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_CommonPrefix(entry, context3);
+        return de_CommonPrefix(entry, context4);
       });
     }, "de_CommonPrefixList");
-    var de_Condition = /* @__PURE__ */ __name((output, context3) => {
+    var de_Condition = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_HECRE] != null) {
         contents[_HECRE] = (0, import_smithy_client4.expectString)(output[_HECRE]);
@@ -52542,11 +52542,11 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Condition");
-    var de_ContinuationEvent = /* @__PURE__ */ __name((output, context3) => {
+    var de_ContinuationEvent = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       return contents;
     }, "de_ContinuationEvent");
-    var de_CopyObjectResult = /* @__PURE__ */ __name((output, context3) => {
+    var de_CopyObjectResult = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ETa] != null) {
         contents[_ETa] = (0, import_smithy_client4.expectString)(output[_ETa]);
@@ -52568,7 +52568,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_CopyObjectResult");
-    var de_CopyPartResult = /* @__PURE__ */ __name((output, context3) => {
+    var de_CopyPartResult = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ETa] != null) {
         contents[_ETa] = (0, import_smithy_client4.expectString)(output[_ETa]);
@@ -52590,7 +52590,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_CopyPartResult");
-    var de_CORSRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_CORSRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ID_] != null) {
         contents[_ID_] = (0, import_smithy_client4.expectString)(output[_ID_]);
@@ -52598,34 +52598,34 @@ var require_dist_cjs71 = __commonJS({
       if (output.AllowedHeader === "") {
         contents[_AHl] = [];
       } else if (output[_AH] != null) {
-        contents[_AHl] = de_AllowedHeaders((0, import_smithy_client4.getArrayIfSingleItem)(output[_AH]), context3);
+        contents[_AHl] = de_AllowedHeaders((0, import_smithy_client4.getArrayIfSingleItem)(output[_AH]), context4);
       }
       if (output.AllowedMethod === "") {
         contents[_AMl] = [];
       } else if (output[_AM] != null) {
-        contents[_AMl] = de_AllowedMethods((0, import_smithy_client4.getArrayIfSingleItem)(output[_AM]), context3);
+        contents[_AMl] = de_AllowedMethods((0, import_smithy_client4.getArrayIfSingleItem)(output[_AM]), context4);
       }
       if (output.AllowedOrigin === "") {
         contents[_AOl] = [];
       } else if (output[_AO] != null) {
-        contents[_AOl] = de_AllowedOrigins((0, import_smithy_client4.getArrayIfSingleItem)(output[_AO]), context3);
+        contents[_AOl] = de_AllowedOrigins((0, import_smithy_client4.getArrayIfSingleItem)(output[_AO]), context4);
       }
       if (output.ExposeHeader === "") {
         contents[_EH] = [];
       } else if (output[_EHx] != null) {
-        contents[_EH] = de_ExposeHeaders((0, import_smithy_client4.getArrayIfSingleItem)(output[_EHx]), context3);
+        contents[_EH] = de_ExposeHeaders((0, import_smithy_client4.getArrayIfSingleItem)(output[_EHx]), context4);
       }
       if (output[_MAS] != null) {
         contents[_MAS] = (0, import_smithy_client4.strictParseInt32)(output[_MAS]);
       }
       return contents;
     }, "de_CORSRule");
-    var de_CORSRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_CORSRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_CORSRule(entry, context3);
+        return de_CORSRule(entry, context4);
       });
     }, "de_CORSRules");
-    var de_DefaultRetention = /* @__PURE__ */ __name((output, context3) => {
+    var de_DefaultRetention = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Mo] != null) {
         contents[_Mo] = (0, import_smithy_client4.expectString)(output[_Mo]);
@@ -52638,7 +52638,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_DefaultRetention");
-    var de_DeletedObject = /* @__PURE__ */ __name((output, context3) => {
+    var de_DeletedObject = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
@@ -52654,15 +52654,15 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_DeletedObject");
-    var de_DeletedObjects = /* @__PURE__ */ __name((output, context3) => {
+    var de_DeletedObjects = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_DeletedObject(entry, context3);
+        return de_DeletedObject(entry, context4);
       });
     }, "de_DeletedObjects");
-    var de_DeleteMarkerEntry = /* @__PURE__ */ __name((output, context3) => {
+    var de_DeleteMarkerEntry = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_O] != null) {
-        contents[_O] = de_Owner(output[_O], context3);
+        contents[_O] = de_Owner(output[_O], context4);
       }
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
@@ -52678,19 +52678,19 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_DeleteMarkerEntry");
-    var de_DeleteMarkerReplication = /* @__PURE__ */ __name((output, context3) => {
+    var de_DeleteMarkerReplication = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       return contents;
     }, "de_DeleteMarkerReplication");
-    var de_DeleteMarkers = /* @__PURE__ */ __name((output, context3) => {
+    var de_DeleteMarkers = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_DeleteMarkerEntry(entry, context3);
+        return de_DeleteMarkerEntry(entry, context4);
       });
     }, "de_DeleteMarkers");
-    var de_Destination = /* @__PURE__ */ __name((output, context3) => {
+    var de_Destination = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_B] != null) {
         contents[_B] = (0, import_smithy_client4.expectString)(output[_B]);
@@ -52702,31 +52702,31 @@ var require_dist_cjs71 = __commonJS({
         contents[_SC] = (0, import_smithy_client4.expectString)(output[_SC]);
       }
       if (output[_ACT] != null) {
-        contents[_ACT] = de_AccessControlTranslation(output[_ACT], context3);
+        contents[_ACT] = de_AccessControlTranslation(output[_ACT], context4);
       }
       if (output[_ECn] != null) {
-        contents[_ECn] = de_EncryptionConfiguration(output[_ECn], context3);
+        contents[_ECn] = de_EncryptionConfiguration(output[_ECn], context4);
       }
       if (output[_RTe] != null) {
-        contents[_RTe] = de_ReplicationTime(output[_RTe], context3);
+        contents[_RTe] = de_ReplicationTime(output[_RTe], context4);
       }
       if (output[_Me] != null) {
-        contents[_Me] = de_Metrics(output[_Me], context3);
+        contents[_Me] = de_Metrics(output[_Me], context4);
       }
       return contents;
     }, "de_Destination");
-    var de_EncryptionConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_EncryptionConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_RKKID] != null) {
         contents[_RKKID] = (0, import_smithy_client4.expectString)(output[_RKKID]);
       }
       return contents;
     }, "de_EncryptionConfiguration");
-    var de_EndEvent = /* @__PURE__ */ __name((output, context3) => {
+    var de_EndEvent = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       return contents;
     }, "de_EndEvent");
-    var de__Error = /* @__PURE__ */ __name((output, context3) => {
+    var de__Error = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
@@ -52742,40 +52742,40 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de__Error");
-    var de_ErrorDocument = /* @__PURE__ */ __name((output, context3) => {
+    var de_ErrorDocument = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
       }
       return contents;
     }, "de_ErrorDocument");
-    var de_Errors = /* @__PURE__ */ __name((output, context3) => {
+    var de_Errors = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de__Error(entry, context3);
+        return de__Error(entry, context4);
       });
     }, "de_Errors");
-    var de_EventBridgeConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_EventBridgeConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       return contents;
     }, "de_EventBridgeConfiguration");
-    var de_EventList = /* @__PURE__ */ __name((output, context3) => {
+    var de_EventList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_EventList");
-    var de_ExistingObjectReplication = /* @__PURE__ */ __name((output, context3) => {
+    var de_ExistingObjectReplication = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       return contents;
     }, "de_ExistingObjectReplication");
-    var de_ExposeHeaders = /* @__PURE__ */ __name((output, context3) => {
+    var de_ExposeHeaders = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_ExposeHeaders");
-    var de_FilterRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_FilterRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_N] != null) {
         contents[_N] = (0, import_smithy_client4.expectString)(output[_N]);
@@ -52785,12 +52785,12 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_FilterRule");
-    var de_FilterRuleList = /* @__PURE__ */ __name((output, context3) => {
+    var de_FilterRuleList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_FilterRule(entry, context3);
+        return de_FilterRule(entry, context4);
       });
     }, "de_FilterRuleList");
-    var de_GetObjectAttributesParts = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetObjectAttributesParts = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_PC] != null) {
         contents[_TPC] = (0, import_smithy_client4.strictParseInt32)(output[_PC]);
@@ -52810,21 +52810,21 @@ var require_dist_cjs71 = __commonJS({
       if (output.Part === "") {
         contents[_Part] = [];
       } else if (output[_Par] != null) {
-        contents[_Part] = de_PartsList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Par]), context3);
+        contents[_Part] = de_PartsList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Par]), context4);
       }
       return contents;
     }, "de_GetObjectAttributesParts");
-    var de_Grant = /* @__PURE__ */ __name((output, context3) => {
+    var de_Grant = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Gra] != null) {
-        contents[_Gra] = de_Grantee(output[_Gra], context3);
+        contents[_Gra] = de_Grantee(output[_Gra], context4);
       }
       if (output[_Pe] != null) {
         contents[_Pe] = (0, import_smithy_client4.expectString)(output[_Pe]);
       }
       return contents;
     }, "de_Grant");
-    var de_Grantee = /* @__PURE__ */ __name((output, context3) => {
+    var de_Grantee = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DN] != null) {
         contents[_DN] = (0, import_smithy_client4.expectString)(output[_DN]);
@@ -52843,19 +52843,19 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Grantee");
-    var de_Grants = /* @__PURE__ */ __name((output, context3) => {
+    var de_Grants = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Grant(entry, context3);
+        return de_Grant(entry, context4);
       });
     }, "de_Grants");
-    var de_IndexDocument = /* @__PURE__ */ __name((output, context3) => {
+    var de_IndexDocument = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Su] != null) {
         contents[_Su] = (0, import_smithy_client4.expectString)(output[_Su]);
       }
       return contents;
     }, "de_IndexDocument");
-    var de_Initiator = /* @__PURE__ */ __name((output, context3) => {
+    var de_Initiator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ID_] != null) {
         contents[_ID_] = (0, import_smithy_client4.expectString)(output[_ID_]);
@@ -52865,7 +52865,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Initiator");
-    var de_IntelligentTieringAndOperator = /* @__PURE__ */ __name((output, context3) => {
+    var de_IntelligentTieringAndOperator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
@@ -52873,17 +52873,17 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tag === "") {
         contents[_Tag] = [];
       } else if (output[_Ta] != null) {
-        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context3);
+        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context4);
       }
       return contents;
     }, "de_IntelligentTieringAndOperator");
-    var de_IntelligentTieringConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_IntelligentTieringConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
       }
       if (output[_F] != null) {
-        contents[_F] = de_IntelligentTieringFilter(output[_F], context3);
+        contents[_F] = de_IntelligentTieringFilter(output[_F], context4);
       }
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
@@ -52891,38 +52891,38 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tiering === "") {
         contents[_Tie] = [];
       } else if (output[_Tier] != null) {
-        contents[_Tie] = de_TieringList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Tier]), context3);
+        contents[_Tie] = de_TieringList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Tier]), context4);
       }
       return contents;
     }, "de_IntelligentTieringConfiguration");
-    var de_IntelligentTieringConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_IntelligentTieringConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_IntelligentTieringConfiguration(entry, context3);
+        return de_IntelligentTieringConfiguration(entry, context4);
       });
     }, "de_IntelligentTieringConfigurationList");
-    var de_IntelligentTieringFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_IntelligentTieringFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_Ta] != null) {
-        contents[_Ta] = de_Tag(output[_Ta], context3);
+        contents[_Ta] = de_Tag(output[_Ta], context4);
       }
       if (output[_A] != null) {
-        contents[_A] = de_IntelligentTieringAndOperator(output[_A], context3);
+        contents[_A] = de_IntelligentTieringAndOperator(output[_A], context4);
       }
       return contents;
     }, "de_IntelligentTieringFilter");
-    var de_InventoryConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Des] != null) {
-        contents[_Des] = de_InventoryDestination(output[_Des], context3);
+        contents[_Des] = de_InventoryDestination(output[_Des], context4);
       }
       if (output[_IE] != null) {
         contents[_IE] = (0, import_smithy_client4.parseBoolean)(output[_IE]);
       }
       if (output[_F] != null) {
-        contents[_F] = de_InventoryFilter(output[_F], context3);
+        contents[_F] = de_InventoryFilter(output[_F], context4);
       }
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
@@ -52933,48 +52933,48 @@ var require_dist_cjs71 = __commonJS({
       if (output.OptionalFields === "") {
         contents[_OF] = [];
       } else if (output[_OF] != null && output[_OF][_Fi] != null) {
-        contents[_OF] = de_InventoryOptionalFields((0, import_smithy_client4.getArrayIfSingleItem)(output[_OF][_Fi]), context3);
+        contents[_OF] = de_InventoryOptionalFields((0, import_smithy_client4.getArrayIfSingleItem)(output[_OF][_Fi]), context4);
       }
       if (output[_Sc] != null) {
-        contents[_Sc] = de_InventorySchedule(output[_Sc], context3);
+        contents[_Sc] = de_InventorySchedule(output[_Sc], context4);
       }
       return contents;
     }, "de_InventoryConfiguration");
-    var de_InventoryConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_InventoryConfiguration(entry, context3);
+        return de_InventoryConfiguration(entry, context4);
       });
     }, "de_InventoryConfigurationList");
-    var de_InventoryDestination = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryDestination = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SBD] != null) {
-        contents[_SBD] = de_InventoryS3BucketDestination(output[_SBD], context3);
+        contents[_SBD] = de_InventoryS3BucketDestination(output[_SBD], context4);
       }
       return contents;
     }, "de_InventoryDestination");
-    var de_InventoryEncryption = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryEncryption = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SS] != null) {
-        contents[_SSES] = de_SSES3(output[_SS], context3);
+        contents[_SSES] = de_SSES3(output[_SS], context4);
       }
       if (output[_SK] != null) {
-        contents[_SSEKMS] = de_SSEKMS(output[_SK], context3);
+        contents[_SSEKMS] = de_SSEKMS(output[_SK], context4);
       }
       return contents;
     }, "de_InventoryEncryption");
-    var de_InventoryFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       return contents;
     }, "de_InventoryFilter");
-    var de_InventoryOptionalFields = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryOptionalFields = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
         return (0, import_smithy_client4.expectString)(entry);
       });
     }, "de_InventoryOptionalFields");
-    var de_InventoryS3BucketDestination = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventoryS3BucketDestination = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_AIc] != null) {
         contents[_AIc] = (0, import_smithy_client4.expectString)(output[_AIc]);
@@ -52989,18 +52989,18 @@ var require_dist_cjs71 = __commonJS({
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_En] != null) {
-        contents[_En] = de_InventoryEncryption(output[_En], context3);
+        contents[_En] = de_InventoryEncryption(output[_En], context4);
       }
       return contents;
     }, "de_InventoryS3BucketDestination");
-    var de_InventorySchedule = /* @__PURE__ */ __name((output, context3) => {
+    var de_InventorySchedule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Fr] != null) {
         contents[_Fr] = (0, import_smithy_client4.expectString)(output[_Fr]);
       }
       return contents;
     }, "de_InventorySchedule");
-    var de_LambdaFunctionConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_LambdaFunctionConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
@@ -53011,19 +53011,19 @@ var require_dist_cjs71 = __commonJS({
       if (output.Event === "") {
         contents[_Eve] = [];
       } else if (output[_Ev] != null) {
-        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context3);
+        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context4);
       }
       if (output[_F] != null) {
-        contents[_F] = de_NotificationConfigurationFilter(output[_F], context3);
+        contents[_F] = de_NotificationConfigurationFilter(output[_F], context4);
       }
       return contents;
     }, "de_LambdaFunctionConfiguration");
-    var de_LambdaFunctionConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_LambdaFunctionConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_LambdaFunctionConfiguration(entry, context3);
+        return de_LambdaFunctionConfiguration(entry, context4);
       });
     }, "de_LambdaFunctionConfigurationList");
-    var de_LifecycleExpiration = /* @__PURE__ */ __name((output, context3) => {
+    var de_LifecycleExpiration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Dat] != null) {
         contents[_Dat] = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.parseRfc3339DateTimeWithOffset)(output[_Dat]));
@@ -53036,10 +53036,10 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_LifecycleExpiration");
-    var de_LifecycleRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_LifecycleRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Exp] != null) {
-        contents[_Exp] = de_LifecycleExpiration(output[_Exp], context3);
+        contents[_Exp] = de_LifecycleExpiration(output[_Exp], context4);
       }
       if (output[_ID_] != null) {
         contents[_ID_] = (0, import_smithy_client4.expectString)(output[_ID_]);
@@ -53048,7 +53048,7 @@ var require_dist_cjs71 = __commonJS({
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_F] != null) {
-        contents[_F] = de_LifecycleRuleFilter(output[_F], context3);
+        contents[_F] = de_LifecycleRuleFilter(output[_F], context4);
       }
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
@@ -53056,22 +53056,22 @@ var require_dist_cjs71 = __commonJS({
       if (output.Transition === "") {
         contents[_Tr] = [];
       } else if (output[_Tra] != null) {
-        contents[_Tr] = de_TransitionList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Tra]), context3);
+        contents[_Tr] = de_TransitionList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Tra]), context4);
       }
       if (output.NoncurrentVersionTransition === "") {
         contents[_NVT] = [];
       } else if (output[_NVTo] != null) {
-        contents[_NVT] = de_NoncurrentVersionTransitionList((0, import_smithy_client4.getArrayIfSingleItem)(output[_NVTo]), context3);
+        contents[_NVT] = de_NoncurrentVersionTransitionList((0, import_smithy_client4.getArrayIfSingleItem)(output[_NVTo]), context4);
       }
       if (output[_NVE] != null) {
-        contents[_NVE] = de_NoncurrentVersionExpiration(output[_NVE], context3);
+        contents[_NVE] = de_NoncurrentVersionExpiration(output[_NVE], context4);
       }
       if (output[_AIMU] != null) {
-        contents[_AIMU] = de_AbortIncompleteMultipartUpload(output[_AIMU], context3);
+        contents[_AIMU] = de_AbortIncompleteMultipartUpload(output[_AIMU], context4);
       }
       return contents;
     }, "de_LifecycleRule");
-    var de_LifecycleRuleAndOperator = /* @__PURE__ */ __name((output, context3) => {
+    var de_LifecycleRuleAndOperator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
@@ -53079,7 +53079,7 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tag === "") {
         contents[_Tag] = [];
       } else if (output[_Ta] != null) {
-        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context3);
+        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context4);
       }
       if (output[_OSGT] != null) {
         contents[_OSGT] = (0, import_smithy_client4.strictParseLong)(output[_OSGT]);
@@ -53089,13 +53089,13 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_LifecycleRuleAndOperator");
-    var de_LifecycleRuleFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_LifecycleRuleFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_Ta] != null) {
-        contents[_Ta] = de_Tag(output[_Ta], context3);
+        contents[_Ta] = de_Tag(output[_Ta], context4);
       }
       if (output[_OSGT] != null) {
         contents[_OSGT] = (0, import_smithy_client4.strictParseLong)(output[_OSGT]);
@@ -53104,16 +53104,16 @@ var require_dist_cjs71 = __commonJS({
         contents[_OSLT] = (0, import_smithy_client4.strictParseLong)(output[_OSLT]);
       }
       if (output[_A] != null) {
-        contents[_A] = de_LifecycleRuleAndOperator(output[_A], context3);
+        contents[_A] = de_LifecycleRuleAndOperator(output[_A], context4);
       }
       return contents;
     }, "de_LifecycleRuleFilter");
-    var de_LifecycleRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_LifecycleRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_LifecycleRule(entry, context3);
+        return de_LifecycleRule(entry, context4);
       });
     }, "de_LifecycleRules");
-    var de_LoggingEnabled = /* @__PURE__ */ __name((output, context3) => {
+    var de_LoggingEnabled = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_TB] != null) {
         contents[_TB] = (0, import_smithy_client4.expectString)(output[_TB]);
@@ -53121,27 +53121,27 @@ var require_dist_cjs71 = __commonJS({
       if (output.TargetGrants === "") {
         contents[_TG] = [];
       } else if (output[_TG] != null && output[_TG][_G] != null) {
-        contents[_TG] = de_TargetGrants((0, import_smithy_client4.getArrayIfSingleItem)(output[_TG][_G]), context3);
+        contents[_TG] = de_TargetGrants((0, import_smithy_client4.getArrayIfSingleItem)(output[_TG][_G]), context4);
       }
       if (output[_TP] != null) {
         contents[_TP] = (0, import_smithy_client4.expectString)(output[_TP]);
       }
       if (output[_TOKF] != null) {
-        contents[_TOKF] = de_TargetObjectKeyFormat(output[_TOKF], context3);
+        contents[_TOKF] = de_TargetObjectKeyFormat(output[_TOKF], context4);
       }
       return contents;
     }, "de_LoggingEnabled");
-    var de_Metrics = /* @__PURE__ */ __name((output, context3) => {
+    var de_Metrics = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       if (output[_ETv] != null) {
-        contents[_ETv] = de_ReplicationTimeValue(output[_ETv], context3);
+        contents[_ETv] = de_ReplicationTimeValue(output[_ETv], context4);
       }
       return contents;
     }, "de_Metrics");
-    var de_MetricsAndOperator = /* @__PURE__ */ __name((output, context3) => {
+    var de_MetricsAndOperator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
@@ -53149,30 +53149,30 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tag === "") {
         contents[_Tag] = [];
       } else if (output[_Ta] != null) {
-        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context3);
+        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context4);
       }
       if (output[_APAc] != null) {
         contents[_APAc] = (0, import_smithy_client4.expectString)(output[_APAc]);
       }
       return contents;
     }, "de_MetricsAndOperator");
-    var de_MetricsConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_MetricsConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
       }
       if (output.Filter === "") {
       } else if (output[_F] != null) {
-        contents[_F] = de_MetricsFilter((0, import_smithy_client4.expectUnion)(output[_F]), context3);
+        contents[_F] = de_MetricsFilter((0, import_smithy_client4.expectUnion)(output[_F]), context4);
       }
       return contents;
     }, "de_MetricsConfiguration");
-    var de_MetricsConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_MetricsConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_MetricsConfiguration(entry, context3);
+        return de_MetricsConfiguration(entry, context4);
       });
     }, "de_MetricsConfigurationList");
-    var de_MetricsFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_MetricsFilter = /* @__PURE__ */ __name((output, context4) => {
       if (output[_P] != null) {
         return {
           Prefix: (0, import_smithy_client4.expectString)(output[_P])
@@ -53180,7 +53180,7 @@ var require_dist_cjs71 = __commonJS({
       }
       if (output[_Ta] != null) {
         return {
-          Tag: de_Tag(output[_Ta], context3)
+          Tag: de_Tag(output[_Ta], context4)
         };
       }
       if (output[_APAc] != null) {
@@ -53190,12 +53190,12 @@ var require_dist_cjs71 = __commonJS({
       }
       if (output[_A] != null) {
         return {
-          And: de_MetricsAndOperator(output[_A], context3)
+          And: de_MetricsAndOperator(output[_A], context4)
         };
       }
       return { $unknown: Object.entries(output)[0] };
     }, "de_MetricsFilter");
-    var de_MultipartUpload = /* @__PURE__ */ __name((output, context3) => {
+    var de_MultipartUpload = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_UI] != null) {
         contents[_UI] = (0, import_smithy_client4.expectString)(output[_UI]);
@@ -53210,22 +53210,22 @@ var require_dist_cjs71 = __commonJS({
         contents[_SC] = (0, import_smithy_client4.expectString)(output[_SC]);
       }
       if (output[_O] != null) {
-        contents[_O] = de_Owner(output[_O], context3);
+        contents[_O] = de_Owner(output[_O], context4);
       }
       if (output[_In] != null) {
-        contents[_In] = de_Initiator(output[_In], context3);
+        contents[_In] = de_Initiator(output[_In], context4);
       }
       if (output[_CA] != null) {
         contents[_CA] = (0, import_smithy_client4.expectString)(output[_CA]);
       }
       return contents;
     }, "de_MultipartUpload");
-    var de_MultipartUploadList = /* @__PURE__ */ __name((output, context3) => {
+    var de_MultipartUploadList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_MultipartUpload(entry, context3);
+        return de_MultipartUpload(entry, context4);
       });
     }, "de_MultipartUploadList");
-    var de_NoncurrentVersionExpiration = /* @__PURE__ */ __name((output, context3) => {
+    var de_NoncurrentVersionExpiration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ND] != null) {
         contents[_ND] = (0, import_smithy_client4.strictParseInt32)(output[_ND]);
@@ -53235,7 +53235,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_NoncurrentVersionExpiration");
-    var de_NoncurrentVersionTransition = /* @__PURE__ */ __name((output, context3) => {
+    var de_NoncurrentVersionTransition = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ND] != null) {
         contents[_ND] = (0, import_smithy_client4.strictParseInt32)(output[_ND]);
@@ -53248,19 +53248,19 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_NoncurrentVersionTransition");
-    var de_NoncurrentVersionTransitionList = /* @__PURE__ */ __name((output, context3) => {
+    var de_NoncurrentVersionTransitionList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_NoncurrentVersionTransition(entry, context3);
+        return de_NoncurrentVersionTransition(entry, context4);
       });
     }, "de_NoncurrentVersionTransitionList");
-    var de_NotificationConfigurationFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_NotificationConfigurationFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SKe] != null) {
-        contents[_K] = de_S3KeyFilter(output[_SKe], context3);
+        contents[_K] = de_S3KeyFilter(output[_SKe], context4);
       }
       return contents;
     }, "de_NotificationConfigurationFilter");
-    var de__Object = /* @__PURE__ */ __name((output, context3) => {
+    var de__Object = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
@@ -53274,7 +53274,7 @@ var require_dist_cjs71 = __commonJS({
       if (output.ChecksumAlgorithm === "") {
         contents[_CA] = [];
       } else if (output[_CA] != null) {
-        contents[_CA] = de_ChecksumAlgorithmList((0, import_smithy_client4.getArrayIfSingleItem)(output[_CA]), context3);
+        contents[_CA] = de_ChecksumAlgorithmList((0, import_smithy_client4.getArrayIfSingleItem)(output[_CA]), context4);
       }
       if (output[_Si] != null) {
         contents[_Si] = (0, import_smithy_client4.strictParseLong)(output[_Si]);
@@ -53283,36 +53283,36 @@ var require_dist_cjs71 = __commonJS({
         contents[_SC] = (0, import_smithy_client4.expectString)(output[_SC]);
       }
       if (output[_O] != null) {
-        contents[_O] = de_Owner(output[_O], context3);
+        contents[_O] = de_Owner(output[_O], context4);
       }
       if (output[_RSe] != null) {
-        contents[_RSe] = de_RestoreStatus(output[_RSe], context3);
+        contents[_RSe] = de_RestoreStatus(output[_RSe], context4);
       }
       return contents;
     }, "de__Object");
-    var de_ObjectList = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de__Object(entry, context3);
+        return de__Object(entry, context4);
       });
     }, "de_ObjectList");
-    var de_ObjectLockConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectLockConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_OLE] != null) {
         contents[_OLE] = (0, import_smithy_client4.expectString)(output[_OLE]);
       }
       if (output[_Ru] != null) {
-        contents[_Ru] = de_ObjectLockRule(output[_Ru], context3);
+        contents[_Ru] = de_ObjectLockRule(output[_Ru], context4);
       }
       return contents;
     }, "de_ObjectLockConfiguration");
-    var de_ObjectLockLegalHold = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectLockLegalHold = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       return contents;
     }, "de_ObjectLockLegalHold");
-    var de_ObjectLockRetention = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectLockRetention = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Mo] != null) {
         contents[_Mo] = (0, import_smithy_client4.expectString)(output[_Mo]);
@@ -53322,14 +53322,14 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ObjectLockRetention");
-    var de_ObjectLockRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectLockRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DRe] != null) {
-        contents[_DRe] = de_DefaultRetention(output[_DRe], context3);
+        contents[_DRe] = de_DefaultRetention(output[_DRe], context4);
       }
       return contents;
     }, "de_ObjectLockRule");
-    var de_ObjectPart = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectPart = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_PN] != null) {
         contents[_PN] = (0, import_smithy_client4.strictParseInt32)(output[_PN]);
@@ -53351,7 +53351,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ObjectPart");
-    var de_ObjectVersion = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectVersion = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ETa] != null) {
         contents[_ETa] = (0, import_smithy_client4.expectString)(output[_ETa]);
@@ -53359,7 +53359,7 @@ var require_dist_cjs71 = __commonJS({
       if (output.ChecksumAlgorithm === "") {
         contents[_CA] = [];
       } else if (output[_CA] != null) {
-        contents[_CA] = de_ChecksumAlgorithmList((0, import_smithy_client4.getArrayIfSingleItem)(output[_CA]), context3);
+        contents[_CA] = de_ChecksumAlgorithmList((0, import_smithy_client4.getArrayIfSingleItem)(output[_CA]), context4);
       }
       if (output[_Si] != null) {
         contents[_Si] = (0, import_smithy_client4.strictParseLong)(output[_Si]);
@@ -53380,19 +53380,19 @@ var require_dist_cjs71 = __commonJS({
         contents[_LM] = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.parseRfc3339DateTimeWithOffset)(output[_LM]));
       }
       if (output[_O] != null) {
-        contents[_O] = de_Owner(output[_O], context3);
+        contents[_O] = de_Owner(output[_O], context4);
       }
       if (output[_RSe] != null) {
-        contents[_RSe] = de_RestoreStatus(output[_RSe], context3);
+        contents[_RSe] = de_RestoreStatus(output[_RSe], context4);
       }
       return contents;
     }, "de_ObjectVersion");
-    var de_ObjectVersionList = /* @__PURE__ */ __name((output, context3) => {
+    var de_ObjectVersionList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ObjectVersion(entry, context3);
+        return de_ObjectVersion(entry, context4);
       });
     }, "de_ObjectVersionList");
-    var de_Owner = /* @__PURE__ */ __name((output, context3) => {
+    var de_Owner = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DN] != null) {
         contents[_DN] = (0, import_smithy_client4.expectString)(output[_DN]);
@@ -53402,28 +53402,28 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Owner");
-    var de_OwnershipControls = /* @__PURE__ */ __name((output, context3) => {
+    var de_OwnershipControls = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output.Rule === "") {
         contents[_Rul] = [];
       } else if (output[_Ru] != null) {
-        contents[_Rul] = de_OwnershipControlsRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context3);
+        contents[_Rul] = de_OwnershipControlsRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context4);
       }
       return contents;
     }, "de_OwnershipControls");
-    var de_OwnershipControlsRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_OwnershipControlsRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_OO] != null) {
         contents[_OO] = (0, import_smithy_client4.expectString)(output[_OO]);
       }
       return contents;
     }, "de_OwnershipControlsRule");
-    var de_OwnershipControlsRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_OwnershipControlsRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_OwnershipControlsRule(entry, context3);
+        return de_OwnershipControlsRule(entry, context4);
       });
     }, "de_OwnershipControlsRules");
-    var de_Part = /* @__PURE__ */ __name((output, context3) => {
+    var de_Part = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_PN] != null) {
         contents[_PN] = (0, import_smithy_client4.strictParseInt32)(output[_PN]);
@@ -53451,31 +53451,31 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Part");
-    var de_PartitionedPrefix = /* @__PURE__ */ __name((output, context3) => {
+    var de_PartitionedPrefix = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_PDS] != null) {
         contents[_PDS] = (0, import_smithy_client4.expectString)(output[_PDS]);
       }
       return contents;
     }, "de_PartitionedPrefix");
-    var de_Parts = /* @__PURE__ */ __name((output, context3) => {
+    var de_Parts = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Part(entry, context3);
+        return de_Part(entry, context4);
       });
     }, "de_Parts");
-    var de_PartsList = /* @__PURE__ */ __name((output, context3) => {
+    var de_PartsList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ObjectPart(entry, context3);
+        return de_ObjectPart(entry, context4);
       });
     }, "de_PartsList");
-    var de_PolicyStatus = /* @__PURE__ */ __name((output, context3) => {
+    var de_PolicyStatus = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_IP] != null) {
         contents[_IP] = (0, import_smithy_client4.parseBoolean)(output[_IP]);
       }
       return contents;
     }, "de_PolicyStatus");
-    var de_Progress = /* @__PURE__ */ __name((output, context3) => {
+    var de_Progress = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_BS] != null) {
         contents[_BS] = (0, import_smithy_client4.strictParseLong)(output[_BS]);
@@ -53488,7 +53488,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Progress");
-    var de_PublicAccessBlockConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_PublicAccessBlockConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_BPA] != null) {
         contents[_BPA] = (0, import_smithy_client4.parseBoolean)(output[_BPA]);
@@ -53504,7 +53504,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_PublicAccessBlockConfiguration");
-    var de_QueueConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_QueueConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
@@ -53515,19 +53515,19 @@ var require_dist_cjs71 = __commonJS({
       if (output.Event === "") {
         contents[_Eve] = [];
       } else if (output[_Ev] != null) {
-        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context3);
+        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context4);
       }
       if (output[_F] != null) {
-        contents[_F] = de_NotificationConfigurationFilter(output[_F], context3);
+        contents[_F] = de_NotificationConfigurationFilter(output[_F], context4);
       }
       return contents;
     }, "de_QueueConfiguration");
-    var de_QueueConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_QueueConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_QueueConfiguration(entry, context3);
+        return de_QueueConfiguration(entry, context4);
       });
     }, "de_QueueConfigurationList");
-    var de_Redirect = /* @__PURE__ */ __name((output, context3) => {
+    var de_Redirect = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_HN] != null) {
         contents[_HN] = (0, import_smithy_client4.expectString)(output[_HN]);
@@ -53546,7 +53546,7 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Redirect");
-    var de_RedirectAllRequestsTo = /* @__PURE__ */ __name((output, context3) => {
+    var de_RedirectAllRequestsTo = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_HN] != null) {
         contents[_HN] = (0, import_smithy_client4.expectString)(output[_HN]);
@@ -53556,14 +53556,14 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_RedirectAllRequestsTo");
-    var de_ReplicaModifications = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicaModifications = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       return contents;
     }, "de_ReplicaModifications");
-    var de_ReplicationConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Ro] != null) {
         contents[_Ro] = (0, import_smithy_client4.expectString)(output[_Ro]);
@@ -53571,11 +53571,11 @@ var require_dist_cjs71 = __commonJS({
       if (output.Rule === "") {
         contents[_Rul] = [];
       } else if (output[_Ru] != null) {
-        contents[_Rul] = de_ReplicationRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context3);
+        contents[_Rul] = de_ReplicationRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context4);
       }
       return contents;
     }, "de_ReplicationConfiguration");
-    var de_ReplicationRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ID_] != null) {
         contents[_ID_] = (0, import_smithy_client4.expectString)(output[_ID_]);
@@ -53587,26 +53587,26 @@ var require_dist_cjs71 = __commonJS({
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_F] != null) {
-        contents[_F] = de_ReplicationRuleFilter(output[_F], context3);
+        contents[_F] = de_ReplicationRuleFilter(output[_F], context4);
       }
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       if (output[_SSC] != null) {
-        contents[_SSC] = de_SourceSelectionCriteria(output[_SSC], context3);
+        contents[_SSC] = de_SourceSelectionCriteria(output[_SSC], context4);
       }
       if (output[_EOR] != null) {
-        contents[_EOR] = de_ExistingObjectReplication(output[_EOR], context3);
+        contents[_EOR] = de_ExistingObjectReplication(output[_EOR], context4);
       }
       if (output[_Des] != null) {
-        contents[_Des] = de_Destination(output[_Des], context3);
+        contents[_Des] = de_Destination(output[_Des], context4);
       }
       if (output[_DMR] != null) {
-        contents[_DMR] = de_DeleteMarkerReplication(output[_DMR], context3);
+        contents[_DMR] = de_DeleteMarkerReplication(output[_DMR], context4);
       }
       return contents;
     }, "de_ReplicationRule");
-    var de_ReplicationRuleAndOperator = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationRuleAndOperator = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
@@ -53614,46 +53614,46 @@ var require_dist_cjs71 = __commonJS({
       if (output.Tag === "") {
         contents[_Tag] = [];
       } else if (output[_Ta] != null) {
-        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context3);
+        contents[_Tag] = de_TagSet((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ta]), context4);
       }
       return contents;
     }, "de_ReplicationRuleAndOperator");
-    var de_ReplicationRuleFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationRuleFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_P] != null) {
         contents[_P] = (0, import_smithy_client4.expectString)(output[_P]);
       }
       if (output[_Ta] != null) {
-        contents[_Ta] = de_Tag(output[_Ta], context3);
+        contents[_Ta] = de_Tag(output[_Ta], context4);
       }
       if (output[_A] != null) {
-        contents[_A] = de_ReplicationRuleAndOperator(output[_A], context3);
+        contents[_A] = de_ReplicationRuleAndOperator(output[_A], context4);
       }
       return contents;
     }, "de_ReplicationRuleFilter");
-    var de_ReplicationRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ReplicationRule(entry, context3);
+        return de_ReplicationRule(entry, context4);
       });
     }, "de_ReplicationRules");
-    var de_ReplicationTime = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationTime = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       if (output[_Tim] != null) {
-        contents[_Tim] = de_ReplicationTimeValue(output[_Tim], context3);
+        contents[_Tim] = de_ReplicationTimeValue(output[_Tim], context4);
       }
       return contents;
     }, "de_ReplicationTime");
-    var de_ReplicationTimeValue = /* @__PURE__ */ __name((output, context3) => {
+    var de_ReplicationTimeValue = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Mi] != null) {
         contents[_Mi] = (0, import_smithy_client4.strictParseInt32)(output[_Mi]);
       }
       return contents;
     }, "de_ReplicationTimeValue");
-    var de_RestoreStatus = /* @__PURE__ */ __name((output, context3) => {
+    var de_RestoreStatus = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_IRIP] != null) {
         contents[_IRIP] = (0, import_smithy_client4.parseBoolean)(output[_IRIP]);
@@ -53663,31 +53663,31 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_RestoreStatus");
-    var de_RoutingRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_RoutingRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Con] != null) {
-        contents[_Con] = de_Condition(output[_Con], context3);
+        contents[_Con] = de_Condition(output[_Con], context4);
       }
       if (output[_Red] != null) {
-        contents[_Red] = de_Redirect(output[_Red], context3);
+        contents[_Red] = de_Redirect(output[_Red], context4);
       }
       return contents;
     }, "de_RoutingRule");
-    var de_RoutingRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_RoutingRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_RoutingRule(entry, context3);
+        return de_RoutingRule(entry, context4);
       });
     }, "de_RoutingRules");
-    var de_S3KeyFilter = /* @__PURE__ */ __name((output, context3) => {
+    var de_S3KeyFilter = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output.FilterRule === "") {
         contents[_FRi] = [];
       } else if (output[_FR] != null) {
-        contents[_FRi] = de_FilterRuleList((0, import_smithy_client4.getArrayIfSingleItem)(output[_FR]), context3);
+        contents[_FRi] = de_FilterRuleList((0, import_smithy_client4.getArrayIfSingleItem)(output[_FR]), context4);
       }
       return contents;
     }, "de_S3KeyFilter");
-    var de_ServerSideEncryptionByDefault = /* @__PURE__ */ __name((output, context3) => {
+    var de_ServerSideEncryptionByDefault = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SSEA] != null) {
         contents[_SSEA] = (0, import_smithy_client4.expectString)(output[_SSEA]);
@@ -53697,31 +53697,31 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_ServerSideEncryptionByDefault");
-    var de_ServerSideEncryptionConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_ServerSideEncryptionConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output.Rule === "") {
         contents[_Rul] = [];
       } else if (output[_Ru] != null) {
-        contents[_Rul] = de_ServerSideEncryptionRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context3);
+        contents[_Rul] = de_ServerSideEncryptionRules((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ru]), context4);
       }
       return contents;
     }, "de_ServerSideEncryptionConfiguration");
-    var de_ServerSideEncryptionRule = /* @__PURE__ */ __name((output, context3) => {
+    var de_ServerSideEncryptionRule = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_ASSEBD] != null) {
-        contents[_ASSEBD] = de_ServerSideEncryptionByDefault(output[_ASSEBD], context3);
+        contents[_ASSEBD] = de_ServerSideEncryptionByDefault(output[_ASSEBD], context4);
       }
       if (output[_BKE] != null) {
         contents[_BKE] = (0, import_smithy_client4.parseBoolean)(output[_BKE]);
       }
       return contents;
     }, "de_ServerSideEncryptionRule");
-    var de_ServerSideEncryptionRules = /* @__PURE__ */ __name((output, context3) => {
+    var de_ServerSideEncryptionRules = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_ServerSideEncryptionRule(entry, context3);
+        return de_ServerSideEncryptionRule(entry, context4);
       });
     }, "de_ServerSideEncryptionRules");
-    var de_SessionCredentials = /* @__PURE__ */ __name((output, context3) => {
+    var de_SessionCredentials = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_AKI] != null) {
         contents[_AKI] = (0, import_smithy_client4.expectString)(output[_AKI]);
@@ -53737,39 +53737,39 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_SessionCredentials");
-    var de_SimplePrefix = /* @__PURE__ */ __name((output, context3) => {
+    var de_SimplePrefix = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       return contents;
     }, "de_SimplePrefix");
-    var de_SourceSelectionCriteria = /* @__PURE__ */ __name((output, context3) => {
+    var de_SourceSelectionCriteria = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SKEO] != null) {
-        contents[_SKEO] = de_SseKmsEncryptedObjects(output[_SKEO], context3);
+        contents[_SKEO] = de_SseKmsEncryptedObjects(output[_SKEO], context4);
       }
       if (output[_RM] != null) {
-        contents[_RM] = de_ReplicaModifications(output[_RM], context3);
+        contents[_RM] = de_ReplicaModifications(output[_RM], context4);
       }
       return contents;
     }, "de_SourceSelectionCriteria");
-    var de_SSEKMS = /* @__PURE__ */ __name((output, context3) => {
+    var de_SSEKMS = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_KI] != null) {
         contents[_KI] = (0, import_smithy_client4.expectString)(output[_KI]);
       }
       return contents;
     }, "de_SSEKMS");
-    var de_SseKmsEncryptedObjects = /* @__PURE__ */ __name((output, context3) => {
+    var de_SseKmsEncryptedObjects = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_S] != null) {
         contents[_S] = (0, import_smithy_client4.expectString)(output[_S]);
       }
       return contents;
     }, "de_SseKmsEncryptedObjects");
-    var de_SSES3 = /* @__PURE__ */ __name((output, context3) => {
+    var de_SSES3 = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       return contents;
     }, "de_SSES3");
-    var de_Stats = /* @__PURE__ */ __name((output, context3) => {
+    var de_Stats = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_BS] != null) {
         contents[_BS] = (0, import_smithy_client4.strictParseLong)(output[_BS]);
@@ -53782,24 +53782,24 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Stats");
-    var de_StorageClassAnalysis = /* @__PURE__ */ __name((output, context3) => {
+    var de_StorageClassAnalysis = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_DE] != null) {
-        contents[_DE] = de_StorageClassAnalysisDataExport(output[_DE], context3);
+        contents[_DE] = de_StorageClassAnalysisDataExport(output[_DE], context4);
       }
       return contents;
     }, "de_StorageClassAnalysis");
-    var de_StorageClassAnalysisDataExport = /* @__PURE__ */ __name((output, context3) => {
+    var de_StorageClassAnalysisDataExport = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_OSV] != null) {
         contents[_OSV] = (0, import_smithy_client4.expectString)(output[_OSV]);
       }
       if (output[_Des] != null) {
-        contents[_Des] = de_AnalyticsExportDestination(output[_Des], context3);
+        contents[_Des] = de_AnalyticsExportDestination(output[_Des], context4);
       }
       return contents;
     }, "de_StorageClassAnalysisDataExport");
-    var de_Tag = /* @__PURE__ */ __name((output, context3) => {
+    var de_Tag = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_K] != null) {
         contents[_K] = (0, import_smithy_client4.expectString)(output[_K]);
@@ -53809,37 +53809,37 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Tag");
-    var de_TagSet = /* @__PURE__ */ __name((output, context3) => {
+    var de_TagSet = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Tag(entry, context3);
+        return de_Tag(entry, context4);
       });
     }, "de_TagSet");
-    var de_TargetGrant = /* @__PURE__ */ __name((output, context3) => {
+    var de_TargetGrant = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Gra] != null) {
-        contents[_Gra] = de_Grantee(output[_Gra], context3);
+        contents[_Gra] = de_Grantee(output[_Gra], context4);
       }
       if (output[_Pe] != null) {
         contents[_Pe] = (0, import_smithy_client4.expectString)(output[_Pe]);
       }
       return contents;
     }, "de_TargetGrant");
-    var de_TargetGrants = /* @__PURE__ */ __name((output, context3) => {
+    var de_TargetGrants = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_TargetGrant(entry, context3);
+        return de_TargetGrant(entry, context4);
       });
     }, "de_TargetGrants");
-    var de_TargetObjectKeyFormat = /* @__PURE__ */ __name((output, context3) => {
+    var de_TargetObjectKeyFormat = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_SPi] != null) {
-        contents[_SPi] = de_SimplePrefix(output[_SPi], context3);
+        contents[_SPi] = de_SimplePrefix(output[_SPi], context4);
       }
       if (output[_PP] != null) {
-        contents[_PP] = de_PartitionedPrefix(output[_PP], context3);
+        contents[_PP] = de_PartitionedPrefix(output[_PP], context4);
       }
       return contents;
     }, "de_TargetObjectKeyFormat");
-    var de_Tiering = /* @__PURE__ */ __name((output, context3) => {
+    var de_Tiering = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Da] != null) {
         contents[_Da] = (0, import_smithy_client4.strictParseInt32)(output[_Da]);
@@ -53849,12 +53849,12 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Tiering");
-    var de_TieringList = /* @__PURE__ */ __name((output, context3) => {
+    var de_TieringList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Tiering(entry, context3);
+        return de_Tiering(entry, context4);
       });
     }, "de_TieringList");
-    var de_TopicConfiguration = /* @__PURE__ */ __name((output, context3) => {
+    var de_TopicConfiguration = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_I] != null) {
         contents[_I] = (0, import_smithy_client4.expectString)(output[_I]);
@@ -53865,19 +53865,19 @@ var require_dist_cjs71 = __commonJS({
       if (output.Event === "") {
         contents[_Eve] = [];
       } else if (output[_Ev] != null) {
-        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context3);
+        contents[_Eve] = de_EventList((0, import_smithy_client4.getArrayIfSingleItem)(output[_Ev]), context4);
       }
       if (output[_F] != null) {
-        contents[_F] = de_NotificationConfigurationFilter(output[_F], context3);
+        contents[_F] = de_NotificationConfigurationFilter(output[_F], context4);
       }
       return contents;
     }, "de_TopicConfiguration");
-    var de_TopicConfigurationList = /* @__PURE__ */ __name((output, context3) => {
+    var de_TopicConfigurationList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_TopicConfiguration(entry, context3);
+        return de_TopicConfiguration(entry, context4);
       });
     }, "de_TopicConfigurationList");
-    var de_Transition = /* @__PURE__ */ __name((output, context3) => {
+    var de_Transition = /* @__PURE__ */ __name((output, context4) => {
       const contents = {};
       if (output[_Dat] != null) {
         contents[_Dat] = (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.parseRfc3339DateTimeWithOffset)(output[_Dat]));
@@ -53890,9 +53890,9 @@ var require_dist_cjs71 = __commonJS({
       }
       return contents;
     }, "de_Transition");
-    var de_TransitionList = /* @__PURE__ */ __name((output, context3) => {
+    var de_TransitionList = /* @__PURE__ */ __name((output, context4) => {
       return (output || []).filter((e) => e != null).map((entry) => {
-        return de_Transition(entry, context3);
+        return de_Transition(entry, context4);
       });
     }, "de_TransitionList");
     var deserializeMetadata = /* @__PURE__ */ __name((output) => ({
@@ -53901,7 +53901,7 @@ var require_dist_cjs71 = __commonJS({
       extendedRequestId: output.headers["x-amz-id-2"],
       cfId: output.headers["x-amz-cf-id"]
     }), "deserializeMetadata");
-    var collectBodyString2 = /* @__PURE__ */ __name((streamBody, context3) => (0, import_smithy_client4.collectBody)(streamBody, context3).then((body) => context3.utf8Encoder(body)), "collectBodyString");
+    var collectBodyString2 = /* @__PURE__ */ __name((streamBody, context4) => (0, import_smithy_client4.collectBody)(streamBody, context4).then((body) => context4.utf8Encoder(body)), "collectBodyString");
     var _A = "And";
     var _AAO = "AnalyticsAndOperator";
     var _AC = "AnalyticsConfiguration";
@@ -56388,9 +56388,9 @@ var require_httpAuthSchemeProvider5 = __commonJS({
     exports2.resolveHttpAuthSchemeConfig = exports2.defaultCognitoIdentityHttpAuthSchemeProvider = exports2.defaultCognitoIdentityHttpAuthSchemeParametersProvider = void 0;
     var core_1 = (init_dist_es2(), __toCommonJS(dist_es_exports2));
     var util_middleware_1 = require_dist_cjs4();
-    var defaultCognitoIdentityHttpAuthSchemeParametersProvider = async (config, context3, input) => {
+    var defaultCognitoIdentityHttpAuthSchemeParametersProvider = async (config, context4, input) => {
       return {
-        operation: (0, util_middleware_1.getSmithyContext)(context3).operation,
+        operation: (0, util_middleware_1.getSmithyContext)(context4).operation,
         region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
           throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
         })()
@@ -56404,10 +56404,10 @@ var require_httpAuthSchemeProvider5 = __commonJS({
           name: "cognito-identity",
           region: authParameters.region
         },
-        propertiesExtractor: (config, context3) => ({
+        propertiesExtractor: (config, context4) => ({
           signingProperties: {
             config,
-            context: context3
+            context: context4
           }
         })
       };
@@ -56610,10 +56610,10 @@ var require_endpointResolver5 = __commonJS({
       size: 50,
       params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"]
     });
-    var defaultEndpointResolver = (endpointParams, context3 = {}) => {
+    var defaultEndpointResolver = (endpointParams, context4 = {}) => {
       return cache.get(endpointParams, () => (0, util_endpoints_2.resolveEndpoint)(ruleset_1.ruleSet, {
         endpointParams,
-        logger: context3.logger
+        logger: context4.logger
       }));
     };
     exports2.defaultEndpointResolver = defaultEndpointResolver;
@@ -57175,149 +57175,149 @@ var require_dist_cjs72 = __commonJS({
       ...obj,
       ...obj.Logins && { Logins: import_smithy_client4.SENSITIVE_STRING }
     }), "UnlinkIdentityInputFilterSensitiveLog");
-    var se_CreateIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_CreateIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("CreateIdentityPool");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_CreateIdentityPoolCommand");
-    var se_DeleteIdentitiesCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_DeleteIdentitiesCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("DeleteIdentities");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_DeleteIdentitiesCommand");
-    var se_DeleteIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_DeleteIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("DeleteIdentityPool");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_DeleteIdentityPoolCommand");
-    var se_DescribeIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_DescribeIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("DescribeIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_DescribeIdentityCommand");
-    var se_DescribeIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_DescribeIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("DescribeIdentityPool");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_DescribeIdentityPoolCommand");
-    var se_GetCredentialsForIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetCredentialsForIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetCredentialsForIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetCredentialsForIdentityCommand");
-    var se_GetIdCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetIdCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetId");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetIdCommand");
-    var se_GetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetIdentityPoolRoles");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetIdentityPoolRolesCommand");
-    var se_GetOpenIdTokenCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetOpenIdTokenCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetOpenIdToken");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetOpenIdTokenCommand");
-    var se_GetOpenIdTokenForDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetOpenIdTokenForDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetOpenIdTokenForDeveloperIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetOpenIdTokenForDeveloperIdentityCommand");
-    var se_GetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_GetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("GetPrincipalTagAttributeMap");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_GetPrincipalTagAttributeMapCommand");
-    var se_ListIdentitiesCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_ListIdentitiesCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("ListIdentities");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_ListIdentitiesCommand");
-    var se_ListIdentityPoolsCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_ListIdentityPoolsCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("ListIdentityPools");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_ListIdentityPoolsCommand");
-    var se_ListTagsForResourceCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_ListTagsForResourceCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("ListTagsForResource");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_ListTagsForResourceCommand");
-    var se_LookupDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_LookupDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("LookupDeveloperIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_LookupDeveloperIdentityCommand");
-    var se_MergeDeveloperIdentitiesCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_MergeDeveloperIdentitiesCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("MergeDeveloperIdentities");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_MergeDeveloperIdentitiesCommand");
-    var se_SetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_SetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("SetIdentityPoolRoles");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_SetIdentityPoolRolesCommand");
-    var se_SetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_SetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("SetPrincipalTagAttributeMap");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_SetPrincipalTagAttributeMapCommand");
-    var se_TagResourceCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_TagResourceCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("TagResource");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_TagResourceCommand");
-    var se_UnlinkDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_UnlinkDeveloperIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("UnlinkDeveloperIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_UnlinkDeveloperIdentityCommand");
-    var se_UnlinkIdentityCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_UnlinkIdentityCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("UnlinkIdentity");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_UnlinkIdentityCommand");
-    var se_UntagResourceCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_UntagResourceCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("UntagResource");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_UntagResourceCommand");
-    var se_UpdateIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context3) => {
+    var se_UpdateIdentityPoolCommand = /* @__PURE__ */ __name(async (input, context4) => {
       const headers = sharedHeaders("UpdateIdentityPool");
       let body;
       body = JSON.stringify((0, import_smithy_client4._json)(input));
-      return buildHttpRpcRequest(context3, headers, "/", void 0, body);
+      return buildHttpRpcRequest(context4, headers, "/", void 0, body);
     }, "se_UpdateIdentityPoolCommand");
-    var de_CreateIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CreateIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57326,11 +57326,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_CreateIdentityPoolCommand");
-    var de_DeleteIdentitiesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteIdentitiesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57339,34 +57339,34 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_DeleteIdentitiesCommand");
-    var de_DeleteIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DeleteIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       const response = {
         $metadata: deserializeMetadata(output)
       };
       return response;
     }, "de_DeleteIdentityPoolCommand");
-    var de_DescribeIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DescribeIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
-      contents = de_IdentityDescription(data, context3);
+      contents = de_IdentityDescription(data, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_DescribeIdentityCommand");
-    var de_DescribeIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_DescribeIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57375,24 +57375,24 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_DescribeIdentityPoolCommand");
-    var de_GetCredentialsForIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetCredentialsForIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
-      contents = de_GetCredentialsForIdentityResponse(data, context3);
+      contents = de_GetCredentialsForIdentityResponse(data, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_GetCredentialsForIdentityCommand");
-    var de_GetIdCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetIdCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57401,11 +57401,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_GetIdCommand");
-    var de_GetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57414,11 +57414,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_GetIdentityPoolRolesCommand");
-    var de_GetOpenIdTokenCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetOpenIdTokenCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57427,11 +57427,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_GetOpenIdTokenCommand");
-    var de_GetOpenIdTokenForDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetOpenIdTokenForDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57440,11 +57440,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_GetOpenIdTokenForDeveloperIdentityCommand");
-    var de_GetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_GetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57453,24 +57453,24 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_GetPrincipalTagAttributeMapCommand");
-    var de_ListIdentitiesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListIdentitiesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
-      contents = de_ListIdentitiesResponse(data, context3);
+      contents = de_ListIdentitiesResponse(data, context4);
       const response = {
         $metadata: deserializeMetadata(output),
         ...contents
       };
       return response;
     }, "de_ListIdentitiesCommand");
-    var de_ListIdentityPoolsCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListIdentityPoolsCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57479,11 +57479,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_ListIdentityPoolsCommand");
-    var de_ListTagsForResourceCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_ListTagsForResourceCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57492,11 +57492,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_ListTagsForResourceCommand");
-    var de_LookupDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_LookupDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57505,11 +57505,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_LookupDeveloperIdentityCommand");
-    var de_MergeDeveloperIdentitiesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_MergeDeveloperIdentitiesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57518,21 +57518,21 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_MergeDeveloperIdentitiesCommand");
-    var de_SetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_SetIdentityPoolRolesCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       const response = {
         $metadata: deserializeMetadata(output)
       };
       return response;
     }, "de_SetIdentityPoolRolesCommand");
-    var de_SetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_SetPrincipalTagAttributeMapCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57541,11 +57541,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_SetPrincipalTagAttributeMapCommand");
-    var de_TagResourceCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_TagResourceCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57554,31 +57554,31 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_TagResourceCommand");
-    var de_UnlinkDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UnlinkDeveloperIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       const response = {
         $metadata: deserializeMetadata(output)
       };
       return response;
     }, "de_UnlinkDeveloperIdentityCommand");
-    var de_UnlinkIdentityCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UnlinkIdentityCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      await (0, import_smithy_client4.collectBody)(output.body, context3);
+      await (0, import_smithy_client4.collectBody)(output.body, context4);
       const response = {
         $metadata: deserializeMetadata(output)
       };
       return response;
     }, "de_UnlinkIdentityCommand");
-    var de_UntagResourceCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UntagResourceCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57587,11 +57587,11 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_UntagResourceCommand");
-    var de_UpdateIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_UpdateIdentityPoolCommand = /* @__PURE__ */ __name(async (output, context4) => {
       if (output.statusCode >= 300) {
-        return de_CommandError(output, context3);
+        return de_CommandError(output, context4);
       }
-      const data = await (0, import_core22.parseJsonBody)(output.body, context3);
+      const data = await (0, import_core22.parseJsonBody)(output.body, context4);
       let contents = {};
       contents = (0, import_smithy_client4._json)(data);
       const response = {
@@ -57600,46 +57600,46 @@ var require_dist_cjs72 = __commonJS({
       };
       return response;
     }, "de_UpdateIdentityPoolCommand");
-    var de_CommandError = /* @__PURE__ */ __name(async (output, context3) => {
+    var de_CommandError = /* @__PURE__ */ __name(async (output, context4) => {
       const parsedOutput = {
         ...output,
-        body: await (0, import_core22.parseJsonErrorBody)(output.body, context3)
+        body: await (0, import_core22.parseJsonErrorBody)(output.body, context4)
       };
       const errorCode = (0, import_core22.loadRestJsonErrorCode)(output, parsedOutput.body);
       switch (errorCode) {
         case "InternalErrorException":
         case "com.amazonaws.cognitoidentity#InternalErrorException":
-          throw await de_InternalErrorExceptionRes(parsedOutput, context3);
+          throw await de_InternalErrorExceptionRes(parsedOutput, context4);
         case "InvalidParameterException":
         case "com.amazonaws.cognitoidentity#InvalidParameterException":
-          throw await de_InvalidParameterExceptionRes(parsedOutput, context3);
+          throw await de_InvalidParameterExceptionRes(parsedOutput, context4);
         case "LimitExceededException":
         case "com.amazonaws.cognitoidentity#LimitExceededException":
-          throw await de_LimitExceededExceptionRes(parsedOutput, context3);
+          throw await de_LimitExceededExceptionRes(parsedOutput, context4);
         case "NotAuthorizedException":
         case "com.amazonaws.cognitoidentity#NotAuthorizedException":
-          throw await de_NotAuthorizedExceptionRes(parsedOutput, context3);
+          throw await de_NotAuthorizedExceptionRes(parsedOutput, context4);
         case "ResourceConflictException":
         case "com.amazonaws.cognitoidentity#ResourceConflictException":
-          throw await de_ResourceConflictExceptionRes(parsedOutput, context3);
+          throw await de_ResourceConflictExceptionRes(parsedOutput, context4);
         case "TooManyRequestsException":
         case "com.amazonaws.cognitoidentity#TooManyRequestsException":
-          throw await de_TooManyRequestsExceptionRes(parsedOutput, context3);
+          throw await de_TooManyRequestsExceptionRes(parsedOutput, context4);
         case "ResourceNotFoundException":
         case "com.amazonaws.cognitoidentity#ResourceNotFoundException":
-          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context3);
+          throw await de_ResourceNotFoundExceptionRes(parsedOutput, context4);
         case "ExternalServiceException":
         case "com.amazonaws.cognitoidentity#ExternalServiceException":
-          throw await de_ExternalServiceExceptionRes(parsedOutput, context3);
+          throw await de_ExternalServiceExceptionRes(parsedOutput, context4);
         case "InvalidIdentityPoolConfigurationException":
         case "com.amazonaws.cognitoidentity#InvalidIdentityPoolConfigurationException":
-          throw await de_InvalidIdentityPoolConfigurationExceptionRes(parsedOutput, context3);
+          throw await de_InvalidIdentityPoolConfigurationExceptionRes(parsedOutput, context4);
         case "DeveloperUserAlreadyRegisteredException":
         case "com.amazonaws.cognitoidentity#DeveloperUserAlreadyRegisteredException":
-          throw await de_DeveloperUserAlreadyRegisteredExceptionRes(parsedOutput, context3);
+          throw await de_DeveloperUserAlreadyRegisteredExceptionRes(parsedOutput, context4);
         case "ConcurrentModificationException":
         case "com.amazonaws.cognitoidentity#ConcurrentModificationException":
-          throw await de_ConcurrentModificationExceptionRes(parsedOutput, context3);
+          throw await de_ConcurrentModificationExceptionRes(parsedOutput, context4);
         default:
           const parsedBody = parsedOutput.body;
           return throwDefaultError({
@@ -57649,7 +57649,7 @@ var require_dist_cjs72 = __commonJS({
           });
       }
     }, "de_CommandError");
-    var de_ConcurrentModificationExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ConcurrentModificationExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new ConcurrentModificationException({
@@ -57658,7 +57658,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_ConcurrentModificationExceptionRes");
-    var de_DeveloperUserAlreadyRegisteredExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_DeveloperUserAlreadyRegisteredExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new DeveloperUserAlreadyRegisteredException({
@@ -57667,7 +57667,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_DeveloperUserAlreadyRegisteredExceptionRes");
-    var de_ExternalServiceExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ExternalServiceExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new ExternalServiceException({
@@ -57676,7 +57676,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_ExternalServiceExceptionRes");
-    var de_InternalErrorExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InternalErrorExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new InternalErrorException({
@@ -57685,7 +57685,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_InternalErrorExceptionRes");
-    var de_InvalidIdentityPoolConfigurationExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidIdentityPoolConfigurationExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new InvalidIdentityPoolConfigurationException({
@@ -57694,7 +57694,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_InvalidIdentityPoolConfigurationExceptionRes");
-    var de_InvalidParameterExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_InvalidParameterExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new InvalidParameterException({
@@ -57703,7 +57703,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_InvalidParameterExceptionRes");
-    var de_LimitExceededExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_LimitExceededExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new LimitExceededException({
@@ -57712,7 +57712,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_LimitExceededExceptionRes");
-    var de_NotAuthorizedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_NotAuthorizedExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new NotAuthorizedException({
@@ -57721,7 +57721,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_NotAuthorizedExceptionRes");
-    var de_ResourceConflictExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ResourceConflictExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new ResourceConflictException({
@@ -57730,7 +57730,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_ResourceConflictExceptionRes");
-    var de_ResourceNotFoundExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_ResourceNotFoundExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new ResourceNotFoundException({
@@ -57739,7 +57739,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_ResourceNotFoundExceptionRes");
-    var de_TooManyRequestsExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context3) => {
+    var de_TooManyRequestsExceptionRes = /* @__PURE__ */ __name(async (parsedOutput, context4) => {
       const body = parsedOutput.body;
       const deserialized = (0, import_smithy_client4._json)(body);
       const exception2 = new TooManyRequestsException({
@@ -57748,7 +57748,7 @@ var require_dist_cjs72 = __commonJS({
       });
       return (0, import_smithy_client4.decorateServiceException)(exception2, body);
     }, "de_TooManyRequestsExceptionRes");
-    var de_Credentials = /* @__PURE__ */ __name((output, context3) => {
+    var de_Credentials = /* @__PURE__ */ __name((output, context4) => {
       return (0, import_smithy_client4.take)(output, {
         AccessKeyId: import_smithy_client4.expectString,
         Expiration: (_) => (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.parseEpochTimestamp)((0, import_smithy_client4.expectNumber)(_))),
@@ -57756,19 +57756,19 @@ var require_dist_cjs72 = __commonJS({
         SessionToken: import_smithy_client4.expectString
       });
     }, "de_Credentials");
-    var de_GetCredentialsForIdentityResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_GetCredentialsForIdentityResponse = /* @__PURE__ */ __name((output, context4) => {
       return (0, import_smithy_client4.take)(output, {
-        Credentials: (_) => de_Credentials(_, context3),
+        Credentials: (_) => de_Credentials(_, context4),
         IdentityId: import_smithy_client4.expectString
       });
     }, "de_GetCredentialsForIdentityResponse");
-    var de_IdentitiesList = /* @__PURE__ */ __name((output, context3) => {
+    var de_IdentitiesList = /* @__PURE__ */ __name((output, context4) => {
       const retVal = (output || []).filter((e) => e != null).map((entry) => {
-        return de_IdentityDescription(entry, context3);
+        return de_IdentityDescription(entry, context4);
       });
       return retVal;
     }, "de_IdentitiesList");
-    var de_IdentityDescription = /* @__PURE__ */ __name((output, context3) => {
+    var de_IdentityDescription = /* @__PURE__ */ __name((output, context4) => {
       return (0, import_smithy_client4.take)(output, {
         CreationDate: (_) => (0, import_smithy_client4.expectNonNull)((0, import_smithy_client4.parseEpochTimestamp)((0, import_smithy_client4.expectNumber)(_))),
         IdentityId: import_smithy_client4.expectString,
@@ -57776,9 +57776,9 @@ var require_dist_cjs72 = __commonJS({
         Logins: import_smithy_client4._json
       });
     }, "de_IdentityDescription");
-    var de_ListIdentitiesResponse = /* @__PURE__ */ __name((output, context3) => {
+    var de_ListIdentitiesResponse = /* @__PURE__ */ __name((output, context4) => {
       return (0, import_smithy_client4.take)(output, {
-        Identities: (_) => de_IdentitiesList(_, context3),
+        Identities: (_) => de_IdentitiesList(_, context4),
         IdentityPoolId: import_smithy_client4.expectString,
         NextToken: import_smithy_client4.expectString
       });
@@ -57790,8 +57790,8 @@ var require_dist_cjs72 = __commonJS({
       cfId: output.headers["x-amz-cf-id"]
     }), "deserializeMetadata");
     var throwDefaultError = (0, import_smithy_client4.withBaseException)(CognitoIdentityServiceException);
-    var buildHttpRpcRequest = /* @__PURE__ */ __name(async (context3, headers, path2, resolvedHostname, body) => {
-      const { hostname, protocol = "https", port, path: basePath } = await context3.endpoint();
+    var buildHttpRpcRequest = /* @__PURE__ */ __name(async (context4, headers, path2, resolvedHostname, body) => {
+      const { hostname, protocol = "https", port, path: basePath } = await context4.endpoint();
       const contents = {
         protocol,
         hostname,
@@ -58603,9 +58603,9 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 var fs3 = __toESM(require("fs"));
-var core4 = __toESM(require_core());
-var import_github2 = __toESM(require_github());
-var import_client_s32 = __toESM(require_dist_cjs71());
+var core5 = __toESM(require_core());
+var import_github3 = __toESM(require_github());
+var import_client_s33 = __toESM(require_dist_cjs71());
 var import_credential_providers = __toESM(require_dist_cjs74());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
@@ -61375,19 +61375,75 @@ function getConfiguration() {
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
     deployments: getDeployments(),
     stagingDirInput,
+    githubToken: githubToken(),
     pullRequestComment: {
       projectName,
       buildNumber,
       commentingStage,
-      githubToken: githubToken(),
       commentingEnabled
     }
   };
 }
 
+// src/error-handling.ts
+var core3 = __toESM(require_core());
+var import_github = __toESM(require_github());
+var import_client_s3 = __toESM(require_dist_cjs71());
+async function getWorkflowFileContent(octokit, branchName2, filename) {
+  const result = await octokit.rest.repos.getContent({
+    ...import_github.context.repo,
+    ref: branchName2,
+    path: filename
+  });
+  if (!Array.isArray(result.data) && result.data.type === "file") {
+    return atob(result.data.content);
+  }
+  return void 0;
+}
+function defaultS3ErrorMessage(projectName) {
+  core3.error(
+    `Error uploading to Riff-Raff. Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`
+  );
+}
+async function handleS3UploadError(thrownError, octokit, branchName2, projectName) {
+  if (thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
+    const workflow = envOrUndefined("GITHUB_WORKFLOW_REF") ?? "";
+    const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
+    const { filename } = regex.exec(workflow)?.groups ?? {};
+    if (filename) {
+      const workflowFileContent = await getWorkflowFileContent(
+        octokit,
+        branchName2,
+        filename
+      );
+      if (workflowFileContent) {
+        workflowFileContent.split("\n").forEach((line, index) => {
+          if (line.includes(projectName)) {
+            core3.error(
+              `Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`,
+              {
+                title: "Error uploading to Riff-Raff",
+                file: filename,
+                startLine: index + 1,
+                endLine: index + 1
+              }
+            );
+          }
+        });
+      } else {
+        defaultS3ErrorMessage(projectName);
+      }
+    } else {
+      defaultS3ErrorMessage(projectName);
+    }
+  } else {
+    defaultS3ErrorMessage(projectName);
+  }
+}
+
 // src/pr-comment.ts
 var import_core3 = __toESM(require_core());
-var import_github = __toESM(require_github());
+var import_github2 = __toESM(require_github());
 function getDeployUrl(config) {
   const url = new URL("https://riffraff.gutools.co.uk/deployment/deployAgain");
   url.searchParams.set("project", config.projectName);
@@ -61435,11 +61491,10 @@ function getCommentMessage(config) {
     marker(projectName)
   ].join("\n");
 }
-async function commentOnPullRequest(pullRequestNumber, config) {
+async function commentOnPullRequest(pullRequestNumber, config, octokit) {
   const comment = getCommentMessage(config);
-  const octokit = (0, import_github.getOctokit)(config.githubToken);
   const comments = await octokit.rest.issues.listComments({
-    ...import_github.context.repo,
+    ...import_github2.context.repo,
     issue_number: pullRequestNumber
   });
   (0, import_core3.debug)(`Total comments: ${comments.data.length}`);
@@ -61454,7 +61509,7 @@ async function commentOnPullRequest(pullRequestNumber, config) {
       previousComments.map(async (previousComment) => {
         (0, import_core3.debug)(`Updating comment with id: ${previousComment.id}.`);
         await octokit.rest.issues.updateComment({
-          ...import_github.context.repo,
+          ...import_github2.context.repo,
           comment_id: previousComment.id,
           body: comment
         });
@@ -61463,29 +61518,28 @@ async function commentOnPullRequest(pullRequestNumber, config) {
   } else {
     (0, import_core3.debug)(`No previous comment found. Creating one.`);
     await octokit.rest.issues.createComment({
-      ...import_github.context.repo,
+      ...import_github2.context.repo,
       issue_number: pullRequestNumber,
       body: comment
     });
   }
 }
-async function getPullRequestNumber(config) {
-  const { eventName } = import_github.context;
-  const { pull_request } = import_github.context.payload;
+async function getPullRequestNumber(octokit) {
+  const { eventName } = import_github2.context;
+  const { pull_request } = import_github2.context.payload;
   if (pull_request) {
     (0, import_core3.debug)(
       `Identified PR number as ${pull_request.number} from payload. Trigger was ${eventName}.`
     );
     return Promise.resolve(pull_request.number);
   }
-  (0, import_core3.debug)(`Attempting to get PR number from commit ${import_github.context.sha}`);
-  const octokit = (0, import_github.getOctokit)(config.githubToken);
+  (0, import_core3.debug)(`Attempting to get PR number from commit ${import_github2.context.sha}`);
   const result = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-    ...import_github.context.repo,
-    commit_sha: import_github.context.sha
+    ...import_github2.context.repo,
+    commit_sha: import_github2.context.sha
   });
   const openPrs = result.data.filter(({ state: state2 }) => state2 === "open");
-  const pr = openPrs.find((_) => import_github.context.ref === `refs/heads/${_.head.ref}`) ?? openPrs.at(0);
+  const pr = openPrs.find((_) => import_github2.context.ref === `refs/heads/${_.head.ref}`) ?? openPrs.at(0);
   if (!pr) {
     (0, import_core3.debug)(
       `Failed to identify PR number from commit. Trigger was ${eventName}.`
@@ -61517,15 +61571,15 @@ var riffraffPrefix = (m) => {
 
 // src/s3.ts
 var fs2 = __toESM(require("fs"));
-var core3 = __toESM(require_core());
-var import_client_s3 = __toESM(require_dist_cjs71());
+var core4 = __toESM(require_core());
+var import_client_s32 = __toESM(require_dist_cjs71());
 var S3Store = class {
   client;
   constructor(client) {
     this.client = client;
   }
   async put(data, bucket, key) {
-    const cmd = new import_client_s3.PutObjectCommand({
+    const cmd = new import_client_s32.PutObjectCommand({
       Body: data,
       Key: key,
       Bucket: bucket
@@ -61537,7 +61591,7 @@ var sync = async (store, dir, bucket, keyPrefix) => {
   const responses = walk(dir, (filePath) => {
     const data = fs2.readFileSync(filePath);
     const key = keyPrefix + filePath.substring(dir.length);
-    core3.info(`s3 sync: ${filePath} -> ${key}`);
+    core4.info(`s3 sync: ${filePath} -> ${key}`);
     return store.put(data, bucket, key);
   });
   await Promise.all(responses);
@@ -61562,14 +61616,14 @@ function validateTopics(topics) {
       `No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`
     );
   } else {
-    core4.info("Valid topic found");
+    core5.info("Valid topic found");
   }
 }
 var main = async (options) => {
-  core4.debug(JSON.stringify(import_github2.context, null, 2));
+  core5.debug(JSON.stringify(import_github3.context, null, 2));
   const config = getConfiguration();
-  validateTopics(import_github2.context.payload.repository?.topics);
-  core4.debug(JSON.stringify(config, null, 2));
+  validateTopics(import_github3.context.payload.repository?.topics);
+  core5.debug(JSON.stringify(config, null, 2));
   const {
     riffRaffYaml,
     roleArn,
@@ -61581,8 +61635,10 @@ var main = async (options) => {
     revision,
     deployments,
     stagingDirInput,
-    pullRequestComment
+    pullRequestComment,
+    githubToken: githubToken2
   } = config;
+  const octokit = (0, import_github3.getOctokit)(githubToken2);
   const mfest = manifest(
     projectName,
     buildNumber,
@@ -61593,25 +61649,19 @@ var main = async (options) => {
   );
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
-  if (options.WithSummary) {
-    await core4.summary.addHeading("Riff-Raff").addTable([
-      ["Project name", projectName],
-      ["Build number", buildNumber]
-    ]).write();
-  }
-  core4.info("writing rr yaml...");
+  core5.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
     cp(deployment.sources, `${stagingDir}/${deployment.name}`);
   });
   if (dryRun) {
-    core4.info("Output (dryRun=true):");
-    core4.info(printDir(stagingDir));
+    core5.info("Output (dryRun=true):");
+    core5.info(printDir(stagingDir));
     return;
   }
-  const idToken = await core4.getIDToken(GITHUB_OIDC_AUDIENCE);
+  const idToken = await core5.getIDToken(GITHUB_OIDC_AUDIENCE);
   const store = new S3Store(
-    new import_client_s32.S3Client({
+    new import_client_s33.S3Client({
       region: "eu-west-1",
       credentials: (0, import_credential_providers.fromWebToken)({
         roleArn,
@@ -61620,7 +61670,7 @@ var main = async (options) => {
     })
   );
   const keyPrefix = riffraffPrefix(mfest);
-  core4.info(`S3 prefix: ${keyPrefix}`);
+  core5.info(`S3 prefix: ${keyPrefix}`);
   try {
     await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
     await store.put(
@@ -61628,39 +61678,47 @@ var main = async (options) => {
       "riffraff-builds",
       keyPrefix + "/build.json"
     );
-    core4.info("Upload complete.");
+    core5.info("Upload complete.");
+    if (options.WithSummary) {
+      await core5.summary.addHeading("Riff-Raff").addTable([
+        ["Project name", projectName],
+        ["Build number", buildNumber]
+      ]).write();
+    }
   } catch (err) {
-    core4.error(
-      "Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform"
-    );
+    await handleS3UploadError(err, octokit, branchName2, projectName);
     throw err;
   }
   if (pullRequestComment.commentingEnabled) {
     try {
-      const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+      const pullRequestNumber = await getPullRequestNumber(octokit);
       if (pullRequestNumber) {
-        core4.info(`Commenting on PR ${pullRequestNumber}`);
-        await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+        core5.info(`Commenting on PR ${pullRequestNumber}`);
+        await commentOnPullRequest(
+          pullRequestNumber,
+          pullRequestComment,
+          octokit
+        );
       } else {
-        core4.info(
-          `Unable to calculate Pull Request number, so cannot add a comment. Event is ${import_github2.context.eventName}`
+        core5.info(
+          `Unable to calculate Pull Request number, so cannot add a comment. Event is ${import_github3.context.eventName}`
         );
       }
     } catch (err) {
-      core4.error(
+      core5.error(
         "Error commenting on PR. Do you have the correct permissions?"
       );
       throw err;
     }
   } else {
-    core4.info("commentingEnabled is `false`, skipping comment");
+    core5.info("commentingEnabled is `false`, skipping comment");
   }
 };
 if (require.main === module) {
   main({ WithSummary: true }).catch((err) => {
     if (err instanceof Error) {
-      core4.error(err);
-      core4.setFailed(err.message);
+      core5.error(err);
+      core5.setFailed(err.message);
     }
   });
 }

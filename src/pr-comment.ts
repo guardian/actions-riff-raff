@@ -1,6 +1,7 @@
 import { debug } from '@actions/core';
-import { context, getOctokit } from '@actions/github';
+import { context } from '@actions/github';
 import type { PullRequestCommentConfig } from './config';
+import type { Octokit } from './types';
 
 function getDeployUrl(config: PullRequestCommentConfig): URL {
 	const url = new URL('https://riffraff.gutools.co.uk/deployment/deployAgain');
@@ -65,9 +66,9 @@ function getCommentMessage(config: PullRequestCommentConfig): string {
 export async function commentOnPullRequest(
 	pullRequestNumber: number,
 	config: PullRequestCommentConfig,
+	octokit: Octokit,
 ) {
 	const comment = getCommentMessage(config);
-	const octokit = getOctokit(config.githubToken);
 
 	const comments = await octokit.rest.issues.listComments({
 		...context.repo,
@@ -106,7 +107,7 @@ export async function commentOnPullRequest(
 }
 
 export async function getPullRequestNumber(
-	config: PullRequestCommentConfig,
+	octokit: Octokit,
 ): Promise<number | undefined> {
 	const { eventName } = context;
 	const { pull_request } = context.payload;
@@ -119,8 +120,6 @@ export async function getPullRequestNumber(
 	}
 
 	debug(`Attempting to get PR number from commit ${context.sha}`);
-
-	const octokit = getOctokit(config.githubToken);
 
 	const result = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
 		...context.repo,

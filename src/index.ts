@@ -1,15 +1,17 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import { context } from '@actions/github';
+import { context, getOctokit } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
 import { fromWebToken } from '@aws-sdk/credential-providers';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
+import { handleS3UploadError } from './error-handling';
 import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
+import type { Octokit } from './types';
 
 /**
  * Amazon STS expects OIDC tokens with the `aud` (audience) field set to `sts.amazonaws.com`
@@ -67,7 +69,10 @@ export const main = async (options: Options): Promise<void> => {
 		deployments,
 		stagingDirInput,
 		pullRequestComment,
+		githubToken,
 	} = config;
+
+	const octokit: Octokit = getOctokit(githubToken);
 
 	const mfest = manifest(
 		projectName,
@@ -82,16 +87,6 @@ export const main = async (options: Options): Promise<void> => {
 	// Ensure unique name as multiple steps may run using this action within the
 	// same workflow (this has happened!).
 	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
-
-	if (options.WithSummary) {
-		await core.summary
-			.addHeading('Riff-Raff')
-			.addTable([
-				['Project name', projectName],
-				['Build number', buildNumber],
-			])
-			.write();
-	}
 
 	core.info('writing rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
@@ -133,21 +128,33 @@ export const main = async (options: Options): Promise<void> => {
 		);
 
 		core.info('Upload complete.');
-	} catch (err) {
-		core.error(
-			'Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform',
-		);
 
-		// throw to fail the action
+		if (options.WithSummary) {
+			await core.summary
+				.addHeading('Riff-Raff')
+				.addTable([
+					['Project name', projectName],
+					['Build number', buildNumber],
+				])
+				.write();
+		}
+	} catch (err) {
+		await handleS3UploadError(err, octokit, branchName, projectName);
+
+		// re-throw to fail the action
 		throw err;
 	}
 
 	if (pullRequestComment.commentingEnabled) {
 		try {
-			const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+			const pullRequestNumber = await getPullRequestNumber(octokit);
 			if (pullRequestNumber) {
 				core.info(`Commenting on PR ${pullRequestNumber}`);
-				await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+				await commentOnPullRequest(
+					pullRequestNumber,
+					pullRequestComment,
+					octokit,
+				);
 			} else {
 				core.info(
 					`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,
