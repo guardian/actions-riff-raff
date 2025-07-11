@@ -5,6 +5,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { fromWebToken } from '@aws-sdk/credential-providers';
 import * as yaml from 'js-yaml';
 import { getConfiguration } from './config';
+import { handleS3UploadError } from './error-handling';
 import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
@@ -138,11 +139,9 @@ export const main = async (options: Options): Promise<void> => {
 
 		core.info('Upload complete.');
 	} catch (err) {
-		core.error(
-			'Error uploading to Riff-Raff. Does the repository have an IAM Role? See https://github.com/guardian/riffraff-platform',
-		);
+		await handleS3UploadError(err, octokit, branchName, projectName);
 
-		// throw to fail the action
+		// re-throw to fail the action
 		throw err;
 	}
 
