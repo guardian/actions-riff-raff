@@ -61406,7 +61406,8 @@ function defaultS3ErrorMessage(projectName) {
   );
 }
 async function handleS3UploadError(thrownError, octokit, branchName2, projectName) {
-  if (thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
+  if (import_github.context.eventName === "pull_request" && // Annotations can only be seen in a PR.
+  thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
     const workflow = envOrUndefined("GITHUB_WORKFLOW_REF") ?? "";
     const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
     const { filename } = regex.exec(workflow)?.groups ?? {};
@@ -61554,7 +61555,7 @@ async function getPullRequestNumber(octokit) {
 }
 
 // src/riffraff.ts
-var manifest = (projectName, buildNumber, branch, vcsURL2, revision, buildTool) => {
+var getManifest = (projectName, buildNumber, branch, vcsURL2, revision, buildTool) => {
   return {
     branch,
     vcsURL: vcsURL2,
@@ -61599,12 +61600,6 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 
 // src/index.ts
 var GITHUB_OIDC_AUDIENCE = "sts.amazonaws.com";
-var RiffRaffUploadError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "RiffRaffUploadError";
-  }
-};
 function validateTopics(topics) {
   const deployableTopics = ["production", "hackday", "prototype", "learning"];
   const hasValidTopic = topics.some(
@@ -61612,7 +61607,7 @@ function validateTopics(topics) {
   );
   if (!hasValidTopic) {
     const topicList = deployableTopics.join(", ");
-    throw new RiffRaffUploadError(
+    throw new Error(
       `No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`
     );
   } else {
@@ -61639,7 +61634,7 @@ var main = async (options) => {
     githubToken: githubToken2
   } = config;
   const octokit = (0, import_github3.getOctokit)(githubToken2);
-  const mfest = manifest(
+  const manifest = getManifest(
     projectName,
     buildNumber,
     branchName2,
@@ -61647,7 +61642,7 @@ var main = async (options) => {
     revision,
     "guardian/actions-riff-raff"
   );
-  const manifestJSON = JSON.stringify(mfest);
+  const manifestJSON = JSON.stringify(manifest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
   core5.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
@@ -61669,7 +61664,7 @@ var main = async (options) => {
       })
     })
   );
-  const keyPrefix = riffraffPrefix(mfest);
+  const keyPrefix = riffraffPrefix(manifest);
   core5.info(`S3 prefix: ${keyPrefix}`);
   try {
     await sync(store, stagingDir, "riffraff-artifact", keyPrefix);
@@ -61679,15 +61674,15 @@ var main = async (options) => {
       keyPrefix + "/build.json"
     );
     core5.info("Upload complete.");
-    if (options.WithSummary) {
-      await core5.summary.addHeading("Riff-Raff").addTable([
-        ["Project name", projectName],
-        ["Build number", buildNumber]
-      ]).write();
-    }
   } catch (err) {
     await handleS3UploadError(err, octokit, branchName2, projectName);
     throw err;
+  }
+  if (options.WithSummary) {
+    await core5.summary.addHeading("Riff-Raff").addTable([
+      ["Project name", projectName],
+      ["Build number", buildNumber]
+    ]).write();
   }
   if (pullRequestComment.commentingEnabled) {
     try {

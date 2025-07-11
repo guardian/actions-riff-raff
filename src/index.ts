@@ -9,7 +9,7 @@ import { handleS3UploadError } from './error-handling';
 import { cp, printDir, write } from './file';
 import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
-import { manifest, riffraffPrefix } from './riffraff';
+import { getManifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
 import type { Octokit } from './types';
 
@@ -22,13 +22,6 @@ interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
 }
 
-class RiffRaffUploadError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'RiffRaffUploadError';
-	}
-}
-
 function validateTopics(topics: string[]): void {
 	const deployableTopics = ['production', 'hackday', 'prototype', 'learning'];
 	const hasValidTopic = topics.some((topic) =>
@@ -36,7 +29,7 @@ function validateTopics(topics: string[]): void {
 	);
 	if (!hasValidTopic) {
 		const topicList = deployableTopics.join(', ');
-		throw new RiffRaffUploadError(
+		throw new Error(
 			`No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`,
 		);
 	} else {
@@ -74,7 +67,7 @@ export const main = async (options: Options): Promise<void> => {
 
 	const octokit: Octokit = getOctokit(githubToken);
 
-	const mfest = manifest(
+	const manifest = getManifest(
 		projectName,
 		buildNumber,
 		branchName,
@@ -82,7 +75,7 @@ export const main = async (options: Options): Promise<void> => {
 		revision,
 		'guardian/actions-riff-raff',
 	);
-	const manifestJSON = JSON.stringify(mfest);
+	const manifestJSON = JSON.stringify(manifest);
 
 	// Ensure unique name as multiple steps may run using this action within the
 	// same workflow (this has happened!).
@@ -112,10 +105,11 @@ export const main = async (options: Options): Promise<void> => {
 			}),
 		}),
 	);
-	const keyPrefix = riffraffPrefix(mfest);
+	const keyPrefix = riffraffPrefix(manifest);
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 
+	// Upload files to S3.
 	try {
 		await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
 
@@ -128,23 +122,23 @@ export const main = async (options: Options): Promise<void> => {
 		);
 
 		core.info('Upload complete.');
-
-		if (options.WithSummary) {
-			await core.summary
-				.addHeading('Riff-Raff')
-				.addTable([
-					['Project name', projectName],
-					['Build number', buildNumber],
-				])
-				.write();
-		}
 	} catch (err) {
 		await handleS3UploadError(err, octokit, branchName, projectName);
-
-		// re-throw to fail the action
-		throw err;
+		throw err; // re-throw to fail the action;
 	}
 
+	// S3 upload is complete, print summary.
+	if (options.WithSummary) {
+		await core.summary
+			.addHeading('Riff-Raff')
+			.addTable([
+				['Project name', projectName],
+				['Build number', buildNumber],
+			])
+			.write();
+	}
+
+	// S3 upload is complete, try to add a comment to the PR.
 	if (pullRequestComment.commentingEnabled) {
 		try {
 			const pullRequestNumber = await getPullRequestNumber(octokit);
