@@ -61599,12 +61599,6 @@ var sync = async (store, dir, bucket, keyPrefix) => {
 
 // src/index.ts
 var GITHUB_OIDC_AUDIENCE = "sts.amazonaws.com";
-var RiffRaffUploadError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "RiffRaffUploadError";
-  }
-};
 function validateTopics(topics) {
   const deployableTopics = ["production", "hackday", "prototype", "learning"];
   const hasValidTopic = topics.some(
@@ -61612,7 +61606,7 @@ function validateTopics(topics) {
   );
   if (!hasValidTopic) {
     const topicList = deployableTopics.join(", ");
-    throw new RiffRaffUploadError(
+    throw new Error(
       `No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`
     );
   } else {

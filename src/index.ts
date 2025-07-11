@@ -22,13 +22,6 @@ interface Options {
 	WithSummary: boolean; // Use to disable summary when running locally.
 }
 
-class RiffRaffUploadError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'RiffRaffUploadError';
-	}
-}
-
 function validateTopics(topics: string[]): void {
 	const deployableTopics = ['production', 'hackday', 'prototype', 'learning'];
 	const hasValidTopic = topics.some((topic) =>
@@ -36,7 +29,7 @@ function validateTopics(topics: string[]): void {
 	);
 	if (!hasValidTopic) {
 		const topicList = deployableTopics.join(', ');
-		throw new RiffRaffUploadError(
+		throw new Error(
 			`No valid repository topic found. Add one of ${topicList}. See https://github.com/guardian/recommendations/blob/main/github.md#topics`,
 		);
 	} else {
