@@ -61674,15 +61674,15 @@ var main = async (options) => {
       keyPrefix + "/build.json"
     );
     core5.info("Upload complete.");
-    if (options.WithSummary) {
-      await core5.summary.addHeading("Riff-Raff").addTable([
-        ["Project name", projectName],
-        ["Build number", buildNumber]
-      ]).write();
-    }
   } catch (err) {
     await handleS3UploadError(err, octokit, branchName2, projectName);
     throw err;
+  }
+  if (options.WithSummary) {
+    await core5.summary.addHeading("Riff-Raff").addTable([
+      ["Project name", projectName],
+      ["Build number", buildNumber]
+    ]).write();
   }
   if (pullRequestComment.commentingEnabled) {
     try {

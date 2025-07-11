@@ -109,6 +109,7 @@ export const main = async (options: Options): Promise<void> => {
 
 	core.info(`S3 prefix: ${keyPrefix}`);
 
+	// Upload files to S3.
 	try {
 		await sync(store, stagingDir, 'riffraff-artifact', keyPrefix);
 
@@ -121,23 +122,23 @@ export const main = async (options: Options): Promise<void> => {
 		);
 
 		core.info('Upload complete.');
-
-		if (options.WithSummary) {
-			await core.summary
-				.addHeading('Riff-Raff')
-				.addTable([
-					['Project name', projectName],
-					['Build number', buildNumber],
-				])
-				.write();
-		}
 	} catch (err) {
 		await handleS3UploadError(err, octokit, branchName, projectName);
-
-		// re-throw to fail the action
-		throw err;
+		throw err; // re-throw to fail the action;
 	}
 
+	// S3 upload is complete, print summary.
+	if (options.WithSummary) {
+		await core.summary
+			.addHeading('Riff-Raff')
+			.addTable([
+				['Project name', projectName],
+				['Build number', buildNumber],
+			])
+			.write();
+	}
+
+	// S3 upload is complete, try to add a comment to the PR.
 	if (pullRequestComment.commentingEnabled) {
 		try {
 			const pullRequestNumber = await getPullRequestNumber(octokit);
