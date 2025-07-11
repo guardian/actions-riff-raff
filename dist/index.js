@@ -61649,12 +61649,6 @@ var main = async (options) => {
   );
   const manifestJSON = JSON.stringify(mfest);
   const stagingDir = stagingDirInput ?? fs3.mkdtempSync("staging-");
-  if (options.WithSummary) {
-    await core5.summary.addHeading("Riff-Raff").addTable([
-      ["Project name", projectName],
-      ["Build number", buildNumber]
-    ]).write();
-  }
   core5.info("writing rr yaml...");
   write(`${stagingDir}/riff-raff.yaml`, dump(riffRaffYaml));
   deployments.forEach((deployment) => {
@@ -61685,6 +61679,12 @@ var main = async (options) => {
       keyPrefix + "/build.json"
     );
     core5.info("Upload complete.");
+    if (options.WithSummary) {
+      await core5.summary.addHeading("Riff-Raff").addTable([
+        ["Project name", projectName],
+        ["Build number", buildNumber]
+      ]).write();
+    }
   } catch (err) {
     await handleS3UploadError(err, octokit, branchName2, projectName);
     throw err;

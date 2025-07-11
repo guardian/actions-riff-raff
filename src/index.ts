@@ -88,16 +88,6 @@ export const main = async (options: Options): Promise<void> => {
 	// same workflow (this has happened!).
 	const stagingDir = stagingDirInput ?? fs.mkdtempSync('staging-');
 
-	if (options.WithSummary) {
-		await core.summary
-			.addHeading('Riff-Raff')
-			.addTable([
-				['Project name', projectName],
-				['Build number', buildNumber],
-			])
-			.write();
-	}
-
 	core.info('writing rr yaml...');
 	write(`${stagingDir}/riff-raff.yaml`, yaml.dump(riffRaffYaml));
 
@@ -138,6 +128,16 @@ export const main = async (options: Options): Promise<void> => {
 		);
 
 		core.info('Upload complete.');
+
+		if (options.WithSummary) {
+			await core.summary
+				.addHeading('Riff-Raff')
+				.addTable([
+					['Project name', projectName],
+					['Build number', buildNumber],
+				])
+				.write();
+		}
 	} catch (err) {
 		await handleS3UploadError(err, octokit, branchName, projectName);
 
