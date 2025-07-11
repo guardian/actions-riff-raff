@@ -146,7 +146,6 @@ export interface PullRequestCommentConfig {
 	projectName: string;
 	buildNumber: string;
 	commentingStage: string;
-	githubToken: string;
 	commentingEnabled: boolean;
 }
 
@@ -162,6 +161,7 @@ export interface Configuration {
 	deployments: Deployment[];
 	stagingDirInput?: string;
 	pullRequestComment: PullRequestCommentConfig;
+	githubToken: string;
 }
 
 const offsetBuildNumber = (buildNumber: string, offset: string): string => {
@@ -218,11 +218,11 @@ export function getConfiguration(): Configuration {
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
 		deployments: getDeployments(),
 		stagingDirInput,
+		githubToken: githubToken(),
 		pullRequestComment: {
 			projectName,
 			buildNumber,
 			commentingStage,
-			githubToken: githubToken(),
 			commentingEnabled,
 		},
 	};

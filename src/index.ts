@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as core from '@actions/core';
-import { context } from '@actions/github';
+import { context, getOctokit } from '@actions/github';
 import { S3Client } from '@aws-sdk/client-s3';
 import { fromWebToken } from '@aws-sdk/credential-providers';
 import * as yaml from 'js-yaml';
@@ -10,6 +10,7 @@ import { commentOnPullRequest, getPullRequestNumber } from './pr-comment';
 import type { Deployment } from './riffraff';
 import { manifest, riffraffPrefix } from './riffraff';
 import { S3Store, sync } from './s3';
+import type { Octokit } from './types';
 
 /**
  * Amazon STS expects OIDC tokens with the `aud` (audience) field set to `sts.amazonaws.com`
@@ -67,7 +68,10 @@ export const main = async (options: Options): Promise<void> => {
 		deployments,
 		stagingDirInput,
 		pullRequestComment,
+		githubToken,
 	} = config;
+
+	const octokit: Octokit = getOctokit(githubToken);
 
 	const mfest = manifest(
 		projectName,
@@ -144,10 +148,14 @@ export const main = async (options: Options): Promise<void> => {
 
 	if (pullRequestComment.commentingEnabled) {
 		try {
-			const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+			const pullRequestNumber = await getPullRequestNumber(octokit);
 			if (pullRequestNumber) {
 				core.info(`Commenting on PR ${pullRequestNumber}`);
-				await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+				await commentOnPullRequest(
+					pullRequestNumber,
+					pullRequestComment,
+					octokit,
+				);
 			} else {
 				core.info(
 					`Unable to calculate Pull Request number, so cannot add a comment. Event is ${context.eventName}`,

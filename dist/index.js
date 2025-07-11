@@ -61375,11 +61375,11 @@ function getConfiguration() {
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
     deployments: getDeployments(),
     stagingDirInput,
+    githubToken: githubToken(),
     pullRequestComment: {
       projectName,
       buildNumber,
       commentingStage,
-      githubToken: githubToken(),
       commentingEnabled
     }
   };
@@ -61435,9 +61435,8 @@ function getCommentMessage(config) {
     marker(projectName)
   ].join("\n");
 }
-async function commentOnPullRequest(pullRequestNumber, config) {
+async function commentOnPullRequest(pullRequestNumber, config, octokit) {
   const comment = getCommentMessage(config);
-  const octokit = (0, import_github.getOctokit)(config.githubToken);
   const comments = await octokit.rest.issues.listComments({
     ...import_github.context.repo,
     issue_number: pullRequestNumber
@@ -61469,7 +61468,7 @@ async function commentOnPullRequest(pullRequestNumber, config) {
     });
   }
 }
-async function getPullRequestNumber(config) {
+async function getPullRequestNumber(octokit) {
   const { eventName } = import_github.context;
   const { pull_request } = import_github.context.payload;
   if (pull_request) {
@@ -61479,7 +61478,6 @@ async function getPullRequestNumber(config) {
     return Promise.resolve(pull_request.number);
   }
   (0, import_core3.debug)(`Attempting to get PR number from commit ${import_github.context.sha}`);
-  const octokit = (0, import_github.getOctokit)(config.githubToken);
   const result = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
     ...import_github.context.repo,
     commit_sha: import_github.context.sha
@@ -61581,8 +61579,10 @@ var main = async (options) => {
     revision,
     deployments,
     stagingDirInput,
-    pullRequestComment
+    pullRequestComment,
+    githubToken: githubToken2
   } = config;
+  const octokit = (0, import_github2.getOctokit)(githubToken2);
   const mfest = manifest(
     projectName,
     buildNumber,
@@ -61637,10 +61637,14 @@ var main = async (options) => {
   }
   if (pullRequestComment.commentingEnabled) {
     try {
-      const pullRequestNumber = await getPullRequestNumber(pullRequestComment);
+      const pullRequestNumber = await getPullRequestNumber(octokit);
       if (pullRequestNumber) {
         core4.info(`Commenting on PR ${pullRequestNumber}`);
-        await commentOnPullRequest(pullRequestNumber, pullRequestComment);
+        await commentOnPullRequest(
+          pullRequestNumber,
+          pullRequestComment,
+          octokit
+        );
       } else {
         core4.info(
           `Unable to calculate Pull Request number, so cannot add a comment. Event is ${import_github2.context.eventName}`
