@@ -61406,7 +61406,8 @@ function defaultS3ErrorMessage(projectName) {
   );
 }
 async function handleS3UploadError(thrownError, octokit, branchName2, projectName) {
-  if (thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
+  if (import_github.context.eventName === "pull_request" && // Annotations can only be seen in a PR.
+  thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
     const workflow = envOrUndefined("GITHUB_WORKFLOW_REF") ?? "";
     const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
     const { filename } = regex.exec(workflow)?.groups ?? {};

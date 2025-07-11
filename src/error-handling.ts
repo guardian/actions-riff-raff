@@ -35,6 +35,7 @@ export async function handleS3UploadError(
 	projectName: string,
 ) {
 	if (
+		context.eventName === 'pull_request' && // Annotations can only be seen in a PR.
 		thrownError instanceof S3ServiceException &&
 		thrownError.name === 'AccessDenied'
 	) {
