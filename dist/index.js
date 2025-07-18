@@ -61400,9 +61400,10 @@ async function getWorkflowFileContent(octokit, branchName2, filename) {
   }
   return void 0;
 }
-function defaultS3ErrorMessage(projectName) {
+function accessDeniedErrorMessage(projectName, properties) {
   core3.error(
-    `Error uploading to Riff-Raff. Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`
+    `Error uploading to Riff-Raff. Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`,
+    properties
   );
 }
 async function handleS3UploadError(thrownError, octokit, branchName2, projectName) {
@@ -61420,25 +61421,22 @@ async function handleS3UploadError(thrownError, octokit, branchName2, projectNam
       if (workflowFileContent) {
         workflowFileContent.split("\n").forEach((line, index) => {
           if (line.includes(projectName)) {
-            core3.error(
-              `Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`,
-              {
-                title: "Error uploading to Riff-Raff",
-                file: filename,
-                startLine: index + 1,
-                endLine: index + 1
-              }
-            );
+            accessDeniedErrorMessage(projectName, {
+              title: "Error uploading to Riff-Raff",
+              file: filename,
+              startLine: index + 1,
+              endLine: index + 1
+            });
           }
         });
       } else {
-        defaultS3ErrorMessage(projectName);
+        accessDeniedErrorMessage(projectName);
       }
     } else {
-      defaultS3ErrorMessage(projectName);
+      accessDeniedErrorMessage(projectName);
     }
   } else {
-    defaultS3ErrorMessage(projectName);
+    core3.error(`Unknown error. Check logs for more detail.`);
   }
 }
 

@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import type { AnnotationProperties } from '@actions/core';
 import { context } from '@actions/github';
 import { S3ServiceException } from '@aws-sdk/client-s3';
 import { envOrUndefined } from './config';
@@ -22,9 +23,13 @@ async function getWorkflowFileContent(
 	return undefined;
 }
 
-function defaultS3ErrorMessage(projectName: string) {
+function accessDeniedErrorMessage(
+	projectName: string,
+	properties?: AnnotationProperties,
+) {
 	core.error(
 		`Error uploading to Riff-Raff. Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`,
+		properties,
 	);
 }
 
@@ -56,24 +61,21 @@ export async function handleS3UploadError(
 				// Add an annotation to the GitHub Workflow file. This should appear on the "files changed" tab of the PR.
 				workflowFileContent.split('\n').forEach((line, index) => {
 					if (line.includes(projectName)) {
-						core.error(
-							`Have you added ${projectName} to https://github.com/guardian/riffraff-platform?`,
-							{
-								title: 'Error uploading to Riff-Raff',
-								file: filename,
-								startLine: index + 1,
-								endLine: index + 1,
-							},
-						);
+						accessDeniedErrorMessage(projectName, {
+							title: 'Error uploading to Riff-Raff',
+							file: filename,
+							startLine: index + 1,
+							endLine: index + 1,
+						});
 					}
 				});
 			} else {
-				defaultS3ErrorMessage(projectName);
+				accessDeniedErrorMessage(projectName);
 			}
 		} else {
-			defaultS3ErrorMessage(projectName);
+			accessDeniedErrorMessage(projectName);
 		}
 	} else {
-		defaultS3ErrorMessage(projectName);
+		core.error(`Unknown error. Check logs for more detail.`);
 	}
 }
