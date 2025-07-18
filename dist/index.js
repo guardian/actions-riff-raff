@@ -61407,37 +61407,41 @@ function accessDeniedErrorMessage(projectName, properties) {
   );
 }
 async function handleS3UploadError(thrownError, octokit, branchName2, projectName) {
-  if (import_github.context.eventName === "pull_request" && // Annotations can only be seen in a PR.
-  thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied") {
-    const workflow = envOrUndefined("GITHUB_WORKFLOW_REF") ?? "";
-    const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
-    const { filename } = regex.exec(workflow)?.groups ?? {};
-    if (filename) {
-      const workflowFileContent = await getWorkflowFileContent(
-        octokit,
-        branchName2,
-        filename
-      );
-      if (workflowFileContent) {
-        workflowFileContent.split("\n").forEach((line, index) => {
-          if (line.includes(projectName)) {
-            accessDeniedErrorMessage(projectName, {
-              title: "Error uploading to Riff-Raff",
-              file: filename,
-              startLine: index + 1,
-              endLine: index + 1
-            });
-          }
-        });
-      } else {
-        accessDeniedErrorMessage(projectName);
-      }
-    } else {
-      accessDeniedErrorMessage(projectName);
-    }
-  } else {
+  const isAccessDeniedError = thrownError instanceof import_client_s3.S3ServiceException && thrownError.name === "AccessDenied";
+  if (!isAccessDeniedError) {
     core3.error(`Unknown error. Check logs for more detail.`);
+    return;
   }
+  if (import_github.context.eventName !== "pull_request") {
+    accessDeniedErrorMessage(projectName);
+    return;
+  }
+  const workflow = envOrUndefined("GITHUB_WORKFLOW_REF") ?? "";
+  const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
+  const { filename } = regex.exec(workflow)?.groups ?? {};
+  if (!filename) {
+    accessDeniedErrorMessage(projectName);
+    return;
+  }
+  const workflowFileContent = await getWorkflowFileContent(
+    octokit,
+    branchName2,
+    filename
+  );
+  if (!workflowFileContent) {
+    accessDeniedErrorMessage(projectName);
+    return;
+  }
+  workflowFileContent.split("\n").forEach((line, index) => {
+    if (line.includes(projectName)) {
+      accessDeniedErrorMessage(projectName, {
+        title: "Error uploading to Riff-Raff",
+        file: filename,
+        startLine: index + 1,
+        endLine: index + 1
+      });
+    }
+  });
 }
 
 // src/pr-comment.ts
