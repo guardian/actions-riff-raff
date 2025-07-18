@@ -39,43 +39,52 @@ export async function handleS3UploadError(
 	branchName: string,
 	projectName: string,
 ) {
-	if (
-		context.eventName === 'pull_request' && // Annotations can only be seen in a PR.
+	const isAccessDeniedError =
 		thrownError instanceof S3ServiceException &&
-		thrownError.name === 'AccessDenied'
-	) {
-		const workflow = envOrUndefined('GITHUB_WORKFLOW_REF') ?? '';
-		const regex =
-			/^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
+		thrownError.name === 'AccessDenied';
 
-		const { filename } = regex.exec(workflow)?.groups ?? {};
-
-		if (filename) {
-			const workflowFileContent = await getWorkflowFileContent(
-				octokit,
-				branchName,
-				filename,
-			);
-
-			if (workflowFileContent) {
-				// Add an annotation to the GitHub Workflow file. This should appear on the "files changed" tab of the PR.
-				workflowFileContent.split('\n').forEach((line, index) => {
-					if (line.includes(projectName)) {
-						accessDeniedErrorMessage(projectName, {
-							title: 'Error uploading to Riff-Raff',
-							file: filename,
-							startLine: index + 1,
-							endLine: index + 1,
-						});
-					}
-				});
-			} else {
-				accessDeniedErrorMessage(projectName);
-			}
-		} else {
-			accessDeniedErrorMessage(projectName);
-		}
-	} else {
+	// Generic error handling for other errors.
+	if (!isAccessDeniedError) {
 		core.error(`Unknown error. Check logs for more detail.`);
+		return;
 	}
+
+	// Annotations can only be seen in a PR, return early if not in a PR.
+	if (context.eventName !== 'pull_request') {
+		accessDeniedErrorMessage(projectName);
+		return;
+	}
+
+	const workflow = envOrUndefined('GITHUB_WORKFLOW_REF') ?? '';
+	const regex = /^.+\/.+\/(?<filename>\.github\/workflows\/\w+\.(yaml|yml)).*$/;
+
+	const { filename } = regex.exec(workflow)?.groups ?? {};
+
+	if (!filename) {
+		accessDeniedErrorMessage(projectName);
+		return;
+	}
+
+	const workflowFileContent = await getWorkflowFileContent(
+		octokit,
+		branchName,
+		filename,
+	);
+
+	if (!workflowFileContent) {
+		accessDeniedErrorMessage(projectName);
+		return;
+	}
+
+	// Add an annotation to the GitHub Workflow file. This should appear on the "files changed" tab of the PR.
+	workflowFileContent.split('\n').forEach((line, index) => {
+		if (line.includes(projectName)) {
+			accessDeniedErrorMessage(projectName, {
+				title: 'Error uploading to Riff-Raff',
+				file: filename,
+				startLine: index + 1,
+				endLine: index + 1,
+			});
+		}
+	});
 }
