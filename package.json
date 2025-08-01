@@ -32,7 +32,7 @@
     "@guardian/tsconfig": "^1.0.0",
     "@types/jest": "30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "24.0.13",
+    "@types/node": "24.1.0",
     "jest": "30.0.5",
     "ts-jest": "29.4.0",
     "typescript": "5.5.2"
