@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@guardian/eslint-config": "11.0.0",
-    "@guardian/prettier": "^8.0.1",
+    "@guardian/prettier": "^8.0.2",
     "@guardian/tsconfig": "^1.0.0",
     "@types/jest": "30.0.0",
     "@types/js-yaml": "^4.0.9",
