@@ -24,7 +24,7 @@
     "@aws-sdk/client-s3": "3.703.0",
     "@aws-sdk/credential-providers": "3.699.0",
     "esbuild": "^0.25.12",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "@guardian/eslint-config": "11.0.0",
