@@ -19,7 +19,7 @@
   "author": "devx@theguardian.com",
   "license": "ISC",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^2.0.2",
     "@actions/github": "^6.0.1",
     "@aws-sdk/client-s3": "3.703.0",
     "@aws-sdk/credential-providers": "3.699.0",
