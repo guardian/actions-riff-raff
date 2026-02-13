@@ -16,6 +16,9 @@ updates:
     ignore:
       - dependency-name: "@aws-sdk/client-s3"
       - dependency-name: "@aws-sdk/credential-providers"
+    # @actions/core has dropped support for CJS as of 3.0.0 https://github.com/actions/toolkit/blob/main/packages/core/RELEASES.md
+    # adopting it requires a refactor of our project
+      - dependency-name: "@actions/core"
 
   - package-ecosystem: 'github-actions'
     directory: '/'
