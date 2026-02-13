@@ -26576,8 +26576,14 @@ var require_dist_cjs12 = __commonJS({
         return;
       }
       if (body) {
-        if (Buffer.isBuffer(body) || typeof body === "string") {
-          httpRequest.end(body);
+        const isBuffer = Buffer.isBuffer(body);
+        const isString = typeof body === "string";
+        if (isBuffer || isString) {
+          if (isBuffer && body.byteLength === 0) {
+            httpRequest.end();
+          } else {
+            httpRequest.end(body);
+          }
           return;
         }
         const uint8 = body;
@@ -26638,7 +26644,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         });
       }
       resolveDefaultConfig(options) {
-        const { requestTimeout, connectionTimeout, socketTimeout, socketAcquisitionWarningTimeout, httpAgent, httpsAgent, throwOnRequestTimeout } = options || {};
+        const { requestTimeout, connectionTimeout, socketTimeout, socketAcquisitionWarningTimeout, httpAgent, httpsAgent, throwOnRequestTimeout, logger: logger2 } = options || {};
         const keepAlive = true;
         const maxSockets = 50;
         return {
@@ -26661,7 +26667,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
             }
             return new https.Agent({ keepAlive, maxSockets, ...httpsAgent });
           })(),
-          logger: console
+          logger: logger2
         };
       }
       destroy() {
@@ -28005,11 +28011,14 @@ function member(memberSchema, memberName) {
   const internalCtorAccess = NormalizedSchema;
   return new internalCtorAccess(memberSchema, memberName);
 }
-var NormalizedSchema, isMemberSchema, isStaticSchema;
+var anno, NormalizedSchema, isMemberSchema, isStaticSchema;
 var init_NormalizedSchema = __esm({
   "node_modules/@smithy/core/dist-es/submodules/schema/schemas/NormalizedSchema.js"() {
     init_deref();
     init_translateTraits();
+    anno = {
+      it: /* @__PURE__ */ Symbol.for("@smithy/nor-struct-it")
+    };
     NormalizedSchema = class _NormalizedSchema {
       ref;
       memberName;
@@ -28088,7 +28097,7 @@ var init_NormalizedSchema = __esm({
       }
       getSchema() {
         const sc = this.schema;
-        if (sc[0] === 0) {
+        if (Array.isArray(sc) && sc[0] === 0) {
           return sc[4];
         }
         return sc;
@@ -28114,11 +28123,17 @@ var init_NormalizedSchema = __esm({
       }
       isStructSchema() {
         const sc = this.getSchema();
+        if (typeof sc !== "object") {
+          return false;
+        }
         const id = sc[0];
         return id === 3 || id === -3 || id === 4;
       }
       isUnionSchema() {
         const sc = this.getSchema();
+        if (typeof sc !== "object") {
+          return false;
+        }
         return sc[0] === 4;
       }
       isBlobSchema() {
@@ -28155,9 +28170,7 @@ var init_NormalizedSchema = __esm({
         return !!streaming || this.getSchema() === 42;
       }
       isIdempotencyToken() {
-        const match = (traits2) => (traits2 & 4) === 4 || !!traits2?.idempotencyToken;
-        const { normalizedTraits, traits, memberTraits } = this;
-        return match(normalizedTraits) || match(traits) || match(memberTraits);
+        return !!this.getMergedTraits().idempotencyToken;
       }
       getMergedTraits() {
         return this.normalizedTraits ?? (this.normalizedTraits = {
@@ -28229,9 +28242,19 @@ var init_NormalizedSchema = __esm({
           throw new Error("@smithy/core/schema - cannot iterate non-struct schema.");
         }
         const struct2 = this.getSchema();
-        for (let i4 = 0; i4 < struct2[4].length; ++i4) {
-          yield [struct2[4][i4], member([struct2[5][i4], 0], struct2[4][i4])];
+        const z2 = struct2[4].length;
+        let it = struct2[anno.it];
+        if (it && z2 === it.length) {
+          yield* it;
+          return;
         }
+        it = Array(z2);
+        for (let i4 = 0; i4 < z2; ++i4) {
+          const k4 = struct2[4][i4];
+          const v4 = member([struct2[5][i4], 0], k4);
+          yield it[i4] = [k4, v4];
+        }
+        struct2[anno.it] = it;
       }
     };
     isMemberSchema = (sc) => Array.isArray(sc) && sc.length === 2;
@@ -28309,10 +28332,24 @@ var init_TypeRegistry = __esm({
         }
         return _TypeRegistry.registries.get(namespace);
       }
+      copyFrom(other) {
+        const { schemas, exceptions } = this;
+        for (const [k4, v4] of other.schemas) {
+          if (!schemas.has(k4)) {
+            schemas.set(k4, v4);
+          }
+        }
+        for (const [k4, v4] of other.exceptions) {
+          if (!exceptions.has(k4)) {
+            exceptions.set(k4, v4);
+          }
+        }
+      }
       register(shapeId, schema2) {
         const qualifiedName = this.normalizeShapeId(shapeId);
-        const registry = _TypeRegistry.for(qualifiedName.split("#")[0]);
-        registry.schemas.set(qualifiedName, schema2);
+        for (const r4 of [this, _TypeRegistry.for(qualifiedName.split("#")[0])]) {
+          r4.schemas.set(qualifiedName, schema2);
+        }
       }
       getSchema(shapeId) {
         const id = this.normalizeShapeId(shapeId);
@@ -28323,12 +28360,17 @@ var init_TypeRegistry = __esm({
       }
       registerError(es, ctor) {
         const $error = es;
-        const registry = _TypeRegistry.for($error[1]);
-        registry.schemas.set($error[1] + "#" + $error[2], $error);
-        registry.exceptions.set($error, ctor);
+        const ns = $error[1];
+        for (const r4 of [this, _TypeRegistry.for(ns)]) {
+          r4.schemas.set(ns + "#" + $error[2], $error);
+          r4.exceptions.set($error, ctor);
+        }
       }
       getErrorCtor(es) {
         const $error = es;
+        if (this.exceptions.has($error)) {
+          return this.exceptions.get($error);
+        }
         const registry = _TypeRegistry.for($error[1]);
         return registry.exceptions.get($error);
       }
@@ -29855,6 +29897,11 @@ var init_EventStreamSerde = __esm({
                   [unionMember]: out
                 };
               }
+              if (body.byteLength === 0) {
+                return {
+                  [unionMember]: {}
+                };
+              }
             }
             return {
               [unionMember]: await this.deserializer.read(eventStreamSchema, body)
@@ -29987,9 +30034,14 @@ var init_HttpProtocol = __esm({
     init_SerdeContext();
     HttpProtocol = class extends SerdeContext {
       options;
+      compositeErrorRegistry;
       constructor(options) {
         super();
         this.options = options;
+        this.compositeErrorRegistry = TypeRegistry.for(options.defaultNamespace);
+        for (const etr of options.errorTypeRegistries ?? []) {
+          this.compositeErrorRegistry.copyFrom(etr);
+        }
       }
       getRequestType() {
         return import_protocol_http6.HttpRequest;
@@ -30164,7 +30216,9 @@ var init_HttpBindingProtocol = __esm({
           const inputMemberValue = input[memberName];
           if (inputMemberValue == null && !memberNs.isIdempotencyToken()) {
             if (memberTraits.httpLabel) {
-              throw new Error(`No value provided for input HTTP label: ${memberName}.`);
+              if (request.path.includes(`{${memberName}+}`) || request.path.includes(`{${memberName}}`)) {
+                throw new Error(`No value provided for input HTTP label: ${memberName}.`);
+              }
             }
             continue;
           }
@@ -32852,6 +32906,7 @@ var init_SmithyRpcV2CborProtocol = __esm({
   "node_modules/@smithy/core/dist-es/submodules/cbor/SmithyRpcV2CborProtocol.js"() {
     init_protocols();
     init_schema();
+    init_schema();
     import_util_middleware5 = __toESM(require_dist_cjs4());
     init_CborCodec();
     init_parseCborBody();
@@ -32859,8 +32914,8 @@ var init_SmithyRpcV2CborProtocol = __esm({
       codec = new CborCodec();
       serializer = this.codec.createSerializer();
       deserializer = this.codec.createDeserializer();
-      constructor({ defaultNamespace }) {
-        super({ defaultNamespace });
+      constructor({ defaultNamespace, errorTypeRegistries: errorTypeRegistries4 }) {
+        super({ defaultNamespace, errorTypeRegistries: errorTypeRegistries4 });
       }
       getShapeId() {
         return "smithy.protocols#rpcv2Cbor";
@@ -32902,15 +32957,17 @@ var init_SmithyRpcV2CborProtocol = __esm({
       }
       async handleError(operationSchema, context4, response, dataObject, metadata) {
         const errorName = loadSmithyRpcV2CborErrorCode(response, dataObject) ?? "Unknown";
-        let namespace = this.options.defaultNamespace;
-        if (errorName.includes("#")) {
-          [namespace] = errorName.split("#");
-        }
         const errorMetadata = {
           $metadata: metadata,
           $fault: response.statusCode <= 500 ? "client" : "server"
         };
-        const registry = TypeRegistry.for(namespace);
+        let namespace = this.options.defaultNamespace;
+        if (errorName.includes("#")) {
+          [namespace] = errorName.split("#");
+        }
+        const registry = this.compositeErrorRegistry;
+        const nsRegistry = TypeRegistry.for(namespace);
+        registry.copyFrom(nsRegistry);
         let errorSchema;
         try {
           errorSchema = registry.getSchema(errorName);
@@ -32918,10 +32975,11 @@ var init_SmithyRpcV2CborProtocol = __esm({
           if (dataObject.Message) {
             dataObject.message = dataObject.Message;
           }
-          const synthetic = TypeRegistry.for("smithy.ts.sdk.synthetic." + namespace);
-          const baseExceptionSchema = synthetic.getBaseException();
+          const syntheticRegistry = TypeRegistry.for("smithy.ts.sdk.synthetic." + namespace);
+          registry.copyFrom(syntheticRegistry);
+          const baseExceptionSchema = registry.getBaseException();
           if (baseExceptionSchema) {
-            const ErrorCtor2 = synthetic.getErrorCtor(baseExceptionSchema);
+            const ErrorCtor2 = registry.getErrorCtor(baseExceptionSchema);
             throw Object.assign(new ErrorCtor2({ name: errorName }), errorMetadata, dataObject);
           }
           throw Object.assign(new Error(errorName), errorMetadata, dataObject);
@@ -33435,9 +33493,8 @@ var require_dist_cjs20 = __commonJS({
       }
     };
     var SENSITIVE_STRING = "***SensitiveInformation***";
-    var createAggregatedClient4 = (commands4, Client2) => {
-      for (const command of Object.keys(commands4)) {
-        const CommandCtor = commands4[command];
+    var createAggregatedClient4 = (commands4, Client2, options) => {
+      for (const [command, CommandCtor] of Object.entries(commands4)) {
         const methodImpl = async function(args, optionsOrCb, cb) {
           const command2 = new CommandCtor(args);
           if (typeof optionsOrCb === "function") {
@@ -33452,6 +33509,33 @@ var require_dist_cjs20 = __commonJS({
         };
         const methodName = (command[0].toLowerCase() + command.slice(1)).replace(/Command$/, "");
         Client2.prototype[methodName] = methodImpl;
+      }
+      const { paginators = {}, waiters = {} } = options ?? {};
+      for (const [paginatorName, paginatorFn] of Object.entries(paginators)) {
+        if (Client2.prototype[paginatorName] === void 0) {
+          Client2.prototype[paginatorName] = function(commandInput = {}, paginationConfiguration, ...rest) {
+            return paginatorFn({
+              ...paginationConfiguration,
+              client: this
+            }, commandInput, ...rest);
+          };
+        }
+      }
+      for (const [waiterName, waiterFn] of Object.entries(waiters)) {
+        if (Client2.prototype[waiterName] === void 0) {
+          Client2.prototype[waiterName] = async function(commandInput = {}, waiterConfiguration, ...rest) {
+            let config = waiterConfiguration;
+            if (typeof waiterConfiguration === "number") {
+              config = {
+                maxWaitTime: waiterConfiguration
+              };
+            }
+            return waiterFn({
+              ...config,
+              client: this
+            }, commandInput, ...rest);
+          };
+        }
       }
     };
     var ServiceException = class _ServiceException extends Error {
@@ -34052,52 +34136,6 @@ var init_ConfigurableSerdeContext = __esm({
   }
 });
 
-// node_modules/@aws-sdk/core/dist-es/submodules/protocols/structIterator.js
-function* serializingStructIterator(ns, sourceObject) {
-  if (ns.isUnitSchema()) {
-    return;
-  }
-  const struct2 = ns.getSchema();
-  for (let i4 = 0; i4 < struct2[4].length; ++i4) {
-    const key = struct2[4][i4];
-    const memberSchema = struct2[5][i4];
-    const memberNs = new NormalizedSchema([memberSchema, 0], key);
-    if (!(key in sourceObject) && !memberNs.isIdempotencyToken()) {
-      continue;
-    }
-    yield [key, memberNs];
-  }
-}
-function* deserializingStructIterator(ns, sourceObject, nameTrait) {
-  if (ns.isUnitSchema()) {
-    return;
-  }
-  const struct2 = ns.getSchema();
-  let keysRemaining = Object.keys(sourceObject).filter((k4) => k4 !== "__type").length;
-  for (let i4 = 0; i4 < struct2[4].length; ++i4) {
-    if (keysRemaining === 0) {
-      break;
-    }
-    const key = struct2[4][i4];
-    const memberSchema = struct2[5][i4];
-    const memberNs = new NormalizedSchema([memberSchema, 0], key);
-    let serializationKey = key;
-    if (nameTrait) {
-      serializationKey = memberNs.getMergedTraits()[nameTrait] ?? key;
-    }
-    if (!(serializationKey in sourceObject)) {
-      continue;
-    }
-    yield [key, memberNs];
-    keysRemaining -= 1;
-  }
-}
-var init_structIterator = __esm({
-  "node_modules/@aws-sdk/core/dist-es/submodules/protocols/structIterator.js"() {
-    init_schema();
-  }
-});
-
 // node_modules/@aws-sdk/core/dist-es/submodules/protocols/UnionSerde.js
 var UnionSerde;
 var init_UnionSerde = __esm({
@@ -34230,7 +34268,6 @@ var init_JsonShapeDeserializer = __esm({
     init_serde();
     import_util_base644 = __toESM(require_dist_cjs9());
     init_ConfigurableSerdeContext();
-    init_structIterator();
     init_UnionSerde();
     init_jsonReviver();
     init_parseJsonBody();
@@ -34263,7 +34300,7 @@ var init_JsonShapeDeserializer = __esm({
             if (union) {
               unionSerde = new UnionSerde(record, out);
             }
-            for (const [memberName, memberSchema] of deserializingStructIterator(ns, record, jsonName ? "jsonName" : false)) {
+            for (const [memberName, memberSchema] of ns.structIterator()) {
               let fromKey = memberName;
               if (jsonName) {
                 fromKey = memberSchema.getMergedTraits().jsonName ?? fromKey;
@@ -34443,7 +34480,6 @@ var init_JsonShapeSerializer = __esm({
     init_serde();
     import_util_base645 = __toESM(require_dist_cjs9());
     init_ConfigurableSerdeContext();
-    init_structIterator();
     init_jsonReplacer();
     JsonShapeSerializer = class extends SerdeContextConfig {
       settings;
@@ -34489,7 +34525,7 @@ var init_JsonShapeSerializer = __esm({
             if (jsonName) {
               nameMap = {};
             }
-            for (const [memberName, memberSchema] of serializingStructIterator(ns, record)) {
+            for (const [memberName, memberSchema] of ns.structIterator()) {
               const serializableValue = this._write(memberSchema, record[memberName], ns);
               if (serializableValue !== void 0) {
                 let targetKey = memberName;
@@ -34888,39 +34924,39 @@ var require_fxp = __commonJS({
   "node_modules/fast-xml-parser/lib/fxp.cjs"(exports2, module2) {
     (() => {
       "use strict";
-      var t4 = { d: (e5, n5) => {
-        for (var i5 in n5) t4.o(n5, i5) && !t4.o(e5, i5) && Object.defineProperty(e5, i5, { enumerable: true, get: n5[i5] });
+      var t4 = { d: (e5, i5) => {
+        for (var n5 in i5) t4.o(i5, n5) && !t4.o(e5, n5) && Object.defineProperty(e5, n5, { enumerable: true, get: i5[n5] });
       }, o: (t5, e5) => Object.prototype.hasOwnProperty.call(t5, e5), r: (t5) => {
         "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(t5, Symbol.toStringTag, { value: "Module" }), Object.defineProperty(t5, "__esModule", { value: true });
       } }, e4 = {};
-      t4.r(e4), t4.d(e4, { XMLBuilder: () => ft, XMLParser: () => st, XMLValidator: () => mt });
-      const n4 = ":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD", i4 = new RegExp("^[" + n4 + "][" + n4 + "\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$");
+      t4.r(e4), t4.d(e4, { XMLBuilder: () => ut, XMLParser: () => et, XMLValidator: () => ft });
+      const i4 = ":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD", n4 = new RegExp("^[" + i4 + "][" + i4 + "\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$");
       function s4(t5, e5) {
-        const n5 = [];
-        let i5 = e5.exec(t5);
-        for (; i5; ) {
+        const i5 = [];
+        let n5 = e5.exec(t5);
+        for (; n5; ) {
           const s5 = [];
-          s5.startIndex = e5.lastIndex - i5[0].length;
-          const r5 = i5.length;
-          for (let t6 = 0; t6 < r5; t6++) s5.push(i5[t6]);
-          n5.push(s5), i5 = e5.exec(t5);
+          s5.startIndex = e5.lastIndex - n5[0].length;
+          const r5 = n5.length;
+          for (let t6 = 0; t6 < r5; t6++) s5.push(n5[t6]);
+          i5.push(s5), n5 = e5.exec(t5);
         }
-        return n5;
+        return i5;
       }
       const r4 = function(t5) {
-        return !(null == i4.exec(t5));
+        return !(null == n4.exec(t5));
       }, o4 = { allowBooleanAttributes: false, unpairedTags: [] };
       function a4(t5, e5) {
         e5 = Object.assign({}, o4, e5);
-        const n5 = [];
-        let i5 = false, s5 = false;
+        const i5 = [];
+        let n5 = false, s5 = false;
         "\uFEFF" === t5[0] && (t5 = t5.substr(1));
         for (let o5 = 0; o5 < t5.length; o5++) if ("<" === t5[o5] && "?" === t5[o5 + 1]) {
           if (o5 += 2, o5 = u4(t5, o5), o5.err) return o5;
         } else {
           if ("<" !== t5[o5]) {
             if (l4(t5[o5])) continue;
-            return x4("InvalidChar", "char '" + t5[o5] + "' is not expected.", N(t5, o5));
+            return x4("InvalidChar", "char '" + t5[o5] + "' is not expected.", b4(t5, o5));
           }
           {
             let a5 = o5;
@@ -34931,38 +34967,38 @@ var require_fxp = __commonJS({
             {
               let d5 = false;
               "/" === t5[o5] && (d5 = true, o5++);
-              let f5 = "";
-              for (; o5 < t5.length && ">" !== t5[o5] && " " !== t5[o5] && "	" !== t5[o5] && "\n" !== t5[o5] && "\r" !== t5[o5]; o5++) f5 += t5[o5];
-              if (f5 = f5.trim(), "/" === f5[f5.length - 1] && (f5 = f5.substring(0, f5.length - 1), o5--), !r4(f5)) {
+              let p5 = "";
+              for (; o5 < t5.length && ">" !== t5[o5] && " " !== t5[o5] && "	" !== t5[o5] && "\n" !== t5[o5] && "\r" !== t5[o5]; o5++) p5 += t5[o5];
+              if (p5 = p5.trim(), "/" === p5[p5.length - 1] && (p5 = p5.substring(0, p5.length - 1), o5--), !r4(p5)) {
                 let e6;
-                return e6 = 0 === f5.trim().length ? "Invalid space after '<'." : "Tag '" + f5 + "' is an invalid name.", x4("InvalidTag", e6, N(t5, o5));
+                return e6 = 0 === p5.trim().length ? "Invalid space after '<'." : "Tag '" + p5 + "' is an invalid name.", x4("InvalidTag", e6, b4(t5, o5));
               }
-              const p5 = c4(t5, o5);
-              if (false === p5) return x4("InvalidAttr", "Attributes for '" + f5 + "' have open quote.", N(t5, o5));
-              let b5 = p5.value;
-              if (o5 = p5.index, "/" === b5[b5.length - 1]) {
-                const n6 = o5 - b5.length;
-                b5 = b5.substring(0, b5.length - 1);
-                const s6 = g4(b5, e5);
-                if (true !== s6) return x4(s6.err.code, s6.err.msg, N(t5, n6 + s6.err.line));
-                i5 = true;
+              const c5 = f4(t5, o5);
+              if (false === c5) return x4("InvalidAttr", "Attributes for '" + p5 + "' have open quote.", b4(t5, o5));
+              let N2 = c5.value;
+              if (o5 = c5.index, "/" === N2[N2.length - 1]) {
+                const i6 = o5 - N2.length;
+                N2 = N2.substring(0, N2.length - 1);
+                const s6 = g4(N2, e5);
+                if (true !== s6) return x4(s6.err.code, s6.err.msg, b4(t5, i6 + s6.err.line));
+                n5 = true;
               } else if (d5) {
-                if (!p5.tagClosed) return x4("InvalidTag", "Closing tag '" + f5 + "' doesn't have proper closing.", N(t5, o5));
-                if (b5.trim().length > 0) return x4("InvalidTag", "Closing tag '" + f5 + "' can't have attributes or invalid starting.", N(t5, a5));
-                if (0 === n5.length) return x4("InvalidTag", "Closing tag '" + f5 + "' has not been opened.", N(t5, a5));
+                if (!c5.tagClosed) return x4("InvalidTag", "Closing tag '" + p5 + "' doesn't have proper closing.", b4(t5, o5));
+                if (N2.trim().length > 0) return x4("InvalidTag", "Closing tag '" + p5 + "' can't have attributes or invalid starting.", b4(t5, a5));
+                if (0 === i5.length) return x4("InvalidTag", "Closing tag '" + p5 + "' has not been opened.", b4(t5, a5));
                 {
-                  const e6 = n5.pop();
-                  if (f5 !== e6.tagName) {
-                    let n6 = N(t5, e6.tagStartPos);
-                    return x4("InvalidTag", "Expected closing tag '" + e6.tagName + "' (opened in line " + n6.line + ", col " + n6.col + ") instead of closing tag '" + f5 + "'.", N(t5, a5));
+                  const e6 = i5.pop();
+                  if (p5 !== e6.tagName) {
+                    let i6 = b4(t5, e6.tagStartPos);
+                    return x4("InvalidTag", "Expected closing tag '" + e6.tagName + "' (opened in line " + i6.line + ", col " + i6.col + ") instead of closing tag '" + p5 + "'.", b4(t5, a5));
                   }
-                  0 == n5.length && (s5 = true);
+                  0 == i5.length && (s5 = true);
                 }
               } else {
-                const r5 = g4(b5, e5);
-                if (true !== r5) return x4(r5.err.code, r5.err.msg, N(t5, o5 - b5.length + r5.err.line));
-                if (true === s5) return x4("InvalidXml", "Multiple possible root nodes found.", N(t5, o5));
-                -1 !== e5.unpairedTags.indexOf(f5) || n5.push({ tagName: f5, tagStartPos: a5 }), i5 = true;
+                const r5 = g4(N2, e5);
+                if (true !== r5) return x4(r5.err.code, r5.err.msg, b4(t5, o5 - N2.length + r5.err.line));
+                if (true === s5) return x4("InvalidXml", "Multiple possible root nodes found.", b4(t5, o5));
+                -1 !== e5.unpairedTags.indexOf(p5) || i5.push({ tagName: p5, tagStartPos: a5 }), n5 = true;
               }
               for (o5++; o5 < t5.length; o5++) if ("<" === t5[o5]) {
                 if ("!" === t5[o5 + 1]) {
@@ -34973,24 +35009,24 @@ var require_fxp = __commonJS({
                 if (o5 = u4(t5, ++o5), o5.err) return o5;
               } else if ("&" === t5[o5]) {
                 const e6 = m4(t5, o5);
-                if (-1 == e6) return x4("InvalidChar", "char '&' is not expected.", N(t5, o5));
+                if (-1 == e6) return x4("InvalidChar", "char '&' is not expected.", b4(t5, o5));
                 o5 = e6;
-              } else if (true === s5 && !l4(t5[o5])) return x4("InvalidXml", "Extra text at the end", N(t5, o5));
+              } else if (true === s5 && !l4(t5[o5])) return x4("InvalidXml", "Extra text at the end", b4(t5, o5));
               "<" === t5[o5] && o5--;
             }
           }
         }
-        return i5 ? 1 == n5.length ? x4("InvalidTag", "Unclosed tag '" + n5[0].tagName + "'.", N(t5, n5[0].tagStartPos)) : !(n5.length > 0) || x4("InvalidXml", "Invalid '" + JSON.stringify(n5.map(((t6) => t6.tagName)), null, 4).replace(/\r?\n/g, "") + "' found.", { line: 1, col: 1 }) : x4("InvalidXml", "Start tag expected.", 1);
+        return n5 ? 1 == i5.length ? x4("InvalidTag", "Unclosed tag '" + i5[0].tagName + "'.", b4(t5, i5[0].tagStartPos)) : !(i5.length > 0) || x4("InvalidXml", "Invalid '" + JSON.stringify(i5.map(((t6) => t6.tagName)), null, 4).replace(/\r?\n/g, "") + "' found.", { line: 1, col: 1 }) : x4("InvalidXml", "Start tag expected.", 1);
       }
       function l4(t5) {
         return " " === t5 || "	" === t5 || "\n" === t5 || "\r" === t5;
       }
       function u4(t5, e5) {
-        const n5 = e5;
+        const i5 = e5;
         for (; e5 < t5.length; e5++) if ("?" != t5[e5] && " " != t5[e5]) ;
         else {
-          const i5 = t5.substr(n5, e5 - n5);
-          if (e5 > 5 && "xml" === i5) return x4("InvalidXml", "XML declaration allowed only at the start of the document.", N(t5, e5));
+          const n5 = t5.substr(i5, e5 - i5);
+          if (e5 > 5 && "xml" === n5) return x4("InvalidXml", "XML declaration allowed only at the start of the document.", b4(t5, e5));
           if ("?" == t5[e5] && ">" == t5[e5 + 1]) {
             e5++;
             break;
@@ -35005,9 +35041,9 @@ var require_fxp = __commonJS({
             break;
           }
         } else if (t5.length > e5 + 8 && "D" === t5[e5 + 1] && "O" === t5[e5 + 2] && "C" === t5[e5 + 3] && "T" === t5[e5 + 4] && "Y" === t5[e5 + 5] && "P" === t5[e5 + 6] && "E" === t5[e5 + 7]) {
-          let n5 = 1;
-          for (e5 += 8; e5 < t5.length; e5++) if ("<" === t5[e5]) n5++;
-          else if (">" === t5[e5] && (n5--, 0 === n5)) break;
+          let i5 = 1;
+          for (e5 += 8; e5 < t5.length; e5++) if ("<" === t5[e5]) i5++;
+          else if (">" === t5[e5] && (i5--, 0 === i5)) break;
         } else if (t5.length > e5 + 9 && "[" === t5[e5 + 1] && "C" === t5[e5 + 2] && "D" === t5[e5 + 3] && "A" === t5[e5 + 4] && "T" === t5[e5 + 5] && "A" === t5[e5 + 6] && "[" === t5[e5 + 7]) {
           for (e5 += 8; e5 < t5.length; e5++) if ("]" === t5[e5] && "]" === t5[e5 + 1] && ">" === t5[e5 + 2]) {
             e5 += 2;
@@ -35016,59 +35052,59 @@ var require_fxp = __commonJS({
         }
         return e5;
       }
-      const d4 = '"', f4 = "'";
-      function c4(t5, e5) {
-        let n5 = "", i5 = "", s5 = false;
+      const d4 = '"', p4 = "'";
+      function f4(t5, e5) {
+        let i5 = "", n5 = "", s5 = false;
         for (; e5 < t5.length; e5++) {
-          if (t5[e5] === d4 || t5[e5] === f4) "" === i5 ? i5 = t5[e5] : i5 !== t5[e5] || (i5 = "");
-          else if (">" === t5[e5] && "" === i5) {
+          if (t5[e5] === d4 || t5[e5] === p4) "" === n5 ? n5 = t5[e5] : n5 !== t5[e5] || (n5 = "");
+          else if (">" === t5[e5] && "" === n5) {
             s5 = true;
             break;
           }
-          n5 += t5[e5];
+          i5 += t5[e5];
         }
-        return "" === i5 && { value: n5, index: e5, tagClosed: s5 };
+        return "" === n5 && { value: i5, index: e5, tagClosed: s5 };
       }
-      const p4 = new RegExp(`(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['"])(([\\s\\S])*?)\\5)?`, "g");
+      const c4 = new RegExp(`(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['"])(([\\s\\S])*?)\\5)?`, "g");
       function g4(t5, e5) {
-        const n5 = s4(t5, p4), i5 = {};
-        for (let t6 = 0; t6 < n5.length; t6++) {
-          if (0 === n5[t6][1].length) return x4("InvalidAttr", "Attribute '" + n5[t6][2] + "' has no space in starting.", E2(n5[t6]));
-          if (void 0 !== n5[t6][3] && void 0 === n5[t6][4]) return x4("InvalidAttr", "Attribute '" + n5[t6][2] + "' is without value.", E2(n5[t6]));
-          if (void 0 === n5[t6][3] && !e5.allowBooleanAttributes) return x4("InvalidAttr", "boolean attribute '" + n5[t6][2] + "' is not allowed.", E2(n5[t6]));
-          const s5 = n5[t6][2];
-          if (!b4(s5)) return x4("InvalidAttr", "Attribute '" + s5 + "' is an invalid name.", E2(n5[t6]));
-          if (i5.hasOwnProperty(s5)) return x4("InvalidAttr", "Attribute '" + s5 + "' is repeated.", E2(n5[t6]));
-          i5[s5] = 1;
+        const i5 = s4(t5, c4), n5 = {};
+        for (let t6 = 0; t6 < i5.length; t6++) {
+          if (0 === i5[t6][1].length) return x4("InvalidAttr", "Attribute '" + i5[t6][2] + "' has no space in starting.", E2(i5[t6]));
+          if (void 0 !== i5[t6][3] && void 0 === i5[t6][4]) return x4("InvalidAttr", "Attribute '" + i5[t6][2] + "' is without value.", E2(i5[t6]));
+          if (void 0 === i5[t6][3] && !e5.allowBooleanAttributes) return x4("InvalidAttr", "boolean attribute '" + i5[t6][2] + "' is not allowed.", E2(i5[t6]));
+          const s5 = i5[t6][2];
+          if (!N(s5)) return x4("InvalidAttr", "Attribute '" + s5 + "' is an invalid name.", E2(i5[t6]));
+          if (n5.hasOwnProperty(s5)) return x4("InvalidAttr", "Attribute '" + s5 + "' is repeated.", E2(i5[t6]));
+          n5[s5] = 1;
         }
         return true;
       }
       function m4(t5, e5) {
         if (";" === t5[++e5]) return -1;
         if ("#" === t5[e5]) return (function(t6, e6) {
-          let n6 = /\d/;
-          for ("x" === t6[e6] && (e6++, n6 = /[\da-fA-F]/); e6 < t6.length; e6++) {
+          let i6 = /\d/;
+          for ("x" === t6[e6] && (e6++, i6 = /[\da-fA-F]/); e6 < t6.length; e6++) {
             if (";" === t6[e6]) return e6;
-            if (!t6[e6].match(n6)) break;
+            if (!t6[e6].match(i6)) break;
           }
           return -1;
         })(t5, ++e5);
-        let n5 = 0;
-        for (; e5 < t5.length; e5++, n5++) if (!(t5[e5].match(/\w/) && n5 < 20)) {
+        let i5 = 0;
+        for (; e5 < t5.length; e5++, i5++) if (!(t5[e5].match(/\w/) && i5 < 20)) {
           if (";" === t5[e5]) break;
           return -1;
         }
         return e5;
       }
-      function x4(t5, e5, n5) {
-        return { err: { code: t5, msg: e5, line: n5.line || n5, col: n5.col } };
+      function x4(t5, e5, i5) {
+        return { err: { code: t5, msg: e5, line: i5.line || i5, col: i5.col } };
       }
-      function b4(t5) {
+      function N(t5) {
         return r4(t5);
       }
-      function N(t5, e5) {
-        const n5 = t5.substring(0, e5).split(/\r?\n/);
-        return { line: n5.length, col: n5[n5.length - 1].length + 1 };
+      function b4(t5, e5) {
+        const i5 = t5.substring(0, e5).split(/\r?\n/);
+        return { line: i5.length, col: i5[i5.length - 1].length + 1 };
       }
       function E2(t5) {
         return t5.startIndex + t5[1].length;
@@ -35077,12 +35113,12 @@ var require_fxp = __commonJS({
         return e5;
       }, attributeValueProcessor: function(t5, e5) {
         return e5;
-      }, stopNodes: [], alwaysCreateTextNode: false, isArray: () => false, commentPropName: false, unpairedTags: [], processEntities: true, htmlEntities: false, ignoreDeclaration: false, ignorePiTags: false, transformTagName: false, transformAttributeName: false, updateTag: function(t5, e5, n5) {
+      }, stopNodes: [], alwaysCreateTextNode: false, isArray: () => false, commentPropName: false, unpairedTags: [], processEntities: true, htmlEntities: false, ignoreDeclaration: false, ignorePiTags: false, transformTagName: false, transformAttributeName: false, updateTag: function(t5, e5, i5) {
         return t5;
       }, captureMetaData: false };
-      let y2;
-      y2 = "function" != typeof Symbol ? "@@xmlMetadata" : /* @__PURE__ */ Symbol("XML Node Metadata");
-      class T {
+      let T;
+      T = "function" != typeof Symbol ? "@@xmlMetadata" : /* @__PURE__ */ Symbol("XML Node Metadata");
+      class y2 {
         constructor(t5) {
           this.tagname = t5, this.child = [], this[":@"] = {};
         }
@@ -35090,150 +35126,193 @@ var require_fxp = __commonJS({
           "__proto__" === t5 && (t5 = "#__proto__"), this.child.push({ [t5]: e5 });
         }
         addChild(t5, e5) {
-          "__proto__" === t5.tagname && (t5.tagname = "#__proto__"), t5[":@"] && Object.keys(t5[":@"]).length > 0 ? this.child.push({ [t5.tagname]: t5.child, ":@": t5[":@"] }) : this.child.push({ [t5.tagname]: t5.child }), void 0 !== e5 && (this.child[this.child.length - 1][y2] = { startIndex: e5 });
+          "__proto__" === t5.tagname && (t5.tagname = "#__proto__"), t5[":@"] && Object.keys(t5[":@"]).length > 0 ? this.child.push({ [t5.tagname]: t5.child, ":@": t5[":@"] }) : this.child.push({ [t5.tagname]: t5.child }), void 0 !== e5 && (this.child[this.child.length - 1][T] = { startIndex: e5 });
         }
         static getMetaDataSymbol() {
-          return y2;
+          return T;
         }
       }
-      function w4(t5, e5) {
-        const n5 = {};
-        if ("O" !== t5[e5 + 3] || "C" !== t5[e5 + 4] || "T" !== t5[e5 + 5] || "Y" !== t5[e5 + 6] || "P" !== t5[e5 + 7] || "E" !== t5[e5 + 8]) throw new Error("Invalid Tag instead of DOCTYPE");
-        {
-          e5 += 9;
-          let i5 = 1, s5 = false, r5 = false, o5 = "";
-          for (; e5 < t5.length; e5++) if ("<" !== t5[e5] || r5) if (">" === t5[e5]) {
-            if (r5 ? "-" === t5[e5 - 1] && "-" === t5[e5 - 2] && (r5 = false, i5--) : i5--, 0 === i5) break;
-          } else "[" === t5[e5] ? s5 = true : o5 += t5[e5];
-          else {
-            if (s5 && C2(t5, "!ENTITY", e5)) {
-              let i6, s6;
-              e5 += 7, [i6, s6, e5] = O(t5, e5 + 1), -1 === s6.indexOf("&") && (n5[i6] = { regx: RegExp(`&${i6};`, "g"), val: s6 });
-            } else if (s5 && C2(t5, "!ELEMENT", e5)) {
-              e5 += 8;
-              const { index: n6 } = S(t5, e5 + 1);
-              e5 = n6;
-            } else if (s5 && C2(t5, "!ATTLIST", e5)) e5 += 8;
-            else if (s5 && C2(t5, "!NOTATION", e5)) {
-              e5 += 9;
-              const { index: n6 } = A2(t5, e5 + 1);
-              e5 = n6;
-            } else {
-              if (!C2(t5, "!--", e5)) throw new Error("Invalid DOCTYPE");
-              r5 = true;
+      class w4 {
+        constructor(t5) {
+          this.suppressValidationErr = !t5;
+        }
+        readDocType(t5, e5) {
+          const i5 = {};
+          if ("O" !== t5[e5 + 3] || "C" !== t5[e5 + 4] || "T" !== t5[e5 + 5] || "Y" !== t5[e5 + 6] || "P" !== t5[e5 + 7] || "E" !== t5[e5 + 8]) throw new Error("Invalid Tag instead of DOCTYPE");
+          {
+            e5 += 9;
+            let n5 = 1, s5 = false, r5 = false, o5 = "";
+            for (; e5 < t5.length; e5++) if ("<" !== t5[e5] || r5) if (">" === t5[e5]) {
+              if (r5 ? "-" === t5[e5 - 1] && "-" === t5[e5 - 2] && (r5 = false, n5--) : n5--, 0 === n5) break;
+            } else "[" === t5[e5] ? s5 = true : o5 += t5[e5];
+            else {
+              if (s5 && P(t5, "!ENTITY", e5)) {
+                let n6, s6;
+                e5 += 7, [n6, s6, e5] = this.readEntityExp(t5, e5 + 1, this.suppressValidationErr), -1 === s6.indexOf("&") && (i5[n6] = { regx: RegExp(`&${n6};`, "g"), val: s6 });
+              } else if (s5 && P(t5, "!ELEMENT", e5)) {
+                e5 += 8;
+                const { index: i6 } = this.readElementExp(t5, e5 + 1);
+                e5 = i6;
+              } else if (s5 && P(t5, "!ATTLIST", e5)) e5 += 8;
+              else if (s5 && P(t5, "!NOTATION", e5)) {
+                e5 += 9;
+                const { index: i6 } = this.readNotationExp(t5, e5 + 1, this.suppressValidationErr);
+                e5 = i6;
+              } else {
+                if (!P(t5, "!--", e5)) throw new Error("Invalid DOCTYPE");
+                r5 = true;
+              }
+              n5++, o5 = "";
             }
-            i5++, o5 = "";
+            if (0 !== n5) throw new Error("Unclosed DOCTYPE");
           }
-          if (0 !== i5) throw new Error("Unclosed DOCTYPE");
+          return { entities: i5, i: e5 };
         }
-        return { entities: n5, i: e5 };
+        readEntityExp(t5, e5) {
+          e5 = I2(t5, e5);
+          let i5 = "";
+          for (; e5 < t5.length && !/\s/.test(t5[e5]) && '"' !== t5[e5] && "'" !== t5[e5]; ) i5 += t5[e5], e5++;
+          if (O(i5), e5 = I2(t5, e5), !this.suppressValidationErr) {
+            if ("SYSTEM" === t5.substring(e5, e5 + 6).toUpperCase()) throw new Error("External entities are not supported");
+            if ("%" === t5[e5]) throw new Error("Parameter entities are not supported");
+          }
+          let n5 = "";
+          return [e5, n5] = this.readIdentifierVal(t5, e5, "entity"), [i5, n5, --e5];
+        }
+        readNotationExp(t5, e5) {
+          e5 = I2(t5, e5);
+          let i5 = "";
+          for (; e5 < t5.length && !/\s/.test(t5[e5]); ) i5 += t5[e5], e5++;
+          !this.suppressValidationErr && O(i5), e5 = I2(t5, e5);
+          const n5 = t5.substring(e5, e5 + 6).toUpperCase();
+          if (!this.suppressValidationErr && "SYSTEM" !== n5 && "PUBLIC" !== n5) throw new Error(`Expected SYSTEM or PUBLIC, found "${n5}"`);
+          e5 += n5.length, e5 = I2(t5, e5);
+          let s5 = null, r5 = null;
+          if ("PUBLIC" === n5) [e5, s5] = this.readIdentifierVal(t5, e5, "publicIdentifier"), '"' !== t5[e5 = I2(t5, e5)] && "'" !== t5[e5] || ([e5, r5] = this.readIdentifierVal(t5, e5, "systemIdentifier"));
+          else if ("SYSTEM" === n5 && ([e5, r5] = this.readIdentifierVal(t5, e5, "systemIdentifier"), !this.suppressValidationErr && !r5)) throw new Error("Missing mandatory system identifier for SYSTEM notation");
+          return { notationName: i5, publicIdentifier: s5, systemIdentifier: r5, index: --e5 };
+        }
+        readIdentifierVal(t5, e5, i5) {
+          let n5 = "";
+          const s5 = t5[e5];
+          if ('"' !== s5 && "'" !== s5) throw new Error(`Expected quoted string, found "${s5}"`);
+          for (e5++; e5 < t5.length && t5[e5] !== s5; ) n5 += t5[e5], e5++;
+          if (t5[e5] !== s5) throw new Error(`Unterminated ${i5} value`);
+          return [++e5, n5];
+        }
+        readElementExp(t5, e5) {
+          e5 = I2(t5, e5);
+          let i5 = "";
+          for (; e5 < t5.length && !/\s/.test(t5[e5]); ) i5 += t5[e5], e5++;
+          if (!this.suppressValidationErr && !r4(i5)) throw new Error(`Invalid element name: "${i5}"`);
+          let n5 = "";
+          if ("E" === t5[e5 = I2(t5, e5)] && P(t5, "MPTY", e5)) e5 += 4;
+          else if ("A" === t5[e5] && P(t5, "NY", e5)) e5 += 2;
+          else if ("(" === t5[e5]) {
+            for (e5++; e5 < t5.length && ")" !== t5[e5]; ) n5 += t5[e5], e5++;
+            if (")" !== t5[e5]) throw new Error("Unterminated content model");
+          } else if (!this.suppressValidationErr) throw new Error(`Invalid Element Expression, found "${t5[e5]}"`);
+          return { elementName: i5, contentModel: n5.trim(), index: e5 };
+        }
+        readAttlistExp(t5, e5) {
+          e5 = I2(t5, e5);
+          let i5 = "";
+          for (; e5 < t5.length && !/\s/.test(t5[e5]); ) i5 += t5[e5], e5++;
+          O(i5), e5 = I2(t5, e5);
+          let n5 = "";
+          for (; e5 < t5.length && !/\s/.test(t5[e5]); ) n5 += t5[e5], e5++;
+          if (!O(n5)) throw new Error(`Invalid attribute name: "${n5}"`);
+          e5 = I2(t5, e5);
+          let s5 = "";
+          if ("NOTATION" === t5.substring(e5, e5 + 8).toUpperCase()) {
+            if (s5 = "NOTATION", "(" !== t5[e5 = I2(t5, e5 += 8)]) throw new Error(`Expected '(', found "${t5[e5]}"`);
+            e5++;
+            let i6 = [];
+            for (; e5 < t5.length && ")" !== t5[e5]; ) {
+              let n6 = "";
+              for (; e5 < t5.length && "|" !== t5[e5] && ")" !== t5[e5]; ) n6 += t5[e5], e5++;
+              if (n6 = n6.trim(), !O(n6)) throw new Error(`Invalid notation name: "${n6}"`);
+              i6.push(n6), "|" === t5[e5] && (e5++, e5 = I2(t5, e5));
+            }
+            if (")" !== t5[e5]) throw new Error("Unterminated list of notations");
+            e5++, s5 += " (" + i6.join("|") + ")";
+          } else {
+            for (; e5 < t5.length && !/\s/.test(t5[e5]); ) s5 += t5[e5], e5++;
+            const i6 = ["CDATA", "ID", "IDREF", "IDREFS", "ENTITY", "ENTITIES", "NMTOKEN", "NMTOKENS"];
+            if (!this.suppressValidationErr && !i6.includes(s5.toUpperCase())) throw new Error(`Invalid attribute type: "${s5}"`);
+          }
+          e5 = I2(t5, e5);
+          let r5 = "";
+          return "#REQUIRED" === t5.substring(e5, e5 + 8).toUpperCase() ? (r5 = "#REQUIRED", e5 += 8) : "#IMPLIED" === t5.substring(e5, e5 + 7).toUpperCase() ? (r5 = "#IMPLIED", e5 += 7) : [e5, r5] = this.readIdentifierVal(t5, e5, "ATTLIST"), { elementName: i5, attributeName: n5, attributeType: s5, defaultValue: r5, index: e5 };
+        }
       }
-      const P = (t5, e5) => {
+      const I2 = (t5, e5) => {
         for (; e5 < t5.length && /\s/.test(t5[e5]); ) e5++;
         return e5;
       };
-      function O(t5, e5) {
-        e5 = P(t5, e5);
-        let n5 = "";
-        for (; e5 < t5.length && !/\s/.test(t5[e5]) && '"' !== t5[e5] && "'" !== t5[e5]; ) n5 += t5[e5], e5++;
-        if ($(n5), e5 = P(t5, e5), "SYSTEM" === t5.substring(e5, e5 + 6).toUpperCase()) throw new Error("External entities are not supported");
-        if ("%" === t5[e5]) throw new Error("Parameter entities are not supported");
-        let i5 = "";
-        return [e5, i5] = I2(t5, e5, "entity"), [n5, i5, --e5];
-      }
-      function A2(t5, e5) {
-        e5 = P(t5, e5);
-        let n5 = "";
-        for (; e5 < t5.length && !/\s/.test(t5[e5]); ) n5 += t5[e5], e5++;
-        $(n5), e5 = P(t5, e5);
-        const i5 = t5.substring(e5, e5 + 6).toUpperCase();
-        if ("SYSTEM" !== i5 && "PUBLIC" !== i5) throw new Error(`Expected SYSTEM or PUBLIC, found "${i5}"`);
-        e5 += i5.length, e5 = P(t5, e5);
-        let s5 = null, r5 = null;
-        if ("PUBLIC" === i5) [e5, s5] = I2(t5, e5, "publicIdentifier"), '"' !== t5[e5 = P(t5, e5)] && "'" !== t5[e5] || ([e5, r5] = I2(t5, e5, "systemIdentifier"));
-        else if ("SYSTEM" === i5 && ([e5, r5] = I2(t5, e5, "systemIdentifier"), !r5)) throw new Error("Missing mandatory system identifier for SYSTEM notation");
-        return { notationName: n5, publicIdentifier: s5, systemIdentifier: r5, index: --e5 };
-      }
-      function I2(t5, e5, n5) {
-        let i5 = "";
-        const s5 = t5[e5];
-        if ('"' !== s5 && "'" !== s5) throw new Error(`Expected quoted string, found "${s5}"`);
-        for (e5++; e5 < t5.length && t5[e5] !== s5; ) i5 += t5[e5], e5++;
-        if (t5[e5] !== s5) throw new Error(`Unterminated ${n5} value`);
-        return [++e5, i5];
-      }
-      function S(t5, e5) {
-        e5 = P(t5, e5);
-        let n5 = "";
-        for (; e5 < t5.length && !/\s/.test(t5[e5]); ) n5 += t5[e5], e5++;
-        if (!$(n5)) throw new Error(`Invalid element name: "${n5}"`);
-        let i5 = "";
-        if ("E" === t5[e5 = P(t5, e5)] && C2(t5, "MPTY", e5)) e5 += 4;
-        else if ("A" === t5[e5] && C2(t5, "NY", e5)) e5 += 2;
-        else {
-          if ("(" !== t5[e5]) throw new Error(`Invalid Element Expression, found "${t5[e5]}"`);
-          for (e5++; e5 < t5.length && ")" !== t5[e5]; ) i5 += t5[e5], e5++;
-          if (")" !== t5[e5]) throw new Error("Unterminated content model");
-        }
-        return { elementName: n5, contentModel: i5.trim(), index: e5 };
-      }
-      function C2(t5, e5, n5) {
-        for (let i5 = 0; i5 < e5.length; i5++) if (e5[i5] !== t5[n5 + i5 + 1]) return false;
+      function P(t5, e5, i5) {
+        for (let n5 = 0; n5 < e5.length; n5++) if (e5[n5] !== t5[i5 + n5 + 1]) return false;
         return true;
       }
-      function $(t5) {
+      function O(t5) {
         if (r4(t5)) return t5;
         throw new Error(`Invalid entity name ${t5}`);
       }
-      const j4 = /^[-+]?0x[a-fA-F0-9]+$/, D2 = /^([\-\+])?(0*)([0-9]*(\.[0-9]*)?)$/, V = { hex: true, leadingZeros: true, decimalPoint: ".", eNotation: true };
-      const M = /^([-+])?(0*)(\d*(\.\d*)?[eE][-\+]?\d+)$/;
-      function _(t5) {
+      const A2 = /^[-+]?0x[a-fA-F0-9]+$/, S = /^([\-\+])?(0*)([0-9]*(\.[0-9]*)?)$/, C2 = { hex: true, leadingZeros: true, decimalPoint: ".", eNotation: true };
+      const V = /^([-+])?(0*)(\d*(\.\d*)?[eE][-\+]?\d+)$/;
+      function $(t5) {
         return "function" == typeof t5 ? t5 : Array.isArray(t5) ? (e5) => {
-          for (const n5 of t5) {
-            if ("string" == typeof n5 && e5 === n5) return true;
-            if (n5 instanceof RegExp && n5.test(e5)) return true;
+          for (const i5 of t5) {
+            if ("string" == typeof i5 && e5 === i5) return true;
+            if (i5 instanceof RegExp && i5.test(e5)) return true;
           }
         } : () => false;
       }
-      class k4 {
+      class D2 {
         constructor(t5) {
-          this.options = t5, this.currentNode = null, this.tagsNodeStack = [], this.docTypeEntities = {}, this.lastEntities = { apos: { regex: /&(apos|#39|#x27);/g, val: "'" }, gt: { regex: /&(gt|#62|#x3E);/g, val: ">" }, lt: { regex: /&(lt|#60|#x3C);/g, val: "<" }, quot: { regex: /&(quot|#34|#x22);/g, val: '"' } }, this.ampEntity = { regex: /&(amp|#38|#x26);/g, val: "&" }, this.htmlEntities = { space: { regex: /&(nbsp|#160);/g, val: " " }, cent: { regex: /&(cent|#162);/g, val: "\xA2" }, pound: { regex: /&(pound|#163);/g, val: "\xA3" }, yen: { regex: /&(yen|#165);/g, val: "\xA5" }, euro: { regex: /&(euro|#8364);/g, val: "\u20AC" }, copyright: { regex: /&(copy|#169);/g, val: "\xA9" }, reg: { regex: /&(reg|#174);/g, val: "\xAE" }, inr: { regex: /&(inr|#8377);/g, val: "\u20B9" }, num_dec: { regex: /&#([0-9]{1,7});/g, val: (t6, e5) => String.fromCodePoint(Number.parseInt(e5, 10)) }, num_hex: { regex: /&#x([0-9a-fA-F]{1,6});/g, val: (t6, e5) => String.fromCodePoint(Number.parseInt(e5, 16)) } }, this.addExternalEntities = F2, this.parseXml = X, this.parseTextData = L, this.resolveNameSpace = B2, this.buildAttributesMap = G2, this.isItStopNode = Z, this.replaceEntitiesValue = R, this.readStopNodeData = J2, this.saveTextToParentTag = q4, this.addChild = Y, this.ignoreAttributesFn = _(this.options.ignoreAttributes);
+          if (this.options = t5, this.currentNode = null, this.tagsNodeStack = [], this.docTypeEntities = {}, this.lastEntities = { apos: { regex: /&(apos|#39|#x27);/g, val: "'" }, gt: { regex: /&(gt|#62|#x3E);/g, val: ">" }, lt: { regex: /&(lt|#60|#x3C);/g, val: "<" }, quot: { regex: /&(quot|#34|#x22);/g, val: '"' } }, this.ampEntity = { regex: /&(amp|#38|#x26);/g, val: "&" }, this.htmlEntities = { space: { regex: /&(nbsp|#160);/g, val: " " }, cent: { regex: /&(cent|#162);/g, val: "\xA2" }, pound: { regex: /&(pound|#163);/g, val: "\xA3" }, yen: { regex: /&(yen|#165);/g, val: "\xA5" }, euro: { regex: /&(euro|#8364);/g, val: "\u20AC" }, copyright: { regex: /&(copy|#169);/g, val: "\xA9" }, reg: { regex: /&(reg|#174);/g, val: "\xAE" }, inr: { regex: /&(inr|#8377);/g, val: "\u20B9" }, num_dec: { regex: /&#([0-9]{1,7});/g, val: (t6, e5) => Z(e5, 10, "&#") }, num_hex: { regex: /&#x([0-9a-fA-F]{1,6});/g, val: (t6, e5) => Z(e5, 16, "&#x") } }, this.addExternalEntities = j4, this.parseXml = L, this.parseTextData = M, this.resolveNameSpace = F2, this.buildAttributesMap = k4, this.isItStopNode = Y, this.replaceEntitiesValue = B2, this.readStopNodeData = W, this.saveTextToParentTag = R, this.addChild = U, this.ignoreAttributesFn = $(this.options.ignoreAttributes), this.options.stopNodes && this.options.stopNodes.length > 0) {
+            this.stopNodesExact = /* @__PURE__ */ new Set(), this.stopNodesWildcard = /* @__PURE__ */ new Set();
+            for (let t6 = 0; t6 < this.options.stopNodes.length; t6++) {
+              const e5 = this.options.stopNodes[t6];
+              "string" == typeof e5 && (e5.startsWith("*.") ? this.stopNodesWildcard.add(e5.substring(2)) : this.stopNodesExact.add(e5));
+            }
+          }
+        }
+      }
+      function j4(t5) {
+        const e5 = Object.keys(t5);
+        for (let i5 = 0; i5 < e5.length; i5++) {
+          const n5 = e5[i5];
+          this.lastEntities[n5] = { regex: new RegExp("&" + n5 + ";", "g"), val: t5[n5] };
+        }
+      }
+      function M(t5, e5, i5, n5, s5, r5, o5) {
+        if (void 0 !== t5 && (this.options.trimValues && !n5 && (t5 = t5.trim()), t5.length > 0)) {
+          o5 || (t5 = this.replaceEntitiesValue(t5));
+          const n6 = this.options.tagValueProcessor(e5, t5, i5, s5, r5);
+          return null == n6 ? t5 : typeof n6 != typeof t5 || n6 !== t5 ? n6 : this.options.trimValues || t5.trim() === t5 ? q4(t5, this.options.parseTagValue, this.options.numberParseOptions) : t5;
         }
       }
       function F2(t5) {
-        const e5 = Object.keys(t5);
-        for (let n5 = 0; n5 < e5.length; n5++) {
-          const i5 = e5[n5];
-          this.lastEntities[i5] = { regex: new RegExp("&" + i5 + ";", "g"), val: t5[i5] };
-        }
-      }
-      function L(t5, e5, n5, i5, s5, r5, o5) {
-        if (void 0 !== t5 && (this.options.trimValues && !i5 && (t5 = t5.trim()), t5.length > 0)) {
-          o5 || (t5 = this.replaceEntitiesValue(t5));
-          const i6 = this.options.tagValueProcessor(e5, t5, n5, s5, r5);
-          return null == i6 ? t5 : typeof i6 != typeof t5 || i6 !== t5 ? i6 : this.options.trimValues || t5.trim() === t5 ? H2(t5, this.options.parseTagValue, this.options.numberParseOptions) : t5;
-        }
-      }
-      function B2(t5) {
         if (this.options.removeNSPrefix) {
-          const e5 = t5.split(":"), n5 = "/" === t5.charAt(0) ? "/" : "";
+          const e5 = t5.split(":"), i5 = "/" === t5.charAt(0) ? "/" : "";
           if ("xmlns" === e5[0]) return "";
-          2 === e5.length && (t5 = n5 + e5[1]);
+          2 === e5.length && (t5 = i5 + e5[1]);
         }
         return t5;
       }
-      const U = new RegExp(`([^\\s=]+)\\s*(=\\s*(['"])([\\s\\S]*?)\\3)?`, "gm");
-      function G2(t5, e5, n5) {
+      const _ = new RegExp(`([^\\s=]+)\\s*(=\\s*(['"])([\\s\\S]*?)\\3)?`, "gm");
+      function k4(t5, e5) {
         if (true !== this.options.ignoreAttributes && "string" == typeof t5) {
-          const n6 = s4(t5, U), i5 = n6.length, r5 = {};
-          for (let t6 = 0; t6 < i5; t6++) {
-            const i6 = this.resolveNameSpace(n6[t6][1]);
-            if (this.ignoreAttributesFn(i6, e5)) continue;
-            let s5 = n6[t6][4], o5 = this.options.attributeNamePrefix + i6;
-            if (i6.length) if (this.options.transformAttributeName && (o5 = this.options.transformAttributeName(o5)), "__proto__" === o5 && (o5 = "#__proto__"), void 0 !== s5) {
+          const i5 = s4(t5, _), n5 = i5.length, r5 = {};
+          for (let t6 = 0; t6 < n5; t6++) {
+            const n6 = this.resolveNameSpace(i5[t6][1]);
+            if (this.ignoreAttributesFn(n6, e5)) continue;
+            let s5 = i5[t6][4], o5 = this.options.attributeNamePrefix + n6;
+            if (n6.length) if (this.options.transformAttributeName && (o5 = this.options.transformAttributeName(o5)), "__proto__" === o5 && (o5 = "#__proto__"), void 0 !== s5) {
               this.options.trimValues && (s5 = s5.trim()), s5 = this.replaceEntitiesValue(s5);
-              const t7 = this.options.attributeValueProcessor(i6, s5, e5);
-              r5[o5] = null == t7 ? s5 : typeof t7 != typeof s5 || t7 !== s5 ? t7 : H2(s5, this.options.parseAttributeValue, this.options.numberParseOptions);
+              const t7 = this.options.attributeValueProcessor(n6, s5, e5);
+              r5[o5] = null == t7 ? s5 : typeof t7 != typeof s5 || t7 !== s5 ? t7 : q4(s5, this.options.parseAttributeValue, this.options.numberParseOptions);
             } else this.options.allowBooleanAttributes && (r5[o5] = true);
           }
           if (!Object.keys(r5).length) return;
@@ -35244,270 +35323,274 @@ var require_fxp = __commonJS({
           return r5;
         }
       }
-      const X = function(t5) {
+      const L = function(t5) {
         t5 = t5.replace(/\r\n?/g, "\n");
-        const e5 = new T("!xml");
-        let n5 = e5, i5 = "", s5 = "";
-        for (let r5 = 0; r5 < t5.length; r5++) if ("<" === t5[r5]) if ("/" === t5[r5 + 1]) {
-          const e6 = W(t5, ">", r5, "Closing Tag is not closed.");
-          let o5 = t5.substring(r5 + 2, e6).trim();
+        const e5 = new y2("!xml");
+        let i5 = e5, n5 = "", s5 = "";
+        const r5 = new w4(this.options.processEntities);
+        for (let o5 = 0; o5 < t5.length; o5++) if ("<" === t5[o5]) if ("/" === t5[o5 + 1]) {
+          const e6 = G2(t5, ">", o5, "Closing Tag is not closed.");
+          let r6 = t5.substring(o5 + 2, e6).trim();
           if (this.options.removeNSPrefix) {
-            const t6 = o5.indexOf(":");
-            -1 !== t6 && (o5 = o5.substr(t6 + 1));
+            const t6 = r6.indexOf(":");
+            -1 !== t6 && (r6 = r6.substr(t6 + 1));
           }
-          this.options.transformTagName && (o5 = this.options.transformTagName(o5)), n5 && (i5 = this.saveTextToParentTag(i5, n5, s5));
+          this.options.transformTagName && (r6 = this.options.transformTagName(r6)), i5 && (n5 = this.saveTextToParentTag(n5, i5, s5));
           const a5 = s5.substring(s5.lastIndexOf(".") + 1);
-          if (o5 && -1 !== this.options.unpairedTags.indexOf(o5)) throw new Error(`Unpaired tag can not be used as closing tag: </${o5}>`);
+          if (r6 && -1 !== this.options.unpairedTags.indexOf(r6)) throw new Error(`Unpaired tag can not be used as closing tag: </${r6}>`);
           let l5 = 0;
-          a5 && -1 !== this.options.unpairedTags.indexOf(a5) ? (l5 = s5.lastIndexOf(".", s5.lastIndexOf(".") - 1), this.tagsNodeStack.pop()) : l5 = s5.lastIndexOf("."), s5 = s5.substring(0, l5), n5 = this.tagsNodeStack.pop(), i5 = "", r5 = e6;
-        } else if ("?" === t5[r5 + 1]) {
-          let e6 = z2(t5, r5, false, "?>");
+          a5 && -1 !== this.options.unpairedTags.indexOf(a5) ? (l5 = s5.lastIndexOf(".", s5.lastIndexOf(".") - 1), this.tagsNodeStack.pop()) : l5 = s5.lastIndexOf("."), s5 = s5.substring(0, l5), i5 = this.tagsNodeStack.pop(), n5 = "", o5 = e6;
+        } else if ("?" === t5[o5 + 1]) {
+          let e6 = X(t5, o5, false, "?>");
           if (!e6) throw new Error("Pi Tag is not closed.");
-          if (i5 = this.saveTextToParentTag(i5, n5, s5), this.options.ignoreDeclaration && "?xml" === e6.tagName || this.options.ignorePiTags) ;
+          if (n5 = this.saveTextToParentTag(n5, i5, s5), this.options.ignoreDeclaration && "?xml" === e6.tagName || this.options.ignorePiTags) ;
           else {
-            const t6 = new T(e6.tagName);
-            t6.add(this.options.textNodeName, ""), e6.tagName !== e6.tagExp && e6.attrExpPresent && (t6[":@"] = this.buildAttributesMap(e6.tagExp, s5, e6.tagName)), this.addChild(n5, t6, s5, r5);
+            const t6 = new y2(e6.tagName);
+            t6.add(this.options.textNodeName, ""), e6.tagName !== e6.tagExp && e6.attrExpPresent && (t6[":@"] = this.buildAttributesMap(e6.tagExp, s5)), this.addChild(i5, t6, s5, o5);
           }
-          r5 = e6.closeIndex + 1;
-        } else if ("!--" === t5.substr(r5 + 1, 3)) {
-          const e6 = W(t5, "-->", r5 + 4, "Comment is not closed.");
+          o5 = e6.closeIndex + 1;
+        } else if ("!--" === t5.substr(o5 + 1, 3)) {
+          const e6 = G2(t5, "-->", o5 + 4, "Comment is not closed.");
           if (this.options.commentPropName) {
-            const o5 = t5.substring(r5 + 4, e6 - 2);
-            i5 = this.saveTextToParentTag(i5, n5, s5), n5.add(this.options.commentPropName, [{ [this.options.textNodeName]: o5 }]);
+            const r6 = t5.substring(o5 + 4, e6 - 2);
+            n5 = this.saveTextToParentTag(n5, i5, s5), i5.add(this.options.commentPropName, [{ [this.options.textNodeName]: r6 }]);
           }
-          r5 = e6;
-        } else if ("!D" === t5.substr(r5 + 1, 2)) {
-          const e6 = w4(t5, r5);
-          this.docTypeEntities = e6.entities, r5 = e6.i;
-        } else if ("![" === t5.substr(r5 + 1, 2)) {
-          const e6 = W(t5, "]]>", r5, "CDATA is not closed.") - 2, o5 = t5.substring(r5 + 9, e6);
-          i5 = this.saveTextToParentTag(i5, n5, s5);
-          let a5 = this.parseTextData(o5, n5.tagname, s5, true, false, true, true);
-          null == a5 && (a5 = ""), this.options.cdataPropName ? n5.add(this.options.cdataPropName, [{ [this.options.textNodeName]: o5 }]) : n5.add(this.options.textNodeName, a5), r5 = e6 + 2;
+          o5 = e6;
+        } else if ("!D" === t5.substr(o5 + 1, 2)) {
+          const e6 = r5.readDocType(t5, o5);
+          this.docTypeEntities = e6.entities, o5 = e6.i;
+        } else if ("![" === t5.substr(o5 + 1, 2)) {
+          const e6 = G2(t5, "]]>", o5, "CDATA is not closed.") - 2, r6 = t5.substring(o5 + 9, e6);
+          n5 = this.saveTextToParentTag(n5, i5, s5);
+          let a5 = this.parseTextData(r6, i5.tagname, s5, true, false, true, true);
+          null == a5 && (a5 = ""), this.options.cdataPropName ? i5.add(this.options.cdataPropName, [{ [this.options.textNodeName]: r6 }]) : i5.add(this.options.textNodeName, a5), o5 = e6 + 2;
         } else {
-          let o5 = z2(t5, r5, this.options.removeNSPrefix), a5 = o5.tagName;
-          const l5 = o5.rawTagName;
-          let u5 = o5.tagExp, h5 = o5.attrExpPresent, d5 = o5.closeIndex;
-          this.options.transformTagName && (a5 = this.options.transformTagName(a5)), n5 && i5 && "!xml" !== n5.tagname && (i5 = this.saveTextToParentTag(i5, n5, s5, false));
-          const f5 = n5;
-          f5 && -1 !== this.options.unpairedTags.indexOf(f5.tagname) && (n5 = this.tagsNodeStack.pop(), s5 = s5.substring(0, s5.lastIndexOf("."))), a5 !== e5.tagname && (s5 += s5 ? "." + a5 : a5);
-          const c5 = r5;
-          if (this.isItStopNode(this.options.stopNodes, s5, a5)) {
+          let r6 = X(t5, o5, this.options.removeNSPrefix), a5 = r6.tagName;
+          const l5 = r6.rawTagName;
+          let u5 = r6.tagExp, h5 = r6.attrExpPresent, d5 = r6.closeIndex;
+          if (this.options.transformTagName) {
+            const t6 = this.options.transformTagName(a5);
+            u5 === a5 && (u5 = t6), a5 = t6;
+          }
+          i5 && n5 && "!xml" !== i5.tagname && (n5 = this.saveTextToParentTag(n5, i5, s5, false));
+          const p5 = i5;
+          p5 && -1 !== this.options.unpairedTags.indexOf(p5.tagname) && (i5 = this.tagsNodeStack.pop(), s5 = s5.substring(0, s5.lastIndexOf("."))), a5 !== e5.tagname && (s5 += s5 ? "." + a5 : a5);
+          const f5 = o5;
+          if (this.isItStopNode(this.stopNodesExact, this.stopNodesWildcard, s5, a5)) {
             let e6 = "";
-            if (u5.length > 0 && u5.lastIndexOf("/") === u5.length - 1) "/" === a5[a5.length - 1] ? (a5 = a5.substr(0, a5.length - 1), s5 = s5.substr(0, s5.length - 1), u5 = a5) : u5 = u5.substr(0, u5.length - 1), r5 = o5.closeIndex;
-            else if (-1 !== this.options.unpairedTags.indexOf(a5)) r5 = o5.closeIndex;
+            if (u5.length > 0 && u5.lastIndexOf("/") === u5.length - 1) "/" === a5[a5.length - 1] ? (a5 = a5.substr(0, a5.length - 1), s5 = s5.substr(0, s5.length - 1), u5 = a5) : u5 = u5.substr(0, u5.length - 1), o5 = r6.closeIndex;
+            else if (-1 !== this.options.unpairedTags.indexOf(a5)) o5 = r6.closeIndex;
             else {
-              const n6 = this.readStopNodeData(t5, l5, d5 + 1);
-              if (!n6) throw new Error(`Unexpected end of ${l5}`);
-              r5 = n6.i, e6 = n6.tagContent;
+              const i6 = this.readStopNodeData(t5, l5, d5 + 1);
+              if (!i6) throw new Error(`Unexpected end of ${l5}`);
+              o5 = i6.i, e6 = i6.tagContent;
             }
-            const i6 = new T(a5);
-            a5 !== u5 && h5 && (i6[":@"] = this.buildAttributesMap(u5, s5, a5)), e6 && (e6 = this.parseTextData(e6, a5, s5, true, h5, true, true)), s5 = s5.substr(0, s5.lastIndexOf(".")), i6.add(this.options.textNodeName, e6), this.addChild(n5, i6, s5, c5);
+            const n6 = new y2(a5);
+            a5 !== u5 && h5 && (n6[":@"] = this.buildAttributesMap(u5, s5)), e6 && (e6 = this.parseTextData(e6, a5, s5, true, h5, true, true)), s5 = s5.substr(0, s5.lastIndexOf(".")), n6.add(this.options.textNodeName, e6), this.addChild(i5, n6, s5, f5);
           } else {
             if (u5.length > 0 && u5.lastIndexOf("/") === u5.length - 1) {
-              "/" === a5[a5.length - 1] ? (a5 = a5.substr(0, a5.length - 1), s5 = s5.substr(0, s5.length - 1), u5 = a5) : u5 = u5.substr(0, u5.length - 1), this.options.transformTagName && (a5 = this.options.transformTagName(a5));
-              const t6 = new T(a5);
-              a5 !== u5 && h5 && (t6[":@"] = this.buildAttributesMap(u5, s5, a5)), this.addChild(n5, t6, s5, c5), s5 = s5.substr(0, s5.lastIndexOf("."));
+              if ("/" === a5[a5.length - 1] ? (a5 = a5.substr(0, a5.length - 1), s5 = s5.substr(0, s5.length - 1), u5 = a5) : u5 = u5.substr(0, u5.length - 1), this.options.transformTagName) {
+                const t7 = this.options.transformTagName(a5);
+                u5 === a5 && (u5 = t7), a5 = t7;
+              }
+              const t6 = new y2(a5);
+              a5 !== u5 && h5 && (t6[":@"] = this.buildAttributesMap(u5, s5)), this.addChild(i5, t6, s5, f5), s5 = s5.substr(0, s5.lastIndexOf("."));
             } else {
-              const t6 = new T(a5);
-              this.tagsNodeStack.push(n5), a5 !== u5 && h5 && (t6[":@"] = this.buildAttributesMap(u5, s5, a5)), this.addChild(n5, t6, s5, c5), n5 = t6;
+              const t6 = new y2(a5);
+              this.tagsNodeStack.push(i5), a5 !== u5 && h5 && (t6[":@"] = this.buildAttributesMap(u5, s5)), this.addChild(i5, t6, s5, f5), i5 = t6;
             }
-            i5 = "", r5 = d5;
+            n5 = "", o5 = d5;
           }
         }
-        else i5 += t5[r5];
+        else n5 += t5[o5];
         return e5.child;
       };
-      function Y(t5, e5, n5, i5) {
-        this.options.captureMetaData || (i5 = void 0);
-        const s5 = this.options.updateTag(e5.tagname, n5, e5[":@"]);
-        false === s5 || ("string" == typeof s5 ? (e5.tagname = s5, t5.addChild(e5, i5)) : t5.addChild(e5, i5));
+      function U(t5, e5, i5, n5) {
+        this.options.captureMetaData || (n5 = void 0);
+        const s5 = this.options.updateTag(e5.tagname, i5, e5[":@"]);
+        false === s5 || ("string" == typeof s5 ? (e5.tagname = s5, t5.addChild(e5, n5)) : t5.addChild(e5, n5));
       }
-      const R = function(t5) {
+      const B2 = function(t5) {
         if (this.options.processEntities) {
           for (let e5 in this.docTypeEntities) {
-            const n5 = this.docTypeEntities[e5];
-            t5 = t5.replace(n5.regx, n5.val);
+            const i5 = this.docTypeEntities[e5];
+            t5 = t5.replace(i5.regx, i5.val);
           }
           for (let e5 in this.lastEntities) {
-            const n5 = this.lastEntities[e5];
-            t5 = t5.replace(n5.regex, n5.val);
+            const i5 = this.lastEntities[e5];
+            t5 = t5.replace(i5.regex, i5.val);
           }
           if (this.options.htmlEntities) for (let e5 in this.htmlEntities) {
-            const n5 = this.htmlEntities[e5];
-            t5 = t5.replace(n5.regex, n5.val);
+            const i5 = this.htmlEntities[e5];
+            t5 = t5.replace(i5.regex, i5.val);
           }
           t5 = t5.replace(this.ampEntity.regex, this.ampEntity.val);
         }
         return t5;
       };
-      function q4(t5, e5, n5, i5) {
-        return t5 && (void 0 === i5 && (i5 = 0 === e5.child.length), void 0 !== (t5 = this.parseTextData(t5, e5.tagname, n5, false, !!e5[":@"] && 0 !== Object.keys(e5[":@"]).length, i5)) && "" !== t5 && e5.add(this.options.textNodeName, t5), t5 = ""), t5;
+      function R(t5, e5, i5, n5) {
+        return t5 && (void 0 === n5 && (n5 = 0 === e5.child.length), void 0 !== (t5 = this.parseTextData(t5, e5.tagname, i5, false, !!e5[":@"] && 0 !== Object.keys(e5[":@"]).length, n5)) && "" !== t5 && e5.add(this.options.textNodeName, t5), t5 = ""), t5;
       }
-      function Z(t5, e5, n5) {
-        const i5 = "*." + n5;
-        for (const n6 in t5) {
-          const s5 = t5[n6];
-          if (i5 === s5 || e5 === s5) return true;
-        }
-        return false;
+      function Y(t5, e5, i5, n5) {
+        return !(!e5 || !e5.has(n5)) || !(!t5 || !t5.has(i5));
       }
-      function W(t5, e5, n5, i5) {
-        const s5 = t5.indexOf(e5, n5);
-        if (-1 === s5) throw new Error(i5);
+      function G2(t5, e5, i5, n5) {
+        const s5 = t5.indexOf(e5, i5);
+        if (-1 === s5) throw new Error(n5);
         return s5 + e5.length - 1;
       }
-      function z2(t5, e5, n5, i5 = ">") {
-        const s5 = (function(t6, e6, n6 = ">") {
-          let i6, s6 = "";
+      function X(t5, e5, i5, n5 = ">") {
+        const s5 = (function(t6, e6, i6 = ">") {
+          let n6, s6 = "";
           for (let r6 = e6; r6 < t6.length; r6++) {
             let e7 = t6[r6];
-            if (i6) e7 === i6 && (i6 = "");
-            else if ('"' === e7 || "'" === e7) i6 = e7;
-            else if (e7 === n6[0]) {
-              if (!n6[1]) return { data: s6, index: r6 };
-              if (t6[r6 + 1] === n6[1]) return { data: s6, index: r6 };
+            if (n6) e7 === n6 && (n6 = "");
+            else if ('"' === e7 || "'" === e7) n6 = e7;
+            else if (e7 === i6[0]) {
+              if (!i6[1]) return { data: s6, index: r6 };
+              if (t6[r6 + 1] === i6[1]) return { data: s6, index: r6 };
             } else "	" === e7 && (e7 = " ");
             s6 += e7;
           }
-        })(t5, e5 + 1, i5);
+        })(t5, e5 + 1, n5);
         if (!s5) return;
         let r5 = s5.data;
         const o5 = s5.index, a5 = r5.search(/\s/);
         let l5 = r5, u5 = true;
         -1 !== a5 && (l5 = r5.substring(0, a5), r5 = r5.substring(a5 + 1).trimStart());
         const h5 = l5;
-        if (n5) {
+        if (i5) {
           const t6 = l5.indexOf(":");
           -1 !== t6 && (l5 = l5.substr(t6 + 1), u5 = l5 !== s5.data.substr(t6 + 1));
         }
         return { tagName: l5, tagExp: r5, closeIndex: o5, attrExpPresent: u5, rawTagName: h5 };
       }
-      function J2(t5, e5, n5) {
-        const i5 = n5;
+      function W(t5, e5, i5) {
+        const n5 = i5;
         let s5 = 1;
-        for (; n5 < t5.length; n5++) if ("<" === t5[n5]) if ("/" === t5[n5 + 1]) {
-          const r5 = W(t5, ">", n5, `${e5} is not closed`);
-          if (t5.substring(n5 + 2, r5).trim() === e5 && (s5--, 0 === s5)) return { tagContent: t5.substring(i5, n5), i: r5 };
-          n5 = r5;
-        } else if ("?" === t5[n5 + 1]) n5 = W(t5, "?>", n5 + 1, "StopNode is not closed.");
-        else if ("!--" === t5.substr(n5 + 1, 3)) n5 = W(t5, "-->", n5 + 3, "StopNode is not closed.");
-        else if ("![" === t5.substr(n5 + 1, 2)) n5 = W(t5, "]]>", n5, "StopNode is not closed.") - 2;
+        for (; i5 < t5.length; i5++) if ("<" === t5[i5]) if ("/" === t5[i5 + 1]) {
+          const r5 = G2(t5, ">", i5, `${e5} is not closed`);
+          if (t5.substring(i5 + 2, r5).trim() === e5 && (s5--, 0 === s5)) return { tagContent: t5.substring(n5, i5), i: r5 };
+          i5 = r5;
+        } else if ("?" === t5[i5 + 1]) i5 = G2(t5, "?>", i5 + 1, "StopNode is not closed.");
+        else if ("!--" === t5.substr(i5 + 1, 3)) i5 = G2(t5, "-->", i5 + 3, "StopNode is not closed.");
+        else if ("![" === t5.substr(i5 + 1, 2)) i5 = G2(t5, "]]>", i5, "StopNode is not closed.") - 2;
         else {
-          const i6 = z2(t5, n5, ">");
-          i6 && ((i6 && i6.tagName) === e5 && "/" !== i6.tagExp[i6.tagExp.length - 1] && s5++, n5 = i6.closeIndex);
+          const n6 = X(t5, i5, ">");
+          n6 && ((n6 && n6.tagName) === e5 && "/" !== n6.tagExp[n6.tagExp.length - 1] && s5++, i5 = n6.closeIndex);
         }
       }
-      function H2(t5, e5, n5) {
+      function q4(t5, e5, i5) {
         if (e5 && "string" == typeof t5) {
           const e6 = t5.trim();
           return "true" === e6 || "false" !== e6 && (function(t6, e7 = {}) {
-            if (e7 = Object.assign({}, V, e7), !t6 || "string" != typeof t6) return t6;
-            let n6 = t6.trim();
-            if (void 0 !== e7.skipLike && e7.skipLike.test(n6)) return t6;
+            if (e7 = Object.assign({}, C2, e7), !t6 || "string" != typeof t6) return t6;
+            let i6 = t6.trim();
+            if (void 0 !== e7.skipLike && e7.skipLike.test(i6)) return t6;
             if ("0" === t6) return 0;
-            if (e7.hex && j4.test(n6)) return (function(t7) {
+            if (e7.hex && A2.test(i6)) return (function(t7) {
               if (parseInt) return parseInt(t7, 16);
               if (Number.parseInt) return Number.parseInt(t7, 16);
               if (window && window.parseInt) return window.parseInt(t7, 16);
               throw new Error("parseInt, Number.parseInt, window.parseInt are not supported");
-            })(n6);
-            if (-1 !== n6.search(/.+[eE].+/)) return (function(t7, e8, n7) {
-              if (!n7.eNotation) return t7;
-              const i6 = e8.match(M);
-              if (i6) {
-                let s5 = i6[1] || "";
-                const r5 = -1 === i6[3].indexOf("e") ? "E" : "e", o5 = i6[2], a5 = s5 ? t7[o5.length + 1] === r5 : t7[o5.length] === r5;
-                return o5.length > 1 && a5 ? t7 : 1 !== o5.length || !i6[3].startsWith(`.${r5}`) && i6[3][0] !== r5 ? n7.leadingZeros && !a5 ? (e8 = (i6[1] || "") + i6[3], Number(e8)) : t7 : Number(e8);
+            })(i6);
+            if (-1 !== i6.search(/.+[eE].+/)) return (function(t7, e8, i7) {
+              if (!i7.eNotation) return t7;
+              const n6 = e8.match(V);
+              if (n6) {
+                let s5 = n6[1] || "";
+                const r5 = -1 === n6[3].indexOf("e") ? "E" : "e", o5 = n6[2], a5 = s5 ? t7[o5.length + 1] === r5 : t7[o5.length] === r5;
+                return o5.length > 1 && a5 ? t7 : 1 !== o5.length || !n6[3].startsWith(`.${r5}`) && n6[3][0] !== r5 ? i7.leadingZeros && !a5 ? (e8 = (n6[1] || "") + n6[3], Number(e8)) : t7 : Number(e8);
               }
               return t7;
-            })(t6, n6, e7);
+            })(t6, i6, e7);
             {
-              const s5 = D2.exec(n6);
+              const s5 = S.exec(i6);
               if (s5) {
                 const r5 = s5[1] || "", o5 = s5[2];
-                let a5 = (i5 = s5[3]) && -1 !== i5.indexOf(".") ? ("." === (i5 = i5.replace(/0+$/, "")) ? i5 = "0" : "." === i5[0] ? i5 = "0" + i5 : "." === i5[i5.length - 1] && (i5 = i5.substring(0, i5.length - 1)), i5) : i5;
+                let a5 = (n5 = s5[3]) && -1 !== n5.indexOf(".") ? ("." === (n5 = n5.replace(/0+$/, "")) ? n5 = "0" : "." === n5[0] ? n5 = "0" + n5 : "." === n5[n5.length - 1] && (n5 = n5.substring(0, n5.length - 1)), n5) : n5;
                 const l5 = r5 ? "." === t6[o5.length + 1] : "." === t6[o5.length];
                 if (!e7.leadingZeros && (o5.length > 1 || 1 === o5.length && !l5)) return t6;
                 {
-                  const i6 = Number(n6), s6 = String(i6);
-                  if (0 === i6 || -0 === i6) return i6;
-                  if (-1 !== s6.search(/[eE]/)) return e7.eNotation ? i6 : t6;
-                  if (-1 !== n6.indexOf(".")) return "0" === s6 || s6 === a5 || s6 === `${r5}${a5}` ? i6 : t6;
-                  let l6 = o5 ? a5 : n6;
-                  return o5 ? l6 === s6 || r5 + l6 === s6 ? i6 : t6 : l6 === s6 || l6 === r5 + s6 ? i6 : t6;
+                  const n6 = Number(i6), s6 = String(n6);
+                  if (0 === n6 || -0 === n6) return n6;
+                  if (-1 !== s6.search(/[eE]/)) return e7.eNotation ? n6 : t6;
+                  if (-1 !== i6.indexOf(".")) return "0" === s6 || s6 === a5 || s6 === `${r5}${a5}` ? n6 : t6;
+                  let l6 = o5 ? a5 : i6;
+                  return o5 ? l6 === s6 || r5 + l6 === s6 ? n6 : t6 : l6 === s6 || l6 === r5 + s6 ? n6 : t6;
                 }
               }
               return t6;
             }
-            var i5;
-          })(t5, n5);
+            var n5;
+          })(t5, i5);
         }
         return void 0 !== t5 ? t5 : "";
       }
-      const K = T.getMetaDataSymbol();
-      function Q(t5, e5) {
-        return tt(t5, e5);
+      function Z(t5, e5, i5) {
+        const n5 = Number.parseInt(t5, e5);
+        return n5 >= 0 && n5 <= 1114111 ? String.fromCodePoint(n5) : i5 + t5 + ";";
       }
-      function tt(t5, e5, n5) {
-        let i5;
+      const K = y2.getMetaDataSymbol();
+      function Q(t5, e5) {
+        return z2(t5, e5);
+      }
+      function z2(t5, e5, i5) {
+        let n5;
         const s5 = {};
         for (let r5 = 0; r5 < t5.length; r5++) {
-          const o5 = t5[r5], a5 = et(o5);
+          const o5 = t5[r5], a5 = J2(o5);
           let l5 = "";
-          if (l5 = void 0 === n5 ? a5 : n5 + "." + a5, a5 === e5.textNodeName) void 0 === i5 ? i5 = o5[a5] : i5 += "" + o5[a5];
+          if (l5 = void 0 === i5 ? a5 : i5 + "." + a5, a5 === e5.textNodeName) void 0 === n5 ? n5 = o5[a5] : n5 += "" + o5[a5];
           else {
             if (void 0 === a5) continue;
             if (o5[a5]) {
-              let t6 = tt(o5[a5], e5, l5);
-              const n6 = it(t6, e5);
-              void 0 !== o5[K] && (t6[K] = o5[K]), o5[":@"] ? nt(t6, o5[":@"], l5, e5) : 1 !== Object.keys(t6).length || void 0 === t6[e5.textNodeName] || e5.alwaysCreateTextNode ? 0 === Object.keys(t6).length && (e5.alwaysCreateTextNode ? t6[e5.textNodeName] = "" : t6 = "") : t6 = t6[e5.textNodeName], void 0 !== s5[a5] && s5.hasOwnProperty(a5) ? (Array.isArray(s5[a5]) || (s5[a5] = [s5[a5]]), s5[a5].push(t6)) : e5.isArray(a5, l5, n6) ? s5[a5] = [t6] : s5[a5] = t6;
+              let t6 = z2(o5[a5], e5, l5);
+              const i6 = tt(t6, e5);
+              void 0 !== o5[K] && (t6[K] = o5[K]), o5[":@"] ? H2(t6, o5[":@"], l5, e5) : 1 !== Object.keys(t6).length || void 0 === t6[e5.textNodeName] || e5.alwaysCreateTextNode ? 0 === Object.keys(t6).length && (e5.alwaysCreateTextNode ? t6[e5.textNodeName] = "" : t6 = "") : t6 = t6[e5.textNodeName], void 0 !== s5[a5] && s5.hasOwnProperty(a5) ? (Array.isArray(s5[a5]) || (s5[a5] = [s5[a5]]), s5[a5].push(t6)) : e5.isArray(a5, l5, i6) ? s5[a5] = [t6] : s5[a5] = t6;
             }
           }
         }
-        return "string" == typeof i5 ? i5.length > 0 && (s5[e5.textNodeName] = i5) : void 0 !== i5 && (s5[e5.textNodeName] = i5), s5;
+        return "string" == typeof n5 ? n5.length > 0 && (s5[e5.textNodeName] = n5) : void 0 !== n5 && (s5[e5.textNodeName] = n5), s5;
       }
-      function et(t5) {
+      function J2(t5) {
         const e5 = Object.keys(t5);
         for (let t6 = 0; t6 < e5.length; t6++) {
-          const n5 = e5[t6];
-          if (":@" !== n5) return n5;
+          const i5 = e5[t6];
+          if (":@" !== i5) return i5;
         }
       }
-      function nt(t5, e5, n5, i5) {
+      function H2(t5, e5, i5, n5) {
         if (e5) {
           const s5 = Object.keys(e5), r5 = s5.length;
           for (let o5 = 0; o5 < r5; o5++) {
             const r6 = s5[o5];
-            i5.isArray(r6, n5 + "." + r6, true, true) ? t5[r6] = [e5[r6]] : t5[r6] = e5[r6];
+            n5.isArray(r6, i5 + "." + r6, true, true) ? t5[r6] = [e5[r6]] : t5[r6] = e5[r6];
           }
         }
       }
-      function it(t5, e5) {
-        const { textNodeName: n5 } = e5, i5 = Object.keys(t5).length;
-        return 0 === i5 || !(1 !== i5 || !t5[n5] && "boolean" != typeof t5[n5] && 0 !== t5[n5]);
+      function tt(t5, e5) {
+        const { textNodeName: i5 } = e5, n5 = Object.keys(t5).length;
+        return 0 === n5 || !(1 !== n5 || !t5[i5] && "boolean" != typeof t5[i5] && 0 !== t5[i5]);
       }
-      class st {
+      class et {
         constructor(t5) {
           this.externalEntities = {}, this.options = (function(t6) {
             return Object.assign({}, v4, t6);
           })(t5);
         }
         parse(t5, e5) {
-          if ("string" == typeof t5) ;
-          else {
-            if (!t5.toString) throw new Error("XML data is accepted in String or Bytes[] form.");
-            t5 = t5.toString();
-          }
+          if ("string" != typeof t5 && t5.toString) t5 = t5.toString();
+          else if ("string" != typeof t5) throw new Error("XML data is accepted in String or Bytes[] form.");
           if (e5) {
             true === e5 && (e5 = {});
-            const n6 = a4(t5, e5);
-            if (true !== n6) throw Error(`${n6.err.msg}:${n6.err.line}:${n6.err.col}`);
+            const i6 = a4(t5, e5);
+            if (true !== i6) throw Error(`${i6.err.msg}:${i6.err.line}:${i6.err.col}`);
           }
-          const n5 = new k4(this.options);
-          n5.addExternalEntities(this.externalEntities);
-          const i5 = n5.parseXml(t5);
-          return this.options.preserveOrder || void 0 === i5 ? i5 : Q(i5, this.options);
+          const i5 = new D2(this.options);
+          i5.addExternalEntities(this.externalEntities);
+          const n5 = i5.parseXml(t5);
+          return this.options.preserveOrder || void 0 === n5 ? n5 : Q(n5, this.options);
         }
         addEntity(t5, e5) {
           if (-1 !== e5.indexOf("&")) throw new Error("Entity value can't have '&'");
@@ -35516,159 +35599,159 @@ var require_fxp = __commonJS({
           this.externalEntities[t5] = e5;
         }
         static getMetaDataSymbol() {
-          return T.getMetaDataSymbol();
+          return y2.getMetaDataSymbol();
         }
       }
-      function rt(t5, e5) {
-        let n5 = "";
-        return e5.format && e5.indentBy.length > 0 && (n5 = "\n"), ot(t5, e5, "", n5);
+      function it(t5, e5) {
+        let i5 = "";
+        return e5.format && e5.indentBy.length > 0 && (i5 = "\n"), nt(t5, e5, "", i5);
       }
-      function ot(t5, e5, n5, i5) {
+      function nt(t5, e5, i5, n5) {
         let s5 = "", r5 = false;
         for (let o5 = 0; o5 < t5.length; o5++) {
-          const a5 = t5[o5], l5 = at(a5);
+          const a5 = t5[o5], l5 = st(a5);
           if (void 0 === l5) continue;
           let u5 = "";
-          if (u5 = 0 === n5.length ? l5 : `${n5}.${l5}`, l5 === e5.textNodeName) {
+          if (u5 = 0 === i5.length ? l5 : `${i5}.${l5}`, l5 === e5.textNodeName) {
             let t6 = a5[l5];
-            ut(u5, e5) || (t6 = e5.tagValueProcessor(l5, t6), t6 = ht(t6, e5)), r5 && (s5 += i5), s5 += t6, r5 = false;
+            ot(u5, e5) || (t6 = e5.tagValueProcessor(l5, t6), t6 = at(t6, e5)), r5 && (s5 += n5), s5 += t6, r5 = false;
             continue;
           }
           if (l5 === e5.cdataPropName) {
-            r5 && (s5 += i5), s5 += `<![CDATA[${a5[l5][0][e5.textNodeName]}]]>`, r5 = false;
+            r5 && (s5 += n5), s5 += `<![CDATA[${a5[l5][0][e5.textNodeName]}]]>`, r5 = false;
             continue;
           }
           if (l5 === e5.commentPropName) {
-            s5 += i5 + `<!--${a5[l5][0][e5.textNodeName]}-->`, r5 = true;
+            s5 += n5 + `<!--${a5[l5][0][e5.textNodeName]}-->`, r5 = true;
             continue;
           }
           if ("?" === l5[0]) {
-            const t6 = lt(a5[":@"], e5), n6 = "?xml" === l5 ? "" : i5;
+            const t6 = rt(a5[":@"], e5), i6 = "?xml" === l5 ? "" : n5;
             let o6 = a5[l5][0][e5.textNodeName];
-            o6 = 0 !== o6.length ? " " + o6 : "", s5 += n6 + `<${l5}${o6}${t6}?>`, r5 = true;
+            o6 = 0 !== o6.length ? " " + o6 : "", s5 += i6 + `<${l5}${o6}${t6}?>`, r5 = true;
             continue;
           }
-          let h5 = i5;
+          let h5 = n5;
           "" !== h5 && (h5 += e5.indentBy);
-          const d5 = i5 + `<${l5}${lt(a5[":@"], e5)}`, f5 = ot(a5[l5], e5, u5, h5);
-          -1 !== e5.unpairedTags.indexOf(l5) ? e5.suppressUnpairedNode ? s5 += d5 + ">" : s5 += d5 + "/>" : f5 && 0 !== f5.length || !e5.suppressEmptyNode ? f5 && f5.endsWith(">") ? s5 += d5 + `>${f5}${i5}</${l5}>` : (s5 += d5 + ">", f5 && "" !== i5 && (f5.includes("/>") || f5.includes("</")) ? s5 += i5 + e5.indentBy + f5 + i5 : s5 += f5, s5 += `</${l5}>`) : s5 += d5 + "/>", r5 = true;
+          const d5 = n5 + `<${l5}${rt(a5[":@"], e5)}`, p5 = nt(a5[l5], e5, u5, h5);
+          -1 !== e5.unpairedTags.indexOf(l5) ? e5.suppressUnpairedNode ? s5 += d5 + ">" : s5 += d5 + "/>" : p5 && 0 !== p5.length || !e5.suppressEmptyNode ? p5 && p5.endsWith(">") ? s5 += d5 + `>${p5}${n5}</${l5}>` : (s5 += d5 + ">", p5 && "" !== n5 && (p5.includes("/>") || p5.includes("</")) ? s5 += n5 + e5.indentBy + p5 + n5 : s5 += p5, s5 += `</${l5}>`) : s5 += d5 + "/>", r5 = true;
         }
         return s5;
       }
-      function at(t5) {
+      function st(t5) {
         const e5 = Object.keys(t5);
-        for (let n5 = 0; n5 < e5.length; n5++) {
-          const i5 = e5[n5];
-          if (t5.hasOwnProperty(i5) && ":@" !== i5) return i5;
+        for (let i5 = 0; i5 < e5.length; i5++) {
+          const n5 = e5[i5];
+          if (t5.hasOwnProperty(n5) && ":@" !== n5) return n5;
         }
       }
-      function lt(t5, e5) {
-        let n5 = "";
-        if (t5 && !e5.ignoreAttributes) for (let i5 in t5) {
-          if (!t5.hasOwnProperty(i5)) continue;
-          let s5 = e5.attributeValueProcessor(i5, t5[i5]);
-          s5 = ht(s5, e5), true === s5 && e5.suppressBooleanAttributes ? n5 += ` ${i5.substr(e5.attributeNamePrefix.length)}` : n5 += ` ${i5.substr(e5.attributeNamePrefix.length)}="${s5}"`;
+      function rt(t5, e5) {
+        let i5 = "";
+        if (t5 && !e5.ignoreAttributes) for (let n5 in t5) {
+          if (!t5.hasOwnProperty(n5)) continue;
+          let s5 = e5.attributeValueProcessor(n5, t5[n5]);
+          s5 = at(s5, e5), true === s5 && e5.suppressBooleanAttributes ? i5 += ` ${n5.substr(e5.attributeNamePrefix.length)}` : i5 += ` ${n5.substr(e5.attributeNamePrefix.length)}="${s5}"`;
         }
-        return n5;
+        return i5;
       }
-      function ut(t5, e5) {
-        let n5 = (t5 = t5.substr(0, t5.length - e5.textNodeName.length - 1)).substr(t5.lastIndexOf(".") + 1);
-        for (let i5 in e5.stopNodes) if (e5.stopNodes[i5] === t5 || e5.stopNodes[i5] === "*." + n5) return true;
+      function ot(t5, e5) {
+        let i5 = (t5 = t5.substr(0, t5.length - e5.textNodeName.length - 1)).substr(t5.lastIndexOf(".") + 1);
+        for (let n5 in e5.stopNodes) if (e5.stopNodes[n5] === t5 || e5.stopNodes[n5] === "*." + i5) return true;
         return false;
       }
-      function ht(t5, e5) {
-        if (t5 && t5.length > 0 && e5.processEntities) for (let n5 = 0; n5 < e5.entities.length; n5++) {
-          const i5 = e5.entities[n5];
-          t5 = t5.replace(i5.regex, i5.val);
+      function at(t5, e5) {
+        if (t5 && t5.length > 0 && e5.processEntities) for (let i5 = 0; i5 < e5.entities.length; i5++) {
+          const n5 = e5.entities[i5];
+          t5 = t5.replace(n5.regex, n5.val);
         }
         return t5;
       }
-      const dt = { attributeNamePrefix: "@_", attributesGroupName: false, textNodeName: "#text", ignoreAttributes: true, cdataPropName: false, format: false, indentBy: "  ", suppressEmptyNode: false, suppressUnpairedNode: true, suppressBooleanAttributes: true, tagValueProcessor: function(t5, e5) {
+      const lt = { attributeNamePrefix: "@_", attributesGroupName: false, textNodeName: "#text", ignoreAttributes: true, cdataPropName: false, format: false, indentBy: "  ", suppressEmptyNode: false, suppressUnpairedNode: true, suppressBooleanAttributes: true, tagValueProcessor: function(t5, e5) {
         return e5;
       }, attributeValueProcessor: function(t5, e5) {
         return e5;
       }, preserveOrder: false, commentPropName: false, unpairedTags: [], entities: [{ regex: new RegExp("&", "g"), val: "&amp;" }, { regex: new RegExp(">", "g"), val: "&gt;" }, { regex: new RegExp("<", "g"), val: "&lt;" }, { regex: new RegExp("'", "g"), val: "&apos;" }, { regex: new RegExp('"', "g"), val: "&quot;" }], processEntities: true, stopNodes: [], oneListGroup: false };
-      function ft(t5) {
-        this.options = Object.assign({}, dt, t5), true === this.options.ignoreAttributes || this.options.attributesGroupName ? this.isAttribute = function() {
+      function ut(t5) {
+        this.options = Object.assign({}, lt, t5), true === this.options.ignoreAttributes || this.options.attributesGroupName ? this.isAttribute = function() {
           return false;
-        } : (this.ignoreAttributesFn = _(this.options.ignoreAttributes), this.attrPrefixLen = this.options.attributeNamePrefix.length, this.isAttribute = gt), this.processTextOrObjNode = ct, this.options.format ? (this.indentate = pt, this.tagEndChar = ">\n", this.newLine = "\n") : (this.indentate = function() {
+        } : (this.ignoreAttributesFn = $(this.options.ignoreAttributes), this.attrPrefixLen = this.options.attributeNamePrefix.length, this.isAttribute = pt), this.processTextOrObjNode = ht, this.options.format ? (this.indentate = dt, this.tagEndChar = ">\n", this.newLine = "\n") : (this.indentate = function() {
           return "";
         }, this.tagEndChar = ">", this.newLine = "");
       }
-      function ct(t5, e5, n5, i5) {
-        const s5 = this.j2x(t5, n5 + 1, i5.concat(e5));
-        return void 0 !== t5[this.options.textNodeName] && 1 === Object.keys(t5).length ? this.buildTextValNode(t5[this.options.textNodeName], e5, s5.attrStr, n5) : this.buildObjectNode(s5.val, e5, s5.attrStr, n5);
+      function ht(t5, e5, i5, n5) {
+        const s5 = this.j2x(t5, i5 + 1, n5.concat(e5));
+        return void 0 !== t5[this.options.textNodeName] && 1 === Object.keys(t5).length ? this.buildTextValNode(t5[this.options.textNodeName], e5, s5.attrStr, i5) : this.buildObjectNode(s5.val, e5, s5.attrStr, i5);
       }
-      function pt(t5) {
+      function dt(t5) {
         return this.options.indentBy.repeat(t5);
       }
-      function gt(t5) {
+      function pt(t5) {
         return !(!t5.startsWith(this.options.attributeNamePrefix) || t5 === this.options.textNodeName) && t5.substr(this.attrPrefixLen);
       }
-      ft.prototype.build = function(t5) {
-        return this.options.preserveOrder ? rt(t5, this.options) : (Array.isArray(t5) && this.options.arrayNodeName && this.options.arrayNodeName.length > 1 && (t5 = { [this.options.arrayNodeName]: t5 }), this.j2x(t5, 0, []).val);
-      }, ft.prototype.j2x = function(t5, e5, n5) {
-        let i5 = "", s5 = "";
-        const r5 = n5.join(".");
+      ut.prototype.build = function(t5) {
+        return this.options.preserveOrder ? it(t5, this.options) : (Array.isArray(t5) && this.options.arrayNodeName && this.options.arrayNodeName.length > 1 && (t5 = { [this.options.arrayNodeName]: t5 }), this.j2x(t5, 0, []).val);
+      }, ut.prototype.j2x = function(t5, e5, i5) {
+        let n5 = "", s5 = "";
+        const r5 = i5.join(".");
         for (let o5 in t5) if (Object.prototype.hasOwnProperty.call(t5, o5)) if (void 0 === t5[o5]) this.isAttribute(o5) && (s5 += "");
         else if (null === t5[o5]) this.isAttribute(o5) || o5 === this.options.cdataPropName ? s5 += "" : "?" === o5[0] ? s5 += this.indentate(e5) + "<" + o5 + "?" + this.tagEndChar : s5 += this.indentate(e5) + "<" + o5 + "/" + this.tagEndChar;
         else if (t5[o5] instanceof Date) s5 += this.buildTextValNode(t5[o5], o5, "", e5);
         else if ("object" != typeof t5[o5]) {
-          const n6 = this.isAttribute(o5);
-          if (n6 && !this.ignoreAttributesFn(n6, r5)) i5 += this.buildAttrPairStr(n6, "" + t5[o5]);
-          else if (!n6) if (o5 === this.options.textNodeName) {
+          const i6 = this.isAttribute(o5);
+          if (i6 && !this.ignoreAttributesFn(i6, r5)) n5 += this.buildAttrPairStr(i6, "" + t5[o5]);
+          else if (!i6) if (o5 === this.options.textNodeName) {
             let e6 = this.options.tagValueProcessor(o5, "" + t5[o5]);
             s5 += this.replaceEntitiesValue(e6);
           } else s5 += this.buildTextValNode(t5[o5], o5, "", e5);
         } else if (Array.isArray(t5[o5])) {
-          const i6 = t5[o5].length;
+          const n6 = t5[o5].length;
           let r6 = "", a5 = "";
-          for (let l5 = 0; l5 < i6; l5++) {
-            const i7 = t5[o5][l5];
-            if (void 0 === i7) ;
-            else if (null === i7) "?" === o5[0] ? s5 += this.indentate(e5) + "<" + o5 + "?" + this.tagEndChar : s5 += this.indentate(e5) + "<" + o5 + "/" + this.tagEndChar;
-            else if ("object" == typeof i7) if (this.options.oneListGroup) {
-              const t6 = this.j2x(i7, e5 + 1, n5.concat(o5));
-              r6 += t6.val, this.options.attributesGroupName && i7.hasOwnProperty(this.options.attributesGroupName) && (a5 += t6.attrStr);
-            } else r6 += this.processTextOrObjNode(i7, o5, e5, n5);
+          for (let l5 = 0; l5 < n6; l5++) {
+            const n7 = t5[o5][l5];
+            if (void 0 === n7) ;
+            else if (null === n7) "?" === o5[0] ? s5 += this.indentate(e5) + "<" + o5 + "?" + this.tagEndChar : s5 += this.indentate(e5) + "<" + o5 + "/" + this.tagEndChar;
+            else if ("object" == typeof n7) if (this.options.oneListGroup) {
+              const t6 = this.j2x(n7, e5 + 1, i5.concat(o5));
+              r6 += t6.val, this.options.attributesGroupName && n7.hasOwnProperty(this.options.attributesGroupName) && (a5 += t6.attrStr);
+            } else r6 += this.processTextOrObjNode(n7, o5, e5, i5);
             else if (this.options.oneListGroup) {
-              let t6 = this.options.tagValueProcessor(o5, i7);
+              let t6 = this.options.tagValueProcessor(o5, n7);
               t6 = this.replaceEntitiesValue(t6), r6 += t6;
-            } else r6 += this.buildTextValNode(i7, o5, "", e5);
+            } else r6 += this.buildTextValNode(n7, o5, "", e5);
           }
           this.options.oneListGroup && (r6 = this.buildObjectNode(r6, o5, a5, e5)), s5 += r6;
         } else if (this.options.attributesGroupName && o5 === this.options.attributesGroupName) {
-          const e6 = Object.keys(t5[o5]), n6 = e6.length;
-          for (let s6 = 0; s6 < n6; s6++) i5 += this.buildAttrPairStr(e6[s6], "" + t5[o5][e6[s6]]);
-        } else s5 += this.processTextOrObjNode(t5[o5], o5, e5, n5);
-        return { attrStr: i5, val: s5 };
-      }, ft.prototype.buildAttrPairStr = function(t5, e5) {
+          const e6 = Object.keys(t5[o5]), i6 = e6.length;
+          for (let s6 = 0; s6 < i6; s6++) n5 += this.buildAttrPairStr(e6[s6], "" + t5[o5][e6[s6]]);
+        } else s5 += this.processTextOrObjNode(t5[o5], o5, e5, i5);
+        return { attrStr: n5, val: s5 };
+      }, ut.prototype.buildAttrPairStr = function(t5, e5) {
         return e5 = this.options.attributeValueProcessor(t5, "" + e5), e5 = this.replaceEntitiesValue(e5), this.options.suppressBooleanAttributes && "true" === e5 ? " " + t5 : " " + t5 + '="' + e5 + '"';
-      }, ft.prototype.buildObjectNode = function(t5, e5, n5, i5) {
-        if ("" === t5) return "?" === e5[0] ? this.indentate(i5) + "<" + e5 + n5 + "?" + this.tagEndChar : this.indentate(i5) + "<" + e5 + n5 + this.closeTag(e5) + this.tagEndChar;
+      }, ut.prototype.buildObjectNode = function(t5, e5, i5, n5) {
+        if ("" === t5) return "?" === e5[0] ? this.indentate(n5) + "<" + e5 + i5 + "?" + this.tagEndChar : this.indentate(n5) + "<" + e5 + i5 + this.closeTag(e5) + this.tagEndChar;
         {
           let s5 = "</" + e5 + this.tagEndChar, r5 = "";
-          return "?" === e5[0] && (r5 = "?", s5 = ""), !n5 && "" !== n5 || -1 !== t5.indexOf("<") ? false !== this.options.commentPropName && e5 === this.options.commentPropName && 0 === r5.length ? this.indentate(i5) + `<!--${t5}-->` + this.newLine : this.indentate(i5) + "<" + e5 + n5 + r5 + this.tagEndChar + t5 + this.indentate(i5) + s5 : this.indentate(i5) + "<" + e5 + n5 + r5 + ">" + t5 + s5;
+          return "?" === e5[0] && (r5 = "?", s5 = ""), !i5 && "" !== i5 || -1 !== t5.indexOf("<") ? false !== this.options.commentPropName && e5 === this.options.commentPropName && 0 === r5.length ? this.indentate(n5) + `<!--${t5}-->` + this.newLine : this.indentate(n5) + "<" + e5 + i5 + r5 + this.tagEndChar + t5 + this.indentate(n5) + s5 : this.indentate(n5) + "<" + e5 + i5 + r5 + ">" + t5 + s5;
         }
-      }, ft.prototype.closeTag = function(t5) {
+      }, ut.prototype.closeTag = function(t5) {
         let e5 = "";
         return -1 !== this.options.unpairedTags.indexOf(t5) ? this.options.suppressUnpairedNode || (e5 = "/") : e5 = this.options.suppressEmptyNode ? "/" : `></${t5}`, e5;
-      }, ft.prototype.buildTextValNode = function(t5, e5, n5, i5) {
-        if (false !== this.options.cdataPropName && e5 === this.options.cdataPropName) return this.indentate(i5) + `<![CDATA[${t5}]]>` + this.newLine;
-        if (false !== this.options.commentPropName && e5 === this.options.commentPropName) return this.indentate(i5) + `<!--${t5}-->` + this.newLine;
-        if ("?" === e5[0]) return this.indentate(i5) + "<" + e5 + n5 + "?" + this.tagEndChar;
+      }, ut.prototype.buildTextValNode = function(t5, e5, i5, n5) {
+        if (false !== this.options.cdataPropName && e5 === this.options.cdataPropName) return this.indentate(n5) + `<![CDATA[${t5}]]>` + this.newLine;
+        if (false !== this.options.commentPropName && e5 === this.options.commentPropName) return this.indentate(n5) + `<!--${t5}-->` + this.newLine;
+        if ("?" === e5[0]) return this.indentate(n5) + "<" + e5 + i5 + "?" + this.tagEndChar;
         {
           let s5 = this.options.tagValueProcessor(e5, t5);
-          return s5 = this.replaceEntitiesValue(s5), "" === s5 ? this.indentate(i5) + "<" + e5 + n5 + this.closeTag(e5) + this.tagEndChar : this.indentate(i5) + "<" + e5 + n5 + ">" + s5 + "</" + e5 + this.tagEndChar;
+          return s5 = this.replaceEntitiesValue(s5), "" === s5 ? this.indentate(n5) + "<" + e5 + i5 + this.closeTag(e5) + this.tagEndChar : this.indentate(n5) + "<" + e5 + i5 + ">" + s5 + "</" + e5 + this.tagEndChar;
         }
-      }, ft.prototype.replaceEntitiesValue = function(t5) {
+      }, ut.prototype.replaceEntitiesValue = function(t5) {
         if (t5 && t5.length > 0 && this.options.processEntities) for (let e5 = 0; e5 < this.options.entities.length; e5++) {
-          const n5 = this.options.entities[e5];
-          t5 = t5.replace(n5.regex, n5.val);
+          const i5 = this.options.entities[e5];
+          t5 = t5.replace(i5.regex, i5.val);
         }
         return t5;
       };
-      const mt = { validate: a4 };
+      const ft = { validate: a4 };
       module2.exports = e4;
     })();
   }
@@ -35980,7 +36063,6 @@ var init_QueryShapeSerializer = __esm({
     import_smithy_client5 = __toESM(require_dist_cjs20());
     import_util_base646 = __toESM(require_dist_cjs9());
     init_ConfigurableSerdeContext();
-    init_structIterator();
     QueryShapeSerializer = class extends SerdeContextConfig {
       settings;
       buffer;
@@ -36063,7 +36145,8 @@ var init_QueryShapeSerializer = __esm({
                 if (item == null) {
                   continue;
                 }
-                const suffix = this.getKey("member", member2.getMergedTraits().xmlName);
+                const traits = member2.getMergedTraits();
+                const suffix = this.getKey("member", traits.xmlName, traits.ec2QueryName);
                 const key = flat ? `${prefix}${i4}` : `${prefix}${suffix}.${i4}`;
                 this.write(member2, item, key);
                 ++i4;
@@ -36080,9 +36163,11 @@ var init_QueryShapeSerializer = __esm({
               if (v4 == null) {
                 continue;
               }
-              const keySuffix = this.getKey("key", keySchema.getMergedTraits().xmlName);
+              const keyTraits = keySchema.getMergedTraits();
+              const keySuffix = this.getKey("key", keyTraits.xmlName, keyTraits.ec2QueryName);
               const key = flat ? `${prefix}${i4}.${keySuffix}` : `${prefix}entry.${i4}.${keySuffix}`;
-              const valueSuffix = this.getKey("value", memberSchema.getMergedTraits().xmlName);
+              const valTraits = memberSchema.getMergedTraits();
+              const valueSuffix = this.getKey("value", valTraits.xmlName, valTraits.ec2QueryName);
               const valueKey = flat ? `${prefix}${i4}.${valueSuffix}` : `${prefix}entry.${i4}.${valueSuffix}`;
               this.write(keySchema, k4, key);
               this.write(memberSchema, v4, valueKey);
@@ -36092,11 +36177,12 @@ var init_QueryShapeSerializer = __esm({
         } else if (ns.isStructSchema()) {
           if (value && typeof value === "object") {
             let didWriteMember = false;
-            for (const [memberName, member2] of serializingStructIterator(ns, value)) {
+            for (const [memberName, member2] of ns.structIterator()) {
               if (value[memberName] == null && !member2.isIdempotencyToken()) {
                 continue;
               }
-              const suffix = this.getKey(memberName, member2.getMergedTraits().xmlName);
+              const traits = member2.getMergedTraits();
+              const suffix = this.getKey(memberName, traits.xmlName, traits.ec2QueryName, "struct");
               const key = `${prefix}${suffix}`;
               this.write(member2, value[memberName], key);
               didWriteMember = true;
@@ -36123,9 +36209,13 @@ var init_QueryShapeSerializer = __esm({
         delete this.buffer;
         return str2;
       }
-      getKey(memberName, xmlName) {
+      getKey(memberName, xmlName, ec2QueryName, keySource) {
+        const { ec2, capitalizeKeys } = this.settings;
+        if (ec2 && ec2QueryName) {
+          return ec2QueryName;
+        }
         const key = xmlName ?? memberName;
-        if (this.settings.capitalizeKeys) {
+        if (capitalizeKeys && keySource === "struct") {
           return key[0].toUpperCase() + key.slice(1);
         }
         return key;
@@ -36299,7 +36389,8 @@ var init_AwsEc2QueryProtocol = __esm({
         const ec2Settings = {
           capitalizeKeys: true,
           flattenLists: true,
-          serializeEmptyLists: false
+          serializeEmptyLists: false,
+          ec2: true
         };
         Object.assign(this.serializer.settings, ec2Settings);
       }
@@ -36373,7 +36464,6 @@ var init_XmlShapeSerializer = __esm({
     import_smithy_client7 = __toESM(require_dist_cjs20());
     import_util_base647 = __toESM(require_dist_cjs9());
     init_ConfigurableSerdeContext();
-    init_structIterator();
     XmlShapeSerializer = class extends SerdeContextConfig {
       settings;
       stringBuffer;
@@ -36425,7 +36515,7 @@ var init_XmlShapeSerializer = __esm({
         }
         const structXmlNode = import_xml_builder3.XmlNode.of(name);
         const [xmlnsAttr, xmlns] = this.getXmlnsAttribute(ns, parentXmlns);
-        for (const [memberName, memberSchema] of serializingStructIterator(ns, value)) {
+        for (const [memberName, memberSchema] of ns.structIterator()) {
           const val = value[memberName];
           if (val != null || memberSchema.isIdempotencyToken()) {
             if (memberSchema.getMergedTraits().xmlAttribute) {
@@ -36721,6 +36811,17 @@ var init_AwsRestXmlProtocol = __esm({
       }
       async handleError(operationSchema, context4, response, dataObject, metadata) {
         const errorIdentifier = loadRestXmlErrorCode(response, dataObject) ?? "Unknown";
+        if (dataObject.Error && typeof dataObject.Error === "object") {
+          for (const key of Object.keys(dataObject.Error)) {
+            dataObject[key] = dataObject.Error[key];
+            if (key.toLowerCase() === "message") {
+              dataObject.message = dataObject.Error[key];
+            }
+          }
+        }
+        if (dataObject.RequestId && !metadata.requestId) {
+          metadata.requestId = dataObject.RequestId;
+        }
         const { errorSchema, errorMetadata } = await this.mixin.getErrorSchemaOrThrowBaseException(errorIdentifier, this.options.defaultNamespace, response, dataObject, metadata);
         const ns = NormalizedSchema.of(errorSchema);
         const message = dataObject.Error?.message ?? dataObject.Error?.Message ?? dataObject.message ?? dataObject.Message ?? "Unknown";
@@ -42291,13 +42392,5439 @@ var require_httpAuthSchemeProvider = __commonJS({
   }
 });
 
+// node_modules/@aws-sdk/client-s3/dist-cjs/models/S3ServiceException.js
+var require_S3ServiceException = __commonJS({
+  "node_modules/@aws-sdk/client-s3/dist-cjs/models/S3ServiceException.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.S3ServiceException = exports2.__ServiceException = void 0;
+    var smithy_client_1 = require_dist_cjs20();
+    Object.defineProperty(exports2, "__ServiceException", { enumerable: true, get: function() {
+      return smithy_client_1.ServiceException;
+    } });
+    var S3ServiceException2 = class _S3ServiceException extends smithy_client_1.ServiceException {
+      constructor(options) {
+        super(options);
+        Object.setPrototypeOf(this, _S3ServiceException.prototype);
+      }
+    };
+    exports2.S3ServiceException = S3ServiceException2;
+  }
+});
+
+// node_modules/@aws-sdk/client-s3/dist-cjs/models/errors.js
+var require_errors2 = __commonJS({
+  "node_modules/@aws-sdk/client-s3/dist-cjs/models/errors.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.ObjectAlreadyInActiveTierError = exports2.IdempotencyParameterMismatch = exports2.TooManyParts = exports2.InvalidWriteOffset = exports2.InvalidRequest = exports2.EncryptionTypeMismatch = exports2.NotFound = exports2.NoSuchKey = exports2.InvalidObjectState = exports2.NoSuchBucket = exports2.BucketAlreadyOwnedByYou = exports2.BucketAlreadyExists = exports2.ObjectNotInActiveTierError = exports2.AccessDenied = exports2.NoSuchUpload = void 0;
+    var S3ServiceException_1 = require_S3ServiceException();
+    var NoSuchUpload = class _NoSuchUpload extends S3ServiceException_1.S3ServiceException {
+      name = "NoSuchUpload";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "NoSuchUpload",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _NoSuchUpload.prototype);
+      }
+    };
+    exports2.NoSuchUpload = NoSuchUpload;
+    var AccessDenied = class _AccessDenied extends S3ServiceException_1.S3ServiceException {
+      name = "AccessDenied";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "AccessDenied",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _AccessDenied.prototype);
+      }
+    };
+    exports2.AccessDenied = AccessDenied;
+    var ObjectNotInActiveTierError = class _ObjectNotInActiveTierError extends S3ServiceException_1.S3ServiceException {
+      name = "ObjectNotInActiveTierError";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "ObjectNotInActiveTierError",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ObjectNotInActiveTierError.prototype);
+      }
+    };
+    exports2.ObjectNotInActiveTierError = ObjectNotInActiveTierError;
+    var BucketAlreadyExists = class _BucketAlreadyExists extends S3ServiceException_1.S3ServiceException {
+      name = "BucketAlreadyExists";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "BucketAlreadyExists",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _BucketAlreadyExists.prototype);
+      }
+    };
+    exports2.BucketAlreadyExists = BucketAlreadyExists;
+    var BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou extends S3ServiceException_1.S3ServiceException {
+      name = "BucketAlreadyOwnedByYou";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "BucketAlreadyOwnedByYou",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _BucketAlreadyOwnedByYou.prototype);
+      }
+    };
+    exports2.BucketAlreadyOwnedByYou = BucketAlreadyOwnedByYou;
+    var NoSuchBucket = class _NoSuchBucket extends S3ServiceException_1.S3ServiceException {
+      name = "NoSuchBucket";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "NoSuchBucket",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _NoSuchBucket.prototype);
+      }
+    };
+    exports2.NoSuchBucket = NoSuchBucket;
+    var InvalidObjectState = class _InvalidObjectState extends S3ServiceException_1.S3ServiceException {
+      name = "InvalidObjectState";
+      $fault = "client";
+      StorageClass;
+      AccessTier;
+      constructor(opts) {
+        super({
+          name: "InvalidObjectState",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InvalidObjectState.prototype);
+        this.StorageClass = opts.StorageClass;
+        this.AccessTier = opts.AccessTier;
+      }
+    };
+    exports2.InvalidObjectState = InvalidObjectState;
+    var NoSuchKey = class _NoSuchKey extends S3ServiceException_1.S3ServiceException {
+      name = "NoSuchKey";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "NoSuchKey",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _NoSuchKey.prototype);
+      }
+    };
+    exports2.NoSuchKey = NoSuchKey;
+    var NotFound = class _NotFound extends S3ServiceException_1.S3ServiceException {
+      name = "NotFound";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "NotFound",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _NotFound.prototype);
+      }
+    };
+    exports2.NotFound = NotFound;
+    var EncryptionTypeMismatch = class _EncryptionTypeMismatch extends S3ServiceException_1.S3ServiceException {
+      name = "EncryptionTypeMismatch";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "EncryptionTypeMismatch",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _EncryptionTypeMismatch.prototype);
+      }
+    };
+    exports2.EncryptionTypeMismatch = EncryptionTypeMismatch;
+    var InvalidRequest = class _InvalidRequest extends S3ServiceException_1.S3ServiceException {
+      name = "InvalidRequest";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "InvalidRequest",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InvalidRequest.prototype);
+      }
+    };
+    exports2.InvalidRequest = InvalidRequest;
+    var InvalidWriteOffset = class _InvalidWriteOffset extends S3ServiceException_1.S3ServiceException {
+      name = "InvalidWriteOffset";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "InvalidWriteOffset",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InvalidWriteOffset.prototype);
+      }
+    };
+    exports2.InvalidWriteOffset = InvalidWriteOffset;
+    var TooManyParts = class _TooManyParts extends S3ServiceException_1.S3ServiceException {
+      name = "TooManyParts";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "TooManyParts",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _TooManyParts.prototype);
+      }
+    };
+    exports2.TooManyParts = TooManyParts;
+    var IdempotencyParameterMismatch = class _IdempotencyParameterMismatch extends S3ServiceException_1.S3ServiceException {
+      name = "IdempotencyParameterMismatch";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "IdempotencyParameterMismatch",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _IdempotencyParameterMismatch.prototype);
+      }
+    };
+    exports2.IdempotencyParameterMismatch = IdempotencyParameterMismatch;
+    var ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError extends S3ServiceException_1.S3ServiceException {
+      name = "ObjectAlreadyInActiveTierError";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "ObjectAlreadyInActiveTierError",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ObjectAlreadyInActiveTierError.prototype);
+      }
+    };
+    exports2.ObjectAlreadyInActiveTierError = ObjectAlreadyInActiveTierError;
+  }
+});
+
+// node_modules/@aws-sdk/client-s3/dist-cjs/schemas/schemas_0.js
+var require_schemas_0 = __commonJS({
+  "node_modules/@aws-sdk/client-s3/dist-cjs/schemas/schemas_0.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.CreateBucketMetadataTableConfigurationRequest$ = exports2.CreateBucketMetadataConfigurationRequest$ = exports2.CreateBucketConfiguration$ = exports2.CORSRule$ = exports2.CORSConfiguration$ = exports2.CopyPartResult$ = exports2.CopyObjectResult$ = exports2.CopyObjectRequest$ = exports2.CopyObjectOutput$ = exports2.ContinuationEvent$ = exports2.Condition$ = exports2.CompleteMultipartUploadRequest$ = exports2.CompleteMultipartUploadOutput$ = exports2.CompletedPart$ = exports2.CompletedMultipartUpload$ = exports2.CommonPrefix$ = exports2.Checksum$ = exports2.BucketLoggingStatus$ = exports2.BucketLifecycleConfiguration$ = exports2.BucketInfo$ = exports2.Bucket$ = exports2.BlockedEncryptionTypes$ = exports2.AnalyticsS3BucketDestination$ = exports2.AnalyticsExportDestination$ = exports2.AnalyticsConfiguration$ = exports2.AnalyticsAndOperator$ = exports2.AccessControlTranslation$ = exports2.AccessControlPolicy$ = exports2.AccelerateConfiguration$ = exports2.AbortMultipartUploadRequest$ = exports2.AbortMultipartUploadOutput$ = exports2.AbortIncompleteMultipartUpload$ = exports2.AbacStatus$ = exports2.errorTypeRegistries = exports2.TooManyParts$ = exports2.ObjectNotInActiveTierError$ = exports2.ObjectAlreadyInActiveTierError$ = exports2.NotFound$ = exports2.NoSuchUpload$ = exports2.NoSuchKey$ = exports2.NoSuchBucket$ = exports2.InvalidWriteOffset$ = exports2.InvalidRequest$ = exports2.InvalidObjectState$ = exports2.IdempotencyParameterMismatch$ = exports2.EncryptionTypeMismatch$ = exports2.BucketAlreadyOwnedByYou$ = exports2.BucketAlreadyExists$ = exports2.AccessDenied$ = exports2.S3ServiceException$ = void 0;
+    exports2.GetBucketAccelerateConfigurationRequest$ = exports2.GetBucketAccelerateConfigurationOutput$ = exports2.GetBucketAbacRequest$ = exports2.GetBucketAbacOutput$ = exports2.FilterRule$ = exports2.ExistingObjectReplication$ = exports2.EventBridgeConfiguration$ = exports2.ErrorDocument$ = exports2.ErrorDetails$ = exports2._Error$ = exports2.EndEvent$ = exports2.EncryptionConfiguration$ = exports2.Encryption$ = exports2.DestinationResult$ = exports2.Destination$ = exports2.DeletePublicAccessBlockRequest$ = exports2.DeleteObjectTaggingRequest$ = exports2.DeleteObjectTaggingOutput$ = exports2.DeleteObjectsRequest$ = exports2.DeleteObjectsOutput$ = exports2.DeleteObjectRequest$ = exports2.DeleteObjectOutput$ = exports2.DeleteMarkerReplication$ = exports2.DeleteMarkerEntry$ = exports2.DeletedObject$ = exports2.DeleteBucketWebsiteRequest$ = exports2.DeleteBucketTaggingRequest$ = exports2.DeleteBucketRequest$ = exports2.DeleteBucketReplicationRequest$ = exports2.DeleteBucketPolicyRequest$ = exports2.DeleteBucketOwnershipControlsRequest$ = exports2.DeleteBucketMetricsConfigurationRequest$ = exports2.DeleteBucketMetadataTableConfigurationRequest$ = exports2.DeleteBucketMetadataConfigurationRequest$ = exports2.DeleteBucketLifecycleRequest$ = exports2.DeleteBucketInventoryConfigurationRequest$ = exports2.DeleteBucketIntelligentTieringConfigurationRequest$ = exports2.DeleteBucketEncryptionRequest$ = exports2.DeleteBucketCorsRequest$ = exports2.DeleteBucketAnalyticsConfigurationRequest$ = exports2.Delete$ = exports2.DefaultRetention$ = exports2.CSVOutput$ = exports2.CSVInput$ = exports2.CreateSessionRequest$ = exports2.CreateSessionOutput$ = exports2.CreateMultipartUploadRequest$ = exports2.CreateMultipartUploadOutput$ = exports2.CreateBucketRequest$ = exports2.CreateBucketOutput$ = void 0;
+    exports2.GetObjectLegalHoldRequest$ = exports2.GetObjectLegalHoldOutput$ = exports2.GetObjectAttributesRequest$ = exports2.GetObjectAttributesParts$ = exports2.GetObjectAttributesOutput$ = exports2.GetObjectAclRequest$ = exports2.GetObjectAclOutput$ = exports2.GetBucketWebsiteRequest$ = exports2.GetBucketWebsiteOutput$ = exports2.GetBucketVersioningRequest$ = exports2.GetBucketVersioningOutput$ = exports2.GetBucketTaggingRequest$ = exports2.GetBucketTaggingOutput$ = exports2.GetBucketRequestPaymentRequest$ = exports2.GetBucketRequestPaymentOutput$ = exports2.GetBucketReplicationRequest$ = exports2.GetBucketReplicationOutput$ = exports2.GetBucketPolicyStatusRequest$ = exports2.GetBucketPolicyStatusOutput$ = exports2.GetBucketPolicyRequest$ = exports2.GetBucketPolicyOutput$ = exports2.GetBucketOwnershipControlsRequest$ = exports2.GetBucketOwnershipControlsOutput$ = exports2.GetBucketNotificationConfigurationRequest$ = exports2.GetBucketMetricsConfigurationRequest$ = exports2.GetBucketMetricsConfigurationOutput$ = exports2.GetBucketMetadataTableConfigurationResult$ = exports2.GetBucketMetadataTableConfigurationRequest$ = exports2.GetBucketMetadataTableConfigurationOutput$ = exports2.GetBucketMetadataConfigurationResult$ = exports2.GetBucketMetadataConfigurationRequest$ = exports2.GetBucketMetadataConfigurationOutput$ = exports2.GetBucketLoggingRequest$ = exports2.GetBucketLoggingOutput$ = exports2.GetBucketLocationRequest$ = exports2.GetBucketLocationOutput$ = exports2.GetBucketLifecycleConfigurationRequest$ = exports2.GetBucketLifecycleConfigurationOutput$ = exports2.GetBucketInventoryConfigurationRequest$ = exports2.GetBucketInventoryConfigurationOutput$ = exports2.GetBucketIntelligentTieringConfigurationRequest$ = exports2.GetBucketIntelligentTieringConfigurationOutput$ = exports2.GetBucketEncryptionRequest$ = exports2.GetBucketEncryptionOutput$ = exports2.GetBucketCorsRequest$ = exports2.GetBucketCorsOutput$ = exports2.GetBucketAnalyticsConfigurationRequest$ = exports2.GetBucketAnalyticsConfigurationOutput$ = exports2.GetBucketAclRequest$ = exports2.GetBucketAclOutput$ = void 0;
+    exports2.ListBucketInventoryConfigurationsRequest$ = exports2.ListBucketInventoryConfigurationsOutput$ = exports2.ListBucketIntelligentTieringConfigurationsRequest$ = exports2.ListBucketIntelligentTieringConfigurationsOutput$ = exports2.ListBucketAnalyticsConfigurationsRequest$ = exports2.ListBucketAnalyticsConfigurationsOutput$ = exports2.LifecycleRuleFilter$ = exports2.LifecycleRuleAndOperator$ = exports2.LifecycleRule$ = exports2.LifecycleExpiration$ = exports2.LambdaFunctionConfiguration$ = exports2.JSONOutput$ = exports2.JSONInput$ = exports2.JournalTableConfigurationUpdates$ = exports2.JournalTableConfigurationResult$ = exports2.JournalTableConfiguration$ = exports2.InventoryTableConfigurationUpdates$ = exports2.InventoryTableConfigurationResult$ = exports2.InventoryTableConfiguration$ = exports2.InventorySchedule$ = exports2.InventoryS3BucketDestination$ = exports2.InventoryFilter$ = exports2.InventoryEncryption$ = exports2.InventoryDestination$ = exports2.InventoryConfiguration$ = exports2.IntelligentTieringFilter$ = exports2.IntelligentTieringConfiguration$ = exports2.IntelligentTieringAndOperator$ = exports2.InputSerialization$ = exports2.Initiator$ = exports2.IndexDocument$ = exports2.HeadObjectRequest$ = exports2.HeadObjectOutput$ = exports2.HeadBucketRequest$ = exports2.HeadBucketOutput$ = exports2.Grantee$ = exports2.Grant$ = exports2.GlacierJobParameters$ = exports2.GetPublicAccessBlockRequest$ = exports2.GetPublicAccessBlockOutput$ = exports2.GetObjectTorrentRequest$ = exports2.GetObjectTorrentOutput$ = exports2.GetObjectTaggingRequest$ = exports2.GetObjectTaggingOutput$ = exports2.GetObjectRetentionRequest$ = exports2.GetObjectRetentionOutput$ = exports2.GetObjectRequest$ = exports2.GetObjectOutput$ = exports2.GetObjectLockConfigurationRequest$ = exports2.GetObjectLockConfigurationOutput$ = void 0;
+    exports2.Progress$ = exports2.PolicyStatus$ = exports2.PartitionedPrefix$ = exports2.Part$ = exports2.ParquetInput$ = exports2.OwnershipControlsRule$ = exports2.OwnershipControls$ = exports2.Owner$ = exports2.OutputSerialization$ = exports2.OutputLocation$ = exports2.ObjectVersion$ = exports2.ObjectPart$ = exports2.ObjectLockRule$ = exports2.ObjectLockRetention$ = exports2.ObjectLockLegalHold$ = exports2.ObjectLockConfiguration$ = exports2.ObjectIdentifier$ = exports2._Object$ = exports2.NotificationConfigurationFilter$ = exports2.NotificationConfiguration$ = exports2.NoncurrentVersionTransition$ = exports2.NoncurrentVersionExpiration$ = exports2.MultipartUpload$ = exports2.MetricsConfiguration$ = exports2.MetricsAndOperator$ = exports2.Metrics$ = exports2.MetadataTableEncryptionConfiguration$ = exports2.MetadataTableConfigurationResult$ = exports2.MetadataTableConfiguration$ = exports2.MetadataEntry$ = exports2.MetadataConfigurationResult$ = exports2.MetadataConfiguration$ = exports2.LoggingEnabled$ = exports2.LocationInfo$ = exports2.ListPartsRequest$ = exports2.ListPartsOutput$ = exports2.ListObjectVersionsRequest$ = exports2.ListObjectVersionsOutput$ = exports2.ListObjectsV2Request$ = exports2.ListObjectsV2Output$ = exports2.ListObjectsRequest$ = exports2.ListObjectsOutput$ = exports2.ListMultipartUploadsRequest$ = exports2.ListMultipartUploadsOutput$ = exports2.ListDirectoryBucketsRequest$ = exports2.ListDirectoryBucketsOutput$ = exports2.ListBucketsRequest$ = exports2.ListBucketsOutput$ = exports2.ListBucketMetricsConfigurationsRequest$ = exports2.ListBucketMetricsConfigurationsOutput$ = void 0;
+    exports2.RequestPaymentConfiguration$ = exports2.ReplicationTimeValue$ = exports2.ReplicationTime$ = exports2.ReplicationRuleFilter$ = exports2.ReplicationRuleAndOperator$ = exports2.ReplicationRule$ = exports2.ReplicationConfiguration$ = exports2.ReplicaModifications$ = exports2.RenameObjectRequest$ = exports2.RenameObjectOutput$ = exports2.RedirectAllRequestsTo$ = exports2.Redirect$ = exports2.RecordsEvent$ = exports2.RecordExpiration$ = exports2.QueueConfiguration$ = exports2.PutPublicAccessBlockRequest$ = exports2.PutObjectTaggingRequest$ = exports2.PutObjectTaggingOutput$ = exports2.PutObjectRetentionRequest$ = exports2.PutObjectRetentionOutput$ = exports2.PutObjectRequest$ = exports2.PutObjectOutput$ = exports2.PutObjectLockConfigurationRequest$ = exports2.PutObjectLockConfigurationOutput$ = exports2.PutObjectLegalHoldRequest$ = exports2.PutObjectLegalHoldOutput$ = exports2.PutObjectAclRequest$ = exports2.PutObjectAclOutput$ = exports2.PutBucketWebsiteRequest$ = exports2.PutBucketVersioningRequest$ = exports2.PutBucketTaggingRequest$ = exports2.PutBucketRequestPaymentRequest$ = exports2.PutBucketReplicationRequest$ = exports2.PutBucketPolicyRequest$ = exports2.PutBucketOwnershipControlsRequest$ = exports2.PutBucketNotificationConfigurationRequest$ = exports2.PutBucketMetricsConfigurationRequest$ = exports2.PutBucketLoggingRequest$ = exports2.PutBucketLifecycleConfigurationRequest$ = exports2.PutBucketLifecycleConfigurationOutput$ = exports2.PutBucketInventoryConfigurationRequest$ = exports2.PutBucketIntelligentTieringConfigurationRequest$ = exports2.PutBucketEncryptionRequest$ = exports2.PutBucketCorsRequest$ = exports2.PutBucketAnalyticsConfigurationRequest$ = exports2.PutBucketAclRequest$ = exports2.PutBucketAccelerateConfigurationRequest$ = exports2.PutBucketAbacRequest$ = exports2.PublicAccessBlockConfiguration$ = exports2.ProgressEvent$ = void 0;
+    exports2.SelectObjectContentEventStream$ = exports2.ObjectEncryption$ = exports2.MetricsFilter$ = exports2.AnalyticsFilter$ = exports2.WriteGetObjectResponseRequest$ = exports2.WebsiteConfiguration$ = exports2.VersioningConfiguration$ = exports2.UploadPartRequest$ = exports2.UploadPartOutput$ = exports2.UploadPartCopyRequest$ = exports2.UploadPartCopyOutput$ = exports2.UpdateObjectEncryptionResponse$ = exports2.UpdateObjectEncryptionRequest$ = exports2.UpdateBucketMetadataJournalTableConfigurationRequest$ = exports2.UpdateBucketMetadataInventoryTableConfigurationRequest$ = exports2.Transition$ = exports2.TopicConfiguration$ = exports2.Tiering$ = exports2.TargetObjectKeyFormat$ = exports2.TargetGrant$ = exports2.Tagging$ = exports2.Tag$ = exports2.StorageClassAnalysisDataExport$ = exports2.StorageClassAnalysis$ = exports2.StatsEvent$ = exports2.Stats$ = exports2.SSES3$ = exports2.SSEKMSEncryption$ = exports2.SseKmsEncryptedObjects$ = exports2.SSEKMS$ = exports2.SourceSelectionCriteria$ = exports2.SimplePrefix$ = exports2.SessionCredentials$ = exports2.ServerSideEncryptionRule$ = exports2.ServerSideEncryptionConfiguration$ = exports2.ServerSideEncryptionByDefault$ = exports2.SelectParameters$ = exports2.SelectObjectContentRequest$ = exports2.SelectObjectContentOutput$ = exports2.ScanRange$ = exports2.S3TablesDestinationResult$ = exports2.S3TablesDestination$ = exports2.S3Location$ = exports2.S3KeyFilter$ = exports2.RoutingRule$ = exports2.RestoreStatus$ = exports2.RestoreRequest$ = exports2.RestoreObjectRequest$ = exports2.RestoreObjectOutput$ = exports2.RequestProgress$ = void 0;
+    exports2.GetBucketWebsite$ = exports2.GetBucketVersioning$ = exports2.GetBucketTagging$ = exports2.GetBucketRequestPayment$ = exports2.GetBucketReplication$ = exports2.GetBucketPolicyStatus$ = exports2.GetBucketPolicy$ = exports2.GetBucketOwnershipControls$ = exports2.GetBucketNotificationConfiguration$ = exports2.GetBucketMetricsConfiguration$ = exports2.GetBucketMetadataTableConfiguration$ = exports2.GetBucketMetadataConfiguration$ = exports2.GetBucketLogging$ = exports2.GetBucketLocation$ = exports2.GetBucketLifecycleConfiguration$ = exports2.GetBucketInventoryConfiguration$ = exports2.GetBucketIntelligentTieringConfiguration$ = exports2.GetBucketEncryption$ = exports2.GetBucketCors$ = exports2.GetBucketAnalyticsConfiguration$ = exports2.GetBucketAcl$ = exports2.GetBucketAccelerateConfiguration$ = exports2.GetBucketAbac$ = exports2.DeletePublicAccessBlock$ = exports2.DeleteObjectTagging$ = exports2.DeleteObjects$ = exports2.DeleteObject$ = exports2.DeleteBucketWebsite$ = exports2.DeleteBucketTagging$ = exports2.DeleteBucketReplication$ = exports2.DeleteBucketPolicy$ = exports2.DeleteBucketOwnershipControls$ = exports2.DeleteBucketMetricsConfiguration$ = exports2.DeleteBucketMetadataTableConfiguration$ = exports2.DeleteBucketMetadataConfiguration$ = exports2.DeleteBucketLifecycle$ = exports2.DeleteBucketInventoryConfiguration$ = exports2.DeleteBucketIntelligentTieringConfiguration$ = exports2.DeleteBucketEncryption$ = exports2.DeleteBucketCors$ = exports2.DeleteBucketAnalyticsConfiguration$ = exports2.DeleteBucket$ = exports2.CreateSession$ = exports2.CreateMultipartUpload$ = exports2.CreateBucketMetadataTableConfiguration$ = exports2.CreateBucketMetadataConfiguration$ = exports2.CreateBucket$ = exports2.CopyObject$ = exports2.CompleteMultipartUpload$ = exports2.AbortMultipartUpload$ = void 0;
+    exports2.RestoreObject$ = exports2.RenameObject$ = exports2.PutPublicAccessBlock$ = exports2.PutObjectTagging$ = exports2.PutObjectRetention$ = exports2.PutObjectLockConfiguration$ = exports2.PutObjectLegalHold$ = exports2.PutObjectAcl$ = exports2.PutObject$ = exports2.PutBucketWebsite$ = exports2.PutBucketVersioning$ = exports2.PutBucketTagging$ = exports2.PutBucketRequestPayment$ = exports2.PutBucketReplication$ = exports2.PutBucketPolicy$ = exports2.PutBucketOwnershipControls$ = exports2.PutBucketNotificationConfiguration$ = exports2.PutBucketMetricsConfiguration$ = exports2.PutBucketLogging$ = exports2.PutBucketLifecycleConfiguration$ = exports2.PutBucketInventoryConfiguration$ = exports2.PutBucketIntelligentTieringConfiguration$ = exports2.PutBucketEncryption$ = exports2.PutBucketCors$ = exports2.PutBucketAnalyticsConfiguration$ = exports2.PutBucketAcl$ = exports2.PutBucketAccelerateConfiguration$ = exports2.PutBucketAbac$ = exports2.ListParts$ = exports2.ListObjectVersions$ = exports2.ListObjectsV2$ = exports2.ListObjects$ = exports2.ListMultipartUploads$ = exports2.ListDirectoryBuckets$ = exports2.ListBuckets$ = exports2.ListBucketMetricsConfigurations$ = exports2.ListBucketInventoryConfigurations$ = exports2.ListBucketIntelligentTieringConfigurations$ = exports2.ListBucketAnalyticsConfigurations$ = exports2.HeadObject$ = exports2.HeadBucket$ = exports2.GetPublicAccessBlock$ = exports2.GetObjectTorrent$ = exports2.GetObjectTagging$ = exports2.GetObjectRetention$ = exports2.GetObjectLockConfiguration$ = exports2.GetObjectLegalHold$ = exports2.GetObjectAttributes$ = exports2.GetObjectAcl$ = exports2.GetObject$ = void 0;
+    exports2.WriteGetObjectResponse$ = exports2.UploadPartCopy$ = exports2.UploadPart$ = exports2.UpdateObjectEncryption$ = exports2.UpdateBucketMetadataJournalTableConfiguration$ = exports2.UpdateBucketMetadataInventoryTableConfiguration$ = exports2.SelectObjectContent$ = void 0;
+    var _A2 = "Account";
+    var _AAO = "AnalyticsAndOperator";
+    var _AC = "AccelerateConfiguration";
+    var _ACL = "AccessControlList";
+    var _ACL_ = "ACL";
+    var _ACLn = "AnalyticsConfigurationList";
+    var _ACP = "AccessControlPolicy";
+    var _ACT = "AccessControlTranslation";
+    var _ACn = "AnalyticsConfiguration";
+    var _AD = "AccessDenied";
+    var _ADb = "AbortDate";
+    var _AED = "AnalyticsExportDestination";
+    var _AF = "AnalyticsFilter";
+    var _AH = "AllowedHeaders";
+    var _AHl = "AllowedHeader";
+    var _AI = "AccountId";
+    var _AIMU = "AbortIncompleteMultipartUpload";
+    var _AKI2 = "AccessKeyId";
+    var _AM = "AllowedMethods";
+    var _AMU = "AbortMultipartUpload";
+    var _AMUO = "AbortMultipartUploadOutput";
+    var _AMUR = "AbortMultipartUploadRequest";
+    var _AMl = "AllowedMethod";
+    var _AO = "AllowedOrigins";
+    var _AOl = "AllowedOrigin";
+    var _APA = "AccessPointAlias";
+    var _APAc = "AccessPointArn";
+    var _AQRD = "AllowQuotedRecordDelimiter";
+    var _AR2 = "AcceptRanges";
+    var _ARI2 = "AbortRuleId";
+    var _AS = "AbacStatus";
+    var _ASBD = "AnalyticsS3BucketDestination";
+    var _ASSEBD = "ApplyServerSideEncryptionByDefault";
+    var _ASr = "ArchiveStatus";
+    var _AT3 = "AccessTier";
+    var _An = "And";
+    var _B = "Bucket";
+    var _BA = "BucketArn";
+    var _BAE = "BucketAlreadyExists";
+    var _BAI = "BucketAccountId";
+    var _BAOBY = "BucketAlreadyOwnedByYou";
+    var _BET = "BlockedEncryptionTypes";
+    var _BGR = "BypassGovernanceRetention";
+    var _BI = "BucketInfo";
+    var _BKE = "BucketKeyEnabled";
+    var _BLC = "BucketLifecycleConfiguration";
+    var _BLN = "BucketLocationName";
+    var _BLS = "BucketLoggingStatus";
+    var _BLT = "BucketLocationType";
+    var _BN = "BucketName";
+    var _BP = "BytesProcessed";
+    var _BPA = "BlockPublicAcls";
+    var _BPP = "BlockPublicPolicy";
+    var _BR = "BucketRegion";
+    var _BRy = "BytesReturned";
+    var _BS = "BytesScanned";
+    var _Bo = "Body";
+    var _Bu = "Buckets";
+    var _C2 = "Checksum";
+    var _CA2 = "ChecksumAlgorithm";
+    var _CACL = "CannedACL";
+    var _CB = "CreateBucket";
+    var _CBC = "CreateBucketConfiguration";
+    var _CBMC = "CreateBucketMetadataConfiguration";
+    var _CBMCR = "CreateBucketMetadataConfigurationRequest";
+    var _CBMTC = "CreateBucketMetadataTableConfiguration";
+    var _CBMTCR = "CreateBucketMetadataTableConfigurationRequest";
+    var _CBO = "CreateBucketOutput";
+    var _CBR = "CreateBucketRequest";
+    var _CC = "CacheControl";
+    var _CCRC = "ChecksumCRC32";
+    var _CCRCC = "ChecksumCRC32C";
+    var _CCRCNVME = "ChecksumCRC64NVME";
+    var _CC_ = "Cache-Control";
+    var _CD = "CreationDate";
+    var _CD_ = "Content-Disposition";
+    var _CDo = "ContentDisposition";
+    var _CE = "ContinuationEvent";
+    var _CE_ = "Content-Encoding";
+    var _CEo = "ContentEncoding";
+    var _CF = "CloudFunction";
+    var _CFC = "CloudFunctionConfiguration";
+    var _CL = "ContentLanguage";
+    var _CL_ = "Content-Language";
+    var _CL__ = "Content-Length";
+    var _CLo = "ContentLength";
+    var _CM = "Content-MD5";
+    var _CMD = "ContentMD5";
+    var _CMU = "CompletedMultipartUpload";
+    var _CMUO = "CompleteMultipartUploadOutput";
+    var _CMUOr = "CreateMultipartUploadOutput";
+    var _CMUR = "CompleteMultipartUploadResult";
+    var _CMURo = "CompleteMultipartUploadRequest";
+    var _CMURr = "CreateMultipartUploadRequest";
+    var _CMUo = "CompleteMultipartUpload";
+    var _CMUr = "CreateMultipartUpload";
+    var _CMh = "ChecksumMode";
+    var _CO = "CopyObject";
+    var _COO = "CopyObjectOutput";
+    var _COR = "CopyObjectResult";
+    var _CORSC = "CORSConfiguration";
+    var _CORSR = "CORSRules";
+    var _CORSRu = "CORSRule";
+    var _CORo = "CopyObjectRequest";
+    var _CP = "CommonPrefix";
+    var _CPL = "CommonPrefixList";
+    var _CPLo = "CompletedPartList";
+    var _CPR = "CopyPartResult";
+    var _CPo = "CompletedPart";
+    var _CPom = "CommonPrefixes";
+    var _CR = "ContentRange";
+    var _CRSBA = "ConfirmRemoveSelfBucketAccess";
+    var _CR_ = "Content-Range";
+    var _CS2 = "CopySource";
+    var _CSHA = "ChecksumSHA1";
+    var _CSHAh = "ChecksumSHA256";
+    var _CSIM = "CopySourceIfMatch";
+    var _CSIMS = "CopySourceIfModifiedSince";
+    var _CSINM = "CopySourceIfNoneMatch";
+    var _CSIUS = "CopySourceIfUnmodifiedSince";
+    var _CSO = "CreateSessionOutput";
+    var _CSR = "CreateSessionResult";
+    var _CSRo = "CopySourceRange";
+    var _CSRr = "CreateSessionRequest";
+    var _CSSSECA = "CopySourceSSECustomerAlgorithm";
+    var _CSSSECK = "CopySourceSSECustomerKey";
+    var _CSSSECKMD = "CopySourceSSECustomerKeyMD5";
+    var _CSV = "CSV";
+    var _CSVI = "CopySourceVersionId";
+    var _CSVIn = "CSVInput";
+    var _CSVO = "CSVOutput";
+    var _CSo = "ConfigurationState";
+    var _CSr = "CreateSession";
+    var _CT2 = "ChecksumType";
+    var _CT_ = "Content-Type";
+    var _CTl = "ClientToken";
+    var _CTo = "ContentType";
+    var _CTom = "CompressionType";
+    var _CTon = "ContinuationToken";
+    var _Co = "Condition";
+    var _Cod = "Code";
+    var _Com = "Comments";
+    var _Con = "Contents";
+    var _Cont = "Cont";
+    var _Cr = "Credentials";
+    var _D = "Days";
+    var _DAI = "DaysAfterInitiation";
+    var _DB = "DeleteBucket";
+    var _DBAC = "DeleteBucketAnalyticsConfiguration";
+    var _DBACR = "DeleteBucketAnalyticsConfigurationRequest";
+    var _DBC = "DeleteBucketCors";
+    var _DBCR = "DeleteBucketCorsRequest";
+    var _DBE = "DeleteBucketEncryption";
+    var _DBER = "DeleteBucketEncryptionRequest";
+    var _DBIC = "DeleteBucketInventoryConfiguration";
+    var _DBICR = "DeleteBucketInventoryConfigurationRequest";
+    var _DBITC = "DeleteBucketIntelligentTieringConfiguration";
+    var _DBITCR = "DeleteBucketIntelligentTieringConfigurationRequest";
+    var _DBL = "DeleteBucketLifecycle";
+    var _DBLR = "DeleteBucketLifecycleRequest";
+    var _DBMC = "DeleteBucketMetadataConfiguration";
+    var _DBMCR = "DeleteBucketMetadataConfigurationRequest";
+    var _DBMCRe = "DeleteBucketMetricsConfigurationRequest";
+    var _DBMCe = "DeleteBucketMetricsConfiguration";
+    var _DBMTC = "DeleteBucketMetadataTableConfiguration";
+    var _DBMTCR = "DeleteBucketMetadataTableConfigurationRequest";
+    var _DBOC = "DeleteBucketOwnershipControls";
+    var _DBOCR = "DeleteBucketOwnershipControlsRequest";
+    var _DBP = "DeleteBucketPolicy";
+    var _DBPR = "DeleteBucketPolicyRequest";
+    var _DBR = "DeleteBucketRequest";
+    var _DBRR = "DeleteBucketReplicationRequest";
+    var _DBRe = "DeleteBucketReplication";
+    var _DBT = "DeleteBucketTagging";
+    var _DBTR = "DeleteBucketTaggingRequest";
+    var _DBW = "DeleteBucketWebsite";
+    var _DBWR = "DeleteBucketWebsiteRequest";
+    var _DE = "DataExport";
+    var _DIM = "DestinationIfMatch";
+    var _DIMS = "DestinationIfModifiedSince";
+    var _DINM = "DestinationIfNoneMatch";
+    var _DIUS = "DestinationIfUnmodifiedSince";
+    var _DM = "DeleteMarker";
+    var _DME = "DeleteMarkerEntry";
+    var _DMR = "DeleteMarkerReplication";
+    var _DMVI = "DeleteMarkerVersionId";
+    var _DMe = "DeleteMarkers";
+    var _DN = "DisplayName";
+    var _DO = "DeletedObject";
+    var _DOO = "DeleteObjectOutput";
+    var _DOOe = "DeleteObjectsOutput";
+    var _DOR = "DeleteObjectRequest";
+    var _DORe = "DeleteObjectsRequest";
+    var _DOT = "DeleteObjectTagging";
+    var _DOTO = "DeleteObjectTaggingOutput";
+    var _DOTR = "DeleteObjectTaggingRequest";
+    var _DOe = "DeletedObjects";
+    var _DOel = "DeleteObject";
+    var _DOele = "DeleteObjects";
+    var _DPAB = "DeletePublicAccessBlock";
+    var _DPABR = "DeletePublicAccessBlockRequest";
+    var _DR = "DataRedundancy";
+    var _DRe = "DefaultRetention";
+    var _DRel = "DeleteResult";
+    var _DRes = "DestinationResult";
+    var _Da = "Date";
+    var _De = "Delete";
+    var _Del = "Deleted";
+    var _Deli = "Delimiter";
+    var _Des = "Destination";
+    var _Desc = "Description";
+    var _Det = "Details";
+    var _E2 = "Expiration";
+    var _EA = "EmailAddress";
+    var _EBC = "EventBridgeConfiguration";
+    var _EBO = "ExpectedBucketOwner";
+    var _EC = "EncryptionConfiguration";
+    var _ECr = "ErrorCode";
+    var _ED = "ErrorDetails";
+    var _EDr = "ErrorDocument";
+    var _EE = "EndEvent";
+    var _EH = "ExposeHeaders";
+    var _EHx = "ExposeHeader";
+    var _EM = "ErrorMessage";
+    var _EODM = "ExpiredObjectDeleteMarker";
+    var _EOR = "ExistingObjectReplication";
+    var _ES = "ExpiresString";
+    var _ESBO = "ExpectedSourceBucketOwner";
+    var _ET = "EncryptionType";
+    var _ETL = "EncryptionTypeList";
+    var _ETM = "EncryptionTypeMismatch";
+    var _ETa = "ETag";
+    var _ETn = "EncodingType";
+    var _ETv = "EventThreshold";
+    var _ETx = "ExpressionType";
+    var _En = "Encryption";
+    var _Ena = "Enabled";
+    var _End = "End";
+    var _Er = "Errors";
+    var _Err = "Error";
+    var _Ev = "Events";
+    var _Eve = "Event";
+    var _Ex = "Expires";
+    var _Exp = "Expression";
+    var _F = "Filter";
+    var _FD = "FieldDelimiter";
+    var _FHI = "FileHeaderInfo";
+    var _FO = "FetchOwner";
+    var _FR = "FilterRule";
+    var _FRL = "FilterRuleList";
+    var _FRi = "FilterRules";
+    var _Fi = "Field";
+    var _Fo = "Format";
+    var _Fr = "Frequency";
+    var _G = "Grants";
+    var _GBA = "GetBucketAbac";
+    var _GBAC = "GetBucketAccelerateConfiguration";
+    var _GBACO = "GetBucketAccelerateConfigurationOutput";
+    var _GBACOe = "GetBucketAnalyticsConfigurationOutput";
+    var _GBACR = "GetBucketAccelerateConfigurationRequest";
+    var _GBACRe = "GetBucketAnalyticsConfigurationRequest";
+    var _GBACe = "GetBucketAnalyticsConfiguration";
+    var _GBAO = "GetBucketAbacOutput";
+    var _GBAOe = "GetBucketAclOutput";
+    var _GBAR = "GetBucketAbacRequest";
+    var _GBARe = "GetBucketAclRequest";
+    var _GBAe = "GetBucketAcl";
+    var _GBC = "GetBucketCors";
+    var _GBCO = "GetBucketCorsOutput";
+    var _GBCR = "GetBucketCorsRequest";
+    var _GBE = "GetBucketEncryption";
+    var _GBEO = "GetBucketEncryptionOutput";
+    var _GBER = "GetBucketEncryptionRequest";
+    var _GBIC = "GetBucketInventoryConfiguration";
+    var _GBICO = "GetBucketInventoryConfigurationOutput";
+    var _GBICR = "GetBucketInventoryConfigurationRequest";
+    var _GBITC = "GetBucketIntelligentTieringConfiguration";
+    var _GBITCO = "GetBucketIntelligentTieringConfigurationOutput";
+    var _GBITCR = "GetBucketIntelligentTieringConfigurationRequest";
+    var _GBL = "GetBucketLocation";
+    var _GBLC = "GetBucketLifecycleConfiguration";
+    var _GBLCO = "GetBucketLifecycleConfigurationOutput";
+    var _GBLCR = "GetBucketLifecycleConfigurationRequest";
+    var _GBLO = "GetBucketLocationOutput";
+    var _GBLOe = "GetBucketLoggingOutput";
+    var _GBLR = "GetBucketLocationRequest";
+    var _GBLRe = "GetBucketLoggingRequest";
+    var _GBLe = "GetBucketLogging";
+    var _GBMC = "GetBucketMetadataConfiguration";
+    var _GBMCO = "GetBucketMetadataConfigurationOutput";
+    var _GBMCOe = "GetBucketMetricsConfigurationOutput";
+    var _GBMCR = "GetBucketMetadataConfigurationResult";
+    var _GBMCRe = "GetBucketMetadataConfigurationRequest";
+    var _GBMCRet = "GetBucketMetricsConfigurationRequest";
+    var _GBMCe = "GetBucketMetricsConfiguration";
+    var _GBMTC = "GetBucketMetadataTableConfiguration";
+    var _GBMTCO = "GetBucketMetadataTableConfigurationOutput";
+    var _GBMTCR = "GetBucketMetadataTableConfigurationResult";
+    var _GBMTCRe = "GetBucketMetadataTableConfigurationRequest";
+    var _GBNC = "GetBucketNotificationConfiguration";
+    var _GBNCR = "GetBucketNotificationConfigurationRequest";
+    var _GBOC = "GetBucketOwnershipControls";
+    var _GBOCO = "GetBucketOwnershipControlsOutput";
+    var _GBOCR = "GetBucketOwnershipControlsRequest";
+    var _GBP = "GetBucketPolicy";
+    var _GBPO = "GetBucketPolicyOutput";
+    var _GBPR = "GetBucketPolicyRequest";
+    var _GBPS = "GetBucketPolicyStatus";
+    var _GBPSO = "GetBucketPolicyStatusOutput";
+    var _GBPSR = "GetBucketPolicyStatusRequest";
+    var _GBR = "GetBucketReplication";
+    var _GBRO = "GetBucketReplicationOutput";
+    var _GBRP = "GetBucketRequestPayment";
+    var _GBRPO = "GetBucketRequestPaymentOutput";
+    var _GBRPR = "GetBucketRequestPaymentRequest";
+    var _GBRR = "GetBucketReplicationRequest";
+    var _GBT = "GetBucketTagging";
+    var _GBTO = "GetBucketTaggingOutput";
+    var _GBTR = "GetBucketTaggingRequest";
+    var _GBV = "GetBucketVersioning";
+    var _GBVO = "GetBucketVersioningOutput";
+    var _GBVR = "GetBucketVersioningRequest";
+    var _GBW = "GetBucketWebsite";
+    var _GBWO = "GetBucketWebsiteOutput";
+    var _GBWR = "GetBucketWebsiteRequest";
+    var _GFC = "GrantFullControl";
+    var _GJP = "GlacierJobParameters";
+    var _GO = "GetObject";
+    var _GOA = "GetObjectAcl";
+    var _GOAO = "GetObjectAclOutput";
+    var _GOAOe = "GetObjectAttributesOutput";
+    var _GOAP = "GetObjectAttributesParts";
+    var _GOAR = "GetObjectAclRequest";
+    var _GOARe = "GetObjectAttributesResponse";
+    var _GOARet = "GetObjectAttributesRequest";
+    var _GOAe = "GetObjectAttributes";
+    var _GOLC = "GetObjectLockConfiguration";
+    var _GOLCO = "GetObjectLockConfigurationOutput";
+    var _GOLCR = "GetObjectLockConfigurationRequest";
+    var _GOLH = "GetObjectLegalHold";
+    var _GOLHO = "GetObjectLegalHoldOutput";
+    var _GOLHR = "GetObjectLegalHoldRequest";
+    var _GOO = "GetObjectOutput";
+    var _GOR = "GetObjectRequest";
+    var _GORO = "GetObjectRetentionOutput";
+    var _GORR = "GetObjectRetentionRequest";
+    var _GORe = "GetObjectRetention";
+    var _GOT = "GetObjectTagging";
+    var _GOTO = "GetObjectTaggingOutput";
+    var _GOTOe = "GetObjectTorrentOutput";
+    var _GOTR = "GetObjectTaggingRequest";
+    var _GOTRe = "GetObjectTorrentRequest";
+    var _GOTe = "GetObjectTorrent";
+    var _GPAB = "GetPublicAccessBlock";
+    var _GPABO = "GetPublicAccessBlockOutput";
+    var _GPABR = "GetPublicAccessBlockRequest";
+    var _GR = "GrantRead";
+    var _GRACP = "GrantReadACP";
+    var _GW = "GrantWrite";
+    var _GWACP = "GrantWriteACP";
+    var _Gr = "Grant";
+    var _Gra = "Grantee";
+    var _HB = "HeadBucket";
+    var _HBO = "HeadBucketOutput";
+    var _HBR = "HeadBucketRequest";
+    var _HECRE = "HttpErrorCodeReturnedEquals";
+    var _HN = "HostName";
+    var _HO = "HeadObject";
+    var _HOO = "HeadObjectOutput";
+    var _HOR = "HeadObjectRequest";
+    var _HRC = "HttpRedirectCode";
+    var _I = "Id";
+    var _IC = "InventoryConfiguration";
+    var _ICL = "InventoryConfigurationList";
+    var _ID = "ID";
+    var _IDn = "IndexDocument";
+    var _IDnv = "InventoryDestination";
+    var _IE = "IsEnabled";
+    var _IEn = "InventoryEncryption";
+    var _IF = "InventoryFilter";
+    var _IL = "IsLatest";
+    var _IM = "IfMatch";
+    var _IMIT = "IfMatchInitiatedTime";
+    var _IMLMT = "IfMatchLastModifiedTime";
+    var _IMS = "IfMatchSize";
+    var _IMS_ = "If-Modified-Since";
+    var _IMSf = "IfModifiedSince";
+    var _IMUR = "InitiateMultipartUploadResult";
+    var _IM_ = "If-Match";
+    var _INM = "IfNoneMatch";
+    var _INM_ = "If-None-Match";
+    var _IOF = "InventoryOptionalFields";
+    var _IOS = "InvalidObjectState";
+    var _IOV = "IncludedObjectVersions";
+    var _IP = "IsPublic";
+    var _IPA = "IgnorePublicAcls";
+    var _IPM = "IdempotencyParameterMismatch";
+    var _IR = "InvalidRequest";
+    var _IRIP = "IsRestoreInProgress";
+    var _IS = "InputSerialization";
+    var _ISBD = "InventoryS3BucketDestination";
+    var _ISn = "InventorySchedule";
+    var _IT2 = "IsTruncated";
+    var _ITAO = "IntelligentTieringAndOperator";
+    var _ITC = "IntelligentTieringConfiguration";
+    var _ITCL = "IntelligentTieringConfigurationList";
+    var _ITCR = "InventoryTableConfigurationResult";
+    var _ITCU = "InventoryTableConfigurationUpdates";
+    var _ITCn = "InventoryTableConfiguration";
+    var _ITF = "IntelligentTieringFilter";
+    var _IUS = "IfUnmodifiedSince";
+    var _IUS_ = "If-Unmodified-Since";
+    var _IWO = "InvalidWriteOffset";
+    var _In = "Initiator";
+    var _Ini = "Initiated";
+    var _JSON = "JSON";
+    var _JSONI = "JSONInput";
+    var _JSONO = "JSONOutput";
+    var _JTC = "JournalTableConfiguration";
+    var _JTCR = "JournalTableConfigurationResult";
+    var _JTCU = "JournalTableConfigurationUpdates";
+    var _K2 = "Key";
+    var _KC = "KeyCount";
+    var _KI = "KeyId";
+    var _KKA = "KmsKeyArn";
+    var _KM = "KeyMarker";
+    var _KMSC = "KMSContext";
+    var _KMSKA = "KMSKeyArn";
+    var _KMSKI = "KMSKeyId";
+    var _KMSMKID = "KMSMasterKeyID";
+    var _KPE = "KeyPrefixEquals";
+    var _L = "Location";
+    var _LAMBR = "ListAllMyBucketsResult";
+    var _LAMDBR = "ListAllMyDirectoryBucketsResult";
+    var _LB = "ListBuckets";
+    var _LBAC = "ListBucketAnalyticsConfigurations";
+    var _LBACO = "ListBucketAnalyticsConfigurationsOutput";
+    var _LBACR = "ListBucketAnalyticsConfigurationResult";
+    var _LBACRi = "ListBucketAnalyticsConfigurationsRequest";
+    var _LBIC = "ListBucketInventoryConfigurations";
+    var _LBICO = "ListBucketInventoryConfigurationsOutput";
+    var _LBICR = "ListBucketInventoryConfigurationsRequest";
+    var _LBITC = "ListBucketIntelligentTieringConfigurations";
+    var _LBITCO = "ListBucketIntelligentTieringConfigurationsOutput";
+    var _LBITCR = "ListBucketIntelligentTieringConfigurationsRequest";
+    var _LBMC = "ListBucketMetricsConfigurations";
+    var _LBMCO = "ListBucketMetricsConfigurationsOutput";
+    var _LBMCR = "ListBucketMetricsConfigurationsRequest";
+    var _LBO = "ListBucketsOutput";
+    var _LBR = "ListBucketsRequest";
+    var _LBRi = "ListBucketResult";
+    var _LC = "LocationConstraint";
+    var _LCi = "LifecycleConfiguration";
+    var _LDB = "ListDirectoryBuckets";
+    var _LDBO = "ListDirectoryBucketsOutput";
+    var _LDBR = "ListDirectoryBucketsRequest";
+    var _LE = "LoggingEnabled";
+    var _LEi = "LifecycleExpiration";
+    var _LFA = "LambdaFunctionArn";
+    var _LFC = "LambdaFunctionConfiguration";
+    var _LFCL = "LambdaFunctionConfigurationList";
+    var _LFCa = "LambdaFunctionConfigurations";
+    var _LH = "LegalHold";
+    var _LI = "LocationInfo";
+    var _LICR = "ListInventoryConfigurationsResult";
+    var _LM = "LastModified";
+    var _LMCR = "ListMetricsConfigurationsResult";
+    var _LMT = "LastModifiedTime";
+    var _LMU = "ListMultipartUploads";
+    var _LMUO = "ListMultipartUploadsOutput";
+    var _LMUR = "ListMultipartUploadsResult";
+    var _LMURi = "ListMultipartUploadsRequest";
+    var _LM_ = "Last-Modified";
+    var _LO = "ListObjects";
+    var _LOO = "ListObjectsOutput";
+    var _LOR = "ListObjectsRequest";
+    var _LOV = "ListObjectsV2";
+    var _LOVO = "ListObjectsV2Output";
+    var _LOVOi = "ListObjectVersionsOutput";
+    var _LOVR = "ListObjectsV2Request";
+    var _LOVRi = "ListObjectVersionsRequest";
+    var _LOVi = "ListObjectVersions";
+    var _LP = "ListParts";
+    var _LPO = "ListPartsOutput";
+    var _LPR = "ListPartsResult";
+    var _LPRi = "ListPartsRequest";
+    var _LR = "LifecycleRule";
+    var _LRAO = "LifecycleRuleAndOperator";
+    var _LRF = "LifecycleRuleFilter";
+    var _LRi = "LifecycleRules";
+    var _LVR = "ListVersionsResult";
+    var _M = "Metadata";
+    var _MAO = "MetricsAndOperator";
+    var _MAS = "MaxAgeSeconds";
+    var _MB = "MaxBuckets";
+    var _MC = "MetadataConfiguration";
+    var _MCL = "MetricsConfigurationList";
+    var _MCR = "MetadataConfigurationResult";
+    var _MCe = "MetricsConfiguration";
+    var _MD = "MetadataDirective";
+    var _MDB = "MaxDirectoryBuckets";
+    var _MDf = "MfaDelete";
+    var _ME = "MetadataEntry";
+    var _MF = "MetricsFilter";
+    var _MFA = "MFA";
+    var _MFAD = "MFADelete";
+    var _MK = "MaxKeys";
+    var _MM = "MissingMeta";
+    var _MOS = "MpuObjectSize";
+    var _MP = "MaxParts";
+    var _MTC = "MetadataTableConfiguration";
+    var _MTCR = "MetadataTableConfigurationResult";
+    var _MTEC = "MetadataTableEncryptionConfiguration";
+    var _MU = "MultipartUpload";
+    var _MUL = "MultipartUploadList";
+    var _MUa = "MaxUploads";
+    var _Ma = "Marker";
+    var _Me = "Metrics";
+    var _Mes = "Message";
+    var _Mi = "Minutes";
+    var _Mo = "Mode";
+    var _N = "Name";
+    var _NC = "NotificationConfiguration";
+    var _NCF = "NotificationConfigurationFilter";
+    var _NCT = "NextContinuationToken";
+    var _ND = "NoncurrentDays";
+    var _NEKKAS = "NonEmptyKmsKeyArnString";
+    var _NF = "NotFound";
+    var _NKM = "NextKeyMarker";
+    var _NM = "NextMarker";
+    var _NNV = "NewerNoncurrentVersions";
+    var _NPNM = "NextPartNumberMarker";
+    var _NSB = "NoSuchBucket";
+    var _NSK = "NoSuchKey";
+    var _NSU = "NoSuchUpload";
+    var _NUIM = "NextUploadIdMarker";
+    var _NVE = "NoncurrentVersionExpiration";
+    var _NVIM = "NextVersionIdMarker";
+    var _NVT = "NoncurrentVersionTransitions";
+    var _NVTL = "NoncurrentVersionTransitionList";
+    var _NVTo = "NoncurrentVersionTransition";
+    var _O = "Owner";
+    var _OA = "ObjectAttributes";
+    var _OAIATE = "ObjectAlreadyInActiveTierError";
+    var _OC = "OwnershipControls";
+    var _OCR = "OwnershipControlsRule";
+    var _OCRw = "OwnershipControlsRules";
+    var _OE = "ObjectEncryption";
+    var _OF = "OptionalFields";
+    var _OI = "ObjectIdentifier";
+    var _OIL = "ObjectIdentifierList";
+    var _OL = "OutputLocation";
+    var _OLC = "ObjectLockConfiguration";
+    var _OLE = "ObjectLockEnabled";
+    var _OLEFB = "ObjectLockEnabledForBucket";
+    var _OLLH = "ObjectLockLegalHold";
+    var _OLLHS = "ObjectLockLegalHoldStatus";
+    var _OLM = "ObjectLockMode";
+    var _OLR = "ObjectLockRetention";
+    var _OLRUD = "ObjectLockRetainUntilDate";
+    var _OLRb = "ObjectLockRule";
+    var _OLb = "ObjectList";
+    var _ONIATE = "ObjectNotInActiveTierError";
+    var _OO = "ObjectOwnership";
+    var _OOA = "OptionalObjectAttributes";
+    var _OP = "ObjectParts";
+    var _OPb = "ObjectPart";
+    var _OS = "ObjectSize";
+    var _OSGT = "ObjectSizeGreaterThan";
+    var _OSLT = "ObjectSizeLessThan";
+    var _OSV = "OutputSchemaVersion";
+    var _OSu = "OutputSerialization";
+    var _OV = "ObjectVersion";
+    var _OVL = "ObjectVersionList";
+    var _Ob = "Objects";
+    var _Obj = "Object";
+    var _P2 = "Prefix";
+    var _PABC = "PublicAccessBlockConfiguration";
+    var _PBA = "PutBucketAbac";
+    var _PBAC = "PutBucketAccelerateConfiguration";
+    var _PBACR = "PutBucketAccelerateConfigurationRequest";
+    var _PBACRu = "PutBucketAnalyticsConfigurationRequest";
+    var _PBACu = "PutBucketAnalyticsConfiguration";
+    var _PBAR = "PutBucketAbacRequest";
+    var _PBARu = "PutBucketAclRequest";
+    var _PBAu = "PutBucketAcl";
+    var _PBC = "PutBucketCors";
+    var _PBCR = "PutBucketCorsRequest";
+    var _PBE = "PutBucketEncryption";
+    var _PBER = "PutBucketEncryptionRequest";
+    var _PBIC = "PutBucketInventoryConfiguration";
+    var _PBICR = "PutBucketInventoryConfigurationRequest";
+    var _PBITC = "PutBucketIntelligentTieringConfiguration";
+    var _PBITCR = "PutBucketIntelligentTieringConfigurationRequest";
+    var _PBL = "PutBucketLogging";
+    var _PBLC = "PutBucketLifecycleConfiguration";
+    var _PBLCO = "PutBucketLifecycleConfigurationOutput";
+    var _PBLCR = "PutBucketLifecycleConfigurationRequest";
+    var _PBLR = "PutBucketLoggingRequest";
+    var _PBMC = "PutBucketMetricsConfiguration";
+    var _PBMCR = "PutBucketMetricsConfigurationRequest";
+    var _PBNC = "PutBucketNotificationConfiguration";
+    var _PBNCR = "PutBucketNotificationConfigurationRequest";
+    var _PBOC = "PutBucketOwnershipControls";
+    var _PBOCR = "PutBucketOwnershipControlsRequest";
+    var _PBP = "PutBucketPolicy";
+    var _PBPR = "PutBucketPolicyRequest";
+    var _PBR = "PutBucketReplication";
+    var _PBRP = "PutBucketRequestPayment";
+    var _PBRPR = "PutBucketRequestPaymentRequest";
+    var _PBRR = "PutBucketReplicationRequest";
+    var _PBT = "PutBucketTagging";
+    var _PBTR = "PutBucketTaggingRequest";
+    var _PBV = "PutBucketVersioning";
+    var _PBVR = "PutBucketVersioningRequest";
+    var _PBW = "PutBucketWebsite";
+    var _PBWR = "PutBucketWebsiteRequest";
+    var _PC2 = "PartsCount";
+    var _PDS = "PartitionDateSource";
+    var _PE = "ProgressEvent";
+    var _PI2 = "ParquetInput";
+    var _PL = "PartsList";
+    var _PN = "PartNumber";
+    var _PNM = "PartNumberMarker";
+    var _PO = "PutObject";
+    var _POA = "PutObjectAcl";
+    var _POAO = "PutObjectAclOutput";
+    var _POAR = "PutObjectAclRequest";
+    var _POLC = "PutObjectLockConfiguration";
+    var _POLCO = "PutObjectLockConfigurationOutput";
+    var _POLCR = "PutObjectLockConfigurationRequest";
+    var _POLH = "PutObjectLegalHold";
+    var _POLHO = "PutObjectLegalHoldOutput";
+    var _POLHR = "PutObjectLegalHoldRequest";
+    var _POO = "PutObjectOutput";
+    var _POR = "PutObjectRequest";
+    var _PORO = "PutObjectRetentionOutput";
+    var _PORR = "PutObjectRetentionRequest";
+    var _PORu = "PutObjectRetention";
+    var _POT = "PutObjectTagging";
+    var _POTO = "PutObjectTaggingOutput";
+    var _POTR = "PutObjectTaggingRequest";
+    var _PP = "PartitionedPrefix";
+    var _PPAB = "PutPublicAccessBlock";
+    var _PPABR = "PutPublicAccessBlockRequest";
+    var _PS = "PolicyStatus";
+    var _Pa = "Parts";
+    var _Par = "Part";
+    var _Parq = "Parquet";
+    var _Pay = "Payer";
+    var _Payl = "Payload";
+    var _Pe = "Permission";
+    var _Po = "Policy";
+    var _Pr2 = "Progress";
+    var _Pri = "Priority";
+    var _Pro = "Protocol";
+    var _Q = "Quiet";
+    var _QA = "QueueArn";
+    var _QC = "QuoteCharacter";
+    var _QCL = "QueueConfigurationList";
+    var _QCu = "QueueConfigurations";
+    var _QCue = "QueueConfiguration";
+    var _QEC = "QuoteEscapeCharacter";
+    var _QF = "QuoteFields";
+    var _Qu = "Queue";
+    var _R = "Rules";
+    var _RART = "RedirectAllRequestsTo";
+    var _RC = "RequestCharged";
+    var _RCC = "ResponseCacheControl";
+    var _RCD = "ResponseContentDisposition";
+    var _RCE = "ResponseContentEncoding";
+    var _RCL = "ResponseContentLanguage";
+    var _RCT = "ResponseContentType";
+    var _RCe = "ReplicationConfiguration";
+    var _RD = "RecordDelimiter";
+    var _RE = "ResponseExpires";
+    var _RED = "RestoreExpiryDate";
+    var _REe = "RecordExpiration";
+    var _REec = "RecordsEvent";
+    var _RKKID = "ReplicaKmsKeyID";
+    var _RKPW = "ReplaceKeyPrefixWith";
+    var _RKW = "ReplaceKeyWith";
+    var _RM = "ReplicaModifications";
+    var _RO = "RenameObject";
+    var _ROO = "RenameObjectOutput";
+    var _ROOe = "RestoreObjectOutput";
+    var _ROP = "RestoreOutputPath";
+    var _ROR = "RenameObjectRequest";
+    var _RORe = "RestoreObjectRequest";
+    var _ROe = "RestoreObject";
+    var _RP = "RequestPayer";
+    var _RPB = "RestrictPublicBuckets";
+    var _RPC = "RequestPaymentConfiguration";
+    var _RPe = "RequestProgress";
+    var _RR = "RoutingRules";
+    var _RRAO = "ReplicationRuleAndOperator";
+    var _RRF = "ReplicationRuleFilter";
+    var _RRe = "ReplicationRule";
+    var _RRep = "ReplicationRules";
+    var _RReq = "RequestRoute";
+    var _RRes = "RestoreRequest";
+    var _RRo = "RoutingRule";
+    var _RS = "ReplicationStatus";
+    var _RSe = "RestoreStatus";
+    var _RSen = "RenameSource";
+    var _RT3 = "ReplicationTime";
+    var _RTV = "ReplicationTimeValue";
+    var _RTe = "RequestToken";
+    var _RUD = "RetainUntilDate";
+    var _Ra = "Range";
+    var _Re = "Restore";
+    var _Rec = "Records";
+    var _Red = "Redirect";
+    var _Ret = "Retention";
+    var _Ro = "Role";
+    var _Ru = "Rule";
+    var _S = "Status";
+    var _SA = "StartAfter";
+    var _SAK2 = "SecretAccessKey";
+    var _SAs = "SseAlgorithm";
+    var _SB = "StreamingBlob";
+    var _SBD = "S3BucketDestination";
+    var _SC = "StorageClass";
+    var _SCA = "StorageClassAnalysis";
+    var _SCADE = "StorageClassAnalysisDataExport";
+    var _SCV = "SessionCredentialValue";
+    var _SCe = "SessionCredentials";
+    var _SCt = "StatusCode";
+    var _SDV = "SkipDestinationValidation";
+    var _SE = "StatsEvent";
+    var _SIM = "SourceIfMatch";
+    var _SIMS = "SourceIfModifiedSince";
+    var _SINM = "SourceIfNoneMatch";
+    var _SIUS = "SourceIfUnmodifiedSince";
+    var _SK = "SSE-KMS";
+    var _SKEO = "SseKmsEncryptedObjects";
+    var _SKF = "S3KeyFilter";
+    var _SKe = "S3Key";
+    var _SL = "S3Location";
+    var _SM = "SessionMode";
+    var _SOC = "SelectObjectContent";
+    var _SOCES = "SelectObjectContentEventStream";
+    var _SOCO = "SelectObjectContentOutput";
+    var _SOCR = "SelectObjectContentRequest";
+    var _SP = "SelectParameters";
+    var _SPi = "SimplePrefix";
+    var _SR = "ScanRange";
+    var _SS = "SSE-S3";
+    var _SSC = "SourceSelectionCriteria";
+    var _SSE = "ServerSideEncryption";
+    var _SSEA = "SSEAlgorithm";
+    var _SSEBD = "ServerSideEncryptionByDefault";
+    var _SSEC = "ServerSideEncryptionConfiguration";
+    var _SSECA = "SSECustomerAlgorithm";
+    var _SSECK = "SSECustomerKey";
+    var _SSECKMD = "SSECustomerKeyMD5";
+    var _SSEKMS = "SSEKMS";
+    var _SSEKMSE = "SSEKMSEncryption";
+    var _SSEKMSEC = "SSEKMSEncryptionContext";
+    var _SSEKMSKI = "SSEKMSKeyId";
+    var _SSER = "ServerSideEncryptionRule";
+    var _SSERe = "ServerSideEncryptionRules";
+    var _SSES = "SSES3";
+    var _ST2 = "SessionToken";
+    var _STD = "S3TablesDestination";
+    var _STDR = "S3TablesDestinationResult";
+    var _S_ = "S3";
+    var _Sc = "Schedule";
+    var _Si = "Size";
+    var _St = "Start";
+    var _Sta = "Stats";
+    var _Su = "Suffix";
+    var _T2 = "Tags";
+    var _TA = "TableArn";
+    var _TAo = "TopicArn";
+    var _TB = "TargetBucket";
+    var _TBA = "TableBucketArn";
+    var _TBT = "TableBucketType";
+    var _TC2 = "TagCount";
+    var _TCL = "TopicConfigurationList";
+    var _TCo = "TopicConfigurations";
+    var _TCop = "TopicConfiguration";
+    var _TD = "TaggingDirective";
+    var _TDMOS = "TransitionDefaultMinimumObjectSize";
+    var _TG = "TargetGrants";
+    var _TGa = "TargetGrant";
+    var _TL = "TieringList";
+    var _TLr = "TransitionList";
+    var _TMP = "TooManyParts";
+    var _TN = "TableNamespace";
+    var _TNa = "TableName";
+    var _TOKF = "TargetObjectKeyFormat";
+    var _TP = "TargetPrefix";
+    var _TPC = "TotalPartsCount";
+    var _TS = "TagSet";
+    var _TSa = "TableStatus";
+    var _Ta2 = "Tag";
+    var _Tag = "Tagging";
+    var _Ti = "Tier";
+    var _Tie = "Tierings";
+    var _Tier = "Tiering";
+    var _Tim = "Time";
+    var _To = "Token";
+    var _Top = "Topic";
+    var _Tr = "Transitions";
+    var _Tra = "Transition";
+    var _Ty = "Type";
+    var _U = "Uploads";
+    var _UBMITC = "UpdateBucketMetadataInventoryTableConfiguration";
+    var _UBMITCR = "UpdateBucketMetadataInventoryTableConfigurationRequest";
+    var _UBMJTC = "UpdateBucketMetadataJournalTableConfiguration";
+    var _UBMJTCR = "UpdateBucketMetadataJournalTableConfigurationRequest";
+    var _UI = "UploadId";
+    var _UIM = "UploadIdMarker";
+    var _UM = "UserMetadata";
+    var _UOE = "UpdateObjectEncryption";
+    var _UOER = "UpdateObjectEncryptionRequest";
+    var _UOERp = "UpdateObjectEncryptionResponse";
+    var _UP = "UploadPart";
+    var _UPC = "UploadPartCopy";
+    var _UPCO = "UploadPartCopyOutput";
+    var _UPCR = "UploadPartCopyRequest";
+    var _UPO = "UploadPartOutput";
+    var _UPR = "UploadPartRequest";
+    var _URI = "URI";
+    var _Up = "Upload";
+    var _V2 = "Value";
+    var _VC = "VersioningConfiguration";
+    var _VI = "VersionId";
+    var _VIM = "VersionIdMarker";
+    var _Ve = "Versions";
+    var _Ver = "Version";
+    var _WC = "WebsiteConfiguration";
+    var _WGOR = "WriteGetObjectResponse";
+    var _WGORR = "WriteGetObjectResponseRequest";
+    var _WOB = "WriteOffsetBytes";
+    var _WRL = "WebsiteRedirectLocation";
+    var _Y = "Years";
+    var _ar = "accept-ranges";
+    var _br = "bucket-region";
+    var _c4 = "client";
+    var _ct = "continuation-token";
+    var _d = "delimiter";
+    var _e4 = "error";
+    var _eP = "eventPayload";
+    var _en = "endpoint";
+    var _et = "encoding-type";
+    var _fo = "fetch-owner";
+    var _h3 = "http";
+    var _hC = "httpChecksum";
+    var _hE4 = "httpError";
+    var _hH = "httpHeader";
+    var _hL = "hostLabel";
+    var _hP = "httpPayload";
+    var _hPH = "httpPrefixHeaders";
+    var _hQ = "httpQuery";
+    var _hi = "http://www.w3.org/2001/XMLSchema-instance";
+    var _i = "id";
+    var _iT3 = "idempotencyToken";
+    var _km = "key-marker";
+    var _m3 = "marker";
+    var _mb = "max-buckets";
+    var _mdb = "max-directory-buckets";
+    var _mk = "max-keys";
+    var _mp = "max-parts";
+    var _mu = "max-uploads";
+    var _p = "prefix";
+    var _pN = "partNumber";
+    var _pnm = "part-number-marker";
+    var _rcc = "response-cache-control";
+    var _rcd = "response-content-disposition";
+    var _rce = "response-content-encoding";
+    var _rcl = "response-content-language";
+    var _rct = "response-content-type";
+    var _re = "response-expires";
+    var _s4 = "smithy.ts.sdk.synthetic.com.amazonaws.s3";
+    var _sa = "start-after";
+    var _st = "streaming";
+    var _uI = "uploadId";
+    var _uim = "upload-id-marker";
+    var _vI = "versionId";
+    var _vim = "version-id-marker";
+    var _x = "xsi";
+    var _xA = "xmlAttribute";
+    var _xF = "xmlFlattened";
+    var _xN = "xmlName";
+    var _xNm = "xmlNamespace";
+    var _xaa = "x-amz-acl";
+    var _xaad = "x-amz-abort-date";
+    var _xaapa = "x-amz-access-point-alias";
+    var _xaari = "x-amz-abort-rule-id";
+    var _xaas = "x-amz-archive-status";
+    var _xaba = "x-amz-bucket-arn";
+    var _xabgr = "x-amz-bypass-governance-retention";
+    var _xabln = "x-amz-bucket-location-name";
+    var _xablt = "x-amz-bucket-location-type";
+    var _xabole = "x-amz-bucket-object-lock-enabled";
+    var _xabolt = "x-amz-bucket-object-lock-token";
+    var _xabr = "x-amz-bucket-region";
+    var _xaca = "x-amz-checksum-algorithm";
+    var _xacc = "x-amz-checksum-crc32";
+    var _xacc_ = "x-amz-checksum-crc32c";
+    var _xacc__ = "x-amz-checksum-crc64nvme";
+    var _xacm = "x-amz-checksum-mode";
+    var _xacrsba = "x-amz-confirm-remove-self-bucket-access";
+    var _xacs = "x-amz-checksum-sha1";
+    var _xacs_ = "x-amz-checksum-sha256";
+    var _xacs__ = "x-amz-copy-source";
+    var _xacsim = "x-amz-copy-source-if-match";
+    var _xacsims = "x-amz-copy-source-if-modified-since";
+    var _xacsinm = "x-amz-copy-source-if-none-match";
+    var _xacsius = "x-amz-copy-source-if-unmodified-since";
+    var _xacsm = "x-amz-create-session-mode";
+    var _xacsr = "x-amz-copy-source-range";
+    var _xacssseca = "x-amz-copy-source-server-side-encryption-customer-algorithm";
+    var _xacssseck = "x-amz-copy-source-server-side-encryption-customer-key";
+    var _xacssseckM = "x-amz-copy-source-server-side-encryption-customer-key-MD5";
+    var _xacsvi = "x-amz-copy-source-version-id";
+    var _xact = "x-amz-checksum-type";
+    var _xact_ = "x-amz-client-token";
+    var _xadm = "x-amz-delete-marker";
+    var _xae = "x-amz-expiration";
+    var _xaebo = "x-amz-expected-bucket-owner";
+    var _xafec = "x-amz-fwd-error-code";
+    var _xafem = "x-amz-fwd-error-message";
+    var _xafhCC = "x-amz-fwd-header-Cache-Control";
+    var _xafhCD = "x-amz-fwd-header-Content-Disposition";
+    var _xafhCE = "x-amz-fwd-header-Content-Encoding";
+    var _xafhCL = "x-amz-fwd-header-Content-Language";
+    var _xafhCR = "x-amz-fwd-header-Content-Range";
+    var _xafhCT = "x-amz-fwd-header-Content-Type";
+    var _xafhE = "x-amz-fwd-header-ETag";
+    var _xafhE_ = "x-amz-fwd-header-Expires";
+    var _xafhLM = "x-amz-fwd-header-Last-Modified";
+    var _xafhar = "x-amz-fwd-header-accept-ranges";
+    var _xafhxacc = "x-amz-fwd-header-x-amz-checksum-crc32";
+    var _xafhxacc_ = "x-amz-fwd-header-x-amz-checksum-crc32c";
+    var _xafhxacc__ = "x-amz-fwd-header-x-amz-checksum-crc64nvme";
+    var _xafhxacs = "x-amz-fwd-header-x-amz-checksum-sha1";
+    var _xafhxacs_ = "x-amz-fwd-header-x-amz-checksum-sha256";
+    var _xafhxadm = "x-amz-fwd-header-x-amz-delete-marker";
+    var _xafhxae = "x-amz-fwd-header-x-amz-expiration";
+    var _xafhxamm = "x-amz-fwd-header-x-amz-missing-meta";
+    var _xafhxampc = "x-amz-fwd-header-x-amz-mp-parts-count";
+    var _xafhxaollh = "x-amz-fwd-header-x-amz-object-lock-legal-hold";
+    var _xafhxaolm = "x-amz-fwd-header-x-amz-object-lock-mode";
+    var _xafhxaolrud = "x-amz-fwd-header-x-amz-object-lock-retain-until-date";
+    var _xafhxar = "x-amz-fwd-header-x-amz-restore";
+    var _xafhxarc = "x-amz-fwd-header-x-amz-request-charged";
+    var _xafhxars = "x-amz-fwd-header-x-amz-replication-status";
+    var _xafhxasc = "x-amz-fwd-header-x-amz-storage-class";
+    var _xafhxasse = "x-amz-fwd-header-x-amz-server-side-encryption";
+    var _xafhxasseakki = "x-amz-fwd-header-x-amz-server-side-encryption-aws-kms-key-id";
+    var _xafhxassebke = "x-amz-fwd-header-x-amz-server-side-encryption-bucket-key-enabled";
+    var _xafhxasseca = "x-amz-fwd-header-x-amz-server-side-encryption-customer-algorithm";
+    var _xafhxasseckM = "x-amz-fwd-header-x-amz-server-side-encryption-customer-key-MD5";
+    var _xafhxatc = "x-amz-fwd-header-x-amz-tagging-count";
+    var _xafhxavi = "x-amz-fwd-header-x-amz-version-id";
+    var _xafs = "x-amz-fwd-status";
+    var _xagfc = "x-amz-grant-full-control";
+    var _xagr = "x-amz-grant-read";
+    var _xagra = "x-amz-grant-read-acp";
+    var _xagw = "x-amz-grant-write";
+    var _xagwa = "x-amz-grant-write-acp";
+    var _xaimit = "x-amz-if-match-initiated-time";
+    var _xaimlmt = "x-amz-if-match-last-modified-time";
+    var _xaims = "x-amz-if-match-size";
+    var _xam = "x-amz-meta-";
+    var _xam_ = "x-amz-mfa";
+    var _xamd = "x-amz-metadata-directive";
+    var _xamm = "x-amz-missing-meta";
+    var _xamos = "x-amz-mp-object-size";
+    var _xamp = "x-amz-max-parts";
+    var _xampc = "x-amz-mp-parts-count";
+    var _xaoa = "x-amz-object-attributes";
+    var _xaollh = "x-amz-object-lock-legal-hold";
+    var _xaolm = "x-amz-object-lock-mode";
+    var _xaolrud = "x-amz-object-lock-retain-until-date";
+    var _xaoo = "x-amz-object-ownership";
+    var _xaooa = "x-amz-optional-object-attributes";
+    var _xaos = "x-amz-object-size";
+    var _xapnm = "x-amz-part-number-marker";
+    var _xar = "x-amz-restore";
+    var _xarc = "x-amz-request-charged";
+    var _xarop = "x-amz-restore-output-path";
+    var _xarp = "x-amz-request-payer";
+    var _xarr = "x-amz-request-route";
+    var _xars = "x-amz-replication-status";
+    var _xars_ = "x-amz-rename-source";
+    var _xarsim = "x-amz-rename-source-if-match";
+    var _xarsims = "x-amz-rename-source-if-modified-since";
+    var _xarsinm = "x-amz-rename-source-if-none-match";
+    var _xarsius = "x-amz-rename-source-if-unmodified-since";
+    var _xart = "x-amz-request-token";
+    var _xasc = "x-amz-storage-class";
+    var _xasca = "x-amz-sdk-checksum-algorithm";
+    var _xasdv = "x-amz-skip-destination-validation";
+    var _xasebo = "x-amz-source-expected-bucket-owner";
+    var _xasse = "x-amz-server-side-encryption";
+    var _xasseakki = "x-amz-server-side-encryption-aws-kms-key-id";
+    var _xassebke = "x-amz-server-side-encryption-bucket-key-enabled";
+    var _xassec = "x-amz-server-side-encryption-context";
+    var _xasseca = "x-amz-server-side-encryption-customer-algorithm";
+    var _xasseck = "x-amz-server-side-encryption-customer-key";
+    var _xasseckM = "x-amz-server-side-encryption-customer-key-MD5";
+    var _xat = "x-amz-tagging";
+    var _xatc = "x-amz-tagging-count";
+    var _xatd = "x-amz-tagging-directive";
+    var _xatdmos = "x-amz-transition-default-minimum-object-size";
+    var _xavi = "x-amz-version-id";
+    var _xawob = "x-amz-write-offset-bytes";
+    var _xawrl = "x-amz-website-redirect-location";
+    var _xs = "xsi:type";
+    var n04 = "com.amazonaws.s3";
+    var schema_1 = (init_schema(), __toCommonJS(schema_exports));
+    var errors_1 = require_errors2();
+    var S3ServiceException_1 = require_S3ServiceException();
+    var _s_registry4 = schema_1.TypeRegistry.for(_s4);
+    exports2.S3ServiceException$ = [-3, _s4, "S3ServiceException", 0, [], []];
+    _s_registry4.registerError(exports2.S3ServiceException$, S3ServiceException_1.S3ServiceException);
+    var n0_registry4 = schema_1.TypeRegistry.for(n04);
+    exports2.AccessDenied$ = [
+      -3,
+      n04,
+      _AD,
+      { [_e4]: _c4, [_hE4]: 403 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.AccessDenied$, errors_1.AccessDenied);
+    exports2.BucketAlreadyExists$ = [
+      -3,
+      n04,
+      _BAE,
+      { [_e4]: _c4, [_hE4]: 409 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.BucketAlreadyExists$, errors_1.BucketAlreadyExists);
+    exports2.BucketAlreadyOwnedByYou$ = [
+      -3,
+      n04,
+      _BAOBY,
+      { [_e4]: _c4, [_hE4]: 409 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.BucketAlreadyOwnedByYou$, errors_1.BucketAlreadyOwnedByYou);
+    exports2.EncryptionTypeMismatch$ = [
+      -3,
+      n04,
+      _ETM,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.EncryptionTypeMismatch$, errors_1.EncryptionTypeMismatch);
+    exports2.IdempotencyParameterMismatch$ = [
+      -3,
+      n04,
+      _IPM,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.IdempotencyParameterMismatch$, errors_1.IdempotencyParameterMismatch);
+    exports2.InvalidObjectState$ = [
+      -3,
+      n04,
+      _IOS,
+      { [_e4]: _c4, [_hE4]: 403 },
+      [_SC, _AT3],
+      [0, 0]
+    ];
+    n0_registry4.registerError(exports2.InvalidObjectState$, errors_1.InvalidObjectState);
+    exports2.InvalidRequest$ = [
+      -3,
+      n04,
+      _IR,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.InvalidRequest$, errors_1.InvalidRequest);
+    exports2.InvalidWriteOffset$ = [
+      -3,
+      n04,
+      _IWO,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.InvalidWriteOffset$, errors_1.InvalidWriteOffset);
+    exports2.NoSuchBucket$ = [
+      -3,
+      n04,
+      _NSB,
+      { [_e4]: _c4, [_hE4]: 404 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.NoSuchBucket$, errors_1.NoSuchBucket);
+    exports2.NoSuchKey$ = [
+      -3,
+      n04,
+      _NSK,
+      { [_e4]: _c4, [_hE4]: 404 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.NoSuchKey$, errors_1.NoSuchKey);
+    exports2.NoSuchUpload$ = [
+      -3,
+      n04,
+      _NSU,
+      { [_e4]: _c4, [_hE4]: 404 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.NoSuchUpload$, errors_1.NoSuchUpload);
+    exports2.NotFound$ = [
+      -3,
+      n04,
+      _NF,
+      { [_e4]: _c4 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.NotFound$, errors_1.NotFound);
+    exports2.ObjectAlreadyInActiveTierError$ = [
+      -3,
+      n04,
+      _OAIATE,
+      { [_e4]: _c4, [_hE4]: 403 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.ObjectAlreadyInActiveTierError$, errors_1.ObjectAlreadyInActiveTierError);
+    exports2.ObjectNotInActiveTierError$ = [
+      -3,
+      n04,
+      _ONIATE,
+      { [_e4]: _c4, [_hE4]: 403 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.ObjectNotInActiveTierError$, errors_1.ObjectNotInActiveTierError);
+    exports2.TooManyParts$ = [
+      -3,
+      n04,
+      _TMP,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [],
+      []
+    ];
+    n0_registry4.registerError(exports2.TooManyParts$, errors_1.TooManyParts);
+    exports2.errorTypeRegistries = [
+      _s_registry4,
+      n0_registry4
+    ];
+    var CopySourceSSECustomerKey = [0, n04, _CSSSECK, 8, 0];
+    var NonEmptyKmsKeyArnString = [0, n04, _NEKKAS, 8, 0];
+    var SessionCredentialValue = [0, n04, _SCV, 8, 0];
+    var SSECustomerKey = [0, n04, _SSECK, 8, 0];
+    var SSEKMSEncryptionContext = [0, n04, _SSEKMSEC, 8, 0];
+    var SSEKMSKeyId = [0, n04, _SSEKMSKI, 8, 0];
+    var StreamingBlob = [0, n04, _SB, { [_st]: 1 }, 42];
+    exports2.AbacStatus$ = [
+      3,
+      n04,
+      _AS,
+      0,
+      [_S],
+      [0]
+    ];
+    exports2.AbortIncompleteMultipartUpload$ = [
+      3,
+      n04,
+      _AIMU,
+      0,
+      [_DAI],
+      [1]
+    ];
+    exports2.AbortMultipartUploadOutput$ = [
+      3,
+      n04,
+      _AMUO,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.AbortMultipartUploadRequest$ = [
+      3,
+      n04,
+      _AMUR,
+      0,
+      [_B, _K2, _UI, _RP, _EBO, _IMIT],
+      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [6, { [_hH]: _xaimit }]],
+      3
+    ];
+    exports2.AccelerateConfiguration$ = [
+      3,
+      n04,
+      _AC,
+      0,
+      [_S],
+      [0]
+    ];
+    exports2.AccessControlPolicy$ = [
+      3,
+      n04,
+      _ACP,
+      0,
+      [_G, _O],
+      [[() => Grants, { [_xN]: _ACL }], () => exports2.Owner$]
+    ];
+    exports2.AccessControlTranslation$ = [
+      3,
+      n04,
+      _ACT,
+      0,
+      [_O],
+      [0],
+      1
+    ];
+    exports2.AnalyticsAndOperator$ = [
+      3,
+      n04,
+      _AAO,
+      0,
+      [_P2, _T2],
+      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
+    ];
+    exports2.AnalyticsConfiguration$ = [
+      3,
+      n04,
+      _ACn,
+      0,
+      [_I, _SCA, _F],
+      [0, () => exports2.StorageClassAnalysis$, [() => exports2.AnalyticsFilter$, 0]],
+      2
+    ];
+    exports2.AnalyticsExportDestination$ = [
+      3,
+      n04,
+      _AED,
+      0,
+      [_SBD],
+      [() => exports2.AnalyticsS3BucketDestination$],
+      1
+    ];
+    exports2.AnalyticsS3BucketDestination$ = [
+      3,
+      n04,
+      _ASBD,
+      0,
+      [_Fo, _B, _BAI, _P2],
+      [0, 0, 0, 0],
+      2
+    ];
+    exports2.BlockedEncryptionTypes$ = [
+      3,
+      n04,
+      _BET,
+      0,
+      [_ET],
+      [[() => EncryptionTypeList, { [_xF]: 1 }]]
+    ];
+    exports2.Bucket$ = [
+      3,
+      n04,
+      _B,
+      0,
+      [_N, _CD, _BR, _BA],
+      [0, 4, 0, 0]
+    ];
+    exports2.BucketInfo$ = [
+      3,
+      n04,
+      _BI,
+      0,
+      [_DR, _Ty],
+      [0, 0]
+    ];
+    exports2.BucketLifecycleConfiguration$ = [
+      3,
+      n04,
+      _BLC,
+      0,
+      [_R],
+      [[() => LifecycleRules, { [_xF]: 1, [_xN]: _Ru }]],
+      1
+    ];
+    exports2.BucketLoggingStatus$ = [
+      3,
+      n04,
+      _BLS,
+      0,
+      [_LE],
+      [[() => exports2.LoggingEnabled$, 0]]
+    ];
+    exports2.Checksum$ = [
+      3,
+      n04,
+      _C2,
+      0,
+      [_CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2],
+      [0, 0, 0, 0, 0, 0]
+    ];
+    exports2.CommonPrefix$ = [
+      3,
+      n04,
+      _CP,
+      0,
+      [_P2],
+      [0]
+    ];
+    exports2.CompletedMultipartUpload$ = [
+      3,
+      n04,
+      _CMU,
+      0,
+      [_Pa],
+      [[() => CompletedPartList, { [_xF]: 1, [_xN]: _Par }]]
+    ];
+    exports2.CompletedPart$ = [
+      3,
+      n04,
+      _CPo,
+      0,
+      [_ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _PN],
+      [0, 0, 0, 0, 0, 0, 1]
+    ];
+    exports2.CompleteMultipartUploadOutput$ = [
+      3,
+      n04,
+      _CMUO,
+      { [_xN]: _CMUR },
+      [_L, _B, _K2, _E2, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _SSE, _VI, _SSEKMSKI, _BKE, _RC],
+      [0, 0, 0, [0, { [_hH]: _xae }], 0, 0, 0, 0, 0, 0, 0, [0, { [_hH]: _xasse }], [0, { [_hH]: _xavi }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.CompleteMultipartUploadRequest$ = [
+      3,
+      n04,
+      _CMURo,
+      0,
+      [_B, _K2, _UI, _MU, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _MOS, _RP, _EBO, _IM, _INM, _SSECA, _SSECK, _SSECKMD],
+      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [() => exports2.CompletedMultipartUpload$, { [_hP]: 1, [_xN]: _CMUo }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [1, { [_hH]: _xamos }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }]],
+      3
+    ];
+    exports2.Condition$ = [
+      3,
+      n04,
+      _Co,
+      0,
+      [_HECRE, _KPE],
+      [0, 0]
+    ];
+    exports2.ContinuationEvent$ = [
+      3,
+      n04,
+      _CE,
+      0,
+      [],
+      []
+    ];
+    exports2.CopyObjectOutput$ = [
+      3,
+      n04,
+      _COO,
+      0,
+      [_COR, _E2, _CSVI, _VI, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RC],
+      [[() => exports2.CopyObjectResult$, 16], [0, { [_hH]: _xae }], [0, { [_hH]: _xacsvi }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.CopyObjectRequest$ = [
+      3,
+      n04,
+      _CORo,
+      0,
+      [_B, _CS2, _K2, _ACL_, _CC, _CA2, _CDo, _CEo, _CL, _CTo, _CSIM, _CSIMS, _CSINM, _CSIUS, _Ex, _GFC, _GR, _GRACP, _GWACP, _IM, _INM, _M, _MD, _TD, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _CSSSECA, _CSSSECK, _CSSSECKMD, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO, _ESBO],
+      [[0, 1], [0, { [_hH]: _xacs__ }], [0, 1], [0, { [_hH]: _xaa }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _xaca }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _xacsim }], [4, { [_hH]: _xacsims }], [0, { [_hH]: _xacsinm }], [4, { [_hH]: _xacsius }], [4, { [_hH]: _Ex }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xamd }], [0, { [_hH]: _xatd }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xacssseca }], [() => CopySourceSSECustomerKey, { [_hH]: _xacssseck }], [0, { [_hH]: _xacssseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasebo }]],
+      3
+    ];
+    exports2.CopyObjectResult$ = [
+      3,
+      n04,
+      _COR,
+      0,
+      [_ETa, _LM, _CT2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
+      [0, 4, 0, 0, 0, 0, 0, 0]
+    ];
+    exports2.CopyPartResult$ = [
+      3,
+      n04,
+      _CPR,
+      0,
+      [_ETa, _LM, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
+      [0, 4, 0, 0, 0, 0, 0]
+    ];
+    exports2.CORSConfiguration$ = [
+      3,
+      n04,
+      _CORSC,
+      0,
+      [_CORSR],
+      [[() => CORSRules, { [_xF]: 1, [_xN]: _CORSRu }]],
+      1
+    ];
+    exports2.CORSRule$ = [
+      3,
+      n04,
+      _CORSRu,
+      0,
+      [_AM, _AO, _ID, _AH, _EH, _MAS],
+      [[64 | 0, { [_xF]: 1, [_xN]: _AMl }], [64 | 0, { [_xF]: 1, [_xN]: _AOl }], 0, [64 | 0, { [_xF]: 1, [_xN]: _AHl }], [64 | 0, { [_xF]: 1, [_xN]: _EHx }], 1],
+      2
+    ];
+    exports2.CreateBucketConfiguration$ = [
+      3,
+      n04,
+      _CBC,
+      0,
+      [_LC, _L, _B, _T2],
+      [0, () => exports2.LocationInfo$, () => exports2.BucketInfo$, [() => TagSet, 0]]
+    ];
+    exports2.CreateBucketMetadataConfigurationRequest$ = [
+      3,
+      n04,
+      _CBMCR,
+      0,
+      [_B, _MC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.MetadataConfiguration$, { [_hP]: 1, [_xN]: _MC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.CreateBucketMetadataTableConfigurationRequest$ = [
+      3,
+      n04,
+      _CBMTCR,
+      0,
+      [_B, _MTC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.MetadataTableConfiguration$, { [_hP]: 1, [_xN]: _MTC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.CreateBucketOutput$ = [
+      3,
+      n04,
+      _CBO,
+      0,
+      [_L, _BA],
+      [[0, { [_hH]: _L }], [0, { [_hH]: _xaba }]]
+    ];
+    exports2.CreateBucketRequest$ = [
+      3,
+      n04,
+      _CBR,
+      0,
+      [_B, _ACL_, _CBC, _GFC, _GR, _GRACP, _GW, _GWACP, _OLEFB, _OO],
+      [[0, 1], [0, { [_hH]: _xaa }], [() => exports2.CreateBucketConfiguration$, { [_hP]: 1, [_xN]: _CBC }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [2, { [_hH]: _xabole }], [0, { [_hH]: _xaoo }]],
+      1
+    ];
+    exports2.CreateMultipartUploadOutput$ = [
+      3,
+      n04,
+      _CMUOr,
+      { [_xN]: _IMUR },
+      [_ADb, _ARI2, _B, _K2, _UI, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RC, _CA2, _CT2],
+      [[4, { [_hH]: _xaad }], [0, { [_hH]: _xaari }], [0, { [_xN]: _B }], 0, 0, [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xaca }], [0, { [_hH]: _xact }]]
+    ];
+    exports2.CreateMultipartUploadRequest$ = [
+      3,
+      n04,
+      _CMURr,
+      0,
+      [_B, _K2, _ACL_, _CC, _CDo, _CEo, _CL, _CTo, _Ex, _GFC, _GR, _GRACP, _GWACP, _M, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO, _CA2, _CT2],
+      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xaca }], [0, { [_hH]: _xact }]],
+      2
+    ];
+    exports2.CreateSessionOutput$ = [
+      3,
+      n04,
+      _CSO,
+      { [_xN]: _CSR },
+      [_Cr, _SSE, _SSEKMSKI, _SSEKMSEC, _BKE],
+      [[() => exports2.SessionCredentials$, { [_xN]: _Cr }], [0, { [_hH]: _xasse }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }]],
+      1
+    ];
+    exports2.CreateSessionRequest$ = [
+      3,
+      n04,
+      _CSRr,
+      0,
+      [_B, _SM, _SSE, _SSEKMSKI, _SSEKMSEC, _BKE],
+      [[0, 1], [0, { [_hH]: _xacsm }], [0, { [_hH]: _xasse }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }]],
+      1
+    ];
+    exports2.CSVInput$ = [
+      3,
+      n04,
+      _CSVIn,
+      0,
+      [_FHI, _Com, _QEC, _RD, _FD, _QC, _AQRD],
+      [0, 0, 0, 0, 0, 0, 2]
+    ];
+    exports2.CSVOutput$ = [
+      3,
+      n04,
+      _CSVO,
+      0,
+      [_QF, _QEC, _RD, _FD, _QC],
+      [0, 0, 0, 0, 0]
+    ];
+    exports2.DefaultRetention$ = [
+      3,
+      n04,
+      _DRe,
+      0,
+      [_Mo, _D, _Y],
+      [0, 1, 1]
+    ];
+    exports2.Delete$ = [
+      3,
+      n04,
+      _De,
+      0,
+      [_Ob, _Q],
+      [[() => ObjectIdentifierList, { [_xF]: 1, [_xN]: _Obj }], 2],
+      1
+    ];
+    exports2.DeleteBucketAnalyticsConfigurationRequest$ = [
+      3,
+      n04,
+      _DBACR,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.DeleteBucketCorsRequest$ = [
+      3,
+      n04,
+      _DBCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketEncryptionRequest$ = [
+      3,
+      n04,
+      _DBER,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketIntelligentTieringConfigurationRequest$ = [
+      3,
+      n04,
+      _DBITCR,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.DeleteBucketInventoryConfigurationRequest$ = [
+      3,
+      n04,
+      _DBICR,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.DeleteBucketLifecycleRequest$ = [
+      3,
+      n04,
+      _DBLR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketMetadataConfigurationRequest$ = [
+      3,
+      n04,
+      _DBMCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketMetadataTableConfigurationRequest$ = [
+      3,
+      n04,
+      _DBMTCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketMetricsConfigurationRequest$ = [
+      3,
+      n04,
+      _DBMCRe,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.DeleteBucketOwnershipControlsRequest$ = [
+      3,
+      n04,
+      _DBOCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketPolicyRequest$ = [
+      3,
+      n04,
+      _DBPR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketReplicationRequest$ = [
+      3,
+      n04,
+      _DBRR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketRequest$ = [
+      3,
+      n04,
+      _DBR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketTaggingRequest$ = [
+      3,
+      n04,
+      _DBTR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeleteBucketWebsiteRequest$ = [
+      3,
+      n04,
+      _DBWR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.DeletedObject$ = [
+      3,
+      n04,
+      _DO,
+      0,
+      [_K2, _VI, _DM, _DMVI],
+      [0, 0, 2, 0]
+    ];
+    exports2.DeleteMarkerEntry$ = [
+      3,
+      n04,
+      _DME,
+      0,
+      [_O, _K2, _VI, _IL, _LM],
+      [() => exports2.Owner$, 0, 0, 2, 4]
+    ];
+    exports2.DeleteMarkerReplication$ = [
+      3,
+      n04,
+      _DMR,
+      0,
+      [_S],
+      [0]
+    ];
+    exports2.DeleteObjectOutput$ = [
+      3,
+      n04,
+      _DOO,
+      0,
+      [_DM, _VI, _RC],
+      [[2, { [_hH]: _xadm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.DeleteObjectRequest$ = [
+      3,
+      n04,
+      _DOR,
+      0,
+      [_B, _K2, _MFA, _VI, _RP, _BGR, _EBO, _IM, _IMLMT, _IMS],
+      [[0, 1], [0, 1], [0, { [_hH]: _xam_ }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _IM_ }], [6, { [_hH]: _xaimlmt }], [1, { [_hH]: _xaims }]],
+      2
+    ];
+    exports2.DeleteObjectsOutput$ = [
+      3,
+      n04,
+      _DOOe,
+      { [_xN]: _DRel },
+      [_Del, _RC, _Er],
+      [[() => DeletedObjects, { [_xF]: 1 }], [0, { [_hH]: _xarc }], [() => Errors, { [_xF]: 1, [_xN]: _Err }]]
+    ];
+    exports2.DeleteObjectsRequest$ = [
+      3,
+      n04,
+      _DORe,
+      0,
+      [_B, _De, _MFA, _RP, _BGR, _EBO, _CA2],
+      [[0, 1], [() => exports2.Delete$, { [_hP]: 1, [_xN]: _De }], [0, { [_hH]: _xam_ }], [0, { [_hH]: _xarp }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
+      2
+    ];
+    exports2.DeleteObjectTaggingOutput$ = [
+      3,
+      n04,
+      _DOTO,
+      0,
+      [_VI],
+      [[0, { [_hH]: _xavi }]]
+    ];
+    exports2.DeleteObjectTaggingRequest$ = [
+      3,
+      n04,
+      _DOTR,
+      0,
+      [_B, _K2, _VI, _EBO],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.DeletePublicAccessBlockRequest$ = [
+      3,
+      n04,
+      _DPABR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.Destination$ = [
+      3,
+      n04,
+      _Des,
+      0,
+      [_B, _A2, _SC, _ACT, _EC, _RT3, _Me],
+      [0, 0, 0, () => exports2.AccessControlTranslation$, () => exports2.EncryptionConfiguration$, () => exports2.ReplicationTime$, () => exports2.Metrics$],
+      1
+    ];
+    exports2.DestinationResult$ = [
+      3,
+      n04,
+      _DRes,
+      0,
+      [_TBT, _TBA, _TN],
+      [0, 0, 0]
+    ];
+    exports2.Encryption$ = [
+      3,
+      n04,
+      _En,
+      0,
+      [_ET, _KMSKI, _KMSC],
+      [0, [() => SSEKMSKeyId, 0], 0],
+      1
+    ];
+    exports2.EncryptionConfiguration$ = [
+      3,
+      n04,
+      _EC,
+      0,
+      [_RKKID],
+      [0]
+    ];
+    exports2.EndEvent$ = [
+      3,
+      n04,
+      _EE,
+      0,
+      [],
+      []
+    ];
+    exports2._Error$ = [
+      3,
+      n04,
+      _Err,
+      0,
+      [_K2, _VI, _Cod, _Mes],
+      [0, 0, 0, 0]
+    ];
+    exports2.ErrorDetails$ = [
+      3,
+      n04,
+      _ED,
+      0,
+      [_ECr, _EM],
+      [0, 0]
+    ];
+    exports2.ErrorDocument$ = [
+      3,
+      n04,
+      _EDr,
+      0,
+      [_K2],
+      [0],
+      1
+    ];
+    exports2.EventBridgeConfiguration$ = [
+      3,
+      n04,
+      _EBC,
+      0,
+      [],
+      []
+    ];
+    exports2.ExistingObjectReplication$ = [
+      3,
+      n04,
+      _EOR,
+      0,
+      [_S],
+      [0],
+      1
+    ];
+    exports2.FilterRule$ = [
+      3,
+      n04,
+      _FR,
+      0,
+      [_N, _V2],
+      [0, 0]
+    ];
+    exports2.GetBucketAbacOutput$ = [
+      3,
+      n04,
+      _GBAO,
+      0,
+      [_AS],
+      [[() => exports2.AbacStatus$, 16]]
+    ];
+    exports2.GetBucketAbacRequest$ = [
+      3,
+      n04,
+      _GBAR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketAccelerateConfigurationOutput$ = [
+      3,
+      n04,
+      _GBACO,
+      { [_xN]: _AC },
+      [_S, _RC],
+      [0, [0, { [_hH]: _xarc }]]
+    ];
+    exports2.GetBucketAccelerateConfigurationRequest$ = [
+      3,
+      n04,
+      _GBACR,
+      0,
+      [_B, _EBO, _RP],
+      [[0, 1], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
+      1
+    ];
+    exports2.GetBucketAclOutput$ = [
+      3,
+      n04,
+      _GBAOe,
+      { [_xN]: _ACP },
+      [_O, _G],
+      [() => exports2.Owner$, [() => Grants, { [_xN]: _ACL }]]
+    ];
+    exports2.GetBucketAclRequest$ = [
+      3,
+      n04,
+      _GBARe,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketAnalyticsConfigurationOutput$ = [
+      3,
+      n04,
+      _GBACOe,
+      0,
+      [_ACn],
+      [[() => exports2.AnalyticsConfiguration$, 16]]
+    ];
+    exports2.GetBucketAnalyticsConfigurationRequest$ = [
+      3,
+      n04,
+      _GBACRe,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetBucketCorsOutput$ = [
+      3,
+      n04,
+      _GBCO,
+      { [_xN]: _CORSC },
+      [_CORSR],
+      [[() => CORSRules, { [_xF]: 1, [_xN]: _CORSRu }]]
+    ];
+    exports2.GetBucketCorsRequest$ = [
+      3,
+      n04,
+      _GBCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketEncryptionOutput$ = [
+      3,
+      n04,
+      _GBEO,
+      0,
+      [_SSEC],
+      [[() => exports2.ServerSideEncryptionConfiguration$, 16]]
+    ];
+    exports2.GetBucketEncryptionRequest$ = [
+      3,
+      n04,
+      _GBER,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketIntelligentTieringConfigurationOutput$ = [
+      3,
+      n04,
+      _GBITCO,
+      0,
+      [_ITC],
+      [[() => exports2.IntelligentTieringConfiguration$, 16]]
+    ];
+    exports2.GetBucketIntelligentTieringConfigurationRequest$ = [
+      3,
+      n04,
+      _GBITCR,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetBucketInventoryConfigurationOutput$ = [
+      3,
+      n04,
+      _GBICO,
+      0,
+      [_IC],
+      [[() => exports2.InventoryConfiguration$, 16]]
+    ];
+    exports2.GetBucketInventoryConfigurationRequest$ = [
+      3,
+      n04,
+      _GBICR,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetBucketLifecycleConfigurationOutput$ = [
+      3,
+      n04,
+      _GBLCO,
+      { [_xN]: _LCi },
+      [_R, _TDMOS],
+      [[() => LifecycleRules, { [_xF]: 1, [_xN]: _Ru }], [0, { [_hH]: _xatdmos }]]
+    ];
+    exports2.GetBucketLifecycleConfigurationRequest$ = [
+      3,
+      n04,
+      _GBLCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketLocationOutput$ = [
+      3,
+      n04,
+      _GBLO,
+      { [_xN]: _LC },
+      [_LC],
+      [0]
+    ];
+    exports2.GetBucketLocationRequest$ = [
+      3,
+      n04,
+      _GBLR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketLoggingOutput$ = [
+      3,
+      n04,
+      _GBLOe,
+      { [_xN]: _BLS },
+      [_LE],
+      [[() => exports2.LoggingEnabled$, 0]]
+    ];
+    exports2.GetBucketLoggingRequest$ = [
+      3,
+      n04,
+      _GBLRe,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketMetadataConfigurationOutput$ = [
+      3,
+      n04,
+      _GBMCO,
+      0,
+      [_GBMCR],
+      [[() => exports2.GetBucketMetadataConfigurationResult$, 16]]
+    ];
+    exports2.GetBucketMetadataConfigurationRequest$ = [
+      3,
+      n04,
+      _GBMCRe,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketMetadataConfigurationResult$ = [
+      3,
+      n04,
+      _GBMCR,
+      0,
+      [_MCR],
+      [() => exports2.MetadataConfigurationResult$],
+      1
+    ];
+    exports2.GetBucketMetadataTableConfigurationOutput$ = [
+      3,
+      n04,
+      _GBMTCO,
+      0,
+      [_GBMTCR],
+      [[() => exports2.GetBucketMetadataTableConfigurationResult$, 16]]
+    ];
+    exports2.GetBucketMetadataTableConfigurationRequest$ = [
+      3,
+      n04,
+      _GBMTCRe,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketMetadataTableConfigurationResult$ = [
+      3,
+      n04,
+      _GBMTCR,
+      0,
+      [_MTCR, _S, _Err],
+      [() => exports2.MetadataTableConfigurationResult$, 0, () => exports2.ErrorDetails$],
+      2
+    ];
+    exports2.GetBucketMetricsConfigurationOutput$ = [
+      3,
+      n04,
+      _GBMCOe,
+      0,
+      [_MCe],
+      [[() => exports2.MetricsConfiguration$, 16]]
+    ];
+    exports2.GetBucketMetricsConfigurationRequest$ = [
+      3,
+      n04,
+      _GBMCRet,
+      0,
+      [_B, _I, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetBucketNotificationConfigurationRequest$ = [
+      3,
+      n04,
+      _GBNCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketOwnershipControlsOutput$ = [
+      3,
+      n04,
+      _GBOCO,
+      0,
+      [_OC],
+      [[() => exports2.OwnershipControls$, 16]]
+    ];
+    exports2.GetBucketOwnershipControlsRequest$ = [
+      3,
+      n04,
+      _GBOCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketPolicyOutput$ = [
+      3,
+      n04,
+      _GBPO,
+      0,
+      [_Po],
+      [[0, 16]]
+    ];
+    exports2.GetBucketPolicyRequest$ = [
+      3,
+      n04,
+      _GBPR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketPolicyStatusOutput$ = [
+      3,
+      n04,
+      _GBPSO,
+      0,
+      [_PS],
+      [[() => exports2.PolicyStatus$, 16]]
+    ];
+    exports2.GetBucketPolicyStatusRequest$ = [
+      3,
+      n04,
+      _GBPSR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketReplicationOutput$ = [
+      3,
+      n04,
+      _GBRO,
+      0,
+      [_RCe],
+      [[() => exports2.ReplicationConfiguration$, 16]]
+    ];
+    exports2.GetBucketReplicationRequest$ = [
+      3,
+      n04,
+      _GBRR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketRequestPaymentOutput$ = [
+      3,
+      n04,
+      _GBRPO,
+      { [_xN]: _RPC },
+      [_Pay],
+      [0]
+    ];
+    exports2.GetBucketRequestPaymentRequest$ = [
+      3,
+      n04,
+      _GBRPR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketTaggingOutput$ = [
+      3,
+      n04,
+      _GBTO,
+      { [_xN]: _Tag },
+      [_TS],
+      [[() => TagSet, 0]],
+      1
+    ];
+    exports2.GetBucketTaggingRequest$ = [
+      3,
+      n04,
+      _GBTR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketVersioningOutput$ = [
+      3,
+      n04,
+      _GBVO,
+      { [_xN]: _VC },
+      [_S, _MFAD],
+      [0, [0, { [_xN]: _MDf }]]
+    ];
+    exports2.GetBucketVersioningRequest$ = [
+      3,
+      n04,
+      _GBVR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetBucketWebsiteOutput$ = [
+      3,
+      n04,
+      _GBWO,
+      { [_xN]: _WC },
+      [_RART, _IDn, _EDr, _RR],
+      [() => exports2.RedirectAllRequestsTo$, () => exports2.IndexDocument$, () => exports2.ErrorDocument$, [() => RoutingRules, 0]]
+    ];
+    exports2.GetBucketWebsiteRequest$ = [
+      3,
+      n04,
+      _GBWR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetObjectAclOutput$ = [
+      3,
+      n04,
+      _GOAO,
+      { [_xN]: _ACP },
+      [_O, _G, _RC],
+      [() => exports2.Owner$, [() => Grants, { [_xN]: _ACL }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.GetObjectAclRequest$ = [
+      3,
+      n04,
+      _GOAR,
+      0,
+      [_B, _K2, _VI, _RP, _EBO],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetObjectAttributesOutput$ = [
+      3,
+      n04,
+      _GOAOe,
+      { [_xN]: _GOARe },
+      [_DM, _LM, _VI, _RC, _ETa, _C2, _OP, _SC, _OS],
+      [[2, { [_hH]: _xadm }], [4, { [_hH]: _LM_ }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xarc }], 0, () => exports2.Checksum$, [() => exports2.GetObjectAttributesParts$, 0], 0, 1]
+    ];
+    exports2.GetObjectAttributesParts$ = [
+      3,
+      n04,
+      _GOAP,
+      0,
+      [_TPC, _PNM, _NPNM, _MP, _IT2, _Pa],
+      [[1, { [_xN]: _PC2 }], 0, 0, 1, 2, [() => PartsList, { [_xF]: 1, [_xN]: _Par }]]
+    ];
+    exports2.GetObjectAttributesRequest$ = [
+      3,
+      n04,
+      _GOARet,
+      0,
+      [_B, _K2, _OA, _VI, _MP, _PNM, _SSECA, _SSECK, _SSECKMD, _RP, _EBO],
+      [[0, 1], [0, 1], [64 | 0, { [_hH]: _xaoa }], [0, { [_hQ]: _vI }], [1, { [_hH]: _xamp }], [0, { [_hH]: _xapnm }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      3
+    ];
+    exports2.GetObjectLegalHoldOutput$ = [
+      3,
+      n04,
+      _GOLHO,
+      0,
+      [_LH],
+      [[() => exports2.ObjectLockLegalHold$, { [_hP]: 1, [_xN]: _LH }]]
+    ];
+    exports2.GetObjectLegalHoldRequest$ = [
+      3,
+      n04,
+      _GOLHR,
+      0,
+      [_B, _K2, _VI, _RP, _EBO],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetObjectLockConfigurationOutput$ = [
+      3,
+      n04,
+      _GOLCO,
+      0,
+      [_OLC],
+      [[() => exports2.ObjectLockConfiguration$, 16]]
+    ];
+    exports2.GetObjectLockConfigurationRequest$ = [
+      3,
+      n04,
+      _GOLCR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GetObjectOutput$ = [
+      3,
+      n04,
+      _GOO,
+      0,
+      [_Bo, _DM, _AR2, _E2, _Re, _LM, _CLo, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _MM, _VI, _CC, _CDo, _CEo, _CL, _CR, _CTo, _Ex, _ES, _WRL, _SSE, _M, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _SC, _RC, _RS, _PC2, _TC2, _OLM, _OLRUD, _OLLHS],
+      [[() => StreamingBlob, 16], [2, { [_hH]: _xadm }], [0, { [_hH]: _ar }], [0, { [_hH]: _xae }], [0, { [_hH]: _xar }], [4, { [_hH]: _LM_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [1, { [_hH]: _xamm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CR_ }], [0, { [_hH]: _CT_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _ES }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasse }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xars }], [1, { [_hH]: _xampc }], [1, { [_hH]: _xatc }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }]]
+    ];
+    exports2.GetObjectRequest$ = [
+      3,
+      n04,
+      _GOR,
+      0,
+      [_B, _K2, _IM, _IMSf, _INM, _IUS, _Ra, _RCC, _RCD, _RCE, _RCL, _RCT, _RE, _VI, _SSECA, _SSECK, _SSECKMD, _RP, _PN, _EBO, _CMh],
+      [[0, 1], [0, 1], [0, { [_hH]: _IM_ }], [4, { [_hH]: _IMS_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _Ra }], [0, { [_hQ]: _rcc }], [0, { [_hQ]: _rcd }], [0, { [_hQ]: _rce }], [0, { [_hQ]: _rcl }], [0, { [_hQ]: _rct }], [6, { [_hQ]: _re }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [1, { [_hQ]: _pN }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xacm }]],
+      2
+    ];
+    exports2.GetObjectRetentionOutput$ = [
+      3,
+      n04,
+      _GORO,
+      0,
+      [_Ret],
+      [[() => exports2.ObjectLockRetention$, { [_hP]: 1, [_xN]: _Ret }]]
+    ];
+    exports2.GetObjectRetentionRequest$ = [
+      3,
+      n04,
+      _GORR,
+      0,
+      [_B, _K2, _VI, _RP, _EBO],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetObjectTaggingOutput$ = [
+      3,
+      n04,
+      _GOTO,
+      { [_xN]: _Tag },
+      [_TS, _VI],
+      [[() => TagSet, 0], [0, { [_hH]: _xavi }]],
+      1
+    ];
+    exports2.GetObjectTaggingRequest$ = [
+      3,
+      n04,
+      _GOTR,
+      0,
+      [_B, _K2, _VI, _EBO, _RP],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
+      2
+    ];
+    exports2.GetObjectTorrentOutput$ = [
+      3,
+      n04,
+      _GOTOe,
+      0,
+      [_Bo, _RC],
+      [[() => StreamingBlob, 16], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.GetObjectTorrentRequest$ = [
+      3,
+      n04,
+      _GOTRe,
+      0,
+      [_B, _K2, _RP, _EBO],
+      [[0, 1], [0, 1], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.GetPublicAccessBlockOutput$ = [
+      3,
+      n04,
+      _GPABO,
+      0,
+      [_PABC],
+      [[() => exports2.PublicAccessBlockConfiguration$, 16]]
+    ];
+    exports2.GetPublicAccessBlockRequest$ = [
+      3,
+      n04,
+      _GPABR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.GlacierJobParameters$ = [
+      3,
+      n04,
+      _GJP,
+      0,
+      [_Ti],
+      [0],
+      1
+    ];
+    exports2.Grant$ = [
+      3,
+      n04,
+      _Gr,
+      0,
+      [_Gra, _Pe],
+      [[() => exports2.Grantee$, { [_xNm]: [_x, _hi] }], 0]
+    ];
+    exports2.Grantee$ = [
+      3,
+      n04,
+      _Gra,
+      0,
+      [_Ty, _DN, _EA, _ID, _URI],
+      [[0, { [_xA]: 1, [_xN]: _xs }], 0, 0, 0, 0],
+      1
+    ];
+    exports2.HeadBucketOutput$ = [
+      3,
+      n04,
+      _HBO,
+      0,
+      [_BA, _BLT, _BLN, _BR, _APA],
+      [[0, { [_hH]: _xaba }], [0, { [_hH]: _xablt }], [0, { [_hH]: _xabln }], [0, { [_hH]: _xabr }], [2, { [_hH]: _xaapa }]]
+    ];
+    exports2.HeadBucketRequest$ = [
+      3,
+      n04,
+      _HBR,
+      0,
+      [_B, _EBO],
+      [[0, 1], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.HeadObjectOutput$ = [
+      3,
+      n04,
+      _HOO,
+      0,
+      [_DM, _AR2, _E2, _Re, _ASr, _LM, _CLo, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _ETa, _MM, _VI, _CC, _CDo, _CEo, _CL, _CTo, _CR, _Ex, _ES, _WRL, _SSE, _M, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _SC, _RC, _RS, _PC2, _TC2, _OLM, _OLRUD, _OLLHS],
+      [[2, { [_hH]: _xadm }], [0, { [_hH]: _ar }], [0, { [_hH]: _xae }], [0, { [_hH]: _xar }], [0, { [_hH]: _xaas }], [4, { [_hH]: _LM_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [0, { [_hH]: _ETa }], [1, { [_hH]: _xamm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _CR_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _ES }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasse }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xars }], [1, { [_hH]: _xampc }], [1, { [_hH]: _xatc }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }]]
+    ];
+    exports2.HeadObjectRequest$ = [
+      3,
+      n04,
+      _HOR,
+      0,
+      [_B, _K2, _IM, _IMSf, _INM, _IUS, _Ra, _RCC, _RCD, _RCE, _RCL, _RCT, _RE, _VI, _SSECA, _SSECK, _SSECKMD, _RP, _PN, _EBO, _CMh],
+      [[0, 1], [0, 1], [0, { [_hH]: _IM_ }], [4, { [_hH]: _IMS_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _Ra }], [0, { [_hQ]: _rcc }], [0, { [_hQ]: _rcd }], [0, { [_hQ]: _rce }], [0, { [_hQ]: _rcl }], [0, { [_hQ]: _rct }], [6, { [_hQ]: _re }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [1, { [_hQ]: _pN }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xacm }]],
+      2
+    ];
+    exports2.IndexDocument$ = [
+      3,
+      n04,
+      _IDn,
+      0,
+      [_Su],
+      [0],
+      1
+    ];
+    exports2.Initiator$ = [
+      3,
+      n04,
+      _In,
+      0,
+      [_ID, _DN],
+      [0, 0]
+    ];
+    exports2.InputSerialization$ = [
+      3,
+      n04,
+      _IS,
+      0,
+      [_CSV, _CTom, _JSON, _Parq],
+      [() => exports2.CSVInput$, 0, () => exports2.JSONInput$, () => exports2.ParquetInput$]
+    ];
+    exports2.IntelligentTieringAndOperator$ = [
+      3,
+      n04,
+      _ITAO,
+      0,
+      [_P2, _T2],
+      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
+    ];
+    exports2.IntelligentTieringConfiguration$ = [
+      3,
+      n04,
+      _ITC,
+      0,
+      [_I, _S, _Tie, _F],
+      [0, 0, [() => TieringList, { [_xF]: 1, [_xN]: _Tier }], [() => exports2.IntelligentTieringFilter$, 0]],
+      3
+    ];
+    exports2.IntelligentTieringFilter$ = [
+      3,
+      n04,
+      _ITF,
+      0,
+      [_P2, _Ta2, _An],
+      [0, () => exports2.Tag$, [() => exports2.IntelligentTieringAndOperator$, 0]]
+    ];
+    exports2.InventoryConfiguration$ = [
+      3,
+      n04,
+      _IC,
+      0,
+      [_Des, _IE, _I, _IOV, _Sc, _F, _OF],
+      [[() => exports2.InventoryDestination$, 0], 2, 0, 0, () => exports2.InventorySchedule$, () => exports2.InventoryFilter$, [() => InventoryOptionalFields, 0]],
+      5
+    ];
+    exports2.InventoryDestination$ = [
+      3,
+      n04,
+      _IDnv,
+      0,
+      [_SBD],
+      [[() => exports2.InventoryS3BucketDestination$, 0]],
+      1
+    ];
+    exports2.InventoryEncryption$ = [
+      3,
+      n04,
+      _IEn,
+      0,
+      [_SSES, _SSEKMS],
+      [[() => exports2.SSES3$, { [_xN]: _SS }], [() => exports2.SSEKMS$, { [_xN]: _SK }]]
+    ];
+    exports2.InventoryFilter$ = [
+      3,
+      n04,
+      _IF,
+      0,
+      [_P2],
+      [0],
+      1
+    ];
+    exports2.InventoryS3BucketDestination$ = [
+      3,
+      n04,
+      _ISBD,
+      0,
+      [_B, _Fo, _AI, _P2, _En],
+      [0, 0, 0, 0, [() => exports2.InventoryEncryption$, 0]],
+      2
+    ];
+    exports2.InventorySchedule$ = [
+      3,
+      n04,
+      _ISn,
+      0,
+      [_Fr],
+      [0],
+      1
+    ];
+    exports2.InventoryTableConfiguration$ = [
+      3,
+      n04,
+      _ITCn,
+      0,
+      [_CSo, _EC],
+      [0, () => exports2.MetadataTableEncryptionConfiguration$],
+      1
+    ];
+    exports2.InventoryTableConfigurationResult$ = [
+      3,
+      n04,
+      _ITCR,
+      0,
+      [_CSo, _TSa, _Err, _TNa, _TA],
+      [0, 0, () => exports2.ErrorDetails$, 0, 0],
+      1
+    ];
+    exports2.InventoryTableConfigurationUpdates$ = [
+      3,
+      n04,
+      _ITCU,
+      0,
+      [_CSo, _EC],
+      [0, () => exports2.MetadataTableEncryptionConfiguration$],
+      1
+    ];
+    exports2.JournalTableConfiguration$ = [
+      3,
+      n04,
+      _JTC,
+      0,
+      [_REe, _EC],
+      [() => exports2.RecordExpiration$, () => exports2.MetadataTableEncryptionConfiguration$],
+      1
+    ];
+    exports2.JournalTableConfigurationResult$ = [
+      3,
+      n04,
+      _JTCR,
+      0,
+      [_TSa, _TNa, _REe, _Err, _TA],
+      [0, 0, () => exports2.RecordExpiration$, () => exports2.ErrorDetails$, 0],
+      3
+    ];
+    exports2.JournalTableConfigurationUpdates$ = [
+      3,
+      n04,
+      _JTCU,
+      0,
+      [_REe],
+      [() => exports2.RecordExpiration$],
+      1
+    ];
+    exports2.JSONInput$ = [
+      3,
+      n04,
+      _JSONI,
+      0,
+      [_Ty],
+      [0]
+    ];
+    exports2.JSONOutput$ = [
+      3,
+      n04,
+      _JSONO,
+      0,
+      [_RD],
+      [0]
+    ];
+    exports2.LambdaFunctionConfiguration$ = [
+      3,
+      n04,
+      _LFC,
+      0,
+      [_LFA, _Ev, _I, _F],
+      [[0, { [_xN]: _CF }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => exports2.NotificationConfigurationFilter$, 0]],
+      2
+    ];
+    exports2.LifecycleExpiration$ = [
+      3,
+      n04,
+      _LEi,
+      0,
+      [_Da, _D, _EODM],
+      [5, 1, 2]
+    ];
+    exports2.LifecycleRule$ = [
+      3,
+      n04,
+      _LR,
+      0,
+      [_S, _E2, _ID, _P2, _F, _Tr, _NVT, _NVE, _AIMU],
+      [0, () => exports2.LifecycleExpiration$, 0, 0, [() => exports2.LifecycleRuleFilter$, 0], [() => TransitionList, { [_xF]: 1, [_xN]: _Tra }], [() => NoncurrentVersionTransitionList, { [_xF]: 1, [_xN]: _NVTo }], () => exports2.NoncurrentVersionExpiration$, () => exports2.AbortIncompleteMultipartUpload$],
+      1
+    ];
+    exports2.LifecycleRuleAndOperator$ = [
+      3,
+      n04,
+      _LRAO,
+      0,
+      [_P2, _T2, _OSGT, _OSLT],
+      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }], 1, 1]
+    ];
+    exports2.LifecycleRuleFilter$ = [
+      3,
+      n04,
+      _LRF,
+      0,
+      [_P2, _Ta2, _OSGT, _OSLT, _An],
+      [0, () => exports2.Tag$, 1, 1, [() => exports2.LifecycleRuleAndOperator$, 0]]
+    ];
+    exports2.ListBucketAnalyticsConfigurationsOutput$ = [
+      3,
+      n04,
+      _LBACO,
+      { [_xN]: _LBACR },
+      [_IT2, _CTon, _NCT, _ACLn],
+      [2, 0, 0, [() => AnalyticsConfigurationList, { [_xF]: 1, [_xN]: _ACn }]]
+    ];
+    exports2.ListBucketAnalyticsConfigurationsRequest$ = [
+      3,
+      n04,
+      _LBACRi,
+      0,
+      [_B, _CTon, _EBO],
+      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.ListBucketIntelligentTieringConfigurationsOutput$ = [
+      3,
+      n04,
+      _LBITCO,
+      0,
+      [_IT2, _CTon, _NCT, _ITCL],
+      [2, 0, 0, [() => IntelligentTieringConfigurationList, { [_xF]: 1, [_xN]: _ITC }]]
+    ];
+    exports2.ListBucketIntelligentTieringConfigurationsRequest$ = [
+      3,
+      n04,
+      _LBITCR,
+      0,
+      [_B, _CTon, _EBO],
+      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.ListBucketInventoryConfigurationsOutput$ = [
+      3,
+      n04,
+      _LBICO,
+      { [_xN]: _LICR },
+      [_CTon, _ICL, _IT2, _NCT],
+      [0, [() => InventoryConfigurationList, { [_xF]: 1, [_xN]: _IC }], 2, 0]
+    ];
+    exports2.ListBucketInventoryConfigurationsRequest$ = [
+      3,
+      n04,
+      _LBICR,
+      0,
+      [_B, _CTon, _EBO],
+      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.ListBucketMetricsConfigurationsOutput$ = [
+      3,
+      n04,
+      _LBMCO,
+      { [_xN]: _LMCR },
+      [_IT2, _CTon, _NCT, _MCL],
+      [2, 0, 0, [() => MetricsConfigurationList, { [_xF]: 1, [_xN]: _MCe }]]
+    ];
+    exports2.ListBucketMetricsConfigurationsRequest$ = [
+      3,
+      n04,
+      _LBMCR,
+      0,
+      [_B, _CTon, _EBO],
+      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.ListBucketsOutput$ = [
+      3,
+      n04,
+      _LBO,
+      { [_xN]: _LAMBR },
+      [_Bu, _O, _CTon, _P2],
+      [[() => Buckets, 0], () => exports2.Owner$, 0, 0]
+    ];
+    exports2.ListBucketsRequest$ = [
+      3,
+      n04,
+      _LBR,
+      0,
+      [_MB, _CTon, _P2, _BR],
+      [[1, { [_hQ]: _mb }], [0, { [_hQ]: _ct }], [0, { [_hQ]: _p }], [0, { [_hQ]: _br }]]
+    ];
+    exports2.ListDirectoryBucketsOutput$ = [
+      3,
+      n04,
+      _LDBO,
+      { [_xN]: _LAMDBR },
+      [_Bu, _CTon],
+      [[() => Buckets, 0], 0]
+    ];
+    exports2.ListDirectoryBucketsRequest$ = [
+      3,
+      n04,
+      _LDBR,
+      0,
+      [_CTon, _MDB],
+      [[0, { [_hQ]: _ct }], [1, { [_hQ]: _mdb }]]
+    ];
+    exports2.ListMultipartUploadsOutput$ = [
+      3,
+      n04,
+      _LMUO,
+      { [_xN]: _LMUR },
+      [_B, _KM, _UIM, _NKM, _P2, _Deli, _NUIM, _MUa, _IT2, _U, _CPom, _ETn, _RC],
+      [0, 0, 0, 0, 0, 0, 0, 1, 2, [() => MultipartUploadList, { [_xF]: 1, [_xN]: _Up }], [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
+    ];
+    exports2.ListMultipartUploadsRequest$ = [
+      3,
+      n04,
+      _LMURi,
+      0,
+      [_B, _Deli, _ETn, _KM, _MUa, _P2, _UIM, _EBO, _RP],
+      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _km }], [1, { [_hQ]: _mu }], [0, { [_hQ]: _p }], [0, { [_hQ]: _uim }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
+      1
+    ];
+    exports2.ListObjectsOutput$ = [
+      3,
+      n04,
+      _LOO,
+      { [_xN]: _LBRi },
+      [_IT2, _Ma, _NM, _Con, _N, _P2, _Deli, _MK, _CPom, _ETn, _RC],
+      [2, 0, 0, [() => ObjectList, { [_xF]: 1 }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
+    ];
+    exports2.ListObjectsRequest$ = [
+      3,
+      n04,
+      _LOR,
+      0,
+      [_B, _Deli, _ETn, _Ma, _MK, _P2, _RP, _EBO, _OOA],
+      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _m3 }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [64 | 0, { [_hH]: _xaooa }]],
+      1
+    ];
+    exports2.ListObjectsV2Output$ = [
+      3,
+      n04,
+      _LOVO,
+      { [_xN]: _LBRi },
+      [_IT2, _Con, _N, _P2, _Deli, _MK, _CPom, _ETn, _KC, _CTon, _NCT, _SA, _RC],
+      [2, [() => ObjectList, { [_xF]: 1 }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, 1, 0, 0, 0, [0, { [_hH]: _xarc }]]
+    ];
+    exports2.ListObjectsV2Request$ = [
+      3,
+      n04,
+      _LOVR,
+      0,
+      [_B, _Deli, _ETn, _MK, _P2, _CTon, _FO, _SA, _RP, _EBO, _OOA],
+      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hQ]: _ct }], [2, { [_hQ]: _fo }], [0, { [_hQ]: _sa }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [64 | 0, { [_hH]: _xaooa }]],
+      1
+    ];
+    exports2.ListObjectVersionsOutput$ = [
+      3,
+      n04,
+      _LOVOi,
+      { [_xN]: _LVR },
+      [_IT2, _KM, _VIM, _NKM, _NVIM, _Ve, _DMe, _N, _P2, _Deli, _MK, _CPom, _ETn, _RC],
+      [2, 0, 0, 0, 0, [() => ObjectVersionList, { [_xF]: 1, [_xN]: _Ver }], [() => DeleteMarkers, { [_xF]: 1, [_xN]: _DM }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
+    ];
+    exports2.ListObjectVersionsRequest$ = [
+      3,
+      n04,
+      _LOVRi,
+      0,
+      [_B, _Deli, _ETn, _KM, _MK, _P2, _VIM, _EBO, _RP, _OOA],
+      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _km }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hQ]: _vim }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }], [64 | 0, { [_hH]: _xaooa }]],
+      1
+    ];
+    exports2.ListPartsOutput$ = [
+      3,
+      n04,
+      _LPO,
+      { [_xN]: _LPR },
+      [_ADb, _ARI2, _B, _K2, _UI, _PNM, _NPNM, _MP, _IT2, _Pa, _In, _O, _SC, _RC, _CA2, _CT2],
+      [[4, { [_hH]: _xaad }], [0, { [_hH]: _xaari }], 0, 0, 0, 0, 0, 1, 2, [() => Parts, { [_xF]: 1, [_xN]: _Par }], () => exports2.Initiator$, () => exports2.Owner$, 0, [0, { [_hH]: _xarc }], 0, 0]
+    ];
+    exports2.ListPartsRequest$ = [
+      3,
+      n04,
+      _LPRi,
+      0,
+      [_B, _K2, _UI, _MP, _PNM, _RP, _EBO, _SSECA, _SSECK, _SSECKMD],
+      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [1, { [_hQ]: _mp }], [0, { [_hQ]: _pnm }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }]],
+      3
+    ];
+    exports2.LocationInfo$ = [
+      3,
+      n04,
+      _LI,
+      0,
+      [_Ty, _N],
+      [0, 0]
+    ];
+    exports2.LoggingEnabled$ = [
+      3,
+      n04,
+      _LE,
+      0,
+      [_TB, _TP, _TG, _TOKF],
+      [0, 0, [() => TargetGrants, 0], [() => exports2.TargetObjectKeyFormat$, 0]],
+      2
+    ];
+    exports2.MetadataConfiguration$ = [
+      3,
+      n04,
+      _MC,
+      0,
+      [_JTC, _ITCn],
+      [() => exports2.JournalTableConfiguration$, () => exports2.InventoryTableConfiguration$],
+      1
+    ];
+    exports2.MetadataConfigurationResult$ = [
+      3,
+      n04,
+      _MCR,
+      0,
+      [_DRes, _JTCR, _ITCR],
+      [() => exports2.DestinationResult$, () => exports2.JournalTableConfigurationResult$, () => exports2.InventoryTableConfigurationResult$],
+      1
+    ];
+    exports2.MetadataEntry$ = [
+      3,
+      n04,
+      _ME,
+      0,
+      [_N, _V2],
+      [0, 0]
+    ];
+    exports2.MetadataTableConfiguration$ = [
+      3,
+      n04,
+      _MTC,
+      0,
+      [_STD],
+      [() => exports2.S3TablesDestination$],
+      1
+    ];
+    exports2.MetadataTableConfigurationResult$ = [
+      3,
+      n04,
+      _MTCR,
+      0,
+      [_STDR],
+      [() => exports2.S3TablesDestinationResult$],
+      1
+    ];
+    exports2.MetadataTableEncryptionConfiguration$ = [
+      3,
+      n04,
+      _MTEC,
+      0,
+      [_SAs, _KKA],
+      [0, 0],
+      1
+    ];
+    exports2.Metrics$ = [
+      3,
+      n04,
+      _Me,
+      0,
+      [_S, _ETv],
+      [0, () => exports2.ReplicationTimeValue$],
+      1
+    ];
+    exports2.MetricsAndOperator$ = [
+      3,
+      n04,
+      _MAO,
+      0,
+      [_P2, _T2, _APAc],
+      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }], 0]
+    ];
+    exports2.MetricsConfiguration$ = [
+      3,
+      n04,
+      _MCe,
+      0,
+      [_I, _F],
+      [0, [() => exports2.MetricsFilter$, 0]],
+      1
+    ];
+    exports2.MultipartUpload$ = [
+      3,
+      n04,
+      _MU,
+      0,
+      [_UI, _K2, _Ini, _SC, _O, _In, _CA2, _CT2],
+      [0, 0, 4, 0, () => exports2.Owner$, () => exports2.Initiator$, 0, 0]
+    ];
+    exports2.NoncurrentVersionExpiration$ = [
+      3,
+      n04,
+      _NVE,
+      0,
+      [_ND, _NNV],
+      [1, 1]
+    ];
+    exports2.NoncurrentVersionTransition$ = [
+      3,
+      n04,
+      _NVTo,
+      0,
+      [_ND, _SC, _NNV],
+      [1, 0, 1]
+    ];
+    exports2.NotificationConfiguration$ = [
+      3,
+      n04,
+      _NC,
+      0,
+      [_TCo, _QCu, _LFCa, _EBC],
+      [[() => TopicConfigurationList, { [_xF]: 1, [_xN]: _TCop }], [() => QueueConfigurationList, { [_xF]: 1, [_xN]: _QCue }], [() => LambdaFunctionConfigurationList, { [_xF]: 1, [_xN]: _CFC }], () => exports2.EventBridgeConfiguration$]
+    ];
+    exports2.NotificationConfigurationFilter$ = [
+      3,
+      n04,
+      _NCF,
+      0,
+      [_K2],
+      [[() => exports2.S3KeyFilter$, { [_xN]: _SKe }]]
+    ];
+    exports2._Object$ = [
+      3,
+      n04,
+      _Obj,
+      0,
+      [_K2, _LM, _ETa, _CA2, _CT2, _Si, _SC, _O, _RSe],
+      [0, 4, 0, [64 | 0, { [_xF]: 1 }], 0, 1, 0, () => exports2.Owner$, () => exports2.RestoreStatus$]
+    ];
+    exports2.ObjectIdentifier$ = [
+      3,
+      n04,
+      _OI,
+      0,
+      [_K2, _VI, _ETa, _LMT, _Si],
+      [0, 0, 0, 6, 1],
+      1
+    ];
+    exports2.ObjectLockConfiguration$ = [
+      3,
+      n04,
+      _OLC,
+      0,
+      [_OLE, _Ru],
+      [0, () => exports2.ObjectLockRule$]
+    ];
+    exports2.ObjectLockLegalHold$ = [
+      3,
+      n04,
+      _OLLH,
+      0,
+      [_S],
+      [0]
+    ];
+    exports2.ObjectLockRetention$ = [
+      3,
+      n04,
+      _OLR,
+      0,
+      [_Mo, _RUD],
+      [0, 5]
+    ];
+    exports2.ObjectLockRule$ = [
+      3,
+      n04,
+      _OLRb,
+      0,
+      [_DRe],
+      [() => exports2.DefaultRetention$]
+    ];
+    exports2.ObjectPart$ = [
+      3,
+      n04,
+      _OPb,
+      0,
+      [_PN, _Si, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
+      [1, 1, 0, 0, 0, 0, 0]
+    ];
+    exports2.ObjectVersion$ = [
+      3,
+      n04,
+      _OV,
+      0,
+      [_ETa, _CA2, _CT2, _Si, _SC, _K2, _VI, _IL, _LM, _O, _RSe],
+      [0, [64 | 0, { [_xF]: 1 }], 0, 1, 0, 0, 0, 2, 4, () => exports2.Owner$, () => exports2.RestoreStatus$]
+    ];
+    exports2.OutputLocation$ = [
+      3,
+      n04,
+      _OL,
+      0,
+      [_S_],
+      [[() => exports2.S3Location$, 0]]
+    ];
+    exports2.OutputSerialization$ = [
+      3,
+      n04,
+      _OSu,
+      0,
+      [_CSV, _JSON],
+      [() => exports2.CSVOutput$, () => exports2.JSONOutput$]
+    ];
+    exports2.Owner$ = [
+      3,
+      n04,
+      _O,
+      0,
+      [_DN, _ID],
+      [0, 0]
+    ];
+    exports2.OwnershipControls$ = [
+      3,
+      n04,
+      _OC,
+      0,
+      [_R],
+      [[() => OwnershipControlsRules, { [_xF]: 1, [_xN]: _Ru }]],
+      1
+    ];
+    exports2.OwnershipControlsRule$ = [
+      3,
+      n04,
+      _OCR,
+      0,
+      [_OO],
+      [0],
+      1
+    ];
+    exports2.ParquetInput$ = [
+      3,
+      n04,
+      _PI2,
+      0,
+      [],
+      []
+    ];
+    exports2.Part$ = [
+      3,
+      n04,
+      _Par,
+      0,
+      [_PN, _LM, _ETa, _Si, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
+      [1, 4, 0, 1, 0, 0, 0, 0, 0]
+    ];
+    exports2.PartitionedPrefix$ = [
+      3,
+      n04,
+      _PP,
+      { [_xN]: _PP },
+      [_PDS],
+      [0]
+    ];
+    exports2.PolicyStatus$ = [
+      3,
+      n04,
+      _PS,
+      0,
+      [_IP],
+      [[2, { [_xN]: _IP }]]
+    ];
+    exports2.Progress$ = [
+      3,
+      n04,
+      _Pr2,
+      0,
+      [_BS, _BP, _BRy],
+      [1, 1, 1]
+    ];
+    exports2.ProgressEvent$ = [
+      3,
+      n04,
+      _PE,
+      0,
+      [_Det],
+      [[() => exports2.Progress$, { [_eP]: 1 }]]
+    ];
+    exports2.PublicAccessBlockConfiguration$ = [
+      3,
+      n04,
+      _PABC,
+      0,
+      [_BPA, _IPA, _BPP, _RPB],
+      [[2, { [_xN]: _BPA }], [2, { [_xN]: _IPA }], [2, { [_xN]: _BPP }], [2, { [_xN]: _RPB }]]
+    ];
+    exports2.PutBucketAbacRequest$ = [
+      3,
+      n04,
+      _PBAR,
+      0,
+      [_B, _AS, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.AbacStatus$, { [_hP]: 1, [_xN]: _AS }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketAccelerateConfigurationRequest$ = [
+      3,
+      n04,
+      _PBACR,
+      0,
+      [_B, _AC, _EBO, _CA2],
+      [[0, 1], [() => exports2.AccelerateConfiguration$, { [_hP]: 1, [_xN]: _AC }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
+      2
+    ];
+    exports2.PutBucketAclRequest$ = [
+      3,
+      n04,
+      _PBARu,
+      0,
+      [_B, _ACL_, _ACP, _CMD, _CA2, _GFC, _GR, _GRACP, _GW, _GWACP, _EBO],
+      [[0, 1], [0, { [_hH]: _xaa }], [() => exports2.AccessControlPolicy$, { [_hP]: 1, [_xN]: _ACP }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.PutBucketAnalyticsConfigurationRequest$ = [
+      3,
+      n04,
+      _PBACRu,
+      0,
+      [_B, _I, _ACn, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [() => exports2.AnalyticsConfiguration$, { [_hP]: 1, [_xN]: _ACn }], [0, { [_hH]: _xaebo }]],
+      3
+    ];
+    exports2.PutBucketCorsRequest$ = [
+      3,
+      n04,
+      _PBCR,
+      0,
+      [_B, _CORSC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.CORSConfiguration$, { [_hP]: 1, [_xN]: _CORSC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketEncryptionRequest$ = [
+      3,
+      n04,
+      _PBER,
+      0,
+      [_B, _SSEC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.ServerSideEncryptionConfiguration$, { [_hP]: 1, [_xN]: _SSEC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketIntelligentTieringConfigurationRequest$ = [
+      3,
+      n04,
+      _PBITCR,
+      0,
+      [_B, _I, _ITC, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [() => exports2.IntelligentTieringConfiguration$, { [_hP]: 1, [_xN]: _ITC }], [0, { [_hH]: _xaebo }]],
+      3
+    ];
+    exports2.PutBucketInventoryConfigurationRequest$ = [
+      3,
+      n04,
+      _PBICR,
+      0,
+      [_B, _I, _IC, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [() => exports2.InventoryConfiguration$, { [_hP]: 1, [_xN]: _IC }], [0, { [_hH]: _xaebo }]],
+      3
+    ];
+    exports2.PutBucketLifecycleConfigurationOutput$ = [
+      3,
+      n04,
+      _PBLCO,
+      0,
+      [_TDMOS],
+      [[0, { [_hH]: _xatdmos }]]
+    ];
+    exports2.PutBucketLifecycleConfigurationRequest$ = [
+      3,
+      n04,
+      _PBLCR,
+      0,
+      [_B, _CA2, _LCi, _EBO, _TDMOS],
+      [[0, 1], [0, { [_hH]: _xasca }], [() => exports2.BucketLifecycleConfiguration$, { [_hP]: 1, [_xN]: _LCi }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xatdmos }]],
+      1
+    ];
+    exports2.PutBucketLoggingRequest$ = [
+      3,
+      n04,
+      _PBLR,
+      0,
+      [_B, _BLS, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.BucketLoggingStatus$, { [_hP]: 1, [_xN]: _BLS }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketMetricsConfigurationRequest$ = [
+      3,
+      n04,
+      _PBMCR,
+      0,
+      [_B, _I, _MCe, _EBO],
+      [[0, 1], [0, { [_hQ]: _i }], [() => exports2.MetricsConfiguration$, { [_hP]: 1, [_xN]: _MCe }], [0, { [_hH]: _xaebo }]],
+      3
+    ];
+    exports2.PutBucketNotificationConfigurationRequest$ = [
+      3,
+      n04,
+      _PBNCR,
+      0,
+      [_B, _NC, _EBO, _SDV],
+      [[0, 1], [() => exports2.NotificationConfiguration$, { [_hP]: 1, [_xN]: _NC }], [0, { [_hH]: _xaebo }], [2, { [_hH]: _xasdv }]],
+      2
+    ];
+    exports2.PutBucketOwnershipControlsRequest$ = [
+      3,
+      n04,
+      _PBOCR,
+      0,
+      [_B, _OC, _CMD, _EBO, _CA2],
+      [[0, 1], [() => exports2.OwnershipControls$, { [_hP]: 1, [_xN]: _OC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
+      2
+    ];
+    exports2.PutBucketPolicyRequest$ = [
+      3,
+      n04,
+      _PBPR,
+      0,
+      [_B, _Po, _CMD, _CA2, _CRSBA, _EBO],
+      [[0, 1], [0, 16], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [2, { [_hH]: _xacrsba }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketReplicationRequest$ = [
+      3,
+      n04,
+      _PBRR,
+      0,
+      [_B, _RCe, _CMD, _CA2, _To, _EBO],
+      [[0, 1], [() => exports2.ReplicationConfiguration$, { [_hP]: 1, [_xN]: _RCe }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xabolt }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketRequestPaymentRequest$ = [
+      3,
+      n04,
+      _PBRPR,
+      0,
+      [_B, _RPC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.RequestPaymentConfiguration$, { [_hP]: 1, [_xN]: _RPC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketTaggingRequest$ = [
+      3,
+      n04,
+      _PBTR,
+      0,
+      [_B, _Tag, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.Tagging$, { [_hP]: 1, [_xN]: _Tag }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketVersioningRequest$ = [
+      3,
+      n04,
+      _PBVR,
+      0,
+      [_B, _VC, _CMD, _CA2, _MFA, _EBO],
+      [[0, 1], [() => exports2.VersioningConfiguration$, { [_hP]: 1, [_xN]: _VC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xam_ }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutBucketWebsiteRequest$ = [
+      3,
+      n04,
+      _PBWR,
+      0,
+      [_B, _WC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.WebsiteConfiguration$, { [_hP]: 1, [_xN]: _WC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutObjectAclOutput$ = [
+      3,
+      n04,
+      _POAO,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.PutObjectAclRequest$ = [
+      3,
+      n04,
+      _POAR,
+      0,
+      [_B, _K2, _ACL_, _ACP, _CMD, _CA2, _GFC, _GR, _GRACP, _GW, _GWACP, _RP, _VI, _EBO],
+      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [() => exports2.AccessControlPolicy$, { [_hP]: 1, [_xN]: _ACP }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutObjectLegalHoldOutput$ = [
+      3,
+      n04,
+      _POLHO,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.PutObjectLegalHoldRequest$ = [
+      3,
+      n04,
+      _POLHR,
+      0,
+      [_B, _K2, _LH, _RP, _VI, _CMD, _CA2, _EBO],
+      [[0, 1], [0, 1], [() => exports2.ObjectLockLegalHold$, { [_hP]: 1, [_xN]: _LH }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutObjectLockConfigurationOutput$ = [
+      3,
+      n04,
+      _POLCO,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.PutObjectLockConfigurationRequest$ = [
+      3,
+      n04,
+      _POLCR,
+      0,
+      [_B, _OLC, _RP, _To, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.ObjectLockConfiguration$, { [_hP]: 1, [_xN]: _OLC }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xabolt }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      1
+    ];
+    exports2.PutObjectOutput$ = [
+      3,
+      n04,
+      _POO,
+      0,
+      [_E2, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _SSE, _VI, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _Si, _RC],
+      [[0, { [_hH]: _xae }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [1, { [_hH]: _xaos }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.PutObjectRequest$ = [
+      3,
+      n04,
+      _POR,
+      0,
+      [_B, _K2, _ACL_, _Bo, _CC, _CDo, _CEo, _CL, _CLo, _CMD, _CTo, _CA2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _Ex, _IM, _INM, _GFC, _GR, _GRACP, _GWACP, _WOB, _M, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO],
+      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [() => StreamingBlob, 16], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _CM }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [1, { [_hH]: _xawob }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutObjectRetentionOutput$ = [
+      3,
+      n04,
+      _PORO,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.PutObjectRetentionRequest$ = [
+      3,
+      n04,
+      _PORR,
+      0,
+      [_B, _K2, _Ret, _RP, _VI, _BGR, _CMD, _CA2, _EBO],
+      [[0, 1], [0, 1], [() => exports2.ObjectLockRetention$, { [_hP]: 1, [_xN]: _Ret }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.PutObjectTaggingOutput$ = [
+      3,
+      n04,
+      _POTO,
+      0,
+      [_VI],
+      [[0, { [_hH]: _xavi }]]
+    ];
+    exports2.PutObjectTaggingRequest$ = [
+      3,
+      n04,
+      _POTR,
+      0,
+      [_B, _K2, _Tag, _VI, _CMD, _CA2, _EBO, _RP],
+      [[0, 1], [0, 1], [() => exports2.Tagging$, { [_hP]: 1, [_xN]: _Tag }], [0, { [_hQ]: _vI }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
+      3
+    ];
+    exports2.PutPublicAccessBlockRequest$ = [
+      3,
+      n04,
+      _PPABR,
+      0,
+      [_B, _PABC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.PublicAccessBlockConfiguration$, { [_hP]: 1, [_xN]: _PABC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.QueueConfiguration$ = [
+      3,
+      n04,
+      _QCue,
+      0,
+      [_QA, _Ev, _I, _F],
+      [[0, { [_xN]: _Qu }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => exports2.NotificationConfigurationFilter$, 0]],
+      2
+    ];
+    exports2.RecordExpiration$ = [
+      3,
+      n04,
+      _REe,
+      0,
+      [_E2, _D],
+      [0, 1],
+      1
+    ];
+    exports2.RecordsEvent$ = [
+      3,
+      n04,
+      _REec,
+      0,
+      [_Payl],
+      [[21, { [_eP]: 1 }]]
+    ];
+    exports2.Redirect$ = [
+      3,
+      n04,
+      _Red,
+      0,
+      [_HN, _HRC, _Pro, _RKPW, _RKW],
+      [0, 0, 0, 0, 0]
+    ];
+    exports2.RedirectAllRequestsTo$ = [
+      3,
+      n04,
+      _RART,
+      0,
+      [_HN, _Pro],
+      [0, 0],
+      1
+    ];
+    exports2.RenameObjectOutput$ = [
+      3,
+      n04,
+      _ROO,
+      0,
+      [],
+      []
+    ];
+    exports2.RenameObjectRequest$ = [
+      3,
+      n04,
+      _ROR,
+      0,
+      [_B, _K2, _RSen, _DIM, _DINM, _DIMS, _DIUS, _SIM, _SINM, _SIMS, _SIUS, _CTl],
+      [[0, 1], [0, 1], [0, { [_hH]: _xars_ }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IMS_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _xarsim }], [0, { [_hH]: _xarsinm }], [6, { [_hH]: _xarsims }], [6, { [_hH]: _xarsius }], [0, { [_hH]: _xact_, [_iT3]: 1 }]],
+      3
+    ];
+    exports2.ReplicaModifications$ = [
+      3,
+      n04,
+      _RM,
+      0,
+      [_S],
+      [0],
+      1
+    ];
+    exports2.ReplicationConfiguration$ = [
+      3,
+      n04,
+      _RCe,
+      0,
+      [_Ro, _R],
+      [0, [() => ReplicationRules, { [_xF]: 1, [_xN]: _Ru }]],
+      2
+    ];
+    exports2.ReplicationRule$ = [
+      3,
+      n04,
+      _RRe,
+      0,
+      [_S, _Des, _ID, _Pri, _P2, _F, _SSC, _EOR, _DMR],
+      [0, () => exports2.Destination$, 0, 1, 0, [() => exports2.ReplicationRuleFilter$, 0], () => exports2.SourceSelectionCriteria$, () => exports2.ExistingObjectReplication$, () => exports2.DeleteMarkerReplication$],
+      2
+    ];
+    exports2.ReplicationRuleAndOperator$ = [
+      3,
+      n04,
+      _RRAO,
+      0,
+      [_P2, _T2],
+      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
+    ];
+    exports2.ReplicationRuleFilter$ = [
+      3,
+      n04,
+      _RRF,
+      0,
+      [_P2, _Ta2, _An],
+      [0, () => exports2.Tag$, [() => exports2.ReplicationRuleAndOperator$, 0]]
+    ];
+    exports2.ReplicationTime$ = [
+      3,
+      n04,
+      _RT3,
+      0,
+      [_S, _Tim],
+      [0, () => exports2.ReplicationTimeValue$],
+      2
+    ];
+    exports2.ReplicationTimeValue$ = [
+      3,
+      n04,
+      _RTV,
+      0,
+      [_Mi],
+      [1]
+    ];
+    exports2.RequestPaymentConfiguration$ = [
+      3,
+      n04,
+      _RPC,
+      0,
+      [_Pay],
+      [0],
+      1
+    ];
+    exports2.RequestProgress$ = [
+      3,
+      n04,
+      _RPe,
+      0,
+      [_Ena],
+      [2]
+    ];
+    exports2.RestoreObjectOutput$ = [
+      3,
+      n04,
+      _ROOe,
+      0,
+      [_RC, _ROP],
+      [[0, { [_hH]: _xarc }], [0, { [_hH]: _xarop }]]
+    ];
+    exports2.RestoreObjectRequest$ = [
+      3,
+      n04,
+      _RORe,
+      0,
+      [_B, _K2, _VI, _RRes, _RP, _CA2, _EBO],
+      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [() => exports2.RestoreRequest$, { [_hP]: 1, [_xN]: _RRes }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.RestoreRequest$ = [
+      3,
+      n04,
+      _RRes,
+      0,
+      [_D, _GJP, _Ty, _Ti, _Desc, _SP, _OL],
+      [1, () => exports2.GlacierJobParameters$, 0, 0, 0, () => exports2.SelectParameters$, [() => exports2.OutputLocation$, 0]]
+    ];
+    exports2.RestoreStatus$ = [
+      3,
+      n04,
+      _RSe,
+      0,
+      [_IRIP, _RED],
+      [2, 4]
+    ];
+    exports2.RoutingRule$ = [
+      3,
+      n04,
+      _RRo,
+      0,
+      [_Red, _Co],
+      [() => exports2.Redirect$, () => exports2.Condition$],
+      1
+    ];
+    exports2.S3KeyFilter$ = [
+      3,
+      n04,
+      _SKF,
+      0,
+      [_FRi],
+      [[() => FilterRuleList, { [_xF]: 1, [_xN]: _FR }]]
+    ];
+    exports2.S3Location$ = [
+      3,
+      n04,
+      _SL,
+      0,
+      [_BN, _P2, _En, _CACL, _ACL, _Tag, _UM, _SC],
+      [0, 0, [() => exports2.Encryption$, 0], 0, [() => Grants, 0], [() => exports2.Tagging$, 0], [() => UserMetadata, 0], 0],
+      2
+    ];
+    exports2.S3TablesDestination$ = [
+      3,
+      n04,
+      _STD,
+      0,
+      [_TBA, _TNa],
+      [0, 0],
+      2
+    ];
+    exports2.S3TablesDestinationResult$ = [
+      3,
+      n04,
+      _STDR,
+      0,
+      [_TBA, _TNa, _TA, _TN],
+      [0, 0, 0, 0],
+      4
+    ];
+    exports2.ScanRange$ = [
+      3,
+      n04,
+      _SR,
+      0,
+      [_St, _End],
+      [1, 1]
+    ];
+    exports2.SelectObjectContentOutput$ = [
+      3,
+      n04,
+      _SOCO,
+      0,
+      [_Payl],
+      [[() => exports2.SelectObjectContentEventStream$, 16]]
+    ];
+    exports2.SelectObjectContentRequest$ = [
+      3,
+      n04,
+      _SOCR,
+      0,
+      [_B, _K2, _Exp, _ETx, _IS, _OSu, _SSECA, _SSECK, _SSECKMD, _RPe, _SR, _EBO],
+      [[0, 1], [0, 1], 0, 0, () => exports2.InputSerialization$, () => exports2.OutputSerialization$, [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], () => exports2.RequestProgress$, () => exports2.ScanRange$, [0, { [_hH]: _xaebo }]],
+      6
+    ];
+    exports2.SelectParameters$ = [
+      3,
+      n04,
+      _SP,
+      0,
+      [_IS, _ETx, _Exp, _OSu],
+      [() => exports2.InputSerialization$, 0, 0, () => exports2.OutputSerialization$],
+      4
+    ];
+    exports2.ServerSideEncryptionByDefault$ = [
+      3,
+      n04,
+      _SSEBD,
+      0,
+      [_SSEA, _KMSMKID],
+      [0, [() => SSEKMSKeyId, 0]],
+      1
+    ];
+    exports2.ServerSideEncryptionConfiguration$ = [
+      3,
+      n04,
+      _SSEC,
+      0,
+      [_R],
+      [[() => ServerSideEncryptionRules, { [_xF]: 1, [_xN]: _Ru }]],
+      1
+    ];
+    exports2.ServerSideEncryptionRule$ = [
+      3,
+      n04,
+      _SSER,
+      0,
+      [_ASSEBD, _BKE, _BET],
+      [[() => exports2.ServerSideEncryptionByDefault$, 0], 2, [() => exports2.BlockedEncryptionTypes$, 0]]
+    ];
+    exports2.SessionCredentials$ = [
+      3,
+      n04,
+      _SCe,
+      0,
+      [_AKI2, _SAK2, _ST2, _E2],
+      [[0, { [_xN]: _AKI2 }], [() => SessionCredentialValue, { [_xN]: _SAK2 }], [() => SessionCredentialValue, { [_xN]: _ST2 }], [4, { [_xN]: _E2 }]],
+      4
+    ];
+    exports2.SimplePrefix$ = [
+      3,
+      n04,
+      _SPi,
+      { [_xN]: _SPi },
+      [],
+      []
+    ];
+    exports2.SourceSelectionCriteria$ = [
+      3,
+      n04,
+      _SSC,
+      0,
+      [_SKEO, _RM],
+      [() => exports2.SseKmsEncryptedObjects$, () => exports2.ReplicaModifications$]
+    ];
+    exports2.SSEKMS$ = [
+      3,
+      n04,
+      _SSEKMS,
+      { [_xN]: _SK },
+      [_KI],
+      [[() => SSEKMSKeyId, 0]],
+      1
+    ];
+    exports2.SseKmsEncryptedObjects$ = [
+      3,
+      n04,
+      _SKEO,
+      0,
+      [_S],
+      [0],
+      1
+    ];
+    exports2.SSEKMSEncryption$ = [
+      3,
+      n04,
+      _SSEKMSE,
+      { [_xN]: _SK },
+      [_KMSKA, _BKE],
+      [[() => NonEmptyKmsKeyArnString, 0], 2],
+      1
+    ];
+    exports2.SSES3$ = [
+      3,
+      n04,
+      _SSES,
+      { [_xN]: _SS },
+      [],
+      []
+    ];
+    exports2.Stats$ = [
+      3,
+      n04,
+      _Sta,
+      0,
+      [_BS, _BP, _BRy],
+      [1, 1, 1]
+    ];
+    exports2.StatsEvent$ = [
+      3,
+      n04,
+      _SE,
+      0,
+      [_Det],
+      [[() => exports2.Stats$, { [_eP]: 1 }]]
+    ];
+    exports2.StorageClassAnalysis$ = [
+      3,
+      n04,
+      _SCA,
+      0,
+      [_DE],
+      [() => exports2.StorageClassAnalysisDataExport$]
+    ];
+    exports2.StorageClassAnalysisDataExport$ = [
+      3,
+      n04,
+      _SCADE,
+      0,
+      [_OSV, _Des],
+      [0, () => exports2.AnalyticsExportDestination$],
+      2
+    ];
+    exports2.Tag$ = [
+      3,
+      n04,
+      _Ta2,
+      0,
+      [_K2, _V2],
+      [0, 0],
+      2
+    ];
+    exports2.Tagging$ = [
+      3,
+      n04,
+      _Tag,
+      0,
+      [_TS],
+      [[() => TagSet, 0]],
+      1
+    ];
+    exports2.TargetGrant$ = [
+      3,
+      n04,
+      _TGa,
+      0,
+      [_Gra, _Pe],
+      [[() => exports2.Grantee$, { [_xNm]: [_x, _hi] }], 0]
+    ];
+    exports2.TargetObjectKeyFormat$ = [
+      3,
+      n04,
+      _TOKF,
+      0,
+      [_SPi, _PP],
+      [[() => exports2.SimplePrefix$, { [_xN]: _SPi }], [() => exports2.PartitionedPrefix$, { [_xN]: _PP }]]
+    ];
+    exports2.Tiering$ = [
+      3,
+      n04,
+      _Tier,
+      0,
+      [_D, _AT3],
+      [1, 0],
+      2
+    ];
+    exports2.TopicConfiguration$ = [
+      3,
+      n04,
+      _TCop,
+      0,
+      [_TAo, _Ev, _I, _F],
+      [[0, { [_xN]: _Top }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => exports2.NotificationConfigurationFilter$, 0]],
+      2
+    ];
+    exports2.Transition$ = [
+      3,
+      n04,
+      _Tra,
+      0,
+      [_Da, _D, _SC],
+      [5, 1, 0]
+    ];
+    exports2.UpdateBucketMetadataInventoryTableConfigurationRequest$ = [
+      3,
+      n04,
+      _UBMITCR,
+      0,
+      [_B, _ITCn, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.InventoryTableConfigurationUpdates$, { [_hP]: 1, [_xN]: _ITCn }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.UpdateBucketMetadataJournalTableConfigurationRequest$ = [
+      3,
+      n04,
+      _UBMJTCR,
+      0,
+      [_B, _JTC, _CMD, _CA2, _EBO],
+      [[0, 1], [() => exports2.JournalTableConfigurationUpdates$, { [_hP]: 1, [_xN]: _JTC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
+      2
+    ];
+    exports2.UpdateObjectEncryptionRequest$ = [
+      3,
+      n04,
+      _UOER,
+      0,
+      [_B, _K2, _OE, _VI, _RP, _EBO, _CMD, _CA2],
+      [[0, 1], [0, 1], [() => exports2.ObjectEncryption$, 16], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }]],
+      3
+    ];
+    exports2.UpdateObjectEncryptionResponse$ = [
+      3,
+      n04,
+      _UOERp,
+      0,
+      [_RC],
+      [[0, { [_hH]: _xarc }]]
+    ];
+    exports2.UploadPartCopyOutput$ = [
+      3,
+      n04,
+      _UPCO,
+      0,
+      [_CSVI, _CPR, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _RC],
+      [[0, { [_hH]: _xacsvi }], [() => exports2.CopyPartResult$, 16], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.UploadPartCopyRequest$ = [
+      3,
+      n04,
+      _UPCR,
+      0,
+      [_B, _CS2, _K2, _PN, _UI, _CSIM, _CSIMS, _CSINM, _CSIUS, _CSRo, _SSECA, _SSECK, _SSECKMD, _CSSSECA, _CSSSECK, _CSSSECKMD, _RP, _EBO, _ESBO],
+      [[0, 1], [0, { [_hH]: _xacs__ }], [0, 1], [1, { [_hQ]: _pN }], [0, { [_hQ]: _uI }], [0, { [_hH]: _xacsim }], [4, { [_hH]: _xacsims }], [0, { [_hH]: _xacsinm }], [4, { [_hH]: _xacsius }], [0, { [_hH]: _xacsr }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xacssseca }], [() => CopySourceSSECustomerKey, { [_hH]: _xacssseck }], [0, { [_hH]: _xacssseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasebo }]],
+      5
+    ];
+    exports2.UploadPartOutput$ = [
+      3,
+      n04,
+      _UPO,
+      0,
+      [_SSE, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _RC],
+      [[0, { [_hH]: _xasse }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
+    ];
+    exports2.UploadPartRequest$ = [
+      3,
+      n04,
+      _UPR,
+      0,
+      [_B, _K2, _PN, _UI, _Bo, _CLo, _CMD, _CA2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _SSECA, _SSECK, _SSECKMD, _RP, _EBO],
+      [[0, 1], [0, 1], [1, { [_hQ]: _pN }], [0, { [_hQ]: _uI }], [() => StreamingBlob, 16], [1, { [_hH]: _CL__ }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
+      4
+    ];
+    exports2.VersioningConfiguration$ = [
+      3,
+      n04,
+      _VC,
+      0,
+      [_MFAD, _S],
+      [[0, { [_xN]: _MDf }], 0]
+    ];
+    exports2.WebsiteConfiguration$ = [
+      3,
+      n04,
+      _WC,
+      0,
+      [_EDr, _IDn, _RART, _RR],
+      [() => exports2.ErrorDocument$, () => exports2.IndexDocument$, () => exports2.RedirectAllRequestsTo$, [() => RoutingRules, 0]]
+    ];
+    exports2.WriteGetObjectResponseRequest$ = [
+      3,
+      n04,
+      _WGORR,
+      0,
+      [_RReq, _RTe, _Bo, _SCt, _ECr, _EM, _AR2, _CC, _CDo, _CEo, _CL, _CLo, _CR, _CTo, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _DM, _ETa, _Ex, _E2, _LM, _MM, _M, _OLM, _OLLHS, _OLRUD, _PC2, _RS, _RC, _Re, _SSE, _SSECA, _SSEKMSKI, _SSECKMD, _SC, _TC2, _VI, _BKE],
+      [[0, { [_hL]: 1, [_hH]: _xarr }], [0, { [_hH]: _xart }], [() => StreamingBlob, 16], [1, { [_hH]: _xafs }], [0, { [_hH]: _xafec }], [0, { [_hH]: _xafem }], [0, { [_hH]: _xafhar }], [0, { [_hH]: _xafhCC }], [0, { [_hH]: _xafhCD }], [0, { [_hH]: _xafhCE }], [0, { [_hH]: _xafhCL }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _xafhCR }], [0, { [_hH]: _xafhCT }], [0, { [_hH]: _xafhxacc }], [0, { [_hH]: _xafhxacc_ }], [0, { [_hH]: _xafhxacc__ }], [0, { [_hH]: _xafhxacs }], [0, { [_hH]: _xafhxacs_ }], [2, { [_hH]: _xafhxadm }], [0, { [_hH]: _xafhE }], [4, { [_hH]: _xafhE_ }], [0, { [_hH]: _xafhxae }], [4, { [_hH]: _xafhLM }], [1, { [_hH]: _xafhxamm }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xafhxaolm }], [0, { [_hH]: _xafhxaollh }], [5, { [_hH]: _xafhxaolrud }], [1, { [_hH]: _xafhxampc }], [0, { [_hH]: _xafhxars }], [0, { [_hH]: _xafhxarc }], [0, { [_hH]: _xafhxar }], [0, { [_hH]: _xafhxasse }], [0, { [_hH]: _xafhxasseca }], [() => SSEKMSKeyId, { [_hH]: _xafhxasseakki }], [0, { [_hH]: _xafhxasseckM }], [0, { [_hH]: _xafhxasc }], [1, { [_hH]: _xafhxatc }], [0, { [_hH]: _xafhxavi }], [2, { [_hH]: _xafhxassebke }]],
+      2
+    ];
+    var __Unit = "unit";
+    var AllowedHeaders = 64 | 0;
+    var AllowedMethods = 64 | 0;
+    var AllowedOrigins = 64 | 0;
+    var AnalyticsConfigurationList = [
+      1,
+      n04,
+      _ACLn,
+      0,
+      [
+        () => exports2.AnalyticsConfiguration$,
+        0
+      ]
+    ];
+    var Buckets = [
+      1,
+      n04,
+      _Bu,
+      0,
+      [
+        () => exports2.Bucket$,
+        { [_xN]: _B }
+      ]
+    ];
+    var ChecksumAlgorithmList = 64 | 0;
+    var CommonPrefixList = [
+      1,
+      n04,
+      _CPL,
+      0,
+      () => exports2.CommonPrefix$
+    ];
+    var CompletedPartList = [
+      1,
+      n04,
+      _CPLo,
+      0,
+      () => exports2.CompletedPart$
+    ];
+    var CORSRules = [
+      1,
+      n04,
+      _CORSR,
+      0,
+      [
+        () => exports2.CORSRule$,
+        0
+      ]
+    ];
+    var DeletedObjects = [
+      1,
+      n04,
+      _DOe,
+      0,
+      () => exports2.DeletedObject$
+    ];
+    var DeleteMarkers = [
+      1,
+      n04,
+      _DMe,
+      0,
+      () => exports2.DeleteMarkerEntry$
+    ];
+    var EncryptionTypeList = [
+      1,
+      n04,
+      _ETL,
+      0,
+      [
+        0,
+        { [_xN]: _ET }
+      ]
+    ];
+    var Errors = [
+      1,
+      n04,
+      _Er,
+      0,
+      () => exports2._Error$
+    ];
+    var EventList = 64 | 0;
+    var ExposeHeaders = 64 | 0;
+    var FilterRuleList = [
+      1,
+      n04,
+      _FRL,
+      0,
+      () => exports2.FilterRule$
+    ];
+    var Grants = [
+      1,
+      n04,
+      _G,
+      0,
+      [
+        () => exports2.Grant$,
+        { [_xN]: _Gr }
+      ]
+    ];
+    var IntelligentTieringConfigurationList = [
+      1,
+      n04,
+      _ITCL,
+      0,
+      [
+        () => exports2.IntelligentTieringConfiguration$,
+        0
+      ]
+    ];
+    var InventoryConfigurationList = [
+      1,
+      n04,
+      _ICL,
+      0,
+      [
+        () => exports2.InventoryConfiguration$,
+        0
+      ]
+    ];
+    var InventoryOptionalFields = [
+      1,
+      n04,
+      _IOF,
+      0,
+      [
+        0,
+        { [_xN]: _Fi }
+      ]
+    ];
+    var LambdaFunctionConfigurationList = [
+      1,
+      n04,
+      _LFCL,
+      0,
+      [
+        () => exports2.LambdaFunctionConfiguration$,
+        0
+      ]
+    ];
+    var LifecycleRules = [
+      1,
+      n04,
+      _LRi,
+      0,
+      [
+        () => exports2.LifecycleRule$,
+        0
+      ]
+    ];
+    var MetricsConfigurationList = [
+      1,
+      n04,
+      _MCL,
+      0,
+      [
+        () => exports2.MetricsConfiguration$,
+        0
+      ]
+    ];
+    var MultipartUploadList = [
+      1,
+      n04,
+      _MUL,
+      0,
+      () => exports2.MultipartUpload$
+    ];
+    var NoncurrentVersionTransitionList = [
+      1,
+      n04,
+      _NVTL,
+      0,
+      () => exports2.NoncurrentVersionTransition$
+    ];
+    var ObjectAttributesList = 64 | 0;
+    var ObjectIdentifierList = [
+      1,
+      n04,
+      _OIL,
+      0,
+      () => exports2.ObjectIdentifier$
+    ];
+    var ObjectList = [
+      1,
+      n04,
+      _OLb,
+      0,
+      [
+        () => exports2._Object$,
+        0
+      ]
+    ];
+    var ObjectVersionList = [
+      1,
+      n04,
+      _OVL,
+      0,
+      [
+        () => exports2.ObjectVersion$,
+        0
+      ]
+    ];
+    var OptionalObjectAttributesList = 64 | 0;
+    var OwnershipControlsRules = [
+      1,
+      n04,
+      _OCRw,
+      0,
+      () => exports2.OwnershipControlsRule$
+    ];
+    var Parts = [
+      1,
+      n04,
+      _Pa,
+      0,
+      () => exports2.Part$
+    ];
+    var PartsList = [
+      1,
+      n04,
+      _PL,
+      0,
+      () => exports2.ObjectPart$
+    ];
+    var QueueConfigurationList = [
+      1,
+      n04,
+      _QCL,
+      0,
+      [
+        () => exports2.QueueConfiguration$,
+        0
+      ]
+    ];
+    var ReplicationRules = [
+      1,
+      n04,
+      _RRep,
+      0,
+      [
+        () => exports2.ReplicationRule$,
+        0
+      ]
+    ];
+    var RoutingRules = [
+      1,
+      n04,
+      _RR,
+      0,
+      [
+        () => exports2.RoutingRule$,
+        { [_xN]: _RRo }
+      ]
+    ];
+    var ServerSideEncryptionRules = [
+      1,
+      n04,
+      _SSERe,
+      0,
+      [
+        () => exports2.ServerSideEncryptionRule$,
+        0
+      ]
+    ];
+    var TagSet = [
+      1,
+      n04,
+      _TS,
+      0,
+      [
+        () => exports2.Tag$,
+        { [_xN]: _Ta2 }
+      ]
+    ];
+    var TargetGrants = [
+      1,
+      n04,
+      _TG,
+      0,
+      [
+        () => exports2.TargetGrant$,
+        { [_xN]: _Gr }
+      ]
+    ];
+    var TieringList = [
+      1,
+      n04,
+      _TL,
+      0,
+      () => exports2.Tiering$
+    ];
+    var TopicConfigurationList = [
+      1,
+      n04,
+      _TCL,
+      0,
+      [
+        () => exports2.TopicConfiguration$,
+        0
+      ]
+    ];
+    var TransitionList = [
+      1,
+      n04,
+      _TLr,
+      0,
+      () => exports2.Transition$
+    ];
+    var UserMetadata = [
+      1,
+      n04,
+      _UM,
+      0,
+      [
+        () => exports2.MetadataEntry$,
+        { [_xN]: _ME }
+      ]
+    ];
+    var Metadata = 128 | 0;
+    exports2.AnalyticsFilter$ = [
+      4,
+      n04,
+      _AF,
+      0,
+      [_P2, _Ta2, _An],
+      [0, () => exports2.Tag$, [() => exports2.AnalyticsAndOperator$, 0]]
+    ];
+    exports2.MetricsFilter$ = [
+      4,
+      n04,
+      _MF,
+      0,
+      [_P2, _Ta2, _APAc, _An],
+      [0, () => exports2.Tag$, 0, [() => exports2.MetricsAndOperator$, 0]]
+    ];
+    exports2.ObjectEncryption$ = [
+      4,
+      n04,
+      _OE,
+      0,
+      [_SSEKMS],
+      [[() => exports2.SSEKMSEncryption$, { [_xN]: _SK }]]
+    ];
+    exports2.SelectObjectContentEventStream$ = [
+      4,
+      n04,
+      _SOCES,
+      { [_st]: 1 },
+      [_Rec, _Sta, _Pr2, _Cont, _End],
+      [[() => exports2.RecordsEvent$, 0], [() => exports2.StatsEvent$, 0], [() => exports2.ProgressEvent$, 0], () => exports2.ContinuationEvent$, () => exports2.EndEvent$]
+    ];
+    exports2.AbortMultipartUpload$ = [
+      9,
+      n04,
+      _AMU,
+      { [_h3]: ["DELETE", "/{Key+}?x-id=AbortMultipartUpload", 204] },
+      () => exports2.AbortMultipartUploadRequest$,
+      () => exports2.AbortMultipartUploadOutput$
+    ];
+    exports2.CompleteMultipartUpload$ = [
+      9,
+      n04,
+      _CMUo,
+      { [_h3]: ["POST", "/{Key+}", 200] },
+      () => exports2.CompleteMultipartUploadRequest$,
+      () => exports2.CompleteMultipartUploadOutput$
+    ];
+    exports2.CopyObject$ = [
+      9,
+      n04,
+      _CO,
+      { [_h3]: ["PUT", "/{Key+}?x-id=CopyObject", 200] },
+      () => exports2.CopyObjectRequest$,
+      () => exports2.CopyObjectOutput$
+    ];
+    exports2.CreateBucket$ = [
+      9,
+      n04,
+      _CB,
+      { [_h3]: ["PUT", "/", 200] },
+      () => exports2.CreateBucketRequest$,
+      () => exports2.CreateBucketOutput$
+    ];
+    exports2.CreateBucketMetadataConfiguration$ = [
+      9,
+      n04,
+      _CBMC,
+      { [_hC]: "-", [_h3]: ["POST", "/?metadataConfiguration", 200] },
+      () => exports2.CreateBucketMetadataConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.CreateBucketMetadataTableConfiguration$ = [
+      9,
+      n04,
+      _CBMTC,
+      { [_hC]: "-", [_h3]: ["POST", "/?metadataTable", 200] },
+      () => exports2.CreateBucketMetadataTableConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.CreateMultipartUpload$ = [
+      9,
+      n04,
+      _CMUr,
+      { [_h3]: ["POST", "/{Key+}?uploads", 200] },
+      () => exports2.CreateMultipartUploadRequest$,
+      () => exports2.CreateMultipartUploadOutput$
+    ];
+    exports2.CreateSession$ = [
+      9,
+      n04,
+      _CSr,
+      { [_h3]: ["GET", "/?session", 200] },
+      () => exports2.CreateSessionRequest$,
+      () => exports2.CreateSessionOutput$
+    ];
+    exports2.DeleteBucket$ = [
+      9,
+      n04,
+      _DB,
+      { [_h3]: ["DELETE", "/", 204] },
+      () => exports2.DeleteBucketRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketAnalyticsConfiguration$ = [
+      9,
+      n04,
+      _DBAC,
+      { [_h3]: ["DELETE", "/?analytics", 204] },
+      () => exports2.DeleteBucketAnalyticsConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketCors$ = [
+      9,
+      n04,
+      _DBC,
+      { [_h3]: ["DELETE", "/?cors", 204] },
+      () => exports2.DeleteBucketCorsRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketEncryption$ = [
+      9,
+      n04,
+      _DBE,
+      { [_h3]: ["DELETE", "/?encryption", 204] },
+      () => exports2.DeleteBucketEncryptionRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketIntelligentTieringConfiguration$ = [
+      9,
+      n04,
+      _DBITC,
+      { [_h3]: ["DELETE", "/?intelligent-tiering", 204] },
+      () => exports2.DeleteBucketIntelligentTieringConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketInventoryConfiguration$ = [
+      9,
+      n04,
+      _DBIC,
+      { [_h3]: ["DELETE", "/?inventory", 204] },
+      () => exports2.DeleteBucketInventoryConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketLifecycle$ = [
+      9,
+      n04,
+      _DBL,
+      { [_h3]: ["DELETE", "/?lifecycle", 204] },
+      () => exports2.DeleteBucketLifecycleRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketMetadataConfiguration$ = [
+      9,
+      n04,
+      _DBMC,
+      { [_h3]: ["DELETE", "/?metadataConfiguration", 204] },
+      () => exports2.DeleteBucketMetadataConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketMetadataTableConfiguration$ = [
+      9,
+      n04,
+      _DBMTC,
+      { [_h3]: ["DELETE", "/?metadataTable", 204] },
+      () => exports2.DeleteBucketMetadataTableConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketMetricsConfiguration$ = [
+      9,
+      n04,
+      _DBMCe,
+      { [_h3]: ["DELETE", "/?metrics", 204] },
+      () => exports2.DeleteBucketMetricsConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketOwnershipControls$ = [
+      9,
+      n04,
+      _DBOC,
+      { [_h3]: ["DELETE", "/?ownershipControls", 204] },
+      () => exports2.DeleteBucketOwnershipControlsRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketPolicy$ = [
+      9,
+      n04,
+      _DBP,
+      { [_h3]: ["DELETE", "/?policy", 204] },
+      () => exports2.DeleteBucketPolicyRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketReplication$ = [
+      9,
+      n04,
+      _DBRe,
+      { [_h3]: ["DELETE", "/?replication", 204] },
+      () => exports2.DeleteBucketReplicationRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketTagging$ = [
+      9,
+      n04,
+      _DBT,
+      { [_h3]: ["DELETE", "/?tagging", 204] },
+      () => exports2.DeleteBucketTaggingRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteBucketWebsite$ = [
+      9,
+      n04,
+      _DBW,
+      { [_h3]: ["DELETE", "/?website", 204] },
+      () => exports2.DeleteBucketWebsiteRequest$,
+      () => __Unit
+    ];
+    exports2.DeleteObject$ = [
+      9,
+      n04,
+      _DOel,
+      { [_h3]: ["DELETE", "/{Key+}?x-id=DeleteObject", 204] },
+      () => exports2.DeleteObjectRequest$,
+      () => exports2.DeleteObjectOutput$
+    ];
+    exports2.DeleteObjects$ = [
+      9,
+      n04,
+      _DOele,
+      { [_hC]: "-", [_h3]: ["POST", "/?delete", 200] },
+      () => exports2.DeleteObjectsRequest$,
+      () => exports2.DeleteObjectsOutput$
+    ];
+    exports2.DeleteObjectTagging$ = [
+      9,
+      n04,
+      _DOT,
+      { [_h3]: ["DELETE", "/{Key+}?tagging", 204] },
+      () => exports2.DeleteObjectTaggingRequest$,
+      () => exports2.DeleteObjectTaggingOutput$
+    ];
+    exports2.DeletePublicAccessBlock$ = [
+      9,
+      n04,
+      _DPAB,
+      { [_h3]: ["DELETE", "/?publicAccessBlock", 204] },
+      () => exports2.DeletePublicAccessBlockRequest$,
+      () => __Unit
+    ];
+    exports2.GetBucketAbac$ = [
+      9,
+      n04,
+      _GBA,
+      { [_h3]: ["GET", "/?abac", 200] },
+      () => exports2.GetBucketAbacRequest$,
+      () => exports2.GetBucketAbacOutput$
+    ];
+    exports2.GetBucketAccelerateConfiguration$ = [
+      9,
+      n04,
+      _GBAC,
+      { [_h3]: ["GET", "/?accelerate", 200] },
+      () => exports2.GetBucketAccelerateConfigurationRequest$,
+      () => exports2.GetBucketAccelerateConfigurationOutput$
+    ];
+    exports2.GetBucketAcl$ = [
+      9,
+      n04,
+      _GBAe,
+      { [_h3]: ["GET", "/?acl", 200] },
+      () => exports2.GetBucketAclRequest$,
+      () => exports2.GetBucketAclOutput$
+    ];
+    exports2.GetBucketAnalyticsConfiguration$ = [
+      9,
+      n04,
+      _GBACe,
+      { [_h3]: ["GET", "/?analytics&x-id=GetBucketAnalyticsConfiguration", 200] },
+      () => exports2.GetBucketAnalyticsConfigurationRequest$,
+      () => exports2.GetBucketAnalyticsConfigurationOutput$
+    ];
+    exports2.GetBucketCors$ = [
+      9,
+      n04,
+      _GBC,
+      { [_h3]: ["GET", "/?cors", 200] },
+      () => exports2.GetBucketCorsRequest$,
+      () => exports2.GetBucketCorsOutput$
+    ];
+    exports2.GetBucketEncryption$ = [
+      9,
+      n04,
+      _GBE,
+      { [_h3]: ["GET", "/?encryption", 200] },
+      () => exports2.GetBucketEncryptionRequest$,
+      () => exports2.GetBucketEncryptionOutput$
+    ];
+    exports2.GetBucketIntelligentTieringConfiguration$ = [
+      9,
+      n04,
+      _GBITC,
+      { [_h3]: ["GET", "/?intelligent-tiering&x-id=GetBucketIntelligentTieringConfiguration", 200] },
+      () => exports2.GetBucketIntelligentTieringConfigurationRequest$,
+      () => exports2.GetBucketIntelligentTieringConfigurationOutput$
+    ];
+    exports2.GetBucketInventoryConfiguration$ = [
+      9,
+      n04,
+      _GBIC,
+      { [_h3]: ["GET", "/?inventory&x-id=GetBucketInventoryConfiguration", 200] },
+      () => exports2.GetBucketInventoryConfigurationRequest$,
+      () => exports2.GetBucketInventoryConfigurationOutput$
+    ];
+    exports2.GetBucketLifecycleConfiguration$ = [
+      9,
+      n04,
+      _GBLC,
+      { [_h3]: ["GET", "/?lifecycle", 200] },
+      () => exports2.GetBucketLifecycleConfigurationRequest$,
+      () => exports2.GetBucketLifecycleConfigurationOutput$
+    ];
+    exports2.GetBucketLocation$ = [
+      9,
+      n04,
+      _GBL,
+      { [_h3]: ["GET", "/?location", 200] },
+      () => exports2.GetBucketLocationRequest$,
+      () => exports2.GetBucketLocationOutput$
+    ];
+    exports2.GetBucketLogging$ = [
+      9,
+      n04,
+      _GBLe,
+      { [_h3]: ["GET", "/?logging", 200] },
+      () => exports2.GetBucketLoggingRequest$,
+      () => exports2.GetBucketLoggingOutput$
+    ];
+    exports2.GetBucketMetadataConfiguration$ = [
+      9,
+      n04,
+      _GBMC,
+      { [_h3]: ["GET", "/?metadataConfiguration", 200] },
+      () => exports2.GetBucketMetadataConfigurationRequest$,
+      () => exports2.GetBucketMetadataConfigurationOutput$
+    ];
+    exports2.GetBucketMetadataTableConfiguration$ = [
+      9,
+      n04,
+      _GBMTC,
+      { [_h3]: ["GET", "/?metadataTable", 200] },
+      () => exports2.GetBucketMetadataTableConfigurationRequest$,
+      () => exports2.GetBucketMetadataTableConfigurationOutput$
+    ];
+    exports2.GetBucketMetricsConfiguration$ = [
+      9,
+      n04,
+      _GBMCe,
+      { [_h3]: ["GET", "/?metrics&x-id=GetBucketMetricsConfiguration", 200] },
+      () => exports2.GetBucketMetricsConfigurationRequest$,
+      () => exports2.GetBucketMetricsConfigurationOutput$
+    ];
+    exports2.GetBucketNotificationConfiguration$ = [
+      9,
+      n04,
+      _GBNC,
+      { [_h3]: ["GET", "/?notification", 200] },
+      () => exports2.GetBucketNotificationConfigurationRequest$,
+      () => exports2.NotificationConfiguration$
+    ];
+    exports2.GetBucketOwnershipControls$ = [
+      9,
+      n04,
+      _GBOC,
+      { [_h3]: ["GET", "/?ownershipControls", 200] },
+      () => exports2.GetBucketOwnershipControlsRequest$,
+      () => exports2.GetBucketOwnershipControlsOutput$
+    ];
+    exports2.GetBucketPolicy$ = [
+      9,
+      n04,
+      _GBP,
+      { [_h3]: ["GET", "/?policy", 200] },
+      () => exports2.GetBucketPolicyRequest$,
+      () => exports2.GetBucketPolicyOutput$
+    ];
+    exports2.GetBucketPolicyStatus$ = [
+      9,
+      n04,
+      _GBPS,
+      { [_h3]: ["GET", "/?policyStatus", 200] },
+      () => exports2.GetBucketPolicyStatusRequest$,
+      () => exports2.GetBucketPolicyStatusOutput$
+    ];
+    exports2.GetBucketReplication$ = [
+      9,
+      n04,
+      _GBR,
+      { [_h3]: ["GET", "/?replication", 200] },
+      () => exports2.GetBucketReplicationRequest$,
+      () => exports2.GetBucketReplicationOutput$
+    ];
+    exports2.GetBucketRequestPayment$ = [
+      9,
+      n04,
+      _GBRP,
+      { [_h3]: ["GET", "/?requestPayment", 200] },
+      () => exports2.GetBucketRequestPaymentRequest$,
+      () => exports2.GetBucketRequestPaymentOutput$
+    ];
+    exports2.GetBucketTagging$ = [
+      9,
+      n04,
+      _GBT,
+      { [_h3]: ["GET", "/?tagging", 200] },
+      () => exports2.GetBucketTaggingRequest$,
+      () => exports2.GetBucketTaggingOutput$
+    ];
+    exports2.GetBucketVersioning$ = [
+      9,
+      n04,
+      _GBV,
+      { [_h3]: ["GET", "/?versioning", 200] },
+      () => exports2.GetBucketVersioningRequest$,
+      () => exports2.GetBucketVersioningOutput$
+    ];
+    exports2.GetBucketWebsite$ = [
+      9,
+      n04,
+      _GBW,
+      { [_h3]: ["GET", "/?website", 200] },
+      () => exports2.GetBucketWebsiteRequest$,
+      () => exports2.GetBucketWebsiteOutput$
+    ];
+    exports2.GetObject$ = [
+      9,
+      n04,
+      _GO,
+      { [_hC]: "-", [_h3]: ["GET", "/{Key+}?x-id=GetObject", 200] },
+      () => exports2.GetObjectRequest$,
+      () => exports2.GetObjectOutput$
+    ];
+    exports2.GetObjectAcl$ = [
+      9,
+      n04,
+      _GOA,
+      { [_h3]: ["GET", "/{Key+}?acl", 200] },
+      () => exports2.GetObjectAclRequest$,
+      () => exports2.GetObjectAclOutput$
+    ];
+    exports2.GetObjectAttributes$ = [
+      9,
+      n04,
+      _GOAe,
+      { [_h3]: ["GET", "/{Key+}?attributes", 200] },
+      () => exports2.GetObjectAttributesRequest$,
+      () => exports2.GetObjectAttributesOutput$
+    ];
+    exports2.GetObjectLegalHold$ = [
+      9,
+      n04,
+      _GOLH,
+      { [_h3]: ["GET", "/{Key+}?legal-hold", 200] },
+      () => exports2.GetObjectLegalHoldRequest$,
+      () => exports2.GetObjectLegalHoldOutput$
+    ];
+    exports2.GetObjectLockConfiguration$ = [
+      9,
+      n04,
+      _GOLC,
+      { [_h3]: ["GET", "/?object-lock", 200] },
+      () => exports2.GetObjectLockConfigurationRequest$,
+      () => exports2.GetObjectLockConfigurationOutput$
+    ];
+    exports2.GetObjectRetention$ = [
+      9,
+      n04,
+      _GORe,
+      { [_h3]: ["GET", "/{Key+}?retention", 200] },
+      () => exports2.GetObjectRetentionRequest$,
+      () => exports2.GetObjectRetentionOutput$
+    ];
+    exports2.GetObjectTagging$ = [
+      9,
+      n04,
+      _GOT,
+      { [_h3]: ["GET", "/{Key+}?tagging", 200] },
+      () => exports2.GetObjectTaggingRequest$,
+      () => exports2.GetObjectTaggingOutput$
+    ];
+    exports2.GetObjectTorrent$ = [
+      9,
+      n04,
+      _GOTe,
+      { [_h3]: ["GET", "/{Key+}?torrent", 200] },
+      () => exports2.GetObjectTorrentRequest$,
+      () => exports2.GetObjectTorrentOutput$
+    ];
+    exports2.GetPublicAccessBlock$ = [
+      9,
+      n04,
+      _GPAB,
+      { [_h3]: ["GET", "/?publicAccessBlock", 200] },
+      () => exports2.GetPublicAccessBlockRequest$,
+      () => exports2.GetPublicAccessBlockOutput$
+    ];
+    exports2.HeadBucket$ = [
+      9,
+      n04,
+      _HB,
+      { [_h3]: ["HEAD", "/", 200] },
+      () => exports2.HeadBucketRequest$,
+      () => exports2.HeadBucketOutput$
+    ];
+    exports2.HeadObject$ = [
+      9,
+      n04,
+      _HO,
+      { [_h3]: ["HEAD", "/{Key+}", 200] },
+      () => exports2.HeadObjectRequest$,
+      () => exports2.HeadObjectOutput$
+    ];
+    exports2.ListBucketAnalyticsConfigurations$ = [
+      9,
+      n04,
+      _LBAC,
+      { [_h3]: ["GET", "/?analytics&x-id=ListBucketAnalyticsConfigurations", 200] },
+      () => exports2.ListBucketAnalyticsConfigurationsRequest$,
+      () => exports2.ListBucketAnalyticsConfigurationsOutput$
+    ];
+    exports2.ListBucketIntelligentTieringConfigurations$ = [
+      9,
+      n04,
+      _LBITC,
+      { [_h3]: ["GET", "/?intelligent-tiering&x-id=ListBucketIntelligentTieringConfigurations", 200] },
+      () => exports2.ListBucketIntelligentTieringConfigurationsRequest$,
+      () => exports2.ListBucketIntelligentTieringConfigurationsOutput$
+    ];
+    exports2.ListBucketInventoryConfigurations$ = [
+      9,
+      n04,
+      _LBIC,
+      { [_h3]: ["GET", "/?inventory&x-id=ListBucketInventoryConfigurations", 200] },
+      () => exports2.ListBucketInventoryConfigurationsRequest$,
+      () => exports2.ListBucketInventoryConfigurationsOutput$
+    ];
+    exports2.ListBucketMetricsConfigurations$ = [
+      9,
+      n04,
+      _LBMC,
+      { [_h3]: ["GET", "/?metrics&x-id=ListBucketMetricsConfigurations", 200] },
+      () => exports2.ListBucketMetricsConfigurationsRequest$,
+      () => exports2.ListBucketMetricsConfigurationsOutput$
+    ];
+    exports2.ListBuckets$ = [
+      9,
+      n04,
+      _LB,
+      { [_h3]: ["GET", "/?x-id=ListBuckets", 200] },
+      () => exports2.ListBucketsRequest$,
+      () => exports2.ListBucketsOutput$
+    ];
+    exports2.ListDirectoryBuckets$ = [
+      9,
+      n04,
+      _LDB,
+      { [_h3]: ["GET", "/?x-id=ListDirectoryBuckets", 200] },
+      () => exports2.ListDirectoryBucketsRequest$,
+      () => exports2.ListDirectoryBucketsOutput$
+    ];
+    exports2.ListMultipartUploads$ = [
+      9,
+      n04,
+      _LMU,
+      { [_h3]: ["GET", "/?uploads", 200] },
+      () => exports2.ListMultipartUploadsRequest$,
+      () => exports2.ListMultipartUploadsOutput$
+    ];
+    exports2.ListObjects$ = [
+      9,
+      n04,
+      _LO,
+      { [_h3]: ["GET", "/", 200] },
+      () => exports2.ListObjectsRequest$,
+      () => exports2.ListObjectsOutput$
+    ];
+    exports2.ListObjectsV2$ = [
+      9,
+      n04,
+      _LOV,
+      { [_h3]: ["GET", "/?list-type=2", 200] },
+      () => exports2.ListObjectsV2Request$,
+      () => exports2.ListObjectsV2Output$
+    ];
+    exports2.ListObjectVersions$ = [
+      9,
+      n04,
+      _LOVi,
+      { [_h3]: ["GET", "/?versions", 200] },
+      () => exports2.ListObjectVersionsRequest$,
+      () => exports2.ListObjectVersionsOutput$
+    ];
+    exports2.ListParts$ = [
+      9,
+      n04,
+      _LP,
+      { [_h3]: ["GET", "/{Key+}?x-id=ListParts", 200] },
+      () => exports2.ListPartsRequest$,
+      () => exports2.ListPartsOutput$
+    ];
+    exports2.PutBucketAbac$ = [
+      9,
+      n04,
+      _PBA,
+      { [_hC]: "-", [_h3]: ["PUT", "/?abac", 200] },
+      () => exports2.PutBucketAbacRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketAccelerateConfiguration$ = [
+      9,
+      n04,
+      _PBAC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?accelerate", 200] },
+      () => exports2.PutBucketAccelerateConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketAcl$ = [
+      9,
+      n04,
+      _PBAu,
+      { [_hC]: "-", [_h3]: ["PUT", "/?acl", 200] },
+      () => exports2.PutBucketAclRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketAnalyticsConfiguration$ = [
+      9,
+      n04,
+      _PBACu,
+      { [_h3]: ["PUT", "/?analytics", 200] },
+      () => exports2.PutBucketAnalyticsConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketCors$ = [
+      9,
+      n04,
+      _PBC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?cors", 200] },
+      () => exports2.PutBucketCorsRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketEncryption$ = [
+      9,
+      n04,
+      _PBE,
+      { [_hC]: "-", [_h3]: ["PUT", "/?encryption", 200] },
+      () => exports2.PutBucketEncryptionRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketIntelligentTieringConfiguration$ = [
+      9,
+      n04,
+      _PBITC,
+      { [_h3]: ["PUT", "/?intelligent-tiering", 200] },
+      () => exports2.PutBucketIntelligentTieringConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketInventoryConfiguration$ = [
+      9,
+      n04,
+      _PBIC,
+      { [_h3]: ["PUT", "/?inventory", 200] },
+      () => exports2.PutBucketInventoryConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketLifecycleConfiguration$ = [
+      9,
+      n04,
+      _PBLC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?lifecycle", 200] },
+      () => exports2.PutBucketLifecycleConfigurationRequest$,
+      () => exports2.PutBucketLifecycleConfigurationOutput$
+    ];
+    exports2.PutBucketLogging$ = [
+      9,
+      n04,
+      _PBL,
+      { [_hC]: "-", [_h3]: ["PUT", "/?logging", 200] },
+      () => exports2.PutBucketLoggingRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketMetricsConfiguration$ = [
+      9,
+      n04,
+      _PBMC,
+      { [_h3]: ["PUT", "/?metrics", 200] },
+      () => exports2.PutBucketMetricsConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketNotificationConfiguration$ = [
+      9,
+      n04,
+      _PBNC,
+      { [_h3]: ["PUT", "/?notification", 200] },
+      () => exports2.PutBucketNotificationConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketOwnershipControls$ = [
+      9,
+      n04,
+      _PBOC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?ownershipControls", 200] },
+      () => exports2.PutBucketOwnershipControlsRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketPolicy$ = [
+      9,
+      n04,
+      _PBP,
+      { [_hC]: "-", [_h3]: ["PUT", "/?policy", 200] },
+      () => exports2.PutBucketPolicyRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketReplication$ = [
+      9,
+      n04,
+      _PBR,
+      { [_hC]: "-", [_h3]: ["PUT", "/?replication", 200] },
+      () => exports2.PutBucketReplicationRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketRequestPayment$ = [
+      9,
+      n04,
+      _PBRP,
+      { [_hC]: "-", [_h3]: ["PUT", "/?requestPayment", 200] },
+      () => exports2.PutBucketRequestPaymentRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketTagging$ = [
+      9,
+      n04,
+      _PBT,
+      { [_hC]: "-", [_h3]: ["PUT", "/?tagging", 200] },
+      () => exports2.PutBucketTaggingRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketVersioning$ = [
+      9,
+      n04,
+      _PBV,
+      { [_hC]: "-", [_h3]: ["PUT", "/?versioning", 200] },
+      () => exports2.PutBucketVersioningRequest$,
+      () => __Unit
+    ];
+    exports2.PutBucketWebsite$ = [
+      9,
+      n04,
+      _PBW,
+      { [_hC]: "-", [_h3]: ["PUT", "/?website", 200] },
+      () => exports2.PutBucketWebsiteRequest$,
+      () => __Unit
+    ];
+    exports2.PutObject$ = [
+      9,
+      n04,
+      _PO,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?x-id=PutObject", 200] },
+      () => exports2.PutObjectRequest$,
+      () => exports2.PutObjectOutput$
+    ];
+    exports2.PutObjectAcl$ = [
+      9,
+      n04,
+      _POA,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?acl", 200] },
+      () => exports2.PutObjectAclRequest$,
+      () => exports2.PutObjectAclOutput$
+    ];
+    exports2.PutObjectLegalHold$ = [
+      9,
+      n04,
+      _POLH,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?legal-hold", 200] },
+      () => exports2.PutObjectLegalHoldRequest$,
+      () => exports2.PutObjectLegalHoldOutput$
+    ];
+    exports2.PutObjectLockConfiguration$ = [
+      9,
+      n04,
+      _POLC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?object-lock", 200] },
+      () => exports2.PutObjectLockConfigurationRequest$,
+      () => exports2.PutObjectLockConfigurationOutput$
+    ];
+    exports2.PutObjectRetention$ = [
+      9,
+      n04,
+      _PORu,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?retention", 200] },
+      () => exports2.PutObjectRetentionRequest$,
+      () => exports2.PutObjectRetentionOutput$
+    ];
+    exports2.PutObjectTagging$ = [
+      9,
+      n04,
+      _POT,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?tagging", 200] },
+      () => exports2.PutObjectTaggingRequest$,
+      () => exports2.PutObjectTaggingOutput$
+    ];
+    exports2.PutPublicAccessBlock$ = [
+      9,
+      n04,
+      _PPAB,
+      { [_hC]: "-", [_h3]: ["PUT", "/?publicAccessBlock", 200] },
+      () => exports2.PutPublicAccessBlockRequest$,
+      () => __Unit
+    ];
+    exports2.RenameObject$ = [
+      9,
+      n04,
+      _RO,
+      { [_h3]: ["PUT", "/{Key+}?renameObject", 200] },
+      () => exports2.RenameObjectRequest$,
+      () => exports2.RenameObjectOutput$
+    ];
+    exports2.RestoreObject$ = [
+      9,
+      n04,
+      _ROe,
+      { [_hC]: "-", [_h3]: ["POST", "/{Key+}?restore", 200] },
+      () => exports2.RestoreObjectRequest$,
+      () => exports2.RestoreObjectOutput$
+    ];
+    exports2.SelectObjectContent$ = [
+      9,
+      n04,
+      _SOC,
+      { [_h3]: ["POST", "/{Key+}?select&select-type=2", 200] },
+      () => exports2.SelectObjectContentRequest$,
+      () => exports2.SelectObjectContentOutput$
+    ];
+    exports2.UpdateBucketMetadataInventoryTableConfiguration$ = [
+      9,
+      n04,
+      _UBMITC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?metadataInventoryTable", 200] },
+      () => exports2.UpdateBucketMetadataInventoryTableConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.UpdateBucketMetadataJournalTableConfiguration$ = [
+      9,
+      n04,
+      _UBMJTC,
+      { [_hC]: "-", [_h3]: ["PUT", "/?metadataJournalTable", 200] },
+      () => exports2.UpdateBucketMetadataJournalTableConfigurationRequest$,
+      () => __Unit
+    ];
+    exports2.UpdateObjectEncryption$ = [
+      9,
+      n04,
+      _UOE,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?encryption", 200] },
+      () => exports2.UpdateObjectEncryptionRequest$,
+      () => exports2.UpdateObjectEncryptionResponse$
+    ];
+    exports2.UploadPart$ = [
+      9,
+      n04,
+      _UP,
+      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?x-id=UploadPart", 200] },
+      () => exports2.UploadPartRequest$,
+      () => exports2.UploadPartOutput$
+    ];
+    exports2.UploadPartCopy$ = [
+      9,
+      n04,
+      _UPC,
+      { [_h3]: ["PUT", "/{Key+}?x-id=UploadPartCopy", 200] },
+      () => exports2.UploadPartCopyRequest$,
+      () => exports2.UploadPartCopyOutput$
+    ];
+    exports2.WriteGetObjectResponse$ = [
+      9,
+      n04,
+      _WGOR,
+      { [_en]: ["{RequestRoute}."], [_h3]: ["POST", "/WriteGetObjectResponse", 200] },
+      () => exports2.WriteGetObjectResponseRequest$,
+      () => __Unit
+    ];
+  }
+});
+
 // node_modules/@aws-sdk/client-s3/package.json
 var require_package = __commonJS({
   "node_modules/@aws-sdk/client-s3/package.json"(exports2, module2) {
     module2.exports = {
       name: "@aws-sdk/client-s3",
       description: "AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native",
-      version: "3.971.0",
+      version: "3.989.0",
       scripts: {
         build: "concurrently 'yarn:build:types' 'yarn:build:es' && yarn build:cjs",
         "build:cjs": "node ../../scripts/compilation/inline client-s3",
@@ -42305,7 +47832,7 @@ var require_package = __commonJS({
         "build:include:deps": 'yarn g:turbo run build -F="$npm_package_name"',
         "build:types": "tsc -p tsconfig.types.json",
         "build:types:downlevel": "downlevel-dts dist-types dist-types/ts3.4",
-        clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
+        clean: "premove dist-cjs dist-es dist-types tsconfig.cjs.tsbuildinfo tsconfig.es.tsbuildinfo tsconfig.types.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo s3",
         test: "yarn g:vitest run",
@@ -42326,26 +47853,26 @@ var require_package = __commonJS({
         "@aws-crypto/sha1-browser": "5.2.0",
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.970.0",
-        "@aws-sdk/credential-provider-node": "3.971.0",
-        "@aws-sdk/middleware-bucket-endpoint": "3.969.0",
-        "@aws-sdk/middleware-expect-continue": "3.969.0",
-        "@aws-sdk/middleware-flexible-checksums": "3.971.0",
-        "@aws-sdk/middleware-host-header": "3.969.0",
-        "@aws-sdk/middleware-location-constraint": "3.969.0",
-        "@aws-sdk/middleware-logger": "3.969.0",
-        "@aws-sdk/middleware-recursion-detection": "3.969.0",
-        "@aws-sdk/middleware-sdk-s3": "3.970.0",
-        "@aws-sdk/middleware-ssec": "3.971.0",
-        "@aws-sdk/middleware-user-agent": "3.970.0",
-        "@aws-sdk/region-config-resolver": "3.969.0",
-        "@aws-sdk/signature-v4-multi-region": "3.970.0",
-        "@aws-sdk/types": "3.969.0",
-        "@aws-sdk/util-endpoints": "3.970.0",
-        "@aws-sdk/util-user-agent-browser": "3.969.0",
-        "@aws-sdk/util-user-agent-node": "3.971.0",
+        "@aws-sdk/core": "^3.973.9",
+        "@aws-sdk/credential-provider-node": "^3.972.8",
+        "@aws-sdk/middleware-bucket-endpoint": "^3.972.3",
+        "@aws-sdk/middleware-expect-continue": "^3.972.3",
+        "@aws-sdk/middleware-flexible-checksums": "^3.972.7",
+        "@aws-sdk/middleware-host-header": "^3.972.3",
+        "@aws-sdk/middleware-location-constraint": "^3.972.3",
+        "@aws-sdk/middleware-logger": "^3.972.3",
+        "@aws-sdk/middleware-recursion-detection": "^3.972.3",
+        "@aws-sdk/middleware-sdk-s3": "^3.972.9",
+        "@aws-sdk/middleware-ssec": "^3.972.3",
+        "@aws-sdk/middleware-user-agent": "^3.972.9",
+        "@aws-sdk/region-config-resolver": "^3.972.3",
+        "@aws-sdk/signature-v4-multi-region": "3.989.0",
+        "@aws-sdk/types": "^3.973.1",
+        "@aws-sdk/util-endpoints": "3.989.0",
+        "@aws-sdk/util-user-agent-browser": "^3.972.3",
+        "@aws-sdk/util-user-agent-node": "^3.972.7",
         "@smithy/config-resolver": "^4.4.6",
-        "@smithy/core": "^3.20.6",
+        "@smithy/core": "^3.23.0",
         "@smithy/eventstream-serde-browser": "^4.2.8",
         "@smithy/eventstream-serde-config-resolver": "^4.3.8",
         "@smithy/eventstream-serde-node": "^4.2.8",
@@ -42356,36 +47883,36 @@ var require_package = __commonJS({
         "@smithy/invalid-dependency": "^4.2.8",
         "@smithy/md5-js": "^4.2.8",
         "@smithy/middleware-content-length": "^4.2.8",
-        "@smithy/middleware-endpoint": "^4.4.7",
-        "@smithy/middleware-retry": "^4.4.23",
+        "@smithy/middleware-endpoint": "^4.4.14",
+        "@smithy/middleware-retry": "^4.4.31",
         "@smithy/middleware-serde": "^4.2.9",
         "@smithy/middleware-stack": "^4.2.8",
         "@smithy/node-config-provider": "^4.3.8",
-        "@smithy/node-http-handler": "^4.4.8",
+        "@smithy/node-http-handler": "^4.4.10",
         "@smithy/protocol-http": "^5.3.8",
-        "@smithy/smithy-client": "^4.10.8",
+        "@smithy/smithy-client": "^4.11.3",
         "@smithy/types": "^4.12.0",
         "@smithy/url-parser": "^4.2.8",
         "@smithy/util-base64": "^4.3.0",
         "@smithy/util-body-length-browser": "^4.2.0",
         "@smithy/util-body-length-node": "^4.2.1",
-        "@smithy/util-defaults-mode-browser": "^4.3.22",
-        "@smithy/util-defaults-mode-node": "^4.2.25",
+        "@smithy/util-defaults-mode-browser": "^4.3.30",
+        "@smithy/util-defaults-mode-node": "^4.2.33",
         "@smithy/util-endpoints": "^3.2.8",
         "@smithy/util-middleware": "^4.2.8",
         "@smithy/util-retry": "^4.2.8",
-        "@smithy/util-stream": "^4.5.10",
+        "@smithy/util-stream": "^4.5.12",
         "@smithy/util-utf8": "^4.2.0",
         "@smithy/util-waiter": "^4.2.8",
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/signature-v4-crt": "3.971.0",
+        "@aws-sdk/signature-v4-crt": "3.989.0",
         "@tsconfig/node20": "20.1.8",
         "@types/node": "^20.14.8",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
-        rimraf: "5.0.10",
+        premove: "4.0.0",
         typescript: "~5.8.3"
       },
       engines: {
@@ -43095,7 +48622,7 @@ var init_package = __esm({
   "node_modules/@aws-sdk/nested-clients/package.json"() {
     package_default = {
       name: "@aws-sdk/nested-clients",
-      version: "3.971.0",
+      version: "3.989.0",
       description: "Nested clients for AWS SDK packages.",
       main: "./dist-cjs/index.js",
       module: "./dist-es/index.js",
@@ -43107,7 +48634,7 @@ var init_package = __esm({
         "build:include:deps": 'yarn g:turbo run build -F="$npm_package_name"',
         "build:types": "tsc -p tsconfig.types.json",
         "build:types:downlevel": "downlevel-dts dist-types dist-types/ts3.4",
-        clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
+        clean: "premove dist-cjs dist-es dist-types tsconfig.cjs.tsbuildinfo tsconfig.es.tsbuildinfo tsconfig.types.tsbuildinfo",
         lint: "node ../../scripts/validation/submodules-linter.js --pkg nested-clients",
         test: "yarn g:vitest run",
         "test:watch": "yarn g:vitest watch"
@@ -43124,37 +48651,37 @@ var init_package = __esm({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.970.0",
-        "@aws-sdk/middleware-host-header": "3.969.0",
-        "@aws-sdk/middleware-logger": "3.969.0",
-        "@aws-sdk/middleware-recursion-detection": "3.969.0",
-        "@aws-sdk/middleware-user-agent": "3.970.0",
-        "@aws-sdk/region-config-resolver": "3.969.0",
-        "@aws-sdk/types": "3.969.0",
-        "@aws-sdk/util-endpoints": "3.970.0",
-        "@aws-sdk/util-user-agent-browser": "3.969.0",
-        "@aws-sdk/util-user-agent-node": "3.971.0",
+        "@aws-sdk/core": "^3.973.9",
+        "@aws-sdk/middleware-host-header": "^3.972.3",
+        "@aws-sdk/middleware-logger": "^3.972.3",
+        "@aws-sdk/middleware-recursion-detection": "^3.972.3",
+        "@aws-sdk/middleware-user-agent": "^3.972.9",
+        "@aws-sdk/region-config-resolver": "^3.972.3",
+        "@aws-sdk/types": "^3.973.1",
+        "@aws-sdk/util-endpoints": "3.989.0",
+        "@aws-sdk/util-user-agent-browser": "^3.972.3",
+        "@aws-sdk/util-user-agent-node": "^3.972.7",
         "@smithy/config-resolver": "^4.4.6",
-        "@smithy/core": "^3.20.6",
+        "@smithy/core": "^3.23.0",
         "@smithy/fetch-http-handler": "^5.3.9",
         "@smithy/hash-node": "^4.2.8",
         "@smithy/invalid-dependency": "^4.2.8",
         "@smithy/middleware-content-length": "^4.2.8",
-        "@smithy/middleware-endpoint": "^4.4.7",
-        "@smithy/middleware-retry": "^4.4.23",
+        "@smithy/middleware-endpoint": "^4.4.14",
+        "@smithy/middleware-retry": "^4.4.31",
         "@smithy/middleware-serde": "^4.2.9",
         "@smithy/middleware-stack": "^4.2.8",
         "@smithy/node-config-provider": "^4.3.8",
-        "@smithy/node-http-handler": "^4.4.8",
+        "@smithy/node-http-handler": "^4.4.10",
         "@smithy/protocol-http": "^5.3.8",
-        "@smithy/smithy-client": "^4.10.8",
+        "@smithy/smithy-client": "^4.11.3",
         "@smithy/types": "^4.12.0",
         "@smithy/url-parser": "^4.2.8",
         "@smithy/util-base64": "^4.3.0",
         "@smithy/util-body-length-browser": "^4.2.0",
         "@smithy/util-body-length-node": "^4.2.1",
-        "@smithy/util-defaults-mode-browser": "^4.3.22",
-        "@smithy/util-defaults-mode-node": "^4.2.25",
+        "@smithy/util-defaults-mode-browser": "^4.3.30",
+        "@smithy/util-defaults-mode-node": "^4.2.33",
         "@smithy/util-endpoints": "^3.2.8",
         "@smithy/util-middleware": "^4.2.8",
         "@smithy/util-retry": "^4.2.8",
@@ -43164,7 +48691,7 @@ var init_package = __esm({
       devDependencies: {
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
-        rimraf: "5.0.10",
+        premove: "4.0.0",
         typescript: "~5.8.3"
       },
       typesVersions: {
@@ -43481,320 +49008,12 @@ var init_endpointResolver = __esm({
   }
 });
 
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.shared.js
-var import_smithy_client8, import_url_parser, import_util_base648, import_util_utf88, getRuntimeConfig;
-var init_runtimeConfig_shared = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.shared.js"() {
-    init_dist_es2();
-    init_protocols2();
-    init_dist_es();
-    import_smithy_client8 = __toESM(require_dist_cjs20());
-    import_url_parser = __toESM(require_dist_cjs35());
-    import_util_base648 = __toESM(require_dist_cjs9());
-    import_util_utf88 = __toESM(require_dist_cjs8());
-    init_httpAuthSchemeProvider();
-    init_endpointResolver();
-    getRuntimeConfig = (config) => {
-      return {
-        apiVersion: "2019-06-10",
-        base64Decoder: config?.base64Decoder ?? import_util_base648.fromBase64,
-        base64Encoder: config?.base64Encoder ?? import_util_base648.toBase64,
-        disableHostPrefix: config?.disableHostPrefix ?? false,
-        endpointProvider: config?.endpointProvider ?? defaultEndpointResolver,
-        extensions: config?.extensions ?? [],
-        httpAuthSchemeProvider: config?.httpAuthSchemeProvider ?? defaultSSOOIDCHttpAuthSchemeProvider,
-        httpAuthSchemes: config?.httpAuthSchemes ?? [
-          {
-            schemeId: "aws.auth#sigv4",
-            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4"),
-            signer: new AwsSdkSigV4Signer()
-          },
-          {
-            schemeId: "smithy.api#noAuth",
-            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
-            signer: new NoAuthSigner()
-          }
-        ],
-        logger: config?.logger ?? new import_smithy_client8.NoOpLogger(),
-        protocol: config?.protocol ?? AwsRestJsonProtocol,
-        protocolSettings: config?.protocolSettings ?? {
-          defaultNamespace: "com.amazonaws.ssooidc",
-          version: "2019-06-10",
-          serviceTarget: "AWSSSOOIDCService"
-        },
-        serviceId: config?.serviceId ?? "SSO OIDC",
-        urlParser: config?.urlParser ?? import_url_parser.parseUrl,
-        utf8Decoder: config?.utf8Decoder ?? import_util_utf88.fromUtf8,
-        utf8Encoder: config?.utf8Encoder ?? import_util_utf88.toUtf8
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.js
-var import_util_user_agent_node, import_config_resolver, import_hash_node, import_middleware_retry, import_node_config_provider, import_node_http_handler, import_smithy_client9, import_util_body_length_node, import_util_defaults_mode_node, import_util_retry, getRuntimeConfig2;
-var init_runtimeConfig = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.js"() {
-    init_package();
-    init_dist_es2();
-    import_util_user_agent_node = __toESM(require_dist_cjs51());
-    import_config_resolver = __toESM(require_dist_cjs38());
-    import_hash_node = __toESM(require_dist_cjs52());
-    import_middleware_retry = __toESM(require_dist_cjs46());
-    import_node_config_provider = __toESM(require_dist_cjs42());
-    import_node_http_handler = __toESM(require_dist_cjs12());
-    import_smithy_client9 = __toESM(require_dist_cjs20());
-    import_util_body_length_node = __toESM(require_dist_cjs53());
-    import_util_defaults_mode_node = __toESM(require_dist_cjs54());
-    import_util_retry = __toESM(require_dist_cjs45());
-    init_runtimeConfig_shared();
-    getRuntimeConfig2 = (config) => {
-      (0, import_smithy_client9.emitWarningIfUnsupportedVersion)(process.version);
-      const defaultsMode = (0, import_util_defaults_mode_node.resolveDefaultsModeConfig)(config);
-      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client9.loadConfigsForDefaultMode);
-      const clientSharedValues = getRuntimeConfig(config);
-      emitWarningIfUnsupportedVersion(process.version);
-      const loaderConfig = {
-        profile: config?.profile,
-        logger: clientSharedValues.logger
-      };
-      return {
-        ...clientSharedValues,
-        ...config,
-        runtime: "node",
-        defaultsMode,
-        authSchemePreference: config?.authSchemePreference ?? (0, import_node_config_provider.loadConfig)(NODE_AUTH_SCHEME_PREFERENCE_OPTIONS, loaderConfig),
-        bodyLengthChecker: config?.bodyLengthChecker ?? import_util_body_length_node.calculateBodyLength,
-        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, import_util_user_agent_node.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_default.version }),
-        maxAttempts: config?.maxAttempts ?? (0, import_node_config_provider.loadConfig)(import_middleware_retry.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_REGION_CONFIG_OPTIONS, { ...import_config_resolver.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
-        requestHandler: import_node_http_handler.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
-        retryMode: config?.retryMode ?? (0, import_node_config_provider.loadConfig)({
-          ...import_middleware_retry.NODE_RETRY_MODE_CONFIG_OPTIONS,
-          default: async () => (await defaultConfigProvider()).retryMode || import_util_retry.DEFAULT_RETRY_MODE
-        }, config),
-        sha256: config?.sha256 ?? import_hash_node.Hash.bind(null, "sha256"),
-        streamCollector: config?.streamCollector ?? import_node_http_handler.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, import_node_config_provider.loadConfig)(import_util_user_agent_node.NODE_APP_ID_CONFIG_OPTIONS, loaderConfig)
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/region-config-resolver/dist-cjs/regionConfig/stsRegionDefaultResolver.js
-var require_stsRegionDefaultResolver = __commonJS({
-  "node_modules/@aws-sdk/region-config-resolver/dist-cjs/regionConfig/stsRegionDefaultResolver.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.warning = void 0;
-    exports2.stsRegionDefaultResolver = stsRegionDefaultResolver2;
-    var config_resolver_1 = require_dist_cjs38();
-    var node_config_provider_1 = require_dist_cjs42();
-    function stsRegionDefaultResolver2(loaderConfig = {}) {
-      return (0, node_config_provider_1.loadConfig)({
-        ...config_resolver_1.NODE_REGION_CONFIG_OPTIONS,
-        async default() {
-          if (!exports2.warning.silence) {
-            console.warn("@aws-sdk - WARN - default STS region of us-east-1 used. See @aws-sdk/credential-providers README and set a region explicitly.");
-          }
-          return "us-east-1";
-        }
-      }, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig });
-    }
-    exports2.warning = {
-      silence: false
-    };
-  }
-});
-
-// node_modules/@aws-sdk/region-config-resolver/dist-cjs/index.js
-var require_dist_cjs55 = __commonJS({
-  "node_modules/@aws-sdk/region-config-resolver/dist-cjs/index.js"(exports2) {
-    "use strict";
-    var stsRegionDefaultResolver2 = require_stsRegionDefaultResolver();
-    var configResolver = require_dist_cjs38();
-    var getAwsRegionExtensionConfiguration4 = (runtimeConfig) => {
-      return {
-        setRegion(region) {
-          runtimeConfig.region = region;
-        },
-        region() {
-          return runtimeConfig.region;
-        }
-      };
-    };
-    var resolveAwsRegionExtensionConfiguration4 = (awsRegionExtensionConfiguration) => {
-      return {
-        region: awsRegionExtensionConfiguration.region()
-      };
-    };
-    Object.defineProperty(exports2, "NODE_REGION_CONFIG_FILE_OPTIONS", {
-      enumerable: true,
-      get: function() {
-        return configResolver.NODE_REGION_CONFIG_FILE_OPTIONS;
-      }
-    });
-    Object.defineProperty(exports2, "NODE_REGION_CONFIG_OPTIONS", {
-      enumerable: true,
-      get: function() {
-        return configResolver.NODE_REGION_CONFIG_OPTIONS;
-      }
-    });
-    Object.defineProperty(exports2, "REGION_ENV_NAME", {
-      enumerable: true,
-      get: function() {
-        return configResolver.REGION_ENV_NAME;
-      }
-    });
-    Object.defineProperty(exports2, "REGION_INI_NAME", {
-      enumerable: true,
-      get: function() {
-        return configResolver.REGION_INI_NAME;
-      }
-    });
-    Object.defineProperty(exports2, "resolveRegionConfig", {
-      enumerable: true,
-      get: function() {
-        return configResolver.resolveRegionConfig;
-      }
-    });
-    exports2.getAwsRegionExtensionConfiguration = getAwsRegionExtensionConfiguration4;
-    exports2.resolveAwsRegionExtensionConfiguration = resolveAwsRegionExtensionConfiguration4;
-    Object.keys(stsRegionDefaultResolver2).forEach(function(k4) {
-      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
-        enumerable: true,
-        get: function() {
-          return stsRegionDefaultResolver2[k4];
-        }
-      });
-    });
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/auth/httpAuthExtensionConfiguration.js
-var getHttpAuthExtensionConfiguration, resolveHttpAuthRuntimeConfig;
-var init_httpAuthExtensionConfiguration = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/auth/httpAuthExtensionConfiguration.js"() {
-    getHttpAuthExtensionConfiguration = (runtimeConfig) => {
-      const _httpAuthSchemes = runtimeConfig.httpAuthSchemes;
-      let _httpAuthSchemeProvider = runtimeConfig.httpAuthSchemeProvider;
-      let _credentials = runtimeConfig.credentials;
-      return {
-        setHttpAuthScheme(httpAuthScheme) {
-          const index = _httpAuthSchemes.findIndex((scheme) => scheme.schemeId === httpAuthScheme.schemeId);
-          if (index === -1) {
-            _httpAuthSchemes.push(httpAuthScheme);
-          } else {
-            _httpAuthSchemes.splice(index, 1, httpAuthScheme);
-          }
-        },
-        httpAuthSchemes() {
-          return _httpAuthSchemes;
-        },
-        setHttpAuthSchemeProvider(httpAuthSchemeProvider) {
-          _httpAuthSchemeProvider = httpAuthSchemeProvider;
-        },
-        httpAuthSchemeProvider() {
-          return _httpAuthSchemeProvider;
-        },
-        setCredentials(credentials) {
-          _credentials = credentials;
-        },
-        credentials() {
-          return _credentials;
-        }
-      };
-    };
-    resolveHttpAuthRuntimeConfig = (config) => {
-      return {
-        httpAuthSchemes: config.httpAuthSchemes(),
-        httpAuthSchemeProvider: config.httpAuthSchemeProvider(),
-        credentials: config.credentials()
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeExtensions.js
-var import_region_config_resolver, import_protocol_http12, import_smithy_client10, resolveRuntimeExtensions;
-var init_runtimeExtensions = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeExtensions.js"() {
-    import_region_config_resolver = __toESM(require_dist_cjs55());
-    import_protocol_http12 = __toESM(require_dist_cjs2());
-    import_smithy_client10 = __toESM(require_dist_cjs20());
-    init_httpAuthExtensionConfiguration();
-    resolveRuntimeExtensions = (runtimeConfig, extensions) => {
-      const extensionConfiguration = Object.assign((0, import_region_config_resolver.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client10.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http12.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration(runtimeConfig));
-      extensions.forEach((extension) => extension.configure(extensionConfiguration));
-      return Object.assign(runtimeConfig, (0, import_region_config_resolver.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client10.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http12.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig(extensionConfiguration));
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/SSOOIDCClient.js
-var import_middleware_host_header, import_middleware_logger, import_middleware_recursion_detection, import_middleware_user_agent, import_config_resolver2, import_middleware_content_length, import_middleware_endpoint, import_middleware_retry2, import_smithy_client11, SSOOIDCClient;
-var init_SSOOIDCClient = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/SSOOIDCClient.js"() {
-    import_middleware_host_header = __toESM(require_dist_cjs27());
-    import_middleware_logger = __toESM(require_dist_cjs28());
-    import_middleware_recursion_detection = __toESM(require_dist_cjs29());
-    import_middleware_user_agent = __toESM(require_dist_cjs37());
-    import_config_resolver2 = __toESM(require_dist_cjs38());
-    init_dist_es();
-    init_schema();
-    import_middleware_content_length = __toESM(require_dist_cjs40());
-    import_middleware_endpoint = __toESM(require_dist_cjs43());
-    import_middleware_retry2 = __toESM(require_dist_cjs46());
-    import_smithy_client11 = __toESM(require_dist_cjs20());
-    init_httpAuthSchemeProvider();
-    init_EndpointParameters();
-    init_runtimeConfig();
-    init_runtimeExtensions();
-    SSOOIDCClient = class extends import_smithy_client11.Client {
-      config;
-      constructor(...[configuration]) {
-        const _config_0 = getRuntimeConfig2(configuration || {});
-        super(_config_0);
-        this.initConfig = _config_0;
-        const _config_1 = resolveClientEndpointParameters(_config_0);
-        const _config_2 = (0, import_middleware_user_agent.resolveUserAgentConfig)(_config_1);
-        const _config_3 = (0, import_middleware_retry2.resolveRetryConfig)(_config_2);
-        const _config_4 = (0, import_config_resolver2.resolveRegionConfig)(_config_3);
-        const _config_5 = (0, import_middleware_host_header.resolveHostHeaderConfig)(_config_4);
-        const _config_6 = (0, import_middleware_endpoint.resolveEndpointConfig)(_config_5);
-        const _config_7 = resolveHttpAuthSchemeConfig(_config_6);
-        const _config_8 = resolveRuntimeExtensions(_config_7, configuration?.extensions || []);
-        this.config = _config_8;
-        this.middlewareStack.use(getSchemaSerdePlugin(this.config));
-        this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_retry2.getRetryPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_content_length.getContentLengthPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_host_header.getHostHeaderPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_logger.getLoggerPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_recursion_detection.getRecursionDetectionPlugin)(this.config));
-        this.middlewareStack.use(getHttpAuthSchemeEndpointRuleSetPlugin(this.config, {
-          httpAuthSchemeParametersProvider: defaultSSOOIDCHttpAuthSchemeParametersProvider,
-          identityProviderConfigProvider: async (config) => new DefaultIdentityProviderConfig({
-            "aws.auth#sigv4": config.credentials
-          })
-        }));
-        this.middlewareStack.use(getHttpSigningPlugin(this.config));
-      }
-      destroy() {
-        super.destroy();
-      }
-    };
-  }
-});
-
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/models/SSOOIDCServiceException.js
-var import_smithy_client12, SSOOIDCServiceException;
+var import_smithy_client8, SSOOIDCServiceException;
 var init_SSOOIDCServiceException = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/models/SSOOIDCServiceException.js"() {
-    import_smithy_client12 = __toESM(require_dist_cjs20());
-    SSOOIDCServiceException = class _SSOOIDCServiceException extends import_smithy_client12.ServiceException {
+    import_smithy_client8 = __toESM(require_dist_cjs20());
+    SSOOIDCServiceException = class _SSOOIDCServiceException extends import_smithy_client8.ServiceException {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, _SSOOIDCServiceException.prototype);
@@ -43992,7 +49211,7 @@ var init_errors = __esm({
 });
 
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/schemas/schemas_0.js
-var _ADE, _APE, _AT, _CS, _CT, _CTR, _CTRr, _CV, _ETE, _ICE, _IGE, _IRE, _ISE, _ISEn, _IT, _RT, _SDE, _UCE, _UGTE, _aT, _c, _cI, _cS, _cV, _co, _dC, _e, _eI, _ed, _gT, _h, _hE, _iT, _r, _rT, _rU, _s, _se, _sm, _tT, n0, AccessToken, ClientSecret, CodeVerifier, IdToken, RefreshToken, AccessDeniedException$, AuthorizationPendingException$, CreateTokenRequest$, CreateTokenResponse$, ExpiredTokenException$, InternalServerException$, InvalidClientException$, InvalidGrantException$, InvalidRequestException$, InvalidScopeException$, SlowDownException$, UnauthorizedClientException$, UnsupportedGrantTypeException$, SSOOIDCServiceException$, Scopes, CreateToken$;
+var _ADE, _APE, _AT, _CS, _CT, _CTR, _CTRr, _CV, _ETE, _ICE, _IGE, _IRE, _ISE, _ISEn, _IT, _RT, _SDE, _UCE, _UGTE, _aT, _c, _cI, _cS, _cV, _co, _dC, _e, _eI, _ed, _gT, _h, _hE, _iT, _r, _rT, _rU, _s, _sc, _se, _tT, n0, _s_registry, SSOOIDCServiceException$, n0_registry, AccessDeniedException$, AuthorizationPendingException$, ExpiredTokenException$, InternalServerException$, InvalidClientException$, InvalidGrantException$, InvalidRequestException$, InvalidScopeException$, SlowDownException$, UnauthorizedClientException$, UnsupportedGrantTypeException$, errorTypeRegistries, AccessToken, ClientSecret, CodeVerifier, IdToken, RefreshToken, CreateTokenRequest$, CreateTokenResponse$, Scopes, CreateToken$;
 var init_schemas_0 = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/schemas/schemas_0.js"() {
     init_schema();
@@ -44034,16 +49253,15 @@ var init_schemas_0 = __esm({
     _r = "reason";
     _rT = "refreshToken";
     _rU = "redirectUri";
-    _s = "scope";
+    _s = "smithy.ts.sdk.synthetic.com.amazonaws.ssooidc";
+    _sc = "scope";
     _se = "server";
-    _sm = "smithy.ts.sdk.synthetic.com.amazonaws.ssooidc";
     _tT = "tokenType";
     n0 = "com.amazonaws.ssooidc";
-    AccessToken = [0, n0, _AT, 8, 0];
-    ClientSecret = [0, n0, _CS, 8, 0];
-    CodeVerifier = [0, n0, _CV, 8, 0];
-    IdToken = [0, n0, _IT, 8, 0];
-    RefreshToken = [0, n0, _RT, 8, 0];
+    _s_registry = TypeRegistry.for(_s);
+    SSOOIDCServiceException$ = [-3, _s, "SSOOIDCServiceException", 0, [], []];
+    _s_registry.registerError(SSOOIDCServiceException$, SSOOIDCServiceException);
+    n0_registry = TypeRegistry.for(n0);
     AccessDeniedException$ = [
       -3,
       n0,
@@ -44052,7 +49270,7 @@ var init_schemas_0 = __esm({
       [_e, _r, _ed],
       [0, 0, 0]
     ];
-    TypeRegistry.for(n0).registerError(AccessDeniedException$, AccessDeniedException);
+    n0_registry.registerError(AccessDeniedException$, AccessDeniedException);
     AuthorizationPendingException$ = [
       -3,
       n0,
@@ -44061,13 +49279,58 @@ var init_schemas_0 = __esm({
       [_e, _ed],
       [0, 0]
     ];
-    TypeRegistry.for(n0).registerError(AuthorizationPendingException$, AuthorizationPendingException);
+    n0_registry.registerError(AuthorizationPendingException$, AuthorizationPendingException);
+    ExpiredTokenException$ = [-3, n0, _ETE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(ExpiredTokenException$, ExpiredTokenException);
+    InternalServerException$ = [-3, n0, _ISE, { [_e]: _se, [_hE]: 500 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(InternalServerException$, InternalServerException);
+    InvalidClientException$ = [-3, n0, _ICE, { [_e]: _c, [_hE]: 401 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(InvalidClientException$, InvalidClientException);
+    InvalidGrantException$ = [-3, n0, _IGE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(InvalidGrantException$, InvalidGrantException);
+    InvalidRequestException$ = [
+      -3,
+      n0,
+      _IRE,
+      { [_e]: _c, [_hE]: 400 },
+      [_e, _r, _ed],
+      [0, 0, 0]
+    ];
+    n0_registry.registerError(InvalidRequestException$, InvalidRequestException);
+    InvalidScopeException$ = [-3, n0, _ISEn, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(InvalidScopeException$, InvalidScopeException);
+    SlowDownException$ = [-3, n0, _SDE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
+    n0_registry.registerError(SlowDownException$, SlowDownException);
+    UnauthorizedClientException$ = [
+      -3,
+      n0,
+      _UCE,
+      { [_e]: _c, [_hE]: 400 },
+      [_e, _ed],
+      [0, 0]
+    ];
+    n0_registry.registerError(UnauthorizedClientException$, UnauthorizedClientException);
+    UnsupportedGrantTypeException$ = [
+      -3,
+      n0,
+      _UGTE,
+      { [_e]: _c, [_hE]: 400 },
+      [_e, _ed],
+      [0, 0]
+    ];
+    n0_registry.registerError(UnsupportedGrantTypeException$, UnsupportedGrantTypeException);
+    errorTypeRegistries = [_s_registry, n0_registry];
+    AccessToken = [0, n0, _AT, 8, 0];
+    ClientSecret = [0, n0, _CS, 8, 0];
+    CodeVerifier = [0, n0, _CV, 8, 0];
+    IdToken = [0, n0, _IT, 8, 0];
+    RefreshToken = [0, n0, _RT, 8, 0];
     CreateTokenRequest$ = [
       3,
       n0,
       _CTR,
       0,
-      [_cI, _cS, _gT, _dC, _co, _rT, _s, _rU, _cV],
+      [_cI, _cS, _gT, _dC, _co, _rT, _sc, _rU, _cV],
       [0, [() => ClientSecret, 0], 0, 0, 0, [() => RefreshToken, 0], 64 | 0, 0, [() => CodeVerifier, 0]],
       3
     ];
@@ -44079,47 +49342,6 @@ var init_schemas_0 = __esm({
       [_aT, _tT, _eI, _rT, _iT],
       [[() => AccessToken, 0], 0, 1, [() => RefreshToken, 0], [() => IdToken, 0]]
     ];
-    ExpiredTokenException$ = [-3, n0, _ETE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(ExpiredTokenException$, ExpiredTokenException);
-    InternalServerException$ = [-3, n0, _ISE, { [_e]: _se, [_hE]: 500 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(InternalServerException$, InternalServerException);
-    InvalidClientException$ = [-3, n0, _ICE, { [_e]: _c, [_hE]: 401 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(InvalidClientException$, InvalidClientException);
-    InvalidGrantException$ = [-3, n0, _IGE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(InvalidGrantException$, InvalidGrantException);
-    InvalidRequestException$ = [
-      -3,
-      n0,
-      _IRE,
-      { [_e]: _c, [_hE]: 400 },
-      [_e, _r, _ed],
-      [0, 0, 0]
-    ];
-    TypeRegistry.for(n0).registerError(InvalidRequestException$, InvalidRequestException);
-    InvalidScopeException$ = [-3, n0, _ISEn, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(InvalidScopeException$, InvalidScopeException);
-    SlowDownException$ = [-3, n0, _SDE, { [_e]: _c, [_hE]: 400 }, [_e, _ed], [0, 0]];
-    TypeRegistry.for(n0).registerError(SlowDownException$, SlowDownException);
-    UnauthorizedClientException$ = [
-      -3,
-      n0,
-      _UCE,
-      { [_e]: _c, [_hE]: 400 },
-      [_e, _ed],
-      [0, 0]
-    ];
-    TypeRegistry.for(n0).registerError(UnauthorizedClientException$, UnauthorizedClientException);
-    UnsupportedGrantTypeException$ = [
-      -3,
-      n0,
-      _UGTE,
-      { [_e]: _c, [_hE]: 400 },
-      [_e, _ed],
-      [0, 0]
-    ];
-    TypeRegistry.for(n0).registerError(UnsupportedGrantTypeException$, UnsupportedGrantTypeException);
-    SSOOIDCServiceException$ = [-3, _sm, "SSOOIDCServiceException", 0, [], []];
-    TypeRegistry.for(_sm).registerError(SSOOIDCServiceException$, SSOOIDCServiceException);
     Scopes = 64 | 0;
     CreateToken$ = [
       9,
@@ -44129,6 +49351,316 @@ var init_schemas_0 = __esm({
       () => CreateTokenRequest$,
       () => CreateTokenResponse$
     ];
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.shared.js
+var import_smithy_client9, import_url_parser, import_util_base648, import_util_utf88, getRuntimeConfig;
+var init_runtimeConfig_shared = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.shared.js"() {
+    init_dist_es2();
+    init_protocols2();
+    init_dist_es();
+    import_smithy_client9 = __toESM(require_dist_cjs20());
+    import_url_parser = __toESM(require_dist_cjs35());
+    import_util_base648 = __toESM(require_dist_cjs9());
+    import_util_utf88 = __toESM(require_dist_cjs8());
+    init_httpAuthSchemeProvider();
+    init_endpointResolver();
+    init_schemas_0();
+    getRuntimeConfig = (config) => {
+      return {
+        apiVersion: "2019-06-10",
+        base64Decoder: config?.base64Decoder ?? import_util_base648.fromBase64,
+        base64Encoder: config?.base64Encoder ?? import_util_base648.toBase64,
+        disableHostPrefix: config?.disableHostPrefix ?? false,
+        endpointProvider: config?.endpointProvider ?? defaultEndpointResolver,
+        extensions: config?.extensions ?? [],
+        httpAuthSchemeProvider: config?.httpAuthSchemeProvider ?? defaultSSOOIDCHttpAuthSchemeProvider,
+        httpAuthSchemes: config?.httpAuthSchemes ?? [
+          {
+            schemeId: "aws.auth#sigv4",
+            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4"),
+            signer: new AwsSdkSigV4Signer()
+          },
+          {
+            schemeId: "smithy.api#noAuth",
+            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
+            signer: new NoAuthSigner()
+          }
+        ],
+        logger: config?.logger ?? new import_smithy_client9.NoOpLogger(),
+        protocol: config?.protocol ?? AwsRestJsonProtocol,
+        protocolSettings: config?.protocolSettings ?? {
+          defaultNamespace: "com.amazonaws.ssooidc",
+          errorTypeRegistries,
+          version: "2019-06-10",
+          serviceTarget: "AWSSSOOIDCService"
+        },
+        serviceId: config?.serviceId ?? "SSO OIDC",
+        urlParser: config?.urlParser ?? import_url_parser.parseUrl,
+        utf8Decoder: config?.utf8Decoder ?? import_util_utf88.fromUtf8,
+        utf8Encoder: config?.utf8Encoder ?? import_util_utf88.toUtf8
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.js
+var import_util_user_agent_node, import_config_resolver, import_hash_node, import_middleware_retry, import_node_config_provider, import_node_http_handler, import_smithy_client10, import_util_body_length_node, import_util_defaults_mode_node, import_util_retry, getRuntimeConfig2;
+var init_runtimeConfig = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeConfig.js"() {
+    init_package();
+    init_dist_es2();
+    import_util_user_agent_node = __toESM(require_dist_cjs51());
+    import_config_resolver = __toESM(require_dist_cjs38());
+    import_hash_node = __toESM(require_dist_cjs52());
+    import_middleware_retry = __toESM(require_dist_cjs46());
+    import_node_config_provider = __toESM(require_dist_cjs42());
+    import_node_http_handler = __toESM(require_dist_cjs12());
+    import_smithy_client10 = __toESM(require_dist_cjs20());
+    import_util_body_length_node = __toESM(require_dist_cjs53());
+    import_util_defaults_mode_node = __toESM(require_dist_cjs54());
+    import_util_retry = __toESM(require_dist_cjs45());
+    init_runtimeConfig_shared();
+    getRuntimeConfig2 = (config) => {
+      (0, import_smithy_client10.emitWarningIfUnsupportedVersion)(process.version);
+      const defaultsMode = (0, import_util_defaults_mode_node.resolveDefaultsModeConfig)(config);
+      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client10.loadConfigsForDefaultMode);
+      const clientSharedValues = getRuntimeConfig(config);
+      emitWarningIfUnsupportedVersion(process.version);
+      const loaderConfig = {
+        profile: config?.profile,
+        logger: clientSharedValues.logger
+      };
+      return {
+        ...clientSharedValues,
+        ...config,
+        runtime: "node",
+        defaultsMode,
+        authSchemePreference: config?.authSchemePreference ?? (0, import_node_config_provider.loadConfig)(NODE_AUTH_SCHEME_PREFERENCE_OPTIONS, loaderConfig),
+        bodyLengthChecker: config?.bodyLengthChecker ?? import_util_body_length_node.calculateBodyLength,
+        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, import_util_user_agent_node.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_default.version }),
+        maxAttempts: config?.maxAttempts ?? (0, import_node_config_provider.loadConfig)(import_middleware_retry.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
+        region: config?.region ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_REGION_CONFIG_OPTIONS, { ...import_config_resolver.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
+        requestHandler: import_node_http_handler.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
+        retryMode: config?.retryMode ?? (0, import_node_config_provider.loadConfig)({
+          ...import_middleware_retry.NODE_RETRY_MODE_CONFIG_OPTIONS,
+          default: async () => (await defaultConfigProvider()).retryMode || import_util_retry.DEFAULT_RETRY_MODE
+        }, config),
+        sha256: config?.sha256 ?? import_hash_node.Hash.bind(null, "sha256"),
+        streamCollector: config?.streamCollector ?? import_node_http_handler.streamCollector,
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, import_node_config_provider.loadConfig)(import_config_resolver.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
+        userAgentAppId: config?.userAgentAppId ?? (0, import_node_config_provider.loadConfig)(import_util_user_agent_node.NODE_APP_ID_CONFIG_OPTIONS, loaderConfig)
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/region-config-resolver/dist-cjs/regionConfig/stsRegionDefaultResolver.js
+var require_stsRegionDefaultResolver = __commonJS({
+  "node_modules/@aws-sdk/region-config-resolver/dist-cjs/regionConfig/stsRegionDefaultResolver.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.warning = void 0;
+    exports2.stsRegionDefaultResolver = stsRegionDefaultResolver2;
+    var config_resolver_1 = require_dist_cjs38();
+    var node_config_provider_1 = require_dist_cjs42();
+    function stsRegionDefaultResolver2(loaderConfig = {}) {
+      return (0, node_config_provider_1.loadConfig)({
+        ...config_resolver_1.NODE_REGION_CONFIG_OPTIONS,
+        async default() {
+          if (!exports2.warning.silence) {
+            console.warn("@aws-sdk - WARN - default STS region of us-east-1 used. See @aws-sdk/credential-providers README and set a region explicitly.");
+          }
+          return "us-east-1";
+        }
+      }, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig });
+    }
+    exports2.warning = {
+      silence: false
+    };
+  }
+});
+
+// node_modules/@aws-sdk/region-config-resolver/dist-cjs/index.js
+var require_dist_cjs55 = __commonJS({
+  "node_modules/@aws-sdk/region-config-resolver/dist-cjs/index.js"(exports2) {
+    "use strict";
+    var stsRegionDefaultResolver2 = require_stsRegionDefaultResolver();
+    var configResolver = require_dist_cjs38();
+    var getAwsRegionExtensionConfiguration4 = (runtimeConfig) => {
+      return {
+        setRegion(region) {
+          runtimeConfig.region = region;
+        },
+        region() {
+          return runtimeConfig.region;
+        }
+      };
+    };
+    var resolveAwsRegionExtensionConfiguration4 = (awsRegionExtensionConfiguration) => {
+      return {
+        region: awsRegionExtensionConfiguration.region()
+      };
+    };
+    Object.defineProperty(exports2, "NODE_REGION_CONFIG_FILE_OPTIONS", {
+      enumerable: true,
+      get: function() {
+        return configResolver.NODE_REGION_CONFIG_FILE_OPTIONS;
+      }
+    });
+    Object.defineProperty(exports2, "NODE_REGION_CONFIG_OPTIONS", {
+      enumerable: true,
+      get: function() {
+        return configResolver.NODE_REGION_CONFIG_OPTIONS;
+      }
+    });
+    Object.defineProperty(exports2, "REGION_ENV_NAME", {
+      enumerable: true,
+      get: function() {
+        return configResolver.REGION_ENV_NAME;
+      }
+    });
+    Object.defineProperty(exports2, "REGION_INI_NAME", {
+      enumerable: true,
+      get: function() {
+        return configResolver.REGION_INI_NAME;
+      }
+    });
+    Object.defineProperty(exports2, "resolveRegionConfig", {
+      enumerable: true,
+      get: function() {
+        return configResolver.resolveRegionConfig;
+      }
+    });
+    exports2.getAwsRegionExtensionConfiguration = getAwsRegionExtensionConfiguration4;
+    exports2.resolveAwsRegionExtensionConfiguration = resolveAwsRegionExtensionConfiguration4;
+    Object.keys(stsRegionDefaultResolver2).forEach(function(k4) {
+      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
+        enumerable: true,
+        get: function() {
+          return stsRegionDefaultResolver2[k4];
+        }
+      });
+    });
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/auth/httpAuthExtensionConfiguration.js
+var getHttpAuthExtensionConfiguration, resolveHttpAuthRuntimeConfig;
+var init_httpAuthExtensionConfiguration = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/auth/httpAuthExtensionConfiguration.js"() {
+    getHttpAuthExtensionConfiguration = (runtimeConfig) => {
+      const _httpAuthSchemes = runtimeConfig.httpAuthSchemes;
+      let _httpAuthSchemeProvider = runtimeConfig.httpAuthSchemeProvider;
+      let _credentials = runtimeConfig.credentials;
+      return {
+        setHttpAuthScheme(httpAuthScheme) {
+          const index = _httpAuthSchemes.findIndex((scheme) => scheme.schemeId === httpAuthScheme.schemeId);
+          if (index === -1) {
+            _httpAuthSchemes.push(httpAuthScheme);
+          } else {
+            _httpAuthSchemes.splice(index, 1, httpAuthScheme);
+          }
+        },
+        httpAuthSchemes() {
+          return _httpAuthSchemes;
+        },
+        setHttpAuthSchemeProvider(httpAuthSchemeProvider) {
+          _httpAuthSchemeProvider = httpAuthSchemeProvider;
+        },
+        httpAuthSchemeProvider() {
+          return _httpAuthSchemeProvider;
+        },
+        setCredentials(credentials) {
+          _credentials = credentials;
+        },
+        credentials() {
+          return _credentials;
+        }
+      };
+    };
+    resolveHttpAuthRuntimeConfig = (config) => {
+      return {
+        httpAuthSchemes: config.httpAuthSchemes(),
+        httpAuthSchemeProvider: config.httpAuthSchemeProvider(),
+        credentials: config.credentials()
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeExtensions.js
+var import_region_config_resolver, import_protocol_http12, import_smithy_client11, resolveRuntimeExtensions;
+var init_runtimeExtensions = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/runtimeExtensions.js"() {
+    import_region_config_resolver = __toESM(require_dist_cjs55());
+    import_protocol_http12 = __toESM(require_dist_cjs2());
+    import_smithy_client11 = __toESM(require_dist_cjs20());
+    init_httpAuthExtensionConfiguration();
+    resolveRuntimeExtensions = (runtimeConfig, extensions) => {
+      const extensionConfiguration = Object.assign((0, import_region_config_resolver.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client11.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http12.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration(runtimeConfig));
+      extensions.forEach((extension) => extension.configure(extensionConfiguration));
+      return Object.assign(runtimeConfig, (0, import_region_config_resolver.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client11.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http12.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig(extensionConfiguration));
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/SSOOIDCClient.js
+var import_middleware_host_header, import_middleware_logger, import_middleware_recursion_detection, import_middleware_user_agent, import_config_resolver2, import_middleware_content_length, import_middleware_endpoint, import_middleware_retry2, import_smithy_client12, SSOOIDCClient;
+var init_SSOOIDCClient = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/SSOOIDCClient.js"() {
+    import_middleware_host_header = __toESM(require_dist_cjs27());
+    import_middleware_logger = __toESM(require_dist_cjs28());
+    import_middleware_recursion_detection = __toESM(require_dist_cjs29());
+    import_middleware_user_agent = __toESM(require_dist_cjs37());
+    import_config_resolver2 = __toESM(require_dist_cjs38());
+    init_dist_es();
+    init_schema();
+    import_middleware_content_length = __toESM(require_dist_cjs40());
+    import_middleware_endpoint = __toESM(require_dist_cjs43());
+    import_middleware_retry2 = __toESM(require_dist_cjs46());
+    import_smithy_client12 = __toESM(require_dist_cjs20());
+    init_httpAuthSchemeProvider();
+    init_EndpointParameters();
+    init_runtimeConfig();
+    init_runtimeExtensions();
+    SSOOIDCClient = class extends import_smithy_client12.Client {
+      config;
+      constructor(...[configuration]) {
+        const _config_0 = getRuntimeConfig2(configuration || {});
+        super(_config_0);
+        this.initConfig = _config_0;
+        const _config_1 = resolveClientEndpointParameters(_config_0);
+        const _config_2 = (0, import_middleware_user_agent.resolveUserAgentConfig)(_config_1);
+        const _config_3 = (0, import_middleware_retry2.resolveRetryConfig)(_config_2);
+        const _config_4 = (0, import_config_resolver2.resolveRegionConfig)(_config_3);
+        const _config_5 = (0, import_middleware_host_header.resolveHostHeaderConfig)(_config_4);
+        const _config_6 = (0, import_middleware_endpoint.resolveEndpointConfig)(_config_5);
+        const _config_7 = resolveHttpAuthSchemeConfig(_config_6);
+        const _config_8 = resolveRuntimeExtensions(_config_7, configuration?.extensions || []);
+        this.config = _config_8;
+        this.middlewareStack.use(getSchemaSerdePlugin(this.config));
+        this.middlewareStack.use((0, import_middleware_user_agent.getUserAgentPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_retry2.getRetryPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_content_length.getContentLengthPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_host_header.getHostHeaderPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_logger.getLoggerPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_recursion_detection.getRecursionDetectionPlugin)(this.config));
+        this.middlewareStack.use(getHttpAuthSchemeEndpointRuleSetPlugin(this.config, {
+          httpAuthSchemeParametersProvider: defaultSSOOIDCHttpAuthSchemeParametersProvider,
+          identityProviderConfigProvider: async (config) => new DefaultIdentityProviderConfig({
+            "aws.auth#sigv4": config.credentials
+          })
+        }));
+        this.middlewareStack.use(getHttpSigningPlugin(this.config));
+      }
+      destroy() {
+        super.destroy();
+      }
+    };
   }
 });
 
@@ -44228,7 +49760,8 @@ __export(sso_oidc_exports, {
   UnauthorizedClientException$: () => UnauthorizedClientException$,
   UnsupportedGrantTypeException: () => UnsupportedGrantTypeException,
   UnsupportedGrantTypeException$: () => UnsupportedGrantTypeException$,
-  __Client: () => import_smithy_client11.Client
+  __Client: () => import_smithy_client12.Client,
+  errorTypeRegistries: () => errorTypeRegistries
 });
 var init_sso_oidc = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sso-oidc/index.js"() {
@@ -44477,7 +50010,7 @@ var require_package2 = __commonJS({
     module2.exports = {
       name: "@aws-sdk/client-sso",
       description: "AWS SDK for JavaScript Sso Client for Node.js, Browser and React Native",
-      version: "3.971.0",
+      version: "3.989.0",
       scripts: {
         build: "concurrently 'yarn:build:types' 'yarn:build:es' && yarn build:cjs",
         "build:cjs": "node ../../scripts/compilation/inline client-sso",
@@ -44485,7 +50018,7 @@ var require_package2 = __commonJS({
         "build:include:deps": 'yarn g:turbo run build -F="$npm_package_name"',
         "build:types": "tsc -p tsconfig.types.json",
         "build:types:downlevel": "downlevel-dts dist-types dist-types/ts3.4",
-        clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
+        clean: "premove dist-cjs dist-es dist-types tsconfig.cjs.tsbuildinfo tsconfig.es.tsbuildinfo tsconfig.types.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo sso",
         "test:index": "tsc --noEmit ./test/index-types.ts && node ./test/index-objects.spec.mjs"
@@ -44497,37 +50030,37 @@ var require_package2 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.970.0",
-        "@aws-sdk/middleware-host-header": "3.969.0",
-        "@aws-sdk/middleware-logger": "3.969.0",
-        "@aws-sdk/middleware-recursion-detection": "3.969.0",
-        "@aws-sdk/middleware-user-agent": "3.970.0",
-        "@aws-sdk/region-config-resolver": "3.969.0",
-        "@aws-sdk/types": "3.969.0",
-        "@aws-sdk/util-endpoints": "3.970.0",
-        "@aws-sdk/util-user-agent-browser": "3.969.0",
-        "@aws-sdk/util-user-agent-node": "3.971.0",
+        "@aws-sdk/core": "^3.973.9",
+        "@aws-sdk/middleware-host-header": "^3.972.3",
+        "@aws-sdk/middleware-logger": "^3.972.3",
+        "@aws-sdk/middleware-recursion-detection": "^3.972.3",
+        "@aws-sdk/middleware-user-agent": "^3.972.9",
+        "@aws-sdk/region-config-resolver": "^3.972.3",
+        "@aws-sdk/types": "^3.973.1",
+        "@aws-sdk/util-endpoints": "3.989.0",
+        "@aws-sdk/util-user-agent-browser": "^3.972.3",
+        "@aws-sdk/util-user-agent-node": "^3.972.7",
         "@smithy/config-resolver": "^4.4.6",
-        "@smithy/core": "^3.20.6",
+        "@smithy/core": "^3.23.0",
         "@smithy/fetch-http-handler": "^5.3.9",
         "@smithy/hash-node": "^4.2.8",
         "@smithy/invalid-dependency": "^4.2.8",
         "@smithy/middleware-content-length": "^4.2.8",
-        "@smithy/middleware-endpoint": "^4.4.7",
-        "@smithy/middleware-retry": "^4.4.23",
+        "@smithy/middleware-endpoint": "^4.4.14",
+        "@smithy/middleware-retry": "^4.4.31",
         "@smithy/middleware-serde": "^4.2.9",
         "@smithy/middleware-stack": "^4.2.8",
         "@smithy/node-config-provider": "^4.3.8",
-        "@smithy/node-http-handler": "^4.4.8",
+        "@smithy/node-http-handler": "^4.4.10",
         "@smithy/protocol-http": "^5.3.8",
-        "@smithy/smithy-client": "^4.10.8",
+        "@smithy/smithy-client": "^4.11.3",
         "@smithy/types": "^4.12.0",
         "@smithy/url-parser": "^4.2.8",
         "@smithy/util-base64": "^4.3.0",
         "@smithy/util-body-length-browser": "^4.2.0",
         "@smithy/util-body-length-node": "^4.2.1",
-        "@smithy/util-defaults-mode-browser": "^4.3.22",
-        "@smithy/util-defaults-mode-node": "^4.2.25",
+        "@smithy/util-defaults-mode-browser": "^4.3.30",
+        "@smithy/util-defaults-mode-node": "^4.2.33",
         "@smithy/util-endpoints": "^3.2.8",
         "@smithy/util-middleware": "^4.2.8",
         "@smithy/util-retry": "^4.2.8",
@@ -44539,7 +50072,7 @@ var require_package2 = __commonJS({
         "@types/node": "^20.14.8",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
-        rimraf: "5.0.10",
+        premove: "4.0.0",
         typescript: "~5.8.3"
       },
       engines: {
@@ -44635,6 +50168,329 @@ var require_endpointResolver2 = __commonJS({
   }
 });
 
+// node_modules/@aws-sdk/client-sso/dist-cjs/models/SSOServiceException.js
+var require_SSOServiceException = __commonJS({
+  "node_modules/@aws-sdk/client-sso/dist-cjs/models/SSOServiceException.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.SSOServiceException = exports2.__ServiceException = void 0;
+    var smithy_client_1 = require_dist_cjs20();
+    Object.defineProperty(exports2, "__ServiceException", { enumerable: true, get: function() {
+      return smithy_client_1.ServiceException;
+    } });
+    var SSOServiceException = class _SSOServiceException extends smithy_client_1.ServiceException {
+      constructor(options) {
+        super(options);
+        Object.setPrototypeOf(this, _SSOServiceException.prototype);
+      }
+    };
+    exports2.SSOServiceException = SSOServiceException;
+  }
+});
+
+// node_modules/@aws-sdk/client-sso/dist-cjs/models/errors.js
+var require_errors3 = __commonJS({
+  "node_modules/@aws-sdk/client-sso/dist-cjs/models/errors.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.UnauthorizedException = exports2.TooManyRequestsException = exports2.ResourceNotFoundException = exports2.InvalidRequestException = void 0;
+    var SSOServiceException_1 = require_SSOServiceException();
+    var InvalidRequestException2 = class _InvalidRequestException extends SSOServiceException_1.SSOServiceException {
+      name = "InvalidRequestException";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "InvalidRequestException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InvalidRequestException.prototype);
+      }
+    };
+    exports2.InvalidRequestException = InvalidRequestException2;
+    var ResourceNotFoundException = class _ResourceNotFoundException extends SSOServiceException_1.SSOServiceException {
+      name = "ResourceNotFoundException";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "ResourceNotFoundException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ResourceNotFoundException.prototype);
+      }
+    };
+    exports2.ResourceNotFoundException = ResourceNotFoundException;
+    var TooManyRequestsException = class _TooManyRequestsException extends SSOServiceException_1.SSOServiceException {
+      name = "TooManyRequestsException";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "TooManyRequestsException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _TooManyRequestsException.prototype);
+      }
+    };
+    exports2.TooManyRequestsException = TooManyRequestsException;
+    var UnauthorizedException = class _UnauthorizedException extends SSOServiceException_1.SSOServiceException {
+      name = "UnauthorizedException";
+      $fault = "client";
+      constructor(opts) {
+        super({
+          name: "UnauthorizedException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _UnauthorizedException.prototype);
+      }
+    };
+    exports2.UnauthorizedException = UnauthorizedException;
+  }
+});
+
+// node_modules/@aws-sdk/client-sso/dist-cjs/schemas/schemas_0.js
+var require_schemas_02 = __commonJS({
+  "node_modules/@aws-sdk/client-sso/dist-cjs/schemas/schemas_0.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.Logout$ = exports2.ListAccounts$ = exports2.ListAccountRoles$ = exports2.GetRoleCredentials$ = exports2.RoleInfo$ = exports2.RoleCredentials$ = exports2.LogoutRequest$ = exports2.ListAccountsResponse$ = exports2.ListAccountsRequest$ = exports2.ListAccountRolesResponse$ = exports2.ListAccountRolesRequest$ = exports2.GetRoleCredentialsResponse$ = exports2.GetRoleCredentialsRequest$ = exports2.AccountInfo$ = exports2.errorTypeRegistries = exports2.UnauthorizedException$ = exports2.TooManyRequestsException$ = exports2.ResourceNotFoundException$ = exports2.InvalidRequestException$ = exports2.SSOServiceException$ = void 0;
+    var _AI = "AccountInfo";
+    var _ALT = "AccountListType";
+    var _ATT = "AccessTokenType";
+    var _GRC = "GetRoleCredentials";
+    var _GRCR = "GetRoleCredentialsRequest";
+    var _GRCRe = "GetRoleCredentialsResponse";
+    var _IRE2 = "InvalidRequestException";
+    var _L = "Logout";
+    var _LA = "ListAccounts";
+    var _LAR = "ListAccountsRequest";
+    var _LARR = "ListAccountRolesRequest";
+    var _LARRi = "ListAccountRolesResponse";
+    var _LARi = "ListAccountsResponse";
+    var _LARis = "ListAccountRoles";
+    var _LR = "LogoutRequest";
+    var _RC = "RoleCredentials";
+    var _RI = "RoleInfo";
+    var _RLT = "RoleListType";
+    var _RNFE = "ResourceNotFoundException";
+    var _SAKT = "SecretAccessKeyType";
+    var _STT = "SessionTokenType";
+    var _TMRE2 = "TooManyRequestsException";
+    var _UE = "UnauthorizedException";
+    var _aI = "accountId";
+    var _aKI2 = "accessKeyId";
+    var _aL = "accountList";
+    var _aN = "accountName";
+    var _aT3 = "accessToken";
+    var _ai = "account_id";
+    var _c4 = "client";
+    var _e4 = "error";
+    var _eA = "emailAddress";
+    var _ex = "expiration";
+    var _h3 = "http";
+    var _hE4 = "httpError";
+    var _hH = "httpHeader";
+    var _hQ = "httpQuery";
+    var _m3 = "message";
+    var _mR = "maxResults";
+    var _mr = "max_result";
+    var _nT = "nextToken";
+    var _nt = "next_token";
+    var _rC = "roleCredentials";
+    var _rL = "roleList";
+    var _rN = "roleName";
+    var _rn = "role_name";
+    var _s4 = "smithy.ts.sdk.synthetic.com.amazonaws.sso";
+    var _sAK2 = "secretAccessKey";
+    var _sT2 = "sessionToken";
+    var _xasbt = "x-amz-sso_bearer_token";
+    var n04 = "com.amazonaws.sso";
+    var schema_1 = (init_schema(), __toCommonJS(schema_exports));
+    var errors_1 = require_errors3();
+    var SSOServiceException_1 = require_SSOServiceException();
+    var _s_registry4 = schema_1.TypeRegistry.for(_s4);
+    exports2.SSOServiceException$ = [-3, _s4, "SSOServiceException", 0, [], []];
+    _s_registry4.registerError(exports2.SSOServiceException$, SSOServiceException_1.SSOServiceException);
+    var n0_registry4 = schema_1.TypeRegistry.for(n04);
+    exports2.InvalidRequestException$ = [
+      -3,
+      n04,
+      _IRE2,
+      { [_e4]: _c4, [_hE4]: 400 },
+      [_m3],
+      [0]
+    ];
+    n0_registry4.registerError(exports2.InvalidRequestException$, errors_1.InvalidRequestException);
+    exports2.ResourceNotFoundException$ = [
+      -3,
+      n04,
+      _RNFE,
+      { [_e4]: _c4, [_hE4]: 404 },
+      [_m3],
+      [0]
+    ];
+    n0_registry4.registerError(exports2.ResourceNotFoundException$, errors_1.ResourceNotFoundException);
+    exports2.TooManyRequestsException$ = [
+      -3,
+      n04,
+      _TMRE2,
+      { [_e4]: _c4, [_hE4]: 429 },
+      [_m3],
+      [0]
+    ];
+    n0_registry4.registerError(exports2.TooManyRequestsException$, errors_1.TooManyRequestsException);
+    exports2.UnauthorizedException$ = [
+      -3,
+      n04,
+      _UE,
+      { [_e4]: _c4, [_hE4]: 401 },
+      [_m3],
+      [0]
+    ];
+    n0_registry4.registerError(exports2.UnauthorizedException$, errors_1.UnauthorizedException);
+    exports2.errorTypeRegistries = [
+      _s_registry4,
+      n0_registry4
+    ];
+    var AccessTokenType = [0, n04, _ATT, 8, 0];
+    var SecretAccessKeyType = [0, n04, _SAKT, 8, 0];
+    var SessionTokenType = [0, n04, _STT, 8, 0];
+    exports2.AccountInfo$ = [
+      3,
+      n04,
+      _AI,
+      0,
+      [_aI, _aN, _eA],
+      [0, 0, 0]
+    ];
+    exports2.GetRoleCredentialsRequest$ = [
+      3,
+      n04,
+      _GRCR,
+      0,
+      [_rN, _aI, _aT3],
+      [[0, { [_hQ]: _rn }], [0, { [_hQ]: _ai }], [() => AccessTokenType, { [_hH]: _xasbt }]],
+      3
+    ];
+    exports2.GetRoleCredentialsResponse$ = [
+      3,
+      n04,
+      _GRCRe,
+      0,
+      [_rC],
+      [[() => exports2.RoleCredentials$, 0]]
+    ];
+    exports2.ListAccountRolesRequest$ = [
+      3,
+      n04,
+      _LARR,
+      0,
+      [_aT3, _aI, _nT, _mR],
+      [[() => AccessTokenType, { [_hH]: _xasbt }], [0, { [_hQ]: _ai }], [0, { [_hQ]: _nt }], [1, { [_hQ]: _mr }]],
+      2
+    ];
+    exports2.ListAccountRolesResponse$ = [
+      3,
+      n04,
+      _LARRi,
+      0,
+      [_nT, _rL],
+      [0, () => RoleListType]
+    ];
+    exports2.ListAccountsRequest$ = [
+      3,
+      n04,
+      _LAR,
+      0,
+      [_aT3, _nT, _mR],
+      [[() => AccessTokenType, { [_hH]: _xasbt }], [0, { [_hQ]: _nt }], [1, { [_hQ]: _mr }]],
+      1
+    ];
+    exports2.ListAccountsResponse$ = [
+      3,
+      n04,
+      _LARi,
+      0,
+      [_nT, _aL],
+      [0, () => AccountListType]
+    ];
+    exports2.LogoutRequest$ = [
+      3,
+      n04,
+      _LR,
+      0,
+      [_aT3],
+      [[() => AccessTokenType, { [_hH]: _xasbt }]],
+      1
+    ];
+    exports2.RoleCredentials$ = [
+      3,
+      n04,
+      _RC,
+      0,
+      [_aKI2, _sAK2, _sT2, _ex],
+      [0, [() => SecretAccessKeyType, 0], [() => SessionTokenType, 0], 1]
+    ];
+    exports2.RoleInfo$ = [
+      3,
+      n04,
+      _RI,
+      0,
+      [_rN, _aI],
+      [0, 0]
+    ];
+    var __Unit = "unit";
+    var AccountListType = [
+      1,
+      n04,
+      _ALT,
+      0,
+      () => exports2.AccountInfo$
+    ];
+    var RoleListType = [
+      1,
+      n04,
+      _RLT,
+      0,
+      () => exports2.RoleInfo$
+    ];
+    exports2.GetRoleCredentials$ = [
+      9,
+      n04,
+      _GRC,
+      { [_h3]: ["GET", "/federation/credentials", 200] },
+      () => exports2.GetRoleCredentialsRequest$,
+      () => exports2.GetRoleCredentialsResponse$
+    ];
+    exports2.ListAccountRoles$ = [
+      9,
+      n04,
+      _LARis,
+      { [_h3]: ["GET", "/assignment/roles", 200] },
+      () => exports2.ListAccountRolesRequest$,
+      () => exports2.ListAccountRolesResponse$
+    ];
+    exports2.ListAccounts$ = [
+      9,
+      n04,
+      _LA,
+      { [_h3]: ["GET", "/assignment/accounts", 200] },
+      () => exports2.ListAccountsRequest$,
+      () => exports2.ListAccountsResponse$
+    ];
+    exports2.Logout$ = [
+      9,
+      n04,
+      _L,
+      { [_h3]: ["POST", "/logout", 200] },
+      () => exports2.LogoutRequest$,
+      () => __Unit
+    ];
+  }
+});
+
 // node_modules/@aws-sdk/client-sso/dist-cjs/runtimeConfig.shared.js
 var require_runtimeConfig_shared = __commonJS({
   "node_modules/@aws-sdk/client-sso/dist-cjs/runtimeConfig.shared.js"(exports2) {
@@ -44650,6 +50506,7 @@ var require_runtimeConfig_shared = __commonJS({
     var util_utf8_1 = require_dist_cjs8();
     var httpAuthSchemeProvider_1 = require_httpAuthSchemeProvider2();
     var endpointResolver_1 = require_endpointResolver2();
+    var schemas_0_1 = require_schemas_02();
     var getRuntimeConfig7 = (config) => {
       return {
         apiVersion: "2019-06-10",
@@ -44675,6 +50532,7 @@ var require_runtimeConfig_shared = __commonJS({
         protocol: config?.protocol ?? protocols_1.AwsRestJsonProtocol,
         protocolSettings: config?.protocolSettings ?? {
           defaultNamespace: "com.amazonaws.sso",
+          errorTypeRegistries: schemas_0_1.errorTypeRegistries,
           version: "2019-06-10",
           serviceTarget: "SWBPortalService"
         },
@@ -44763,6 +50621,9 @@ var require_dist_cjs57 = __commonJS({
     var runtimeConfig = require_runtimeConfig();
     var regionConfigResolver = require_dist_cjs55();
     var protocolHttp = require_dist_cjs2();
+    var schemas_0 = require_schemas_02();
+    var errors = require_errors3();
+    var SSOServiceException = require_SSOServiceException();
     var resolveClientEndpointParameters4 = (options) => {
       return Object.assign(options, {
         useDualstackEndpoint: options.useDualstackEndpoint ?? false,
@@ -44852,310 +50713,37 @@ var require_dist_cjs57 = __commonJS({
         super.destroy();
       }
     };
-    var SSOServiceException = class _SSOServiceException extends smithyClient.ServiceException {
-      constructor(options) {
-        super(options);
-        Object.setPrototypeOf(this, _SSOServiceException.prototype);
-      }
-    };
-    var InvalidRequestException2 = class _InvalidRequestException extends SSOServiceException {
-      name = "InvalidRequestException";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "InvalidRequestException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _InvalidRequestException.prototype);
-      }
-    };
-    var ResourceNotFoundException = class _ResourceNotFoundException extends SSOServiceException {
-      name = "ResourceNotFoundException";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "ResourceNotFoundException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _ResourceNotFoundException.prototype);
-      }
-    };
-    var TooManyRequestsException = class _TooManyRequestsException extends SSOServiceException {
-      name = "TooManyRequestsException";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "TooManyRequestsException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _TooManyRequestsException.prototype);
-      }
-    };
-    var UnauthorizedException = class _UnauthorizedException extends SSOServiceException {
-      name = "UnauthorizedException";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "UnauthorizedException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _UnauthorizedException.prototype);
-      }
-    };
-    var _AI = "AccountInfo";
-    var _ALT = "AccountListType";
-    var _ATT = "AccessTokenType";
-    var _GRC = "GetRoleCredentials";
-    var _GRCR = "GetRoleCredentialsRequest";
-    var _GRCRe = "GetRoleCredentialsResponse";
-    var _IRE2 = "InvalidRequestException";
-    var _L = "Logout";
-    var _LA = "ListAccounts";
-    var _LAR = "ListAccountsRequest";
-    var _LARR = "ListAccountRolesRequest";
-    var _LARRi = "ListAccountRolesResponse";
-    var _LARi = "ListAccountsResponse";
-    var _LARis = "ListAccountRoles";
-    var _LR = "LogoutRequest";
-    var _RC = "RoleCredentials";
-    var _RI = "RoleInfo";
-    var _RLT = "RoleListType";
-    var _RNFE = "ResourceNotFoundException";
-    var _SAKT = "SecretAccessKeyType";
-    var _STT = "SessionTokenType";
-    var _TMRE2 = "TooManyRequestsException";
-    var _UE = "UnauthorizedException";
-    var _aI = "accountId";
-    var _aKI2 = "accessKeyId";
-    var _aL = "accountList";
-    var _aN = "accountName";
-    var _aT3 = "accessToken";
-    var _ai = "account_id";
-    var _c4 = "client";
-    var _e4 = "error";
-    var _eA = "emailAddress";
-    var _ex = "expiration";
-    var _h3 = "http";
-    var _hE4 = "httpError";
-    var _hH = "httpHeader";
-    var _hQ = "httpQuery";
-    var _m3 = "message";
-    var _mR = "maxResults";
-    var _mr = "max_result";
-    var _nT = "nextToken";
-    var _nt = "next_token";
-    var _rC = "roleCredentials";
-    var _rL = "roleList";
-    var _rN = "roleName";
-    var _rn = "role_name";
-    var _s4 = "smithy.ts.sdk.synthetic.com.amazonaws.sso";
-    var _sAK2 = "secretAccessKey";
-    var _sT2 = "sessionToken";
-    var _xasbt = "x-amz-sso_bearer_token";
-    var n04 = "com.amazonaws.sso";
-    var AccessTokenType = [0, n04, _ATT, 8, 0];
-    var SecretAccessKeyType = [0, n04, _SAKT, 8, 0];
-    var SessionTokenType = [0, n04, _STT, 8, 0];
-    var AccountInfo$ = [
-      3,
-      n04,
-      _AI,
-      0,
-      [_aI, _aN, _eA],
-      [0, 0, 0]
-    ];
-    var GetRoleCredentialsRequest$ = [
-      3,
-      n04,
-      _GRCR,
-      0,
-      [_rN, _aI, _aT3],
-      [[0, { [_hQ]: _rn }], [0, { [_hQ]: _ai }], [() => AccessTokenType, { [_hH]: _xasbt }]],
-      3
-    ];
-    var GetRoleCredentialsResponse$ = [
-      3,
-      n04,
-      _GRCRe,
-      0,
-      [_rC],
-      [[() => RoleCredentials$, 0]]
-    ];
-    var InvalidRequestException$2 = [
-      -3,
-      n04,
-      _IRE2,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [_m3],
-      [0]
-    ];
-    schema2.TypeRegistry.for(n04).registerError(InvalidRequestException$2, InvalidRequestException2);
-    var ListAccountRolesRequest$ = [
-      3,
-      n04,
-      _LARR,
-      0,
-      [_aT3, _aI, _nT, _mR],
-      [[() => AccessTokenType, { [_hH]: _xasbt }], [0, { [_hQ]: _ai }], [0, { [_hQ]: _nt }], [1, { [_hQ]: _mr }]],
-      2
-    ];
-    var ListAccountRolesResponse$ = [
-      3,
-      n04,
-      _LARRi,
-      0,
-      [_nT, _rL],
-      [0, () => RoleListType]
-    ];
-    var ListAccountsRequest$ = [
-      3,
-      n04,
-      _LAR,
-      0,
-      [_aT3, _nT, _mR],
-      [[() => AccessTokenType, { [_hH]: _xasbt }], [0, { [_hQ]: _nt }], [1, { [_hQ]: _mr }]],
-      1
-    ];
-    var ListAccountsResponse$ = [
-      3,
-      n04,
-      _LARi,
-      0,
-      [_nT, _aL],
-      [0, () => AccountListType]
-    ];
-    var LogoutRequest$ = [
-      3,
-      n04,
-      _LR,
-      0,
-      [_aT3],
-      [[() => AccessTokenType, { [_hH]: _xasbt }]],
-      1
-    ];
-    var ResourceNotFoundException$ = [
-      -3,
-      n04,
-      _RNFE,
-      { [_e4]: _c4, [_hE4]: 404 },
-      [_m3],
-      [0]
-    ];
-    schema2.TypeRegistry.for(n04).registerError(ResourceNotFoundException$, ResourceNotFoundException);
-    var RoleCredentials$ = [
-      3,
-      n04,
-      _RC,
-      0,
-      [_aKI2, _sAK2, _sT2, _ex],
-      [0, [() => SecretAccessKeyType, 0], [() => SessionTokenType, 0], 1]
-    ];
-    var RoleInfo$ = [
-      3,
-      n04,
-      _RI,
-      0,
-      [_rN, _aI],
-      [0, 0]
-    ];
-    var TooManyRequestsException$ = [
-      -3,
-      n04,
-      _TMRE2,
-      { [_e4]: _c4, [_hE4]: 429 },
-      [_m3],
-      [0]
-    ];
-    schema2.TypeRegistry.for(n04).registerError(TooManyRequestsException$, TooManyRequestsException);
-    var UnauthorizedException$ = [
-      -3,
-      n04,
-      _UE,
-      { [_e4]: _c4, [_hE4]: 401 },
-      [_m3],
-      [0]
-    ];
-    schema2.TypeRegistry.for(n04).registerError(UnauthorizedException$, UnauthorizedException);
-    var __Unit = "unit";
-    var SSOServiceException$ = [-3, _s4, "SSOServiceException", 0, [], []];
-    schema2.TypeRegistry.for(_s4).registerError(SSOServiceException$, SSOServiceException);
-    var AccountListType = [
-      1,
-      n04,
-      _ALT,
-      0,
-      () => AccountInfo$
-    ];
-    var RoleListType = [
-      1,
-      n04,
-      _RLT,
-      0,
-      () => RoleInfo$
-    ];
-    var GetRoleCredentials$ = [
-      9,
-      n04,
-      _GRC,
-      { [_h3]: ["GET", "/federation/credentials", 200] },
-      () => GetRoleCredentialsRequest$,
-      () => GetRoleCredentialsResponse$
-    ];
-    var ListAccountRoles$ = [
-      9,
-      n04,
-      _LARis,
-      { [_h3]: ["GET", "/assignment/roles", 200] },
-      () => ListAccountRolesRequest$,
-      () => ListAccountRolesResponse$
-    ];
-    var ListAccounts$ = [
-      9,
-      n04,
-      _LA,
-      { [_h3]: ["GET", "/assignment/accounts", 200] },
-      () => ListAccountsRequest$,
-      () => ListAccountsResponse$
-    ];
-    var Logout$ = [
-      9,
-      n04,
-      _L,
-      { [_h3]: ["POST", "/logout", 200] },
-      () => LogoutRequest$,
-      () => __Unit
-    ];
     var GetRoleCredentialsCommand = class extends smithyClient.Command.classBuilder().ep(commonParams4).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("SWBPortalService", "GetRoleCredentials", {}).n("SSOClient", "GetRoleCredentialsCommand").sc(GetRoleCredentials$).build() {
+    }).s("SWBPortalService", "GetRoleCredentials", {}).n("SSOClient", "GetRoleCredentialsCommand").sc(schemas_0.GetRoleCredentials$).build() {
     };
     var ListAccountRolesCommand = class extends smithyClient.Command.classBuilder().ep(commonParams4).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("SWBPortalService", "ListAccountRoles", {}).n("SSOClient", "ListAccountRolesCommand").sc(ListAccountRoles$).build() {
+    }).s("SWBPortalService", "ListAccountRoles", {}).n("SSOClient", "ListAccountRolesCommand").sc(schemas_0.ListAccountRoles$).build() {
     };
     var ListAccountsCommand = class extends smithyClient.Command.classBuilder().ep(commonParams4).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("SWBPortalService", "ListAccounts", {}).n("SSOClient", "ListAccountsCommand").sc(ListAccounts$).build() {
+    }).s("SWBPortalService", "ListAccounts", {}).n("SSOClient", "ListAccountsCommand").sc(schemas_0.ListAccounts$).build() {
     };
     var LogoutCommand = class extends smithyClient.Command.classBuilder().ep(commonParams4).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("SWBPortalService", "Logout", {}).n("SSOClient", "LogoutCommand").sc(Logout$).build() {
+    }).s("SWBPortalService", "Logout", {}).n("SSOClient", "LogoutCommand").sc(schemas_0.Logout$).build() {
     };
+    var paginateListAccountRoles = core6.createPaginator(SSOClient, ListAccountRolesCommand, "nextToken", "nextToken", "maxResults");
+    var paginateListAccounts = core6.createPaginator(SSOClient, ListAccountsCommand, "nextToken", "nextToken", "maxResults");
     var commands4 = {
       GetRoleCredentialsCommand,
       ListAccountRolesCommand,
       ListAccountsCommand,
       LogoutCommand
     };
+    var paginators = {
+      paginateListAccountRoles,
+      paginateListAccounts
+    };
     var SSO = class extends SSOClient {
     };
-    smithyClient.createAggregatedClient(commands4, SSO);
-    var paginateListAccountRoles = core6.createPaginator(SSOClient, ListAccountRolesCommand, "nextToken", "nextToken", "maxResults");
-    var paginateListAccounts = core6.createPaginator(SSOClient, ListAccountsCommand, "nextToken", "nextToken", "maxResults");
+    smithyClient.createAggregatedClient(commands4, SSO, { paginators });
     Object.defineProperty(exports2, "$Command", {
       enumerable: true,
       get: function() {
@@ -45168,38 +50756,36 @@ var require_dist_cjs57 = __commonJS({
         return smithyClient.Client;
       }
     });
-    exports2.AccountInfo$ = AccountInfo$;
-    exports2.GetRoleCredentials$ = GetRoleCredentials$;
+    Object.defineProperty(exports2, "SSOServiceException", {
+      enumerable: true,
+      get: function() {
+        return SSOServiceException.SSOServiceException;
+      }
+    });
     exports2.GetRoleCredentialsCommand = GetRoleCredentialsCommand;
-    exports2.GetRoleCredentialsRequest$ = GetRoleCredentialsRequest$;
-    exports2.GetRoleCredentialsResponse$ = GetRoleCredentialsResponse$;
-    exports2.InvalidRequestException = InvalidRequestException2;
-    exports2.InvalidRequestException$ = InvalidRequestException$2;
-    exports2.ListAccountRoles$ = ListAccountRoles$;
     exports2.ListAccountRolesCommand = ListAccountRolesCommand;
-    exports2.ListAccountRolesRequest$ = ListAccountRolesRequest$;
-    exports2.ListAccountRolesResponse$ = ListAccountRolesResponse$;
-    exports2.ListAccounts$ = ListAccounts$;
     exports2.ListAccountsCommand = ListAccountsCommand;
-    exports2.ListAccountsRequest$ = ListAccountsRequest$;
-    exports2.ListAccountsResponse$ = ListAccountsResponse$;
-    exports2.Logout$ = Logout$;
     exports2.LogoutCommand = LogoutCommand;
-    exports2.LogoutRequest$ = LogoutRequest$;
-    exports2.ResourceNotFoundException = ResourceNotFoundException;
-    exports2.ResourceNotFoundException$ = ResourceNotFoundException$;
-    exports2.RoleCredentials$ = RoleCredentials$;
-    exports2.RoleInfo$ = RoleInfo$;
     exports2.SSO = SSO;
     exports2.SSOClient = SSOClient;
-    exports2.SSOServiceException = SSOServiceException;
-    exports2.SSOServiceException$ = SSOServiceException$;
-    exports2.TooManyRequestsException = TooManyRequestsException;
-    exports2.TooManyRequestsException$ = TooManyRequestsException$;
-    exports2.UnauthorizedException = UnauthorizedException;
-    exports2.UnauthorizedException$ = UnauthorizedException$;
     exports2.paginateListAccountRoles = paginateListAccountRoles;
     exports2.paginateListAccounts = paginateListAccounts;
+    Object.keys(schemas_0).forEach(function(k4) {
+      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
+        enumerable: true,
+        get: function() {
+          return schemas_0[k4];
+        }
+      });
+    });
+    Object.keys(errors).forEach(function(k4) {
+      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
+        enumerable: true,
+        get: function() {
+          return errors[k4];
+        }
+      });
+    });
   }
 });
 
@@ -45533,19 +51119,227 @@ var init_endpointResolver2 = __esm({
   }
 });
 
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/SigninServiceException.js
+var import_smithy_client15, SigninServiceException;
+var init_SigninServiceException = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/SigninServiceException.js"() {
+    import_smithy_client15 = __toESM(require_dist_cjs20());
+    SigninServiceException = class _SigninServiceException extends import_smithy_client15.ServiceException {
+      constructor(options) {
+        super(options);
+        Object.setPrototypeOf(this, _SigninServiceException.prototype);
+      }
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/errors.js
+var AccessDeniedException2, InternalServerException2, TooManyRequestsError, ValidationException;
+var init_errors2 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/errors.js"() {
+    init_SigninServiceException();
+    AccessDeniedException2 = class _AccessDeniedException extends SigninServiceException {
+      name = "AccessDeniedException";
+      $fault = "client";
+      error;
+      constructor(opts) {
+        super({
+          name: "AccessDeniedException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _AccessDeniedException.prototype);
+        this.error = opts.error;
+      }
+    };
+    InternalServerException2 = class _InternalServerException extends SigninServiceException {
+      name = "InternalServerException";
+      $fault = "server";
+      error;
+      constructor(opts) {
+        super({
+          name: "InternalServerException",
+          $fault: "server",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _InternalServerException.prototype);
+        this.error = opts.error;
+      }
+    };
+    TooManyRequestsError = class _TooManyRequestsError extends SigninServiceException {
+      name = "TooManyRequestsError";
+      $fault = "client";
+      error;
+      constructor(opts) {
+        super({
+          name: "TooManyRequestsError",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _TooManyRequestsError.prototype);
+        this.error = opts.error;
+      }
+    };
+    ValidationException = class _ValidationException extends SigninServiceException {
+      name = "ValidationException";
+      $fault = "client";
+      error;
+      constructor(opts) {
+        super({
+          name: "ValidationException",
+          $fault: "client",
+          ...opts
+        });
+        Object.setPrototypeOf(this, _ValidationException.prototype);
+        this.error = opts.error;
+      }
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/schemas/schemas_0.js
+var _ADE2, _AT2, _COAT, _COATR, _COATRB, _COATRBr, _COATRr, _ISE2, _RT2, _TMRE, _VE, _aKI, _aT2, _c2, _cI2, _cV2, _co2, _e2, _eI2, _gT2, _h2, _hE2, _iT2, _jN, _m, _rT2, _rU2, _s2, _sAK, _sT, _se2, _tI, _tO, _tT2, n02, _s_registry2, SigninServiceException$, n0_registry2, AccessDeniedException$2, InternalServerException$2, TooManyRequestsError$, ValidationException$, errorTypeRegistries2, RefreshToken2, AccessToken$, CreateOAuth2TokenRequest$, CreateOAuth2TokenRequestBody$, CreateOAuth2TokenResponse$, CreateOAuth2TokenResponseBody$, CreateOAuth2Token$;
+var init_schemas_02 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/schemas/schemas_0.js"() {
+    init_schema();
+    init_errors2();
+    init_SigninServiceException();
+    _ADE2 = "AccessDeniedException";
+    _AT2 = "AccessToken";
+    _COAT = "CreateOAuth2Token";
+    _COATR = "CreateOAuth2TokenRequest";
+    _COATRB = "CreateOAuth2TokenRequestBody";
+    _COATRBr = "CreateOAuth2TokenResponseBody";
+    _COATRr = "CreateOAuth2TokenResponse";
+    _ISE2 = "InternalServerException";
+    _RT2 = "RefreshToken";
+    _TMRE = "TooManyRequestsError";
+    _VE = "ValidationException";
+    _aKI = "accessKeyId";
+    _aT2 = "accessToken";
+    _c2 = "client";
+    _cI2 = "clientId";
+    _cV2 = "codeVerifier";
+    _co2 = "code";
+    _e2 = "error";
+    _eI2 = "expiresIn";
+    _gT2 = "grantType";
+    _h2 = "http";
+    _hE2 = "httpError";
+    _iT2 = "idToken";
+    _jN = "jsonName";
+    _m = "message";
+    _rT2 = "refreshToken";
+    _rU2 = "redirectUri";
+    _s2 = "smithy.ts.sdk.synthetic.com.amazonaws.signin";
+    _sAK = "secretAccessKey";
+    _sT = "sessionToken";
+    _se2 = "server";
+    _tI = "tokenInput";
+    _tO = "tokenOutput";
+    _tT2 = "tokenType";
+    n02 = "com.amazonaws.signin";
+    _s_registry2 = TypeRegistry.for(_s2);
+    SigninServiceException$ = [-3, _s2, "SigninServiceException", 0, [], []];
+    _s_registry2.registerError(SigninServiceException$, SigninServiceException);
+    n0_registry2 = TypeRegistry.for(n02);
+    AccessDeniedException$2 = [-3, n02, _ADE2, { [_e2]: _c2 }, [_e2, _m], [0, 0], 2];
+    n0_registry2.registerError(AccessDeniedException$2, AccessDeniedException2);
+    InternalServerException$2 = [-3, n02, _ISE2, { [_e2]: _se2, [_hE2]: 500 }, [_e2, _m], [0, 0], 2];
+    n0_registry2.registerError(InternalServerException$2, InternalServerException2);
+    TooManyRequestsError$ = [-3, n02, _TMRE, { [_e2]: _c2, [_hE2]: 429 }, [_e2, _m], [0, 0], 2];
+    n0_registry2.registerError(TooManyRequestsError$, TooManyRequestsError);
+    ValidationException$ = [-3, n02, _VE, { [_e2]: _c2, [_hE2]: 400 }, [_e2, _m], [0, 0], 2];
+    n0_registry2.registerError(ValidationException$, ValidationException);
+    errorTypeRegistries2 = [_s_registry2, n0_registry2];
+    RefreshToken2 = [0, n02, _RT2, 8, 0];
+    AccessToken$ = [
+      3,
+      n02,
+      _AT2,
+      8,
+      [_aKI, _sAK, _sT],
+      [
+        [0, { [_jN]: _aKI }],
+        [0, { [_jN]: _sAK }],
+        [0, { [_jN]: _sT }]
+      ],
+      3
+    ];
+    CreateOAuth2TokenRequest$ = [
+      3,
+      n02,
+      _COATR,
+      0,
+      [_tI],
+      [[() => CreateOAuth2TokenRequestBody$, 16]],
+      1
+    ];
+    CreateOAuth2TokenRequestBody$ = [
+      3,
+      n02,
+      _COATRB,
+      0,
+      [_cI2, _gT2, _co2, _rU2, _cV2, _rT2],
+      [
+        [0, { [_jN]: _cI2 }],
+        [0, { [_jN]: _gT2 }],
+        0,
+        [0, { [_jN]: _rU2 }],
+        [0, { [_jN]: _cV2 }],
+        [() => RefreshToken2, { [_jN]: _rT2 }]
+      ],
+      2
+    ];
+    CreateOAuth2TokenResponse$ = [
+      3,
+      n02,
+      _COATRr,
+      0,
+      [_tO],
+      [[() => CreateOAuth2TokenResponseBody$, 16]],
+      1
+    ];
+    CreateOAuth2TokenResponseBody$ = [
+      3,
+      n02,
+      _COATRBr,
+      0,
+      [_aT2, _tT2, _eI2, _rT2, _iT2],
+      [
+        [() => AccessToken$, { [_jN]: _aT2 }],
+        [0, { [_jN]: _tT2 }],
+        [1, { [_jN]: _eI2 }],
+        [() => RefreshToken2, { [_jN]: _rT2 }],
+        [0, { [_jN]: _iT2 }]
+      ],
+      4
+    ];
+    CreateOAuth2Token$ = [
+      9,
+      n02,
+      _COAT,
+      { [_h2]: ["POST", "/v1/token", 200] },
+      () => CreateOAuth2TokenRequest$,
+      () => CreateOAuth2TokenResponse$
+    ];
+  }
+});
+
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeConfig.shared.js
-var import_smithy_client15, import_url_parser2, import_util_base649, import_util_utf89, getRuntimeConfig3;
+var import_smithy_client16, import_url_parser2, import_util_base649, import_util_utf89, getRuntimeConfig3;
 var init_runtimeConfig_shared2 = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeConfig.shared.js"() {
     init_dist_es2();
     init_protocols2();
     init_dist_es();
-    import_smithy_client15 = __toESM(require_dist_cjs20());
+    import_smithy_client16 = __toESM(require_dist_cjs20());
     import_url_parser2 = __toESM(require_dist_cjs35());
     import_util_base649 = __toESM(require_dist_cjs9());
     import_util_utf89 = __toESM(require_dist_cjs8());
     init_httpAuthSchemeProvider2();
     init_endpointResolver2();
+    init_schemas_02();
     getRuntimeConfig3 = (config) => {
       return {
         apiVersion: "2023-01-01",
@@ -45567,10 +51361,11 @@ var init_runtimeConfig_shared2 = __esm({
             signer: new NoAuthSigner()
           }
         ],
-        logger: config?.logger ?? new import_smithy_client15.NoOpLogger(),
+        logger: config?.logger ?? new import_smithy_client16.NoOpLogger(),
         protocol: config?.protocol ?? AwsRestJsonProtocol,
         protocolSettings: config?.protocolSettings ?? {
           defaultNamespace: "com.amazonaws.signin",
+          errorTypeRegistries: errorTypeRegistries2,
           version: "2023-01-01",
           serviceTarget: "Signin"
         },
@@ -45584,7 +51379,7 @@ var init_runtimeConfig_shared2 = __esm({
 });
 
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeConfig.js
-var import_util_user_agent_node2, import_config_resolver3, import_hash_node2, import_middleware_retry3, import_node_config_provider2, import_node_http_handler2, import_smithy_client16, import_util_body_length_node2, import_util_defaults_mode_node2, import_util_retry2, getRuntimeConfig4;
+var import_util_user_agent_node2, import_config_resolver3, import_hash_node2, import_middleware_retry3, import_node_config_provider2, import_node_http_handler2, import_smithy_client17, import_util_body_length_node2, import_util_defaults_mode_node2, import_util_retry2, getRuntimeConfig4;
 var init_runtimeConfig2 = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeConfig.js"() {
     init_package();
@@ -45595,15 +51390,15 @@ var init_runtimeConfig2 = __esm({
     import_middleware_retry3 = __toESM(require_dist_cjs46());
     import_node_config_provider2 = __toESM(require_dist_cjs42());
     import_node_http_handler2 = __toESM(require_dist_cjs12());
-    import_smithy_client16 = __toESM(require_dist_cjs20());
+    import_smithy_client17 = __toESM(require_dist_cjs20());
     import_util_body_length_node2 = __toESM(require_dist_cjs53());
     import_util_defaults_mode_node2 = __toESM(require_dist_cjs54());
     import_util_retry2 = __toESM(require_dist_cjs45());
     init_runtimeConfig_shared2();
     getRuntimeConfig4 = (config) => {
-      (0, import_smithy_client16.emitWarningIfUnsupportedVersion)(process.version);
+      (0, import_smithy_client17.emitWarningIfUnsupportedVersion)(process.version);
       const defaultsMode = (0, import_util_defaults_mode_node2.resolveDefaultsModeConfig)(config);
-      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client16.loadConfigsForDefaultMode);
+      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client17.loadConfigsForDefaultMode);
       const clientSharedValues = getRuntimeConfig3(config);
       emitWarningIfUnsupportedVersion(process.version);
       const loaderConfig = {
@@ -45680,23 +51475,23 @@ var init_httpAuthExtensionConfiguration2 = __esm({
 });
 
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeExtensions.js
-var import_region_config_resolver2, import_protocol_http13, import_smithy_client17, resolveRuntimeExtensions2;
+var import_region_config_resolver2, import_protocol_http13, import_smithy_client18, resolveRuntimeExtensions2;
 var init_runtimeExtensions2 = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/runtimeExtensions.js"() {
     import_region_config_resolver2 = __toESM(require_dist_cjs55());
     import_protocol_http13 = __toESM(require_dist_cjs2());
-    import_smithy_client17 = __toESM(require_dist_cjs20());
+    import_smithy_client18 = __toESM(require_dist_cjs20());
     init_httpAuthExtensionConfiguration2();
     resolveRuntimeExtensions2 = (runtimeConfig, extensions) => {
-      const extensionConfiguration = Object.assign((0, import_region_config_resolver2.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client17.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http13.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration2(runtimeConfig));
+      const extensionConfiguration = Object.assign((0, import_region_config_resolver2.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client18.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http13.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration2(runtimeConfig));
       extensions.forEach((extension) => extension.configure(extensionConfiguration));
-      return Object.assign(runtimeConfig, (0, import_region_config_resolver2.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client17.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http13.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig2(extensionConfiguration));
+      return Object.assign(runtimeConfig, (0, import_region_config_resolver2.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client18.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http13.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig2(extensionConfiguration));
     };
   }
 });
 
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/SigninClient.js
-var import_middleware_host_header2, import_middleware_logger2, import_middleware_recursion_detection2, import_middleware_user_agent2, import_config_resolver4, import_middleware_content_length2, import_middleware_endpoint3, import_middleware_retry4, import_smithy_client18, SigninClient;
+var import_middleware_host_header2, import_middleware_logger2, import_middleware_recursion_detection2, import_middleware_user_agent2, import_config_resolver4, import_middleware_content_length2, import_middleware_endpoint3, import_middleware_retry4, import_smithy_client19, SigninClient;
 var init_SigninClient = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/SigninClient.js"() {
     import_middleware_host_header2 = __toESM(require_dist_cjs27());
@@ -45709,12 +51504,12 @@ var init_SigninClient = __esm({
     import_middleware_content_length2 = __toESM(require_dist_cjs40());
     import_middleware_endpoint3 = __toESM(require_dist_cjs43());
     import_middleware_retry4 = __toESM(require_dist_cjs46());
-    import_smithy_client18 = __toESM(require_dist_cjs20());
+    import_smithy_client19 = __toESM(require_dist_cjs20());
     init_httpAuthSchemeProvider2();
     init_EndpointParameters2();
     init_runtimeConfig2();
     init_runtimeExtensions2();
-    SigninClient = class extends import_smithy_client18.Client {
+    SigninClient = class extends import_smithy_client19.Client {
       config;
       constructor(...[configuration]) {
         const _config_0 = getRuntimeConfig4(configuration || {});
@@ -45748,210 +51543,6 @@ var init_SigninClient = __esm({
         super.destroy();
       }
     };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/SigninServiceException.js
-var import_smithy_client19, SigninServiceException;
-var init_SigninServiceException = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/SigninServiceException.js"() {
-    import_smithy_client19 = __toESM(require_dist_cjs20());
-    SigninServiceException = class _SigninServiceException extends import_smithy_client19.ServiceException {
-      constructor(options) {
-        super(options);
-        Object.setPrototypeOf(this, _SigninServiceException.prototype);
-      }
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/errors.js
-var AccessDeniedException2, InternalServerException2, TooManyRequestsError, ValidationException;
-var init_errors2 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/models/errors.js"() {
-    init_SigninServiceException();
-    AccessDeniedException2 = class _AccessDeniedException extends SigninServiceException {
-      name = "AccessDeniedException";
-      $fault = "client";
-      error;
-      constructor(opts) {
-        super({
-          name: "AccessDeniedException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _AccessDeniedException.prototype);
-        this.error = opts.error;
-      }
-    };
-    InternalServerException2 = class _InternalServerException extends SigninServiceException {
-      name = "InternalServerException";
-      $fault = "server";
-      error;
-      constructor(opts) {
-        super({
-          name: "InternalServerException",
-          $fault: "server",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _InternalServerException.prototype);
-        this.error = opts.error;
-      }
-    };
-    TooManyRequestsError = class _TooManyRequestsError extends SigninServiceException {
-      name = "TooManyRequestsError";
-      $fault = "client";
-      error;
-      constructor(opts) {
-        super({
-          name: "TooManyRequestsError",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _TooManyRequestsError.prototype);
-        this.error = opts.error;
-      }
-    };
-    ValidationException = class _ValidationException extends SigninServiceException {
-      name = "ValidationException";
-      $fault = "client";
-      error;
-      constructor(opts) {
-        super({
-          name: "ValidationException",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _ValidationException.prototype);
-        this.error = opts.error;
-      }
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/schemas/schemas_0.js
-var _ADE2, _AT2, _COAT, _COATR, _COATRB, _COATRBr, _COATRr, _ISE2, _RT2, _TMRE, _VE, _aKI, _aT2, _c2, _cI2, _cV2, _co2, _e2, _eI2, _gT2, _h2, _hE2, _iT2, _jN, _m, _rT2, _rU2, _s2, _sAK, _sT, _sm2, _tI, _tO, _tT2, n02, RefreshToken2, AccessDeniedException$2, AccessToken$, CreateOAuth2TokenRequest$, CreateOAuth2TokenRequestBody$, CreateOAuth2TokenResponse$, CreateOAuth2TokenResponseBody$, InternalServerException$2, TooManyRequestsError$, ValidationException$, SigninServiceException$, CreateOAuth2Token$;
-var init_schemas_02 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/schemas/schemas_0.js"() {
-    init_schema();
-    init_errors2();
-    init_SigninServiceException();
-    _ADE2 = "AccessDeniedException";
-    _AT2 = "AccessToken";
-    _COAT = "CreateOAuth2Token";
-    _COATR = "CreateOAuth2TokenRequest";
-    _COATRB = "CreateOAuth2TokenRequestBody";
-    _COATRBr = "CreateOAuth2TokenResponseBody";
-    _COATRr = "CreateOAuth2TokenResponse";
-    _ISE2 = "InternalServerException";
-    _RT2 = "RefreshToken";
-    _TMRE = "TooManyRequestsError";
-    _VE = "ValidationException";
-    _aKI = "accessKeyId";
-    _aT2 = "accessToken";
-    _c2 = "client";
-    _cI2 = "clientId";
-    _cV2 = "codeVerifier";
-    _co2 = "code";
-    _e2 = "error";
-    _eI2 = "expiresIn";
-    _gT2 = "grantType";
-    _h2 = "http";
-    _hE2 = "httpError";
-    _iT2 = "idToken";
-    _jN = "jsonName";
-    _m = "message";
-    _rT2 = "refreshToken";
-    _rU2 = "redirectUri";
-    _s2 = "server";
-    _sAK = "secretAccessKey";
-    _sT = "sessionToken";
-    _sm2 = "smithy.ts.sdk.synthetic.com.amazonaws.signin";
-    _tI = "tokenInput";
-    _tO = "tokenOutput";
-    _tT2 = "tokenType";
-    n02 = "com.amazonaws.signin";
-    RefreshToken2 = [0, n02, _RT2, 8, 0];
-    AccessDeniedException$2 = [-3, n02, _ADE2, { [_e2]: _c2 }, [_e2, _m], [0, 0], 2];
-    TypeRegistry.for(n02).registerError(AccessDeniedException$2, AccessDeniedException2);
-    AccessToken$ = [
-      3,
-      n02,
-      _AT2,
-      8,
-      [_aKI, _sAK, _sT],
-      [
-        [0, { [_jN]: _aKI }],
-        [0, { [_jN]: _sAK }],
-        [0, { [_jN]: _sT }]
-      ],
-      3
-    ];
-    CreateOAuth2TokenRequest$ = [
-      3,
-      n02,
-      _COATR,
-      0,
-      [_tI],
-      [[() => CreateOAuth2TokenRequestBody$, 16]],
-      1
-    ];
-    CreateOAuth2TokenRequestBody$ = [
-      3,
-      n02,
-      _COATRB,
-      0,
-      [_cI2, _gT2, _co2, _rU2, _cV2, _rT2],
-      [
-        [0, { [_jN]: _cI2 }],
-        [0, { [_jN]: _gT2 }],
-        0,
-        [0, { [_jN]: _rU2 }],
-        [0, { [_jN]: _cV2 }],
-        [() => RefreshToken2, { [_jN]: _rT2 }]
-      ],
-      2
-    ];
-    CreateOAuth2TokenResponse$ = [
-      3,
-      n02,
-      _COATRr,
-      0,
-      [_tO],
-      [[() => CreateOAuth2TokenResponseBody$, 16]],
-      1
-    ];
-    CreateOAuth2TokenResponseBody$ = [
-      3,
-      n02,
-      _COATRBr,
-      0,
-      [_aT2, _tT2, _eI2, _rT2, _iT2],
-      [
-        [() => AccessToken$, { [_jN]: _aT2 }],
-        [0, { [_jN]: _tT2 }],
-        [1, { [_jN]: _eI2 }],
-        [() => RefreshToken2, { [_jN]: _rT2 }],
-        [0, { [_jN]: _iT2 }]
-      ],
-      4
-    ];
-    InternalServerException$2 = [-3, n02, _ISE2, { [_e2]: _s2, [_hE2]: 500 }, [_e2, _m], [0, 0], 2];
-    TypeRegistry.for(n02).registerError(InternalServerException$2, InternalServerException2);
-    TooManyRequestsError$ = [-3, n02, _TMRE, { [_e2]: _c2, [_hE2]: 429 }, [_e2, _m], [0, 0], 2];
-    TypeRegistry.for(n02).registerError(TooManyRequestsError$, TooManyRequestsError);
-    ValidationException$ = [-3, n02, _VE, { [_e2]: _c2, [_hE2]: 400 }, [_e2, _m], [0, 0], 2];
-    TypeRegistry.for(n02).registerError(ValidationException$, ValidationException);
-    SigninServiceException$ = [-3, _sm2, "SigninServiceException", 0, [], []];
-    TypeRegistry.for(_sm2).registerError(SigninServiceException$, SigninServiceException);
-    CreateOAuth2Token$ = [
-      9,
-      n02,
-      _COAT,
-      { [_h2]: ["POST", "/v1/token", 200] },
-      () => CreateOAuth2TokenRequest$,
-      () => CreateOAuth2TokenResponse$
-    ];
   }
 });
 
@@ -46038,7 +51629,8 @@ __export(signin_exports, {
   TooManyRequestsError$: () => TooManyRequestsError$,
   ValidationException: () => ValidationException,
   ValidationException$: () => ValidationException$,
-  __Client: () => import_smithy_client18.Client
+  __Client: () => import_smithy_client19.Client,
+  errorTypeRegistries: () => errorTypeRegistries2
 });
 var init_signin = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/signin/index.js"() {
@@ -46481,244 +52073,12 @@ var init_endpointResolver3 = __esm({
   }
 });
 
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.shared.js
-var import_smithy_client22, import_url_parser3, import_util_base6410, import_util_utf810, getRuntimeConfig5;
-var init_runtimeConfig_shared3 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.shared.js"() {
-    init_dist_es2();
-    init_protocols2();
-    init_dist_es();
-    import_smithy_client22 = __toESM(require_dist_cjs20());
-    import_url_parser3 = __toESM(require_dist_cjs35());
-    import_util_base6410 = __toESM(require_dist_cjs9());
-    import_util_utf810 = __toESM(require_dist_cjs8());
-    init_httpAuthSchemeProvider3();
-    init_endpointResolver3();
-    getRuntimeConfig5 = (config) => {
-      return {
-        apiVersion: "2011-06-15",
-        base64Decoder: config?.base64Decoder ?? import_util_base6410.fromBase64,
-        base64Encoder: config?.base64Encoder ?? import_util_base6410.toBase64,
-        disableHostPrefix: config?.disableHostPrefix ?? false,
-        endpointProvider: config?.endpointProvider ?? defaultEndpointResolver3,
-        extensions: config?.extensions ?? [],
-        httpAuthSchemeProvider: config?.httpAuthSchemeProvider ?? defaultSTSHttpAuthSchemeProvider,
-        httpAuthSchemes: config?.httpAuthSchemes ?? [
-          {
-            schemeId: "aws.auth#sigv4",
-            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4"),
-            signer: new AwsSdkSigV4Signer()
-          },
-          {
-            schemeId: "smithy.api#noAuth",
-            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
-            signer: new NoAuthSigner()
-          }
-        ],
-        logger: config?.logger ?? new import_smithy_client22.NoOpLogger(),
-        protocol: config?.protocol ?? AwsQueryProtocol,
-        protocolSettings: config?.protocolSettings ?? {
-          defaultNamespace: "com.amazonaws.sts",
-          xmlNamespace: "https://sts.amazonaws.com/doc/2011-06-15/",
-          version: "2011-06-15",
-          serviceTarget: "AWSSecurityTokenServiceV20110615"
-        },
-        serviceId: config?.serviceId ?? "STS",
-        urlParser: config?.urlParser ?? import_url_parser3.parseUrl,
-        utf8Decoder: config?.utf8Decoder ?? import_util_utf810.fromUtf8,
-        utf8Encoder: config?.utf8Encoder ?? import_util_utf810.toUtf8
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.js
-var import_util_user_agent_node3, import_config_resolver5, import_hash_node3, import_middleware_retry5, import_node_config_provider3, import_node_http_handler3, import_smithy_client23, import_util_body_length_node3, import_util_defaults_mode_node3, import_util_retry3, getRuntimeConfig6;
-var init_runtimeConfig3 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.js"() {
-    init_package();
-    init_dist_es2();
-    import_util_user_agent_node3 = __toESM(require_dist_cjs51());
-    import_config_resolver5 = __toESM(require_dist_cjs38());
-    init_dist_es();
-    import_hash_node3 = __toESM(require_dist_cjs52());
-    import_middleware_retry5 = __toESM(require_dist_cjs46());
-    import_node_config_provider3 = __toESM(require_dist_cjs42());
-    import_node_http_handler3 = __toESM(require_dist_cjs12());
-    import_smithy_client23 = __toESM(require_dist_cjs20());
-    import_util_body_length_node3 = __toESM(require_dist_cjs53());
-    import_util_defaults_mode_node3 = __toESM(require_dist_cjs54());
-    import_util_retry3 = __toESM(require_dist_cjs45());
-    init_runtimeConfig_shared3();
-    getRuntimeConfig6 = (config) => {
-      (0, import_smithy_client23.emitWarningIfUnsupportedVersion)(process.version);
-      const defaultsMode = (0, import_util_defaults_mode_node3.resolveDefaultsModeConfig)(config);
-      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client23.loadConfigsForDefaultMode);
-      const clientSharedValues = getRuntimeConfig5(config);
-      emitWarningIfUnsupportedVersion(process.version);
-      const loaderConfig = {
-        profile: config?.profile,
-        logger: clientSharedValues.logger
-      };
-      return {
-        ...clientSharedValues,
-        ...config,
-        runtime: "node",
-        defaultsMode,
-        authSchemePreference: config?.authSchemePreference ?? (0, import_node_config_provider3.loadConfig)(NODE_AUTH_SCHEME_PREFERENCE_OPTIONS, loaderConfig),
-        bodyLengthChecker: config?.bodyLengthChecker ?? import_util_body_length_node3.calculateBodyLength,
-        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, import_util_user_agent_node3.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_default.version }),
-        httpAuthSchemes: config?.httpAuthSchemes ?? [
-          {
-            schemeId: "aws.auth#sigv4",
-            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4") || (async (idProps) => await config.credentialDefaultProvider(idProps?.__config || {})()),
-            signer: new AwsSdkSigV4Signer()
-          },
-          {
-            schemeId: "smithy.api#noAuth",
-            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
-            signer: new NoAuthSigner()
-          }
-        ],
-        maxAttempts: config?.maxAttempts ?? (0, import_node_config_provider3.loadConfig)(import_middleware_retry5.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_REGION_CONFIG_OPTIONS, { ...import_config_resolver5.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
-        requestHandler: import_node_http_handler3.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
-        retryMode: config?.retryMode ?? (0, import_node_config_provider3.loadConfig)({
-          ...import_middleware_retry5.NODE_RETRY_MODE_CONFIG_OPTIONS,
-          default: async () => (await defaultConfigProvider()).retryMode || import_util_retry3.DEFAULT_RETRY_MODE
-        }, config),
-        sha256: config?.sha256 ?? import_hash_node3.Hash.bind(null, "sha256"),
-        streamCollector: config?.streamCollector ?? import_node_http_handler3.streamCollector,
-        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
-        useFipsEndpoint: config?.useFipsEndpoint ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
-        userAgentAppId: config?.userAgentAppId ?? (0, import_node_config_provider3.loadConfig)(import_util_user_agent_node3.NODE_APP_ID_CONFIG_OPTIONS, loaderConfig)
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/auth/httpAuthExtensionConfiguration.js
-var getHttpAuthExtensionConfiguration3, resolveHttpAuthRuntimeConfig3;
-var init_httpAuthExtensionConfiguration3 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/auth/httpAuthExtensionConfiguration.js"() {
-    getHttpAuthExtensionConfiguration3 = (runtimeConfig) => {
-      const _httpAuthSchemes = runtimeConfig.httpAuthSchemes;
-      let _httpAuthSchemeProvider = runtimeConfig.httpAuthSchemeProvider;
-      let _credentials = runtimeConfig.credentials;
-      return {
-        setHttpAuthScheme(httpAuthScheme) {
-          const index = _httpAuthSchemes.findIndex((scheme) => scheme.schemeId === httpAuthScheme.schemeId);
-          if (index === -1) {
-            _httpAuthSchemes.push(httpAuthScheme);
-          } else {
-            _httpAuthSchemes.splice(index, 1, httpAuthScheme);
-          }
-        },
-        httpAuthSchemes() {
-          return _httpAuthSchemes;
-        },
-        setHttpAuthSchemeProvider(httpAuthSchemeProvider) {
-          _httpAuthSchemeProvider = httpAuthSchemeProvider;
-        },
-        httpAuthSchemeProvider() {
-          return _httpAuthSchemeProvider;
-        },
-        setCredentials(credentials) {
-          _credentials = credentials;
-        },
-        credentials() {
-          return _credentials;
-        }
-      };
-    };
-    resolveHttpAuthRuntimeConfig3 = (config) => {
-      return {
-        httpAuthSchemes: config.httpAuthSchemes(),
-        httpAuthSchemeProvider: config.httpAuthSchemeProvider(),
-        credentials: config.credentials()
-      };
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeExtensions.js
-var import_region_config_resolver3, import_protocol_http14, import_smithy_client24, resolveRuntimeExtensions3;
-var init_runtimeExtensions3 = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeExtensions.js"() {
-    import_region_config_resolver3 = __toESM(require_dist_cjs55());
-    import_protocol_http14 = __toESM(require_dist_cjs2());
-    import_smithy_client24 = __toESM(require_dist_cjs20());
-    init_httpAuthExtensionConfiguration3();
-    resolveRuntimeExtensions3 = (runtimeConfig, extensions) => {
-      const extensionConfiguration = Object.assign((0, import_region_config_resolver3.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client24.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http14.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration3(runtimeConfig));
-      extensions.forEach((extension) => extension.configure(extensionConfiguration));
-      return Object.assign(runtimeConfig, (0, import_region_config_resolver3.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client24.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http14.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig3(extensionConfiguration));
-    };
-  }
-});
-
-// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/STSClient.js
-var import_middleware_host_header3, import_middleware_logger3, import_middleware_recursion_detection3, import_middleware_user_agent3, import_config_resolver6, import_middleware_content_length3, import_middleware_endpoint5, import_middleware_retry6, import_smithy_client25, STSClient;
-var init_STSClient = __esm({
-  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/STSClient.js"() {
-    import_middleware_host_header3 = __toESM(require_dist_cjs27());
-    import_middleware_logger3 = __toESM(require_dist_cjs28());
-    import_middleware_recursion_detection3 = __toESM(require_dist_cjs29());
-    import_middleware_user_agent3 = __toESM(require_dist_cjs37());
-    import_config_resolver6 = __toESM(require_dist_cjs38());
-    init_dist_es();
-    init_schema();
-    import_middleware_content_length3 = __toESM(require_dist_cjs40());
-    import_middleware_endpoint5 = __toESM(require_dist_cjs43());
-    import_middleware_retry6 = __toESM(require_dist_cjs46());
-    import_smithy_client25 = __toESM(require_dist_cjs20());
-    init_httpAuthSchemeProvider3();
-    init_EndpointParameters3();
-    init_runtimeConfig3();
-    init_runtimeExtensions3();
-    STSClient = class extends import_smithy_client25.Client {
-      config;
-      constructor(...[configuration]) {
-        const _config_0 = getRuntimeConfig6(configuration || {});
-        super(_config_0);
-        this.initConfig = _config_0;
-        const _config_1 = resolveClientEndpointParameters3(_config_0);
-        const _config_2 = (0, import_middleware_user_agent3.resolveUserAgentConfig)(_config_1);
-        const _config_3 = (0, import_middleware_retry6.resolveRetryConfig)(_config_2);
-        const _config_4 = (0, import_config_resolver6.resolveRegionConfig)(_config_3);
-        const _config_5 = (0, import_middleware_host_header3.resolveHostHeaderConfig)(_config_4);
-        const _config_6 = (0, import_middleware_endpoint5.resolveEndpointConfig)(_config_5);
-        const _config_7 = resolveHttpAuthSchemeConfig3(_config_6);
-        const _config_8 = resolveRuntimeExtensions3(_config_7, configuration?.extensions || []);
-        this.config = _config_8;
-        this.middlewareStack.use(getSchemaSerdePlugin(this.config));
-        this.middlewareStack.use((0, import_middleware_user_agent3.getUserAgentPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_retry6.getRetryPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_content_length3.getContentLengthPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_host_header3.getHostHeaderPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_logger3.getLoggerPlugin)(this.config));
-        this.middlewareStack.use((0, import_middleware_recursion_detection3.getRecursionDetectionPlugin)(this.config));
-        this.middlewareStack.use(getHttpAuthSchemeEndpointRuleSetPlugin(this.config, {
-          httpAuthSchemeParametersProvider: defaultSTSHttpAuthSchemeParametersProvider,
-          identityProviderConfigProvider: async (config) => new DefaultIdentityProviderConfig({
-            "aws.auth#sigv4": config.credentials
-          })
-        }));
-        this.middlewareStack.use(getHttpSigningPlugin(this.config));
-      }
-      destroy() {
-        super.destroy();
-      }
-    };
-  }
-});
-
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/models/STSServiceException.js
-var import_smithy_client26, STSServiceException;
+var import_smithy_client22, STSServiceException;
 var init_STSServiceException = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/models/STSServiceException.js"() {
-    import_smithy_client26 = __toESM(require_dist_cjs20());
-    STSServiceException = class _STSServiceException extends import_smithy_client26.ServiceException {
+    import_smithy_client22 = __toESM(require_dist_cjs20());
+    STSServiceException = class _STSServiceException extends import_smithy_client22.ServiceException {
       constructor(options) {
         super(options);
         Object.setPrototypeOf(this, _STSServiceException.prototype);
@@ -46820,7 +52180,7 @@ var init_errors3 = __esm({
 });
 
 // node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/schemas/schemas_0.js
-var _A, _AKI, _AR, _ARI, _ARR, _ARRs, _ARU, _ARWWI, _ARWWIR, _ARWWIRs, _Au, _C, _CA, _DS, _E, _EI, _ETE2, _IDPCEE, _IDPRCE, _IITE, _K, _MPDE, _P, _PA, _PAr, _PC, _PCLT, _PCr, _PDT, _PI, _PPS, _PPTLE, _Pr, _RA, _RDE, _RSN, _SAK, _SFWIT, _SI, _SN, _ST, _T, _TC, _TTK, _Ta, _V, _WIT, _a, _aKST, _aQE, _c3, _cTT, _e3, _hE3, _m2, _pDLT, _s3, _tLT, n03, accessKeySecretType, clientTokenType, AssumedRoleUser$, AssumeRoleRequest$, AssumeRoleResponse$, AssumeRoleWithWebIdentityRequest$, AssumeRoleWithWebIdentityResponse$, Credentials$, ExpiredTokenException$2, IDPCommunicationErrorException$, IDPRejectedClaimException$, InvalidIdentityTokenException$, MalformedPolicyDocumentException$, PackedPolicyTooLargeException$, PolicyDescriptorType$, ProvidedContext$, RegionDisabledException$, Tag$, STSServiceException$, policyDescriptorListType, ProvidedContextsListType, tagKeyListType, tagListType, AssumeRole$, AssumeRoleWithWebIdentity$;
+var _A, _AKI, _AR, _ARI, _ARR, _ARRs, _ARU, _ARWWI, _ARWWIR, _ARWWIRs, _Au, _C, _CA, _DS, _E, _EI, _ETE2, _IDPCEE, _IDPRCE, _IITE, _K, _MPDE, _P, _PA, _PAr, _PC, _PCLT, _PCr, _PDT, _PI, _PPS, _PPTLE, _Pr, _RA, _RDE, _RSN, _SAK, _SFWIT, _SI, _SN, _ST, _T, _TC, _TTK, _Ta, _V, _WIT, _a, _aKST, _aQE, _c3, _cTT, _e3, _hE3, _m2, _pDLT, _s3, _tLT, n03, _s_registry3, STSServiceException$, n0_registry3, ExpiredTokenException$2, IDPCommunicationErrorException$, IDPRejectedClaimException$, InvalidIdentityTokenException$, MalformedPolicyDocumentException$, PackedPolicyTooLargeException$, RegionDisabledException$, errorTypeRegistries3, accessKeySecretType, clientTokenType, AssumedRoleUser$, AssumeRoleRequest$, AssumeRoleResponse$, AssumeRoleWithWebIdentityRequest$, AssumeRoleWithWebIdentityResponse$, Credentials$, PolicyDescriptorType$, ProvidedContext$, Tag$, policyDescriptorListType, ProvidedContextsListType, tagKeyListType, tagListType, AssumeRole$, AssumeRoleWithWebIdentity$;
 var init_schemas_03 = __esm({
   "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/schemas/schemas_0.js"() {
     init_schema();
@@ -46885,6 +52245,74 @@ var init_schemas_03 = __esm({
     _s3 = "smithy.ts.sdk.synthetic.com.amazonaws.sts";
     _tLT = "tagListType";
     n03 = "com.amazonaws.sts";
+    _s_registry3 = TypeRegistry.for(_s3);
+    STSServiceException$ = [-3, _s3, "STSServiceException", 0, [], []];
+    _s_registry3.registerError(STSServiceException$, STSServiceException);
+    n0_registry3 = TypeRegistry.for(n03);
+    ExpiredTokenException$2 = [
+      -3,
+      n03,
+      _ETE2,
+      { [_aQE]: [`ExpiredTokenException`, 400], [_e3]: _c3, [_hE3]: 400 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(ExpiredTokenException$2, ExpiredTokenException2);
+    IDPCommunicationErrorException$ = [
+      -3,
+      n03,
+      _IDPCEE,
+      { [_aQE]: [`IDPCommunicationError`, 400], [_e3]: _c3, [_hE3]: 400 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(IDPCommunicationErrorException$, IDPCommunicationErrorException);
+    IDPRejectedClaimException$ = [
+      -3,
+      n03,
+      _IDPRCE,
+      { [_aQE]: [`IDPRejectedClaim`, 403], [_e3]: _c3, [_hE3]: 403 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(IDPRejectedClaimException$, IDPRejectedClaimException);
+    InvalidIdentityTokenException$ = [
+      -3,
+      n03,
+      _IITE,
+      { [_aQE]: [`InvalidIdentityToken`, 400], [_e3]: _c3, [_hE3]: 400 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(InvalidIdentityTokenException$, InvalidIdentityTokenException);
+    MalformedPolicyDocumentException$ = [
+      -3,
+      n03,
+      _MPDE,
+      { [_aQE]: [`MalformedPolicyDocument`, 400], [_e3]: _c3, [_hE3]: 400 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(MalformedPolicyDocumentException$, MalformedPolicyDocumentException);
+    PackedPolicyTooLargeException$ = [
+      -3,
+      n03,
+      _PPTLE,
+      { [_aQE]: [`PackedPolicyTooLarge`, 400], [_e3]: _c3, [_hE3]: 400 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(PackedPolicyTooLargeException$, PackedPolicyTooLargeException);
+    RegionDisabledException$ = [
+      -3,
+      n03,
+      _RDE,
+      { [_aQE]: [`RegionDisabledException`, 403], [_e3]: _c3, [_hE3]: 403 },
+      [_m2],
+      [0]
+    ];
+    n0_registry3.registerError(RegionDisabledException$, RegionDisabledException);
+    errorTypeRegistries3 = [_s_registry3, n0_registry3];
     accessKeySecretType = [0, n03, _aKST, 8, 0];
     clientTokenType = [0, n03, _cTT, 8, 0];
     AssumedRoleUser$ = [3, n03, _ARU, 0, [_ARI, _A], [0, 0], 2];
@@ -46931,74 +52359,9 @@ var init_schemas_03 = __esm({
       [0, [() => accessKeySecretType, 0], 0, 4],
       4
     ];
-    ExpiredTokenException$2 = [
-      -3,
-      n03,
-      _ETE2,
-      { [_aQE]: [`ExpiredTokenException`, 400], [_e3]: _c3, [_hE3]: 400 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(ExpiredTokenException$2, ExpiredTokenException2);
-    IDPCommunicationErrorException$ = [
-      -3,
-      n03,
-      _IDPCEE,
-      { [_aQE]: [`IDPCommunicationError`, 400], [_e3]: _c3, [_hE3]: 400 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(IDPCommunicationErrorException$, IDPCommunicationErrorException);
-    IDPRejectedClaimException$ = [
-      -3,
-      n03,
-      _IDPRCE,
-      { [_aQE]: [`IDPRejectedClaim`, 403], [_e3]: _c3, [_hE3]: 403 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(IDPRejectedClaimException$, IDPRejectedClaimException);
-    InvalidIdentityTokenException$ = [
-      -3,
-      n03,
-      _IITE,
-      { [_aQE]: [`InvalidIdentityToken`, 400], [_e3]: _c3, [_hE3]: 400 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(InvalidIdentityTokenException$, InvalidIdentityTokenException);
-    MalformedPolicyDocumentException$ = [
-      -3,
-      n03,
-      _MPDE,
-      { [_aQE]: [`MalformedPolicyDocument`, 400], [_e3]: _c3, [_hE3]: 400 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(MalformedPolicyDocumentException$, MalformedPolicyDocumentException);
-    PackedPolicyTooLargeException$ = [
-      -3,
-      n03,
-      _PPTLE,
-      { [_aQE]: [`PackedPolicyTooLarge`, 400], [_e3]: _c3, [_hE3]: 400 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(PackedPolicyTooLargeException$, PackedPolicyTooLargeException);
     PolicyDescriptorType$ = [3, n03, _PDT, 0, [_a], [0]];
     ProvidedContext$ = [3, n03, _PCr, 0, [_PAr, _CA], [0, 0]];
-    RegionDisabledException$ = [
-      -3,
-      n03,
-      _RDE,
-      { [_aQE]: [`RegionDisabledException`, 403], [_e3]: _c3, [_hE3]: 403 },
-      [_m2],
-      [0]
-    ];
-    TypeRegistry.for(n03).registerError(RegionDisabledException$, RegionDisabledException);
     Tag$ = [3, n03, _Ta, 0, [_K, _V], [0, 0], 2];
-    STSServiceException$ = [-3, _s3, "STSServiceException", 0, [], []];
-    TypeRegistry.for(_s3).registerError(STSServiceException$, STSServiceException);
     policyDescriptorListType = [1, n03, _pDLT, 0, () => PolicyDescriptorType$];
     ProvidedContextsListType = [1, n03, _PCLT, 0, () => ProvidedContext$];
     tagKeyListType = 64 | 0;
@@ -47012,6 +52375,240 @@ var init_schemas_03 = __esm({
       () => AssumeRoleWithWebIdentityRequest$,
       () => AssumeRoleWithWebIdentityResponse$
     ];
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.shared.js
+var import_smithy_client23, import_url_parser3, import_util_base6410, import_util_utf810, getRuntimeConfig5;
+var init_runtimeConfig_shared3 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.shared.js"() {
+    init_dist_es2();
+    init_protocols2();
+    init_dist_es();
+    import_smithy_client23 = __toESM(require_dist_cjs20());
+    import_url_parser3 = __toESM(require_dist_cjs35());
+    import_util_base6410 = __toESM(require_dist_cjs9());
+    import_util_utf810 = __toESM(require_dist_cjs8());
+    init_httpAuthSchemeProvider3();
+    init_endpointResolver3();
+    init_schemas_03();
+    getRuntimeConfig5 = (config) => {
+      return {
+        apiVersion: "2011-06-15",
+        base64Decoder: config?.base64Decoder ?? import_util_base6410.fromBase64,
+        base64Encoder: config?.base64Encoder ?? import_util_base6410.toBase64,
+        disableHostPrefix: config?.disableHostPrefix ?? false,
+        endpointProvider: config?.endpointProvider ?? defaultEndpointResolver3,
+        extensions: config?.extensions ?? [],
+        httpAuthSchemeProvider: config?.httpAuthSchemeProvider ?? defaultSTSHttpAuthSchemeProvider,
+        httpAuthSchemes: config?.httpAuthSchemes ?? [
+          {
+            schemeId: "aws.auth#sigv4",
+            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4"),
+            signer: new AwsSdkSigV4Signer()
+          },
+          {
+            schemeId: "smithy.api#noAuth",
+            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
+            signer: new NoAuthSigner()
+          }
+        ],
+        logger: config?.logger ?? new import_smithy_client23.NoOpLogger(),
+        protocol: config?.protocol ?? AwsQueryProtocol,
+        protocolSettings: config?.protocolSettings ?? {
+          defaultNamespace: "com.amazonaws.sts",
+          errorTypeRegistries: errorTypeRegistries3,
+          xmlNamespace: "https://sts.amazonaws.com/doc/2011-06-15/",
+          version: "2011-06-15",
+          serviceTarget: "AWSSecurityTokenServiceV20110615"
+        },
+        serviceId: config?.serviceId ?? "STS",
+        urlParser: config?.urlParser ?? import_url_parser3.parseUrl,
+        utf8Decoder: config?.utf8Decoder ?? import_util_utf810.fromUtf8,
+        utf8Encoder: config?.utf8Encoder ?? import_util_utf810.toUtf8
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.js
+var import_util_user_agent_node3, import_config_resolver5, import_hash_node3, import_middleware_retry5, import_node_config_provider3, import_node_http_handler3, import_smithy_client24, import_util_body_length_node3, import_util_defaults_mode_node3, import_util_retry3, getRuntimeConfig6;
+var init_runtimeConfig3 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeConfig.js"() {
+    init_package();
+    init_dist_es2();
+    import_util_user_agent_node3 = __toESM(require_dist_cjs51());
+    import_config_resolver5 = __toESM(require_dist_cjs38());
+    init_dist_es();
+    import_hash_node3 = __toESM(require_dist_cjs52());
+    import_middleware_retry5 = __toESM(require_dist_cjs46());
+    import_node_config_provider3 = __toESM(require_dist_cjs42());
+    import_node_http_handler3 = __toESM(require_dist_cjs12());
+    import_smithy_client24 = __toESM(require_dist_cjs20());
+    import_util_body_length_node3 = __toESM(require_dist_cjs53());
+    import_util_defaults_mode_node3 = __toESM(require_dist_cjs54());
+    import_util_retry3 = __toESM(require_dist_cjs45());
+    init_runtimeConfig_shared3();
+    getRuntimeConfig6 = (config) => {
+      (0, import_smithy_client24.emitWarningIfUnsupportedVersion)(process.version);
+      const defaultsMode = (0, import_util_defaults_mode_node3.resolveDefaultsModeConfig)(config);
+      const defaultConfigProvider = () => defaultsMode().then(import_smithy_client24.loadConfigsForDefaultMode);
+      const clientSharedValues = getRuntimeConfig5(config);
+      emitWarningIfUnsupportedVersion(process.version);
+      const loaderConfig = {
+        profile: config?.profile,
+        logger: clientSharedValues.logger
+      };
+      return {
+        ...clientSharedValues,
+        ...config,
+        runtime: "node",
+        defaultsMode,
+        authSchemePreference: config?.authSchemePreference ?? (0, import_node_config_provider3.loadConfig)(NODE_AUTH_SCHEME_PREFERENCE_OPTIONS, loaderConfig),
+        bodyLengthChecker: config?.bodyLengthChecker ?? import_util_body_length_node3.calculateBodyLength,
+        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, import_util_user_agent_node3.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_default.version }),
+        httpAuthSchemes: config?.httpAuthSchemes ?? [
+          {
+            schemeId: "aws.auth#sigv4",
+            identityProvider: (ipc) => ipc.getIdentityProvider("aws.auth#sigv4") || (async (idProps) => await config.credentialDefaultProvider(idProps?.__config || {})()),
+            signer: new AwsSdkSigV4Signer()
+          },
+          {
+            schemeId: "smithy.api#noAuth",
+            identityProvider: (ipc) => ipc.getIdentityProvider("smithy.api#noAuth") || (async () => ({})),
+            signer: new NoAuthSigner()
+          }
+        ],
+        maxAttempts: config?.maxAttempts ?? (0, import_node_config_provider3.loadConfig)(import_middleware_retry5.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
+        region: config?.region ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_REGION_CONFIG_OPTIONS, { ...import_config_resolver5.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
+        requestHandler: import_node_http_handler3.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
+        retryMode: config?.retryMode ?? (0, import_node_config_provider3.loadConfig)({
+          ...import_middleware_retry5.NODE_RETRY_MODE_CONFIG_OPTIONS,
+          default: async () => (await defaultConfigProvider()).retryMode || import_util_retry3.DEFAULT_RETRY_MODE
+        }, config),
+        sha256: config?.sha256 ?? import_hash_node3.Hash.bind(null, "sha256"),
+        streamCollector: config?.streamCollector ?? import_node_http_handler3.streamCollector,
+        useDualstackEndpoint: config?.useDualstackEndpoint ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
+        useFipsEndpoint: config?.useFipsEndpoint ?? (0, import_node_config_provider3.loadConfig)(import_config_resolver5.NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS, loaderConfig),
+        userAgentAppId: config?.userAgentAppId ?? (0, import_node_config_provider3.loadConfig)(import_util_user_agent_node3.NODE_APP_ID_CONFIG_OPTIONS, loaderConfig)
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/auth/httpAuthExtensionConfiguration.js
+var getHttpAuthExtensionConfiguration3, resolveHttpAuthRuntimeConfig3;
+var init_httpAuthExtensionConfiguration3 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/auth/httpAuthExtensionConfiguration.js"() {
+    getHttpAuthExtensionConfiguration3 = (runtimeConfig) => {
+      const _httpAuthSchemes = runtimeConfig.httpAuthSchemes;
+      let _httpAuthSchemeProvider = runtimeConfig.httpAuthSchemeProvider;
+      let _credentials = runtimeConfig.credentials;
+      return {
+        setHttpAuthScheme(httpAuthScheme) {
+          const index = _httpAuthSchemes.findIndex((scheme) => scheme.schemeId === httpAuthScheme.schemeId);
+          if (index === -1) {
+            _httpAuthSchemes.push(httpAuthScheme);
+          } else {
+            _httpAuthSchemes.splice(index, 1, httpAuthScheme);
+          }
+        },
+        httpAuthSchemes() {
+          return _httpAuthSchemes;
+        },
+        setHttpAuthSchemeProvider(httpAuthSchemeProvider) {
+          _httpAuthSchemeProvider = httpAuthSchemeProvider;
+        },
+        httpAuthSchemeProvider() {
+          return _httpAuthSchemeProvider;
+        },
+        setCredentials(credentials) {
+          _credentials = credentials;
+        },
+        credentials() {
+          return _credentials;
+        }
+      };
+    };
+    resolveHttpAuthRuntimeConfig3 = (config) => {
+      return {
+        httpAuthSchemes: config.httpAuthSchemes(),
+        httpAuthSchemeProvider: config.httpAuthSchemeProvider(),
+        credentials: config.credentials()
+      };
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeExtensions.js
+var import_region_config_resolver3, import_protocol_http14, import_smithy_client25, resolveRuntimeExtensions3;
+var init_runtimeExtensions3 = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/runtimeExtensions.js"() {
+    import_region_config_resolver3 = __toESM(require_dist_cjs55());
+    import_protocol_http14 = __toESM(require_dist_cjs2());
+    import_smithy_client25 = __toESM(require_dist_cjs20());
+    init_httpAuthExtensionConfiguration3();
+    resolveRuntimeExtensions3 = (runtimeConfig, extensions) => {
+      const extensionConfiguration = Object.assign((0, import_region_config_resolver3.getAwsRegionExtensionConfiguration)(runtimeConfig), (0, import_smithy_client25.getDefaultExtensionConfiguration)(runtimeConfig), (0, import_protocol_http14.getHttpHandlerExtensionConfiguration)(runtimeConfig), getHttpAuthExtensionConfiguration3(runtimeConfig));
+      extensions.forEach((extension) => extension.configure(extensionConfiguration));
+      return Object.assign(runtimeConfig, (0, import_region_config_resolver3.resolveAwsRegionExtensionConfiguration)(extensionConfiguration), (0, import_smithy_client25.resolveDefaultRuntimeConfig)(extensionConfiguration), (0, import_protocol_http14.resolveHttpHandlerRuntimeConfig)(extensionConfiguration), resolveHttpAuthRuntimeConfig3(extensionConfiguration));
+    };
+  }
+});
+
+// node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/STSClient.js
+var import_middleware_host_header3, import_middleware_logger3, import_middleware_recursion_detection3, import_middleware_user_agent3, import_config_resolver6, import_middleware_content_length3, import_middleware_endpoint5, import_middleware_retry6, import_smithy_client26, STSClient;
+var init_STSClient = __esm({
+  "node_modules/@aws-sdk/nested-clients/dist-es/submodules/sts/STSClient.js"() {
+    import_middleware_host_header3 = __toESM(require_dist_cjs27());
+    import_middleware_logger3 = __toESM(require_dist_cjs28());
+    import_middleware_recursion_detection3 = __toESM(require_dist_cjs29());
+    import_middleware_user_agent3 = __toESM(require_dist_cjs37());
+    import_config_resolver6 = __toESM(require_dist_cjs38());
+    init_dist_es();
+    init_schema();
+    import_middleware_content_length3 = __toESM(require_dist_cjs40());
+    import_middleware_endpoint5 = __toESM(require_dist_cjs43());
+    import_middleware_retry6 = __toESM(require_dist_cjs46());
+    import_smithy_client26 = __toESM(require_dist_cjs20());
+    init_httpAuthSchemeProvider3();
+    init_EndpointParameters3();
+    init_runtimeConfig3();
+    init_runtimeExtensions3();
+    STSClient = class extends import_smithy_client26.Client {
+      config;
+      constructor(...[configuration]) {
+        const _config_0 = getRuntimeConfig6(configuration || {});
+        super(_config_0);
+        this.initConfig = _config_0;
+        const _config_1 = resolveClientEndpointParameters3(_config_0);
+        const _config_2 = (0, import_middleware_user_agent3.resolveUserAgentConfig)(_config_1);
+        const _config_3 = (0, import_middleware_retry6.resolveRetryConfig)(_config_2);
+        const _config_4 = (0, import_config_resolver6.resolveRegionConfig)(_config_3);
+        const _config_5 = (0, import_middleware_host_header3.resolveHostHeaderConfig)(_config_4);
+        const _config_6 = (0, import_middleware_endpoint5.resolveEndpointConfig)(_config_5);
+        const _config_7 = resolveHttpAuthSchemeConfig3(_config_6);
+        const _config_8 = resolveRuntimeExtensions3(_config_7, configuration?.extensions || []);
+        this.config = _config_8;
+        this.middlewareStack.use(getSchemaSerdePlugin(this.config));
+        this.middlewareStack.use((0, import_middleware_user_agent3.getUserAgentPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_retry6.getRetryPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_content_length3.getContentLengthPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_host_header3.getHostHeaderPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_logger3.getLoggerPlugin)(this.config));
+        this.middlewareStack.use((0, import_middleware_recursion_detection3.getRecursionDetectionPlugin)(this.config));
+        this.middlewareStack.use(getHttpAuthSchemeEndpointRuleSetPlugin(this.config, {
+          httpAuthSchemeParametersProvider: defaultSTSHttpAuthSchemeParametersProvider,
+          identityProviderConfigProvider: async (config) => new DefaultIdentityProviderConfig({
+            "aws.auth#sigv4": config.credentials
+          })
+        }));
+        this.middlewareStack.use(getHttpSigningPlugin(this.config));
+      }
+      destroy() {
+        super.destroy();
+      }
+    };
   }
 });
 
@@ -47249,8 +52846,9 @@ __export(sts_exports, {
   STSServiceException: () => STSServiceException,
   STSServiceException$: () => STSServiceException$,
   Tag$: () => Tag$,
-  __Client: () => import_smithy_client25.Client,
+  __Client: () => import_smithy_client26.Client,
   decorateDefaultCredentialProvider: () => decorateDefaultCredentialProvider,
+  errorTypeRegistries: () => errorTypeRegistries3,
   getDefaultRoleAssumer: () => getDefaultRoleAssumer2,
   getDefaultRoleAssumerWithWebIdentity: () => getDefaultRoleAssumerWithWebIdentity2
 });
@@ -47714,12 +53312,14 @@ var require_dist_cjs63 = __commonJS({
             if (!passiveLock) {
               passiveLock = chain(options).then((c4) => {
                 credentials = c4;
+              }).finally(() => {
                 passiveLock = void 0;
               });
             }
           } else {
             activeLock = chain(options).then((c4) => {
               credentials = c4;
+            }).finally(() => {
               activeLock = void 0;
             });
             return provider(options);
@@ -48796,6 +54396,7 @@ var require_runtimeConfig_shared2 = __commonJS({
     var util_utf8_1 = require_dist_cjs8();
     var httpAuthSchemeProvider_1 = require_httpAuthSchemeProvider();
     var endpointResolver_1 = require_endpointResolver();
+    var schemas_0_1 = require_schemas_0();
     var getRuntimeConfig7 = (config) => {
       return {
         apiVersion: "2006-03-01",
@@ -48822,6 +54423,7 @@ var require_runtimeConfig_shared2 = __commonJS({
         protocol: config?.protocol ?? protocols_1.AwsRestXmlProtocol,
         protocolSettings: config?.protocolSettings ?? {
           defaultNamespace: "com.amazonaws.s3",
+          errorTypeRegistries: schemas_0_1.errorTypeRegistries,
           xmlNamespace: "http://s3.amazonaws.com/doc/2006-03-01/",
           version: "2006-03-01",
           serviceTarget: "AmazonS3"
@@ -49209,12 +54811,15 @@ var require_dist_cjs72 = __commonJS({
     var middlewareRetry = require_dist_cjs46();
     var smithyClient = require_dist_cjs20();
     var httpAuthSchemeProvider = require_httpAuthSchemeProvider();
+    var schemas_0 = require_schemas_0();
     var runtimeConfig = require_runtimeConfig2();
     var regionConfigResolver = require_dist_cjs55();
     var protocolHttp = require_dist_cjs2();
     var middlewareSsec = require_dist_cjs69();
     var middlewareLocationConstraint = require_dist_cjs70();
     var utilWaiter = require_dist_cjs71();
+    var errors = require_errors2();
+    var S3ServiceException2 = require_S3ServiceException();
     var resolveClientEndpointParameters4 = (options) => {
       return Object.assign(options, {
         useFipsEndpoint: options.useFipsEndpoint ?? false,
@@ -49239,5285 +54844,6 @@ var require_dist_cjs72 = __commonJS({
       Region: { type: "builtInParams", name: "region" },
       UseDualStack: { type: "builtInParams", name: "useDualstackEndpoint" }
     };
-    var S3ServiceException2 = class _S3ServiceException extends smithyClient.ServiceException {
-      constructor(options) {
-        super(options);
-        Object.setPrototypeOf(this, _S3ServiceException.prototype);
-      }
-    };
-    var NoSuchUpload = class _NoSuchUpload extends S3ServiceException2 {
-      name = "NoSuchUpload";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "NoSuchUpload",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _NoSuchUpload.prototype);
-      }
-    };
-    var ObjectNotInActiveTierError = class _ObjectNotInActiveTierError extends S3ServiceException2 {
-      name = "ObjectNotInActiveTierError";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "ObjectNotInActiveTierError",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _ObjectNotInActiveTierError.prototype);
-      }
-    };
-    var BucketAlreadyExists = class _BucketAlreadyExists extends S3ServiceException2 {
-      name = "BucketAlreadyExists";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "BucketAlreadyExists",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _BucketAlreadyExists.prototype);
-      }
-    };
-    var BucketAlreadyOwnedByYou = class _BucketAlreadyOwnedByYou extends S3ServiceException2 {
-      name = "BucketAlreadyOwnedByYou";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "BucketAlreadyOwnedByYou",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _BucketAlreadyOwnedByYou.prototype);
-      }
-    };
-    var NoSuchBucket = class _NoSuchBucket extends S3ServiceException2 {
-      name = "NoSuchBucket";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "NoSuchBucket",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _NoSuchBucket.prototype);
-      }
-    };
-    var InvalidObjectState = class _InvalidObjectState extends S3ServiceException2 {
-      name = "InvalidObjectState";
-      $fault = "client";
-      StorageClass;
-      AccessTier;
-      constructor(opts) {
-        super({
-          name: "InvalidObjectState",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _InvalidObjectState.prototype);
-        this.StorageClass = opts.StorageClass;
-        this.AccessTier = opts.AccessTier;
-      }
-    };
-    var NoSuchKey = class _NoSuchKey extends S3ServiceException2 {
-      name = "NoSuchKey";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "NoSuchKey",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _NoSuchKey.prototype);
-      }
-    };
-    var NotFound = class _NotFound extends S3ServiceException2 {
-      name = "NotFound";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "NotFound",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _NotFound.prototype);
-      }
-    };
-    var EncryptionTypeMismatch = class _EncryptionTypeMismatch extends S3ServiceException2 {
-      name = "EncryptionTypeMismatch";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "EncryptionTypeMismatch",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _EncryptionTypeMismatch.prototype);
-      }
-    };
-    var InvalidRequest = class _InvalidRequest extends S3ServiceException2 {
-      name = "InvalidRequest";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "InvalidRequest",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _InvalidRequest.prototype);
-      }
-    };
-    var InvalidWriteOffset = class _InvalidWriteOffset extends S3ServiceException2 {
-      name = "InvalidWriteOffset";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "InvalidWriteOffset",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _InvalidWriteOffset.prototype);
-      }
-    };
-    var TooManyParts = class _TooManyParts extends S3ServiceException2 {
-      name = "TooManyParts";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "TooManyParts",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _TooManyParts.prototype);
-      }
-    };
-    var IdempotencyParameterMismatch = class _IdempotencyParameterMismatch extends S3ServiceException2 {
-      name = "IdempotencyParameterMismatch";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "IdempotencyParameterMismatch",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _IdempotencyParameterMismatch.prototype);
-      }
-    };
-    var ObjectAlreadyInActiveTierError = class _ObjectAlreadyInActiveTierError extends S3ServiceException2 {
-      name = "ObjectAlreadyInActiveTierError";
-      $fault = "client";
-      constructor(opts) {
-        super({
-          name: "ObjectAlreadyInActiveTierError",
-          $fault: "client",
-          ...opts
-        });
-        Object.setPrototypeOf(this, _ObjectAlreadyInActiveTierError.prototype);
-      }
-    };
-    var _A2 = "Account";
-    var _AAO = "AnalyticsAndOperator";
-    var _AC = "AccelerateConfiguration";
-    var _ACL = "AccessControlList";
-    var _ACL_ = "ACL";
-    var _ACLn = "AnalyticsConfigurationList";
-    var _ACP = "AccessControlPolicy";
-    var _ACT = "AccessControlTranslation";
-    var _ACn = "AnalyticsConfiguration";
-    var _AD = "AbortDate";
-    var _AED = "AnalyticsExportDestination";
-    var _AF = "AnalyticsFilter";
-    var _AH = "AllowedHeaders";
-    var _AHl = "AllowedHeader";
-    var _AI = "AccountId";
-    var _AIMU = "AbortIncompleteMultipartUpload";
-    var _AKI2 = "AccessKeyId";
-    var _AM = "AllowedMethods";
-    var _AMU = "AbortMultipartUpload";
-    var _AMUO = "AbortMultipartUploadOutput";
-    var _AMUR = "AbortMultipartUploadRequest";
-    var _AMl = "AllowedMethod";
-    var _AO = "AllowedOrigins";
-    var _AOl = "AllowedOrigin";
-    var _APA = "AccessPointAlias";
-    var _APAc = "AccessPointArn";
-    var _AQRD = "AllowQuotedRecordDelimiter";
-    var _AR2 = "AcceptRanges";
-    var _ARI2 = "AbortRuleId";
-    var _AS = "AbacStatus";
-    var _ASBD = "AnalyticsS3BucketDestination";
-    var _ASSEBD = "ApplyServerSideEncryptionByDefault";
-    var _ASr = "ArchiveStatus";
-    var _AT3 = "AccessTier";
-    var _An = "And";
-    var _B = "Bucket";
-    var _BA = "BucketArn";
-    var _BAE = "BucketAlreadyExists";
-    var _BAI = "BucketAccountId";
-    var _BAOBY = "BucketAlreadyOwnedByYou";
-    var _BET = "BlockedEncryptionTypes";
-    var _BGR = "BypassGovernanceRetention";
-    var _BI = "BucketInfo";
-    var _BKE = "BucketKeyEnabled";
-    var _BLC = "BucketLifecycleConfiguration";
-    var _BLN = "BucketLocationName";
-    var _BLS = "BucketLoggingStatus";
-    var _BLT = "BucketLocationType";
-    var _BN = "BucketName";
-    var _BP = "BytesProcessed";
-    var _BPA = "BlockPublicAcls";
-    var _BPP = "BlockPublicPolicy";
-    var _BR = "BucketRegion";
-    var _BRy = "BytesReturned";
-    var _BS = "BytesScanned";
-    var _Bo = "Body";
-    var _Bu = "Buckets";
-    var _C2 = "Checksum";
-    var _CA2 = "ChecksumAlgorithm";
-    var _CACL = "CannedACL";
-    var _CB = "CreateBucket";
-    var _CBC = "CreateBucketConfiguration";
-    var _CBMC = "CreateBucketMetadataConfiguration";
-    var _CBMCR = "CreateBucketMetadataConfigurationRequest";
-    var _CBMTC = "CreateBucketMetadataTableConfiguration";
-    var _CBMTCR = "CreateBucketMetadataTableConfigurationRequest";
-    var _CBO = "CreateBucketOutput";
-    var _CBR = "CreateBucketRequest";
-    var _CC = "CacheControl";
-    var _CCRC = "ChecksumCRC32";
-    var _CCRCC = "ChecksumCRC32C";
-    var _CCRCNVME = "ChecksumCRC64NVME";
-    var _CC_ = "Cache-Control";
-    var _CD = "CreationDate";
-    var _CD_ = "Content-Disposition";
-    var _CDo = "ContentDisposition";
-    var _CE = "ContinuationEvent";
-    var _CE_ = "Content-Encoding";
-    var _CEo = "ContentEncoding";
-    var _CF = "CloudFunction";
-    var _CFC = "CloudFunctionConfiguration";
-    var _CL = "ContentLanguage";
-    var _CL_ = "Content-Language";
-    var _CL__ = "Content-Length";
-    var _CLo = "ContentLength";
-    var _CM = "Content-MD5";
-    var _CMD = "ContentMD5";
-    var _CMU = "CompletedMultipartUpload";
-    var _CMUO = "CompleteMultipartUploadOutput";
-    var _CMUOr = "CreateMultipartUploadOutput";
-    var _CMUR = "CompleteMultipartUploadResult";
-    var _CMURo = "CompleteMultipartUploadRequest";
-    var _CMURr = "CreateMultipartUploadRequest";
-    var _CMUo = "CompleteMultipartUpload";
-    var _CMUr = "CreateMultipartUpload";
-    var _CMh = "ChecksumMode";
-    var _CO = "CopyObject";
-    var _COO = "CopyObjectOutput";
-    var _COR = "CopyObjectResult";
-    var _CORSC = "CORSConfiguration";
-    var _CORSR = "CORSRules";
-    var _CORSRu = "CORSRule";
-    var _CORo = "CopyObjectRequest";
-    var _CP = "CommonPrefix";
-    var _CPL = "CommonPrefixList";
-    var _CPLo = "CompletedPartList";
-    var _CPR = "CopyPartResult";
-    var _CPo = "CompletedPart";
-    var _CPom = "CommonPrefixes";
-    var _CR = "ContentRange";
-    var _CRSBA = "ConfirmRemoveSelfBucketAccess";
-    var _CR_ = "Content-Range";
-    var _CS2 = "CopySource";
-    var _CSHA = "ChecksumSHA1";
-    var _CSHAh = "ChecksumSHA256";
-    var _CSIM = "CopySourceIfMatch";
-    var _CSIMS = "CopySourceIfModifiedSince";
-    var _CSINM = "CopySourceIfNoneMatch";
-    var _CSIUS = "CopySourceIfUnmodifiedSince";
-    var _CSO = "CreateSessionOutput";
-    var _CSR = "CreateSessionResult";
-    var _CSRo = "CopySourceRange";
-    var _CSRr = "CreateSessionRequest";
-    var _CSSSECA = "CopySourceSSECustomerAlgorithm";
-    var _CSSSECK = "CopySourceSSECustomerKey";
-    var _CSSSECKMD = "CopySourceSSECustomerKeyMD5";
-    var _CSV = "CSV";
-    var _CSVI = "CopySourceVersionId";
-    var _CSVIn = "CSVInput";
-    var _CSVO = "CSVOutput";
-    var _CSo = "ConfigurationState";
-    var _CSr = "CreateSession";
-    var _CT2 = "ChecksumType";
-    var _CT_ = "Content-Type";
-    var _CTl = "ClientToken";
-    var _CTo = "ContentType";
-    var _CTom = "CompressionType";
-    var _CTon = "ContinuationToken";
-    var _Co = "Condition";
-    var _Cod = "Code";
-    var _Com = "Comments";
-    var _Con = "Contents";
-    var _Cont = "Cont";
-    var _Cr = "Credentials";
-    var _D = "Days";
-    var _DAI = "DaysAfterInitiation";
-    var _DB = "DeleteBucket";
-    var _DBAC = "DeleteBucketAnalyticsConfiguration";
-    var _DBACR = "DeleteBucketAnalyticsConfigurationRequest";
-    var _DBC = "DeleteBucketCors";
-    var _DBCR = "DeleteBucketCorsRequest";
-    var _DBE = "DeleteBucketEncryption";
-    var _DBER = "DeleteBucketEncryptionRequest";
-    var _DBIC = "DeleteBucketInventoryConfiguration";
-    var _DBICR = "DeleteBucketInventoryConfigurationRequest";
-    var _DBITC = "DeleteBucketIntelligentTieringConfiguration";
-    var _DBITCR = "DeleteBucketIntelligentTieringConfigurationRequest";
-    var _DBL = "DeleteBucketLifecycle";
-    var _DBLR = "DeleteBucketLifecycleRequest";
-    var _DBMC = "DeleteBucketMetadataConfiguration";
-    var _DBMCR = "DeleteBucketMetadataConfigurationRequest";
-    var _DBMCRe = "DeleteBucketMetricsConfigurationRequest";
-    var _DBMCe = "DeleteBucketMetricsConfiguration";
-    var _DBMTC = "DeleteBucketMetadataTableConfiguration";
-    var _DBMTCR = "DeleteBucketMetadataTableConfigurationRequest";
-    var _DBOC = "DeleteBucketOwnershipControls";
-    var _DBOCR = "DeleteBucketOwnershipControlsRequest";
-    var _DBP = "DeleteBucketPolicy";
-    var _DBPR = "DeleteBucketPolicyRequest";
-    var _DBR = "DeleteBucketRequest";
-    var _DBRR = "DeleteBucketReplicationRequest";
-    var _DBRe = "DeleteBucketReplication";
-    var _DBT = "DeleteBucketTagging";
-    var _DBTR = "DeleteBucketTaggingRequest";
-    var _DBW = "DeleteBucketWebsite";
-    var _DBWR = "DeleteBucketWebsiteRequest";
-    var _DE = "DataExport";
-    var _DIM = "DestinationIfMatch";
-    var _DIMS = "DestinationIfModifiedSince";
-    var _DINM = "DestinationIfNoneMatch";
-    var _DIUS = "DestinationIfUnmodifiedSince";
-    var _DM = "DeleteMarker";
-    var _DME = "DeleteMarkerEntry";
-    var _DMR = "DeleteMarkerReplication";
-    var _DMVI = "DeleteMarkerVersionId";
-    var _DMe = "DeleteMarkers";
-    var _DN = "DisplayName";
-    var _DO = "DeletedObject";
-    var _DOO = "DeleteObjectOutput";
-    var _DOOe = "DeleteObjectsOutput";
-    var _DOR = "DeleteObjectRequest";
-    var _DORe = "DeleteObjectsRequest";
-    var _DOT = "DeleteObjectTagging";
-    var _DOTO = "DeleteObjectTaggingOutput";
-    var _DOTR = "DeleteObjectTaggingRequest";
-    var _DOe = "DeletedObjects";
-    var _DOel = "DeleteObject";
-    var _DOele = "DeleteObjects";
-    var _DPAB = "DeletePublicAccessBlock";
-    var _DPABR = "DeletePublicAccessBlockRequest";
-    var _DR = "DataRedundancy";
-    var _DRe = "DefaultRetention";
-    var _DRel = "DeleteResult";
-    var _DRes = "DestinationResult";
-    var _Da = "Date";
-    var _De = "Delete";
-    var _Del = "Deleted";
-    var _Deli = "Delimiter";
-    var _Des = "Destination";
-    var _Desc = "Description";
-    var _Det = "Details";
-    var _E2 = "Expiration";
-    var _EA = "EmailAddress";
-    var _EBC = "EventBridgeConfiguration";
-    var _EBO = "ExpectedBucketOwner";
-    var _EC = "EncryptionConfiguration";
-    var _ECr = "ErrorCode";
-    var _ED = "ErrorDetails";
-    var _EDr = "ErrorDocument";
-    var _EE = "EndEvent";
-    var _EH = "ExposeHeaders";
-    var _EHx = "ExposeHeader";
-    var _EM = "ErrorMessage";
-    var _EODM = "ExpiredObjectDeleteMarker";
-    var _EOR = "ExistingObjectReplication";
-    var _ES = "ExpiresString";
-    var _ESBO = "ExpectedSourceBucketOwner";
-    var _ET = "EncryptionType";
-    var _ETL = "EncryptionTypeList";
-    var _ETM = "EncryptionTypeMismatch";
-    var _ETa = "ETag";
-    var _ETn = "EncodingType";
-    var _ETv = "EventThreshold";
-    var _ETx = "ExpressionType";
-    var _En = "Encryption";
-    var _Ena = "Enabled";
-    var _End = "End";
-    var _Er = "Errors";
-    var _Err = "Error";
-    var _Ev = "Events";
-    var _Eve = "Event";
-    var _Ex = "Expires";
-    var _Exp = "Expression";
-    var _F = "Filter";
-    var _FD = "FieldDelimiter";
-    var _FHI = "FileHeaderInfo";
-    var _FO = "FetchOwner";
-    var _FR = "FilterRule";
-    var _FRL = "FilterRuleList";
-    var _FRi = "FilterRules";
-    var _Fi = "Field";
-    var _Fo = "Format";
-    var _Fr = "Frequency";
-    var _G = "Grants";
-    var _GBA = "GetBucketAbac";
-    var _GBAC = "GetBucketAccelerateConfiguration";
-    var _GBACO = "GetBucketAccelerateConfigurationOutput";
-    var _GBACOe = "GetBucketAnalyticsConfigurationOutput";
-    var _GBACR = "GetBucketAccelerateConfigurationRequest";
-    var _GBACRe = "GetBucketAnalyticsConfigurationRequest";
-    var _GBACe = "GetBucketAnalyticsConfiguration";
-    var _GBAO = "GetBucketAbacOutput";
-    var _GBAOe = "GetBucketAclOutput";
-    var _GBAR = "GetBucketAbacRequest";
-    var _GBARe = "GetBucketAclRequest";
-    var _GBAe = "GetBucketAcl";
-    var _GBC = "GetBucketCors";
-    var _GBCO = "GetBucketCorsOutput";
-    var _GBCR = "GetBucketCorsRequest";
-    var _GBE = "GetBucketEncryption";
-    var _GBEO = "GetBucketEncryptionOutput";
-    var _GBER = "GetBucketEncryptionRequest";
-    var _GBIC = "GetBucketInventoryConfiguration";
-    var _GBICO = "GetBucketInventoryConfigurationOutput";
-    var _GBICR = "GetBucketInventoryConfigurationRequest";
-    var _GBITC = "GetBucketIntelligentTieringConfiguration";
-    var _GBITCO = "GetBucketIntelligentTieringConfigurationOutput";
-    var _GBITCR = "GetBucketIntelligentTieringConfigurationRequest";
-    var _GBL = "GetBucketLocation";
-    var _GBLC = "GetBucketLifecycleConfiguration";
-    var _GBLCO = "GetBucketLifecycleConfigurationOutput";
-    var _GBLCR = "GetBucketLifecycleConfigurationRequest";
-    var _GBLO = "GetBucketLocationOutput";
-    var _GBLOe = "GetBucketLoggingOutput";
-    var _GBLR = "GetBucketLocationRequest";
-    var _GBLRe = "GetBucketLoggingRequest";
-    var _GBLe = "GetBucketLogging";
-    var _GBMC = "GetBucketMetadataConfiguration";
-    var _GBMCO = "GetBucketMetadataConfigurationOutput";
-    var _GBMCOe = "GetBucketMetricsConfigurationOutput";
-    var _GBMCR = "GetBucketMetadataConfigurationResult";
-    var _GBMCRe = "GetBucketMetadataConfigurationRequest";
-    var _GBMCRet = "GetBucketMetricsConfigurationRequest";
-    var _GBMCe = "GetBucketMetricsConfiguration";
-    var _GBMTC = "GetBucketMetadataTableConfiguration";
-    var _GBMTCO = "GetBucketMetadataTableConfigurationOutput";
-    var _GBMTCR = "GetBucketMetadataTableConfigurationResult";
-    var _GBMTCRe = "GetBucketMetadataTableConfigurationRequest";
-    var _GBNC = "GetBucketNotificationConfiguration";
-    var _GBNCR = "GetBucketNotificationConfigurationRequest";
-    var _GBOC = "GetBucketOwnershipControls";
-    var _GBOCO = "GetBucketOwnershipControlsOutput";
-    var _GBOCR = "GetBucketOwnershipControlsRequest";
-    var _GBP = "GetBucketPolicy";
-    var _GBPO = "GetBucketPolicyOutput";
-    var _GBPR = "GetBucketPolicyRequest";
-    var _GBPS = "GetBucketPolicyStatus";
-    var _GBPSO = "GetBucketPolicyStatusOutput";
-    var _GBPSR = "GetBucketPolicyStatusRequest";
-    var _GBR = "GetBucketReplication";
-    var _GBRO = "GetBucketReplicationOutput";
-    var _GBRP = "GetBucketRequestPayment";
-    var _GBRPO = "GetBucketRequestPaymentOutput";
-    var _GBRPR = "GetBucketRequestPaymentRequest";
-    var _GBRR = "GetBucketReplicationRequest";
-    var _GBT = "GetBucketTagging";
-    var _GBTO = "GetBucketTaggingOutput";
-    var _GBTR = "GetBucketTaggingRequest";
-    var _GBV = "GetBucketVersioning";
-    var _GBVO = "GetBucketVersioningOutput";
-    var _GBVR = "GetBucketVersioningRequest";
-    var _GBW = "GetBucketWebsite";
-    var _GBWO = "GetBucketWebsiteOutput";
-    var _GBWR = "GetBucketWebsiteRequest";
-    var _GFC = "GrantFullControl";
-    var _GJP = "GlacierJobParameters";
-    var _GO = "GetObject";
-    var _GOA = "GetObjectAcl";
-    var _GOAO = "GetObjectAclOutput";
-    var _GOAOe = "GetObjectAttributesOutput";
-    var _GOAP = "GetObjectAttributesParts";
-    var _GOAR = "GetObjectAclRequest";
-    var _GOARe = "GetObjectAttributesResponse";
-    var _GOARet = "GetObjectAttributesRequest";
-    var _GOAe = "GetObjectAttributes";
-    var _GOLC = "GetObjectLockConfiguration";
-    var _GOLCO = "GetObjectLockConfigurationOutput";
-    var _GOLCR = "GetObjectLockConfigurationRequest";
-    var _GOLH = "GetObjectLegalHold";
-    var _GOLHO = "GetObjectLegalHoldOutput";
-    var _GOLHR = "GetObjectLegalHoldRequest";
-    var _GOO = "GetObjectOutput";
-    var _GOR = "GetObjectRequest";
-    var _GORO = "GetObjectRetentionOutput";
-    var _GORR = "GetObjectRetentionRequest";
-    var _GORe = "GetObjectRetention";
-    var _GOT = "GetObjectTagging";
-    var _GOTO = "GetObjectTaggingOutput";
-    var _GOTOe = "GetObjectTorrentOutput";
-    var _GOTR = "GetObjectTaggingRequest";
-    var _GOTRe = "GetObjectTorrentRequest";
-    var _GOTe = "GetObjectTorrent";
-    var _GPAB = "GetPublicAccessBlock";
-    var _GPABO = "GetPublicAccessBlockOutput";
-    var _GPABR = "GetPublicAccessBlockRequest";
-    var _GR = "GrantRead";
-    var _GRACP = "GrantReadACP";
-    var _GW = "GrantWrite";
-    var _GWACP = "GrantWriteACP";
-    var _Gr = "Grant";
-    var _Gra = "Grantee";
-    var _HB = "HeadBucket";
-    var _HBO = "HeadBucketOutput";
-    var _HBR = "HeadBucketRequest";
-    var _HECRE = "HttpErrorCodeReturnedEquals";
-    var _HN = "HostName";
-    var _HO = "HeadObject";
-    var _HOO = "HeadObjectOutput";
-    var _HOR = "HeadObjectRequest";
-    var _HRC = "HttpRedirectCode";
-    var _I = "Id";
-    var _IC = "InventoryConfiguration";
-    var _ICL = "InventoryConfigurationList";
-    var _ID = "ID";
-    var _IDn = "IndexDocument";
-    var _IDnv = "InventoryDestination";
-    var _IE = "IsEnabled";
-    var _IEn = "InventoryEncryption";
-    var _IF = "InventoryFilter";
-    var _IL = "IsLatest";
-    var _IM = "IfMatch";
-    var _IMIT = "IfMatchInitiatedTime";
-    var _IMLMT = "IfMatchLastModifiedTime";
-    var _IMS = "IfMatchSize";
-    var _IMS_ = "If-Modified-Since";
-    var _IMSf = "IfModifiedSince";
-    var _IMUR = "InitiateMultipartUploadResult";
-    var _IM_ = "If-Match";
-    var _INM = "IfNoneMatch";
-    var _INM_ = "If-None-Match";
-    var _IOF = "InventoryOptionalFields";
-    var _IOS = "InvalidObjectState";
-    var _IOV = "IncludedObjectVersions";
-    var _IP = "IsPublic";
-    var _IPA = "IgnorePublicAcls";
-    var _IPM = "IdempotencyParameterMismatch";
-    var _IR = "InvalidRequest";
-    var _IRIP = "IsRestoreInProgress";
-    var _IS = "InputSerialization";
-    var _ISBD = "InventoryS3BucketDestination";
-    var _ISn = "InventorySchedule";
-    var _IT2 = "IsTruncated";
-    var _ITAO = "IntelligentTieringAndOperator";
-    var _ITC = "IntelligentTieringConfiguration";
-    var _ITCL = "IntelligentTieringConfigurationList";
-    var _ITCR = "InventoryTableConfigurationResult";
-    var _ITCU = "InventoryTableConfigurationUpdates";
-    var _ITCn = "InventoryTableConfiguration";
-    var _ITF = "IntelligentTieringFilter";
-    var _IUS = "IfUnmodifiedSince";
-    var _IUS_ = "If-Unmodified-Since";
-    var _IWO = "InvalidWriteOffset";
-    var _In = "Initiator";
-    var _Ini = "Initiated";
-    var _JSON = "JSON";
-    var _JSONI = "JSONInput";
-    var _JSONO = "JSONOutput";
-    var _JTC = "JournalTableConfiguration";
-    var _JTCR = "JournalTableConfigurationResult";
-    var _JTCU = "JournalTableConfigurationUpdates";
-    var _K2 = "Key";
-    var _KC = "KeyCount";
-    var _KI = "KeyId";
-    var _KKA = "KmsKeyArn";
-    var _KM = "KeyMarker";
-    var _KMSC = "KMSContext";
-    var _KMSKI = "KMSKeyId";
-    var _KMSMKID = "KMSMasterKeyID";
-    var _KPE = "KeyPrefixEquals";
-    var _L = "Location";
-    var _LAMBR = "ListAllMyBucketsResult";
-    var _LAMDBR = "ListAllMyDirectoryBucketsResult";
-    var _LB = "ListBuckets";
-    var _LBAC = "ListBucketAnalyticsConfigurations";
-    var _LBACO = "ListBucketAnalyticsConfigurationsOutput";
-    var _LBACR = "ListBucketAnalyticsConfigurationResult";
-    var _LBACRi = "ListBucketAnalyticsConfigurationsRequest";
-    var _LBIC = "ListBucketInventoryConfigurations";
-    var _LBICO = "ListBucketInventoryConfigurationsOutput";
-    var _LBICR = "ListBucketInventoryConfigurationsRequest";
-    var _LBITC = "ListBucketIntelligentTieringConfigurations";
-    var _LBITCO = "ListBucketIntelligentTieringConfigurationsOutput";
-    var _LBITCR = "ListBucketIntelligentTieringConfigurationsRequest";
-    var _LBMC = "ListBucketMetricsConfigurations";
-    var _LBMCO = "ListBucketMetricsConfigurationsOutput";
-    var _LBMCR = "ListBucketMetricsConfigurationsRequest";
-    var _LBO = "ListBucketsOutput";
-    var _LBR = "ListBucketsRequest";
-    var _LBRi = "ListBucketResult";
-    var _LC = "LocationConstraint";
-    var _LCi = "LifecycleConfiguration";
-    var _LDB = "ListDirectoryBuckets";
-    var _LDBO = "ListDirectoryBucketsOutput";
-    var _LDBR = "ListDirectoryBucketsRequest";
-    var _LE = "LoggingEnabled";
-    var _LEi = "LifecycleExpiration";
-    var _LFA = "LambdaFunctionArn";
-    var _LFC = "LambdaFunctionConfiguration";
-    var _LFCL = "LambdaFunctionConfigurationList";
-    var _LFCa = "LambdaFunctionConfigurations";
-    var _LH = "LegalHold";
-    var _LI = "LocationInfo";
-    var _LICR = "ListInventoryConfigurationsResult";
-    var _LM = "LastModified";
-    var _LMCR = "ListMetricsConfigurationsResult";
-    var _LMT = "LastModifiedTime";
-    var _LMU = "ListMultipartUploads";
-    var _LMUO = "ListMultipartUploadsOutput";
-    var _LMUR = "ListMultipartUploadsResult";
-    var _LMURi = "ListMultipartUploadsRequest";
-    var _LM_ = "Last-Modified";
-    var _LO = "ListObjects";
-    var _LOO = "ListObjectsOutput";
-    var _LOR = "ListObjectsRequest";
-    var _LOV = "ListObjectsV2";
-    var _LOVO = "ListObjectsV2Output";
-    var _LOVOi = "ListObjectVersionsOutput";
-    var _LOVR = "ListObjectsV2Request";
-    var _LOVRi = "ListObjectVersionsRequest";
-    var _LOVi = "ListObjectVersions";
-    var _LP = "ListParts";
-    var _LPO = "ListPartsOutput";
-    var _LPR = "ListPartsResult";
-    var _LPRi = "ListPartsRequest";
-    var _LR = "LifecycleRule";
-    var _LRAO = "LifecycleRuleAndOperator";
-    var _LRF = "LifecycleRuleFilter";
-    var _LRi = "LifecycleRules";
-    var _LVR = "ListVersionsResult";
-    var _M = "Metadata";
-    var _MAO = "MetricsAndOperator";
-    var _MAS = "MaxAgeSeconds";
-    var _MB = "MaxBuckets";
-    var _MC = "MetadataConfiguration";
-    var _MCL = "MetricsConfigurationList";
-    var _MCR = "MetadataConfigurationResult";
-    var _MCe = "MetricsConfiguration";
-    var _MD = "MetadataDirective";
-    var _MDB = "MaxDirectoryBuckets";
-    var _MDf = "MfaDelete";
-    var _ME = "MetadataEntry";
-    var _MF = "MetricsFilter";
-    var _MFA = "MFA";
-    var _MFAD = "MFADelete";
-    var _MK = "MaxKeys";
-    var _MM = "MissingMeta";
-    var _MOS = "MpuObjectSize";
-    var _MP = "MaxParts";
-    var _MTC = "MetadataTableConfiguration";
-    var _MTCR = "MetadataTableConfigurationResult";
-    var _MTEC = "MetadataTableEncryptionConfiguration";
-    var _MU = "MultipartUpload";
-    var _MUL = "MultipartUploadList";
-    var _MUa = "MaxUploads";
-    var _Ma = "Marker";
-    var _Me = "Metrics";
-    var _Mes = "Message";
-    var _Mi = "Minutes";
-    var _Mo = "Mode";
-    var _N = "Name";
-    var _NC = "NotificationConfiguration";
-    var _NCF = "NotificationConfigurationFilter";
-    var _NCT = "NextContinuationToken";
-    var _ND = "NoncurrentDays";
-    var _NF = "NotFound";
-    var _NKM = "NextKeyMarker";
-    var _NM = "NextMarker";
-    var _NNV = "NewerNoncurrentVersions";
-    var _NPNM = "NextPartNumberMarker";
-    var _NSB = "NoSuchBucket";
-    var _NSK = "NoSuchKey";
-    var _NSU = "NoSuchUpload";
-    var _NUIM = "NextUploadIdMarker";
-    var _NVE = "NoncurrentVersionExpiration";
-    var _NVIM = "NextVersionIdMarker";
-    var _NVT = "NoncurrentVersionTransitions";
-    var _NVTL = "NoncurrentVersionTransitionList";
-    var _NVTo = "NoncurrentVersionTransition";
-    var _O = "Owner";
-    var _OA = "ObjectAttributes";
-    var _OAIATE = "ObjectAlreadyInActiveTierError";
-    var _OC = "OwnershipControls";
-    var _OCR = "OwnershipControlsRule";
-    var _OCRw = "OwnershipControlsRules";
-    var _OF = "OptionalFields";
-    var _OI = "ObjectIdentifier";
-    var _OIL = "ObjectIdentifierList";
-    var _OL = "OutputLocation";
-    var _OLC = "ObjectLockConfiguration";
-    var _OLE = "ObjectLockEnabled";
-    var _OLEFB = "ObjectLockEnabledForBucket";
-    var _OLLH = "ObjectLockLegalHold";
-    var _OLLHS = "ObjectLockLegalHoldStatus";
-    var _OLM = "ObjectLockMode";
-    var _OLR = "ObjectLockRetention";
-    var _OLRUD = "ObjectLockRetainUntilDate";
-    var _OLRb = "ObjectLockRule";
-    var _OLb = "ObjectList";
-    var _ONIATE = "ObjectNotInActiveTierError";
-    var _OO = "ObjectOwnership";
-    var _OOA = "OptionalObjectAttributes";
-    var _OP = "ObjectParts";
-    var _OPb = "ObjectPart";
-    var _OS = "ObjectSize";
-    var _OSGT = "ObjectSizeGreaterThan";
-    var _OSLT = "ObjectSizeLessThan";
-    var _OSV = "OutputSchemaVersion";
-    var _OSu = "OutputSerialization";
-    var _OV = "ObjectVersion";
-    var _OVL = "ObjectVersionList";
-    var _Ob = "Objects";
-    var _Obj = "Object";
-    var _P2 = "Prefix";
-    var _PABC = "PublicAccessBlockConfiguration";
-    var _PBA = "PutBucketAbac";
-    var _PBAC = "PutBucketAccelerateConfiguration";
-    var _PBACR = "PutBucketAccelerateConfigurationRequest";
-    var _PBACRu = "PutBucketAnalyticsConfigurationRequest";
-    var _PBACu = "PutBucketAnalyticsConfiguration";
-    var _PBAR = "PutBucketAbacRequest";
-    var _PBARu = "PutBucketAclRequest";
-    var _PBAu = "PutBucketAcl";
-    var _PBC = "PutBucketCors";
-    var _PBCR = "PutBucketCorsRequest";
-    var _PBE = "PutBucketEncryption";
-    var _PBER = "PutBucketEncryptionRequest";
-    var _PBIC = "PutBucketInventoryConfiguration";
-    var _PBICR = "PutBucketInventoryConfigurationRequest";
-    var _PBITC = "PutBucketIntelligentTieringConfiguration";
-    var _PBITCR = "PutBucketIntelligentTieringConfigurationRequest";
-    var _PBL = "PutBucketLogging";
-    var _PBLC = "PutBucketLifecycleConfiguration";
-    var _PBLCO = "PutBucketLifecycleConfigurationOutput";
-    var _PBLCR = "PutBucketLifecycleConfigurationRequest";
-    var _PBLR = "PutBucketLoggingRequest";
-    var _PBMC = "PutBucketMetricsConfiguration";
-    var _PBMCR = "PutBucketMetricsConfigurationRequest";
-    var _PBNC = "PutBucketNotificationConfiguration";
-    var _PBNCR = "PutBucketNotificationConfigurationRequest";
-    var _PBOC = "PutBucketOwnershipControls";
-    var _PBOCR = "PutBucketOwnershipControlsRequest";
-    var _PBP = "PutBucketPolicy";
-    var _PBPR = "PutBucketPolicyRequest";
-    var _PBR = "PutBucketReplication";
-    var _PBRP = "PutBucketRequestPayment";
-    var _PBRPR = "PutBucketRequestPaymentRequest";
-    var _PBRR = "PutBucketReplicationRequest";
-    var _PBT = "PutBucketTagging";
-    var _PBTR = "PutBucketTaggingRequest";
-    var _PBV = "PutBucketVersioning";
-    var _PBVR = "PutBucketVersioningRequest";
-    var _PBW = "PutBucketWebsite";
-    var _PBWR = "PutBucketWebsiteRequest";
-    var _PC2 = "PartsCount";
-    var _PDS = "PartitionDateSource";
-    var _PE = "ProgressEvent";
-    var _PI2 = "ParquetInput";
-    var _PL = "PartsList";
-    var _PN = "PartNumber";
-    var _PNM = "PartNumberMarker";
-    var _PO = "PutObject";
-    var _POA = "PutObjectAcl";
-    var _POAO = "PutObjectAclOutput";
-    var _POAR = "PutObjectAclRequest";
-    var _POLC = "PutObjectLockConfiguration";
-    var _POLCO = "PutObjectLockConfigurationOutput";
-    var _POLCR = "PutObjectLockConfigurationRequest";
-    var _POLH = "PutObjectLegalHold";
-    var _POLHO = "PutObjectLegalHoldOutput";
-    var _POLHR = "PutObjectLegalHoldRequest";
-    var _POO = "PutObjectOutput";
-    var _POR = "PutObjectRequest";
-    var _PORO = "PutObjectRetentionOutput";
-    var _PORR = "PutObjectRetentionRequest";
-    var _PORu = "PutObjectRetention";
-    var _POT = "PutObjectTagging";
-    var _POTO = "PutObjectTaggingOutput";
-    var _POTR = "PutObjectTaggingRequest";
-    var _PP = "PartitionedPrefix";
-    var _PPAB = "PutPublicAccessBlock";
-    var _PPABR = "PutPublicAccessBlockRequest";
-    var _PS = "PolicyStatus";
-    var _Pa = "Parts";
-    var _Par = "Part";
-    var _Parq = "Parquet";
-    var _Pay = "Payer";
-    var _Payl = "Payload";
-    var _Pe = "Permission";
-    var _Po = "Policy";
-    var _Pr2 = "Progress";
-    var _Pri = "Priority";
-    var _Pro = "Protocol";
-    var _Q = "Quiet";
-    var _QA = "QueueArn";
-    var _QC = "QuoteCharacter";
-    var _QCL = "QueueConfigurationList";
-    var _QCu = "QueueConfigurations";
-    var _QCue = "QueueConfiguration";
-    var _QEC = "QuoteEscapeCharacter";
-    var _QF = "QuoteFields";
-    var _Qu = "Queue";
-    var _R = "Rules";
-    var _RART = "RedirectAllRequestsTo";
-    var _RC = "RequestCharged";
-    var _RCC = "ResponseCacheControl";
-    var _RCD = "ResponseContentDisposition";
-    var _RCE = "ResponseContentEncoding";
-    var _RCL = "ResponseContentLanguage";
-    var _RCT = "ResponseContentType";
-    var _RCe = "ReplicationConfiguration";
-    var _RD = "RecordDelimiter";
-    var _RE = "ResponseExpires";
-    var _RED = "RestoreExpiryDate";
-    var _REe = "RecordExpiration";
-    var _REec = "RecordsEvent";
-    var _RKKID = "ReplicaKmsKeyID";
-    var _RKPW = "ReplaceKeyPrefixWith";
-    var _RKW = "ReplaceKeyWith";
-    var _RM = "ReplicaModifications";
-    var _RO = "RenameObject";
-    var _ROO = "RenameObjectOutput";
-    var _ROOe = "RestoreObjectOutput";
-    var _ROP = "RestoreOutputPath";
-    var _ROR = "RenameObjectRequest";
-    var _RORe = "RestoreObjectRequest";
-    var _ROe = "RestoreObject";
-    var _RP = "RequestPayer";
-    var _RPB = "RestrictPublicBuckets";
-    var _RPC = "RequestPaymentConfiguration";
-    var _RPe = "RequestProgress";
-    var _RR = "RoutingRules";
-    var _RRAO = "ReplicationRuleAndOperator";
-    var _RRF = "ReplicationRuleFilter";
-    var _RRe = "ReplicationRule";
-    var _RRep = "ReplicationRules";
-    var _RReq = "RequestRoute";
-    var _RRes = "RestoreRequest";
-    var _RRo = "RoutingRule";
-    var _RS = "ReplicationStatus";
-    var _RSe = "RestoreStatus";
-    var _RSen = "RenameSource";
-    var _RT3 = "ReplicationTime";
-    var _RTV = "ReplicationTimeValue";
-    var _RTe = "RequestToken";
-    var _RUD = "RetainUntilDate";
-    var _Ra = "Range";
-    var _Re = "Restore";
-    var _Rec = "Records";
-    var _Red = "Redirect";
-    var _Ret = "Retention";
-    var _Ro = "Role";
-    var _Ru = "Rule";
-    var _S = "Status";
-    var _SA = "StartAfter";
-    var _SAK2 = "SecretAccessKey";
-    var _SAs = "SseAlgorithm";
-    var _SB = "StreamingBlob";
-    var _SBD = "S3BucketDestination";
-    var _SC = "StorageClass";
-    var _SCA = "StorageClassAnalysis";
-    var _SCADE = "StorageClassAnalysisDataExport";
-    var _SCV = "SessionCredentialValue";
-    var _SCe = "SessionCredentials";
-    var _SCt = "StatusCode";
-    var _SDV = "SkipDestinationValidation";
-    var _SE = "StatsEvent";
-    var _SIM = "SourceIfMatch";
-    var _SIMS = "SourceIfModifiedSince";
-    var _SINM = "SourceIfNoneMatch";
-    var _SIUS = "SourceIfUnmodifiedSince";
-    var _SK = "SSE-KMS";
-    var _SKEO = "SseKmsEncryptedObjects";
-    var _SKF = "S3KeyFilter";
-    var _SKe = "S3Key";
-    var _SL = "S3Location";
-    var _SM = "SessionMode";
-    var _SOC = "SelectObjectContent";
-    var _SOCES = "SelectObjectContentEventStream";
-    var _SOCO = "SelectObjectContentOutput";
-    var _SOCR = "SelectObjectContentRequest";
-    var _SP = "SelectParameters";
-    var _SPi = "SimplePrefix";
-    var _SR = "ScanRange";
-    var _SS = "SSE-S3";
-    var _SSC = "SourceSelectionCriteria";
-    var _SSE = "ServerSideEncryption";
-    var _SSEA = "SSEAlgorithm";
-    var _SSEBD = "ServerSideEncryptionByDefault";
-    var _SSEC = "ServerSideEncryptionConfiguration";
-    var _SSECA = "SSECustomerAlgorithm";
-    var _SSECK = "SSECustomerKey";
-    var _SSECKMD = "SSECustomerKeyMD5";
-    var _SSEKMS = "SSEKMS";
-    var _SSEKMSEC = "SSEKMSEncryptionContext";
-    var _SSEKMSKI = "SSEKMSKeyId";
-    var _SSER = "ServerSideEncryptionRule";
-    var _SSERe = "ServerSideEncryptionRules";
-    var _SSES = "SSES3";
-    var _ST2 = "SessionToken";
-    var _STD = "S3TablesDestination";
-    var _STDR = "S3TablesDestinationResult";
-    var _S_ = "S3";
-    var _Sc = "Schedule";
-    var _Si = "Size";
-    var _St = "Start";
-    var _Sta = "Stats";
-    var _Su = "Suffix";
-    var _T2 = "Tags";
-    var _TA = "TableArn";
-    var _TAo = "TopicArn";
-    var _TB = "TargetBucket";
-    var _TBA = "TableBucketArn";
-    var _TBT = "TableBucketType";
-    var _TC2 = "TagCount";
-    var _TCL = "TopicConfigurationList";
-    var _TCo = "TopicConfigurations";
-    var _TCop = "TopicConfiguration";
-    var _TD = "TaggingDirective";
-    var _TDMOS = "TransitionDefaultMinimumObjectSize";
-    var _TG = "TargetGrants";
-    var _TGa = "TargetGrant";
-    var _TL = "TieringList";
-    var _TLr = "TransitionList";
-    var _TMP = "TooManyParts";
-    var _TN = "TableNamespace";
-    var _TNa = "TableName";
-    var _TOKF = "TargetObjectKeyFormat";
-    var _TP = "TargetPrefix";
-    var _TPC = "TotalPartsCount";
-    var _TS = "TagSet";
-    var _TSa = "TableStatus";
-    var _Ta2 = "Tag";
-    var _Tag = "Tagging";
-    var _Ti = "Tier";
-    var _Tie = "Tierings";
-    var _Tier = "Tiering";
-    var _Tim = "Time";
-    var _To = "Token";
-    var _Top = "Topic";
-    var _Tr = "Transitions";
-    var _Tra = "Transition";
-    var _Ty = "Type";
-    var _U = "Uploads";
-    var _UBMITC = "UpdateBucketMetadataInventoryTableConfiguration";
-    var _UBMITCR = "UpdateBucketMetadataInventoryTableConfigurationRequest";
-    var _UBMJTC = "UpdateBucketMetadataJournalTableConfiguration";
-    var _UBMJTCR = "UpdateBucketMetadataJournalTableConfigurationRequest";
-    var _UI = "UploadId";
-    var _UIM = "UploadIdMarker";
-    var _UM = "UserMetadata";
-    var _UP = "UploadPart";
-    var _UPC = "UploadPartCopy";
-    var _UPCO = "UploadPartCopyOutput";
-    var _UPCR = "UploadPartCopyRequest";
-    var _UPO = "UploadPartOutput";
-    var _UPR = "UploadPartRequest";
-    var _URI = "URI";
-    var _Up = "Upload";
-    var _V2 = "Value";
-    var _VC = "VersioningConfiguration";
-    var _VI = "VersionId";
-    var _VIM = "VersionIdMarker";
-    var _Ve = "Versions";
-    var _Ver = "Version";
-    var _WC = "WebsiteConfiguration";
-    var _WGOR = "WriteGetObjectResponse";
-    var _WGORR = "WriteGetObjectResponseRequest";
-    var _WOB = "WriteOffsetBytes";
-    var _WRL = "WebsiteRedirectLocation";
-    var _Y = "Years";
-    var _ar = "accept-ranges";
-    var _br = "bucket-region";
-    var _c4 = "client";
-    var _ct = "continuation-token";
-    var _d = "delimiter";
-    var _e4 = "error";
-    var _eP = "eventPayload";
-    var _en = "endpoint";
-    var _et = "encoding-type";
-    var _fo = "fetch-owner";
-    var _h3 = "http";
-    var _hC = "httpChecksum";
-    var _hE4 = "httpError";
-    var _hH = "httpHeader";
-    var _hL = "hostLabel";
-    var _hP = "httpPayload";
-    var _hPH = "httpPrefixHeaders";
-    var _hQ = "httpQuery";
-    var _hi = "http://www.w3.org/2001/XMLSchema-instance";
-    var _i = "id";
-    var _iT3 = "idempotencyToken";
-    var _km = "key-marker";
-    var _m3 = "marker";
-    var _mb = "max-buckets";
-    var _mdb = "max-directory-buckets";
-    var _mk = "max-keys";
-    var _mp = "max-parts";
-    var _mu = "max-uploads";
-    var _p = "prefix";
-    var _pN = "partNumber";
-    var _pnm = "part-number-marker";
-    var _rcc = "response-cache-control";
-    var _rcd = "response-content-disposition";
-    var _rce = "response-content-encoding";
-    var _rcl = "response-content-language";
-    var _rct = "response-content-type";
-    var _re = "response-expires";
-    var _s4 = "streaming";
-    var _sa = "start-after";
-    var _sm3 = "smithy.ts.sdk.synthetic.com.amazonaws.s3";
-    var _uI = "uploadId";
-    var _uim = "upload-id-marker";
-    var _vI = "versionId";
-    var _vim = "version-id-marker";
-    var _x = "xsi";
-    var _xA = "xmlAttribute";
-    var _xF = "xmlFlattened";
-    var _xN = "xmlName";
-    var _xNm = "xmlNamespace";
-    var _xaa = "x-amz-acl";
-    var _xaad = "x-amz-abort-date";
-    var _xaapa = "x-amz-access-point-alias";
-    var _xaari = "x-amz-abort-rule-id";
-    var _xaas = "x-amz-archive-status";
-    var _xaba = "x-amz-bucket-arn";
-    var _xabgr = "x-amz-bypass-governance-retention";
-    var _xabln = "x-amz-bucket-location-name";
-    var _xablt = "x-amz-bucket-location-type";
-    var _xabole = "x-amz-bucket-object-lock-enabled";
-    var _xabolt = "x-amz-bucket-object-lock-token";
-    var _xabr = "x-amz-bucket-region";
-    var _xaca = "x-amz-checksum-algorithm";
-    var _xacc = "x-amz-checksum-crc32";
-    var _xacc_ = "x-amz-checksum-crc32c";
-    var _xacc__ = "x-amz-checksum-crc64nvme";
-    var _xacm = "x-amz-checksum-mode";
-    var _xacrsba = "x-amz-confirm-remove-self-bucket-access";
-    var _xacs = "x-amz-checksum-sha1";
-    var _xacs_ = "x-amz-checksum-sha256";
-    var _xacs__ = "x-amz-copy-source";
-    var _xacsim = "x-amz-copy-source-if-match";
-    var _xacsims = "x-amz-copy-source-if-modified-since";
-    var _xacsinm = "x-amz-copy-source-if-none-match";
-    var _xacsius = "x-amz-copy-source-if-unmodified-since";
-    var _xacsm = "x-amz-create-session-mode";
-    var _xacsr = "x-amz-copy-source-range";
-    var _xacssseca = "x-amz-copy-source-server-side-encryption-customer-algorithm";
-    var _xacssseck = "x-amz-copy-source-server-side-encryption-customer-key";
-    var _xacssseckM = "x-amz-copy-source-server-side-encryption-customer-key-MD5";
-    var _xacsvi = "x-amz-copy-source-version-id";
-    var _xact = "x-amz-checksum-type";
-    var _xact_ = "x-amz-client-token";
-    var _xadm = "x-amz-delete-marker";
-    var _xae = "x-amz-expiration";
-    var _xaebo = "x-amz-expected-bucket-owner";
-    var _xafec = "x-amz-fwd-error-code";
-    var _xafem = "x-amz-fwd-error-message";
-    var _xafhCC = "x-amz-fwd-header-Cache-Control";
-    var _xafhCD = "x-amz-fwd-header-Content-Disposition";
-    var _xafhCE = "x-amz-fwd-header-Content-Encoding";
-    var _xafhCL = "x-amz-fwd-header-Content-Language";
-    var _xafhCR = "x-amz-fwd-header-Content-Range";
-    var _xafhCT = "x-amz-fwd-header-Content-Type";
-    var _xafhE = "x-amz-fwd-header-ETag";
-    var _xafhE_ = "x-amz-fwd-header-Expires";
-    var _xafhLM = "x-amz-fwd-header-Last-Modified";
-    var _xafhar = "x-amz-fwd-header-accept-ranges";
-    var _xafhxacc = "x-amz-fwd-header-x-amz-checksum-crc32";
-    var _xafhxacc_ = "x-amz-fwd-header-x-amz-checksum-crc32c";
-    var _xafhxacc__ = "x-amz-fwd-header-x-amz-checksum-crc64nvme";
-    var _xafhxacs = "x-amz-fwd-header-x-amz-checksum-sha1";
-    var _xafhxacs_ = "x-amz-fwd-header-x-amz-checksum-sha256";
-    var _xafhxadm = "x-amz-fwd-header-x-amz-delete-marker";
-    var _xafhxae = "x-amz-fwd-header-x-amz-expiration";
-    var _xafhxamm = "x-amz-fwd-header-x-amz-missing-meta";
-    var _xafhxampc = "x-amz-fwd-header-x-amz-mp-parts-count";
-    var _xafhxaollh = "x-amz-fwd-header-x-amz-object-lock-legal-hold";
-    var _xafhxaolm = "x-amz-fwd-header-x-amz-object-lock-mode";
-    var _xafhxaolrud = "x-amz-fwd-header-x-amz-object-lock-retain-until-date";
-    var _xafhxar = "x-amz-fwd-header-x-amz-restore";
-    var _xafhxarc = "x-amz-fwd-header-x-amz-request-charged";
-    var _xafhxars = "x-amz-fwd-header-x-amz-replication-status";
-    var _xafhxasc = "x-amz-fwd-header-x-amz-storage-class";
-    var _xafhxasse = "x-amz-fwd-header-x-amz-server-side-encryption";
-    var _xafhxasseakki = "x-amz-fwd-header-x-amz-server-side-encryption-aws-kms-key-id";
-    var _xafhxassebke = "x-amz-fwd-header-x-amz-server-side-encryption-bucket-key-enabled";
-    var _xafhxasseca = "x-amz-fwd-header-x-amz-server-side-encryption-customer-algorithm";
-    var _xafhxasseckM = "x-amz-fwd-header-x-amz-server-side-encryption-customer-key-MD5";
-    var _xafhxatc = "x-amz-fwd-header-x-amz-tagging-count";
-    var _xafhxavi = "x-amz-fwd-header-x-amz-version-id";
-    var _xafs = "x-amz-fwd-status";
-    var _xagfc = "x-amz-grant-full-control";
-    var _xagr = "x-amz-grant-read";
-    var _xagra = "x-amz-grant-read-acp";
-    var _xagw = "x-amz-grant-write";
-    var _xagwa = "x-amz-grant-write-acp";
-    var _xaimit = "x-amz-if-match-initiated-time";
-    var _xaimlmt = "x-amz-if-match-last-modified-time";
-    var _xaims = "x-amz-if-match-size";
-    var _xam = "x-amz-meta-";
-    var _xam_ = "x-amz-mfa";
-    var _xamd = "x-amz-metadata-directive";
-    var _xamm = "x-amz-missing-meta";
-    var _xamos = "x-amz-mp-object-size";
-    var _xamp = "x-amz-max-parts";
-    var _xampc = "x-amz-mp-parts-count";
-    var _xaoa = "x-amz-object-attributes";
-    var _xaollh = "x-amz-object-lock-legal-hold";
-    var _xaolm = "x-amz-object-lock-mode";
-    var _xaolrud = "x-amz-object-lock-retain-until-date";
-    var _xaoo = "x-amz-object-ownership";
-    var _xaooa = "x-amz-optional-object-attributes";
-    var _xaos = "x-amz-object-size";
-    var _xapnm = "x-amz-part-number-marker";
-    var _xar = "x-amz-restore";
-    var _xarc = "x-amz-request-charged";
-    var _xarop = "x-amz-restore-output-path";
-    var _xarp = "x-amz-request-payer";
-    var _xarr = "x-amz-request-route";
-    var _xars = "x-amz-replication-status";
-    var _xars_ = "x-amz-rename-source";
-    var _xarsim = "x-amz-rename-source-if-match";
-    var _xarsims = "x-amz-rename-source-if-modified-since";
-    var _xarsinm = "x-amz-rename-source-if-none-match";
-    var _xarsius = "x-amz-rename-source-if-unmodified-since";
-    var _xart = "x-amz-request-token";
-    var _xasc = "x-amz-storage-class";
-    var _xasca = "x-amz-sdk-checksum-algorithm";
-    var _xasdv = "x-amz-skip-destination-validation";
-    var _xasebo = "x-amz-source-expected-bucket-owner";
-    var _xasse = "x-amz-server-side-encryption";
-    var _xasseakki = "x-amz-server-side-encryption-aws-kms-key-id";
-    var _xassebke = "x-amz-server-side-encryption-bucket-key-enabled";
-    var _xassec = "x-amz-server-side-encryption-context";
-    var _xasseca = "x-amz-server-side-encryption-customer-algorithm";
-    var _xasseck = "x-amz-server-side-encryption-customer-key";
-    var _xasseckM = "x-amz-server-side-encryption-customer-key-MD5";
-    var _xat = "x-amz-tagging";
-    var _xatc = "x-amz-tagging-count";
-    var _xatd = "x-amz-tagging-directive";
-    var _xatdmos = "x-amz-transition-default-minimum-object-size";
-    var _xavi = "x-amz-version-id";
-    var _xawob = "x-amz-write-offset-bytes";
-    var _xawrl = "x-amz-website-redirect-location";
-    var _xs = "xsi:type";
-    var n04 = "com.amazonaws.s3";
-    var CopySourceSSECustomerKey = [0, n04, _CSSSECK, 8, 0];
-    var SessionCredentialValue = [0, n04, _SCV, 8, 0];
-    var SSECustomerKey = [0, n04, _SSECK, 8, 0];
-    var SSEKMSEncryptionContext = [0, n04, _SSEKMSEC, 8, 0];
-    var SSEKMSKeyId = [0, n04, _SSEKMSKI, 8, 0];
-    var StreamingBlob = [0, n04, _SB, { [_s4]: 1 }, 42];
-    var AbacStatus$ = [
-      3,
-      n04,
-      _AS,
-      0,
-      [_S],
-      [0]
-    ];
-    var AbortIncompleteMultipartUpload$ = [
-      3,
-      n04,
-      _AIMU,
-      0,
-      [_DAI],
-      [1]
-    ];
-    var AbortMultipartUploadOutput$ = [
-      3,
-      n04,
-      _AMUO,
-      0,
-      [_RC],
-      [[0, { [_hH]: _xarc }]]
-    ];
-    var AbortMultipartUploadRequest$ = [
-      3,
-      n04,
-      _AMUR,
-      0,
-      [_B, _K2, _UI, _RP, _EBO, _IMIT],
-      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [6, { [_hH]: _xaimit }]],
-      3
-    ];
-    var AccelerateConfiguration$ = [
-      3,
-      n04,
-      _AC,
-      0,
-      [_S],
-      [0]
-    ];
-    var AccessControlPolicy$ = [
-      3,
-      n04,
-      _ACP,
-      0,
-      [_G, _O],
-      [[() => Grants, { [_xN]: _ACL }], () => Owner$]
-    ];
-    var AccessControlTranslation$ = [
-      3,
-      n04,
-      _ACT,
-      0,
-      [_O],
-      [0],
-      1
-    ];
-    var AnalyticsAndOperator$ = [
-      3,
-      n04,
-      _AAO,
-      0,
-      [_P2, _T2],
-      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
-    ];
-    var AnalyticsConfiguration$ = [
-      3,
-      n04,
-      _ACn,
-      0,
-      [_I, _SCA, _F],
-      [0, () => StorageClassAnalysis$, [() => AnalyticsFilter$, 0]],
-      2
-    ];
-    var AnalyticsExportDestination$ = [
-      3,
-      n04,
-      _AED,
-      0,
-      [_SBD],
-      [() => AnalyticsS3BucketDestination$],
-      1
-    ];
-    var AnalyticsS3BucketDestination$ = [
-      3,
-      n04,
-      _ASBD,
-      0,
-      [_Fo, _B, _BAI, _P2],
-      [0, 0, 0, 0],
-      2
-    ];
-    var BlockedEncryptionTypes$ = [
-      3,
-      n04,
-      _BET,
-      0,
-      [_ET],
-      [[() => EncryptionTypeList, { [_xF]: 1 }]]
-    ];
-    var Bucket$ = [
-      3,
-      n04,
-      _B,
-      0,
-      [_N, _CD, _BR, _BA],
-      [0, 4, 0, 0]
-    ];
-    var BucketAlreadyExists$ = [
-      -3,
-      n04,
-      _BAE,
-      { [_e4]: _c4, [_hE4]: 409 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(BucketAlreadyExists$, BucketAlreadyExists);
-    var BucketAlreadyOwnedByYou$ = [
-      -3,
-      n04,
-      _BAOBY,
-      { [_e4]: _c4, [_hE4]: 409 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(BucketAlreadyOwnedByYou$, BucketAlreadyOwnedByYou);
-    var BucketInfo$ = [
-      3,
-      n04,
-      _BI,
-      0,
-      [_DR, _Ty],
-      [0, 0]
-    ];
-    var BucketLifecycleConfiguration$ = [
-      3,
-      n04,
-      _BLC,
-      0,
-      [_R],
-      [[() => LifecycleRules, { [_xF]: 1, [_xN]: _Ru }]],
-      1
-    ];
-    var BucketLoggingStatus$ = [
-      3,
-      n04,
-      _BLS,
-      0,
-      [_LE],
-      [[() => LoggingEnabled$, 0]]
-    ];
-    var Checksum$ = [
-      3,
-      n04,
-      _C2,
-      0,
-      [_CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2],
-      [0, 0, 0, 0, 0, 0]
-    ];
-    var CommonPrefix$ = [
-      3,
-      n04,
-      _CP,
-      0,
-      [_P2],
-      [0]
-    ];
-    var CompletedMultipartUpload$ = [
-      3,
-      n04,
-      _CMU,
-      0,
-      [_Pa],
-      [[() => CompletedPartList, { [_xF]: 1, [_xN]: _Par }]]
-    ];
-    var CompletedPart$ = [
-      3,
-      n04,
-      _CPo,
-      0,
-      [_ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _PN],
-      [0, 0, 0, 0, 0, 0, 1]
-    ];
-    var CompleteMultipartUploadOutput$ = [
-      3,
-      n04,
-      _CMUO,
-      { [_xN]: _CMUR },
-      [_L, _B, _K2, _E2, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _SSE, _VI, _SSEKMSKI, _BKE, _RC],
-      [0, 0, 0, [0, { [_hH]: _xae }], 0, 0, 0, 0, 0, 0, 0, [0, { [_hH]: _xasse }], [0, { [_hH]: _xavi }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
-    ];
-    var CompleteMultipartUploadRequest$ = [
-      3,
-      n04,
-      _CMURo,
-      0,
-      [_B, _K2, _UI, _MU, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _MOS, _RP, _EBO, _IM, _INM, _SSECA, _SSECK, _SSECKMD],
-      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [() => CompletedMultipartUpload$, { [_hP]: 1, [_xN]: _CMUo }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [1, { [_hH]: _xamos }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }]],
-      3
-    ];
-    var Condition$ = [
-      3,
-      n04,
-      _Co,
-      0,
-      [_HECRE, _KPE],
-      [0, 0]
-    ];
-    var ContinuationEvent$ = [
-      3,
-      n04,
-      _CE,
-      0,
-      [],
-      []
-    ];
-    var CopyObjectOutput$ = [
-      3,
-      n04,
-      _COO,
-      0,
-      [_COR, _E2, _CSVI, _VI, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RC],
-      [[() => CopyObjectResult$, 16], [0, { [_hH]: _xae }], [0, { [_hH]: _xacsvi }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
-    ];
-    var CopyObjectRequest$ = [
-      3,
-      n04,
-      _CORo,
-      0,
-      [_B, _CS2, _K2, _ACL_, _CC, _CA2, _CDo, _CEo, _CL, _CTo, _CSIM, _CSIMS, _CSINM, _CSIUS, _Ex, _GFC, _GR, _GRACP, _GWACP, _IM, _INM, _M, _MD, _TD, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _CSSSECA, _CSSSECK, _CSSSECKMD, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO, _ESBO],
-      [[0, 1], [0, { [_hH]: _xacs__ }], [0, 1], [0, { [_hH]: _xaa }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _xaca }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _xacsim }], [4, { [_hH]: _xacsims }], [0, { [_hH]: _xacsinm }], [4, { [_hH]: _xacsius }], [4, { [_hH]: _Ex }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xamd }], [0, { [_hH]: _xatd }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xacssseca }], [() => CopySourceSSECustomerKey, { [_hH]: _xacssseck }], [0, { [_hH]: _xacssseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasebo }]],
-      3
-    ];
-    var CopyObjectResult$ = [
-      3,
-      n04,
-      _COR,
-      0,
-      [_ETa, _LM, _CT2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
-      [0, 4, 0, 0, 0, 0, 0, 0]
-    ];
-    var CopyPartResult$ = [
-      3,
-      n04,
-      _CPR,
-      0,
-      [_ETa, _LM, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
-      [0, 4, 0, 0, 0, 0, 0]
-    ];
-    var CORSConfiguration$ = [
-      3,
-      n04,
-      _CORSC,
-      0,
-      [_CORSR],
-      [[() => CORSRules, { [_xF]: 1, [_xN]: _CORSRu }]],
-      1
-    ];
-    var CORSRule$ = [
-      3,
-      n04,
-      _CORSRu,
-      0,
-      [_AM, _AO, _ID, _AH, _EH, _MAS],
-      [[64 | 0, { [_xF]: 1, [_xN]: _AMl }], [64 | 0, { [_xF]: 1, [_xN]: _AOl }], 0, [64 | 0, { [_xF]: 1, [_xN]: _AHl }], [64 | 0, { [_xF]: 1, [_xN]: _EHx }], 1],
-      2
-    ];
-    var CreateBucketConfiguration$ = [
-      3,
-      n04,
-      _CBC,
-      0,
-      [_LC, _L, _B, _T2],
-      [0, () => LocationInfo$, () => BucketInfo$, [() => TagSet, 0]]
-    ];
-    var CreateBucketMetadataConfigurationRequest$ = [
-      3,
-      n04,
-      _CBMCR,
-      0,
-      [_B, _MC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => MetadataConfiguration$, { [_hP]: 1, [_xN]: _MC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var CreateBucketMetadataTableConfigurationRequest$ = [
-      3,
-      n04,
-      _CBMTCR,
-      0,
-      [_B, _MTC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => MetadataTableConfiguration$, { [_hP]: 1, [_xN]: _MTC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var CreateBucketOutput$ = [
-      3,
-      n04,
-      _CBO,
-      0,
-      [_L, _BA],
-      [[0, { [_hH]: _L }], [0, { [_hH]: _xaba }]]
-    ];
-    var CreateBucketRequest$ = [
-      3,
-      n04,
-      _CBR,
-      0,
-      [_B, _ACL_, _CBC, _GFC, _GR, _GRACP, _GW, _GWACP, _OLEFB, _OO],
-      [[0, 1], [0, { [_hH]: _xaa }], [() => CreateBucketConfiguration$, { [_hP]: 1, [_xN]: _CBC }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [2, { [_hH]: _xabole }], [0, { [_hH]: _xaoo }]],
-      1
-    ];
-    var CreateMultipartUploadOutput$ = [
-      3,
-      n04,
-      _CMUOr,
-      { [_xN]: _IMUR },
-      [_AD, _ARI2, _B, _K2, _UI, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RC, _CA2, _CT2],
-      [[4, { [_hH]: _xaad }], [0, { [_hH]: _xaari }], [0, { [_xN]: _B }], 0, 0, [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xaca }], [0, { [_hH]: _xact }]]
-    ];
-    var CreateMultipartUploadRequest$ = [
-      3,
-      n04,
-      _CMURr,
-      0,
-      [_B, _K2, _ACL_, _CC, _CDo, _CEo, _CL, _CTo, _Ex, _GFC, _GR, _GRACP, _GWACP, _M, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO, _CA2, _CT2],
-      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xaca }], [0, { [_hH]: _xact }]],
-      2
-    ];
-    var CreateSessionOutput$ = [
-      3,
-      n04,
-      _CSO,
-      { [_xN]: _CSR },
-      [_Cr, _SSE, _SSEKMSKI, _SSEKMSEC, _BKE],
-      [[() => SessionCredentials$, { [_xN]: _Cr }], [0, { [_hH]: _xasse }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }]],
-      1
-    ];
-    var CreateSessionRequest$ = [
-      3,
-      n04,
-      _CSRr,
-      0,
-      [_B, _SM, _SSE, _SSEKMSKI, _SSEKMSEC, _BKE],
-      [[0, 1], [0, { [_hH]: _xacsm }], [0, { [_hH]: _xasse }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }]],
-      1
-    ];
-    var CSVInput$ = [
-      3,
-      n04,
-      _CSVIn,
-      0,
-      [_FHI, _Com, _QEC, _RD, _FD, _QC, _AQRD],
-      [0, 0, 0, 0, 0, 0, 2]
-    ];
-    var CSVOutput$ = [
-      3,
-      n04,
-      _CSVO,
-      0,
-      [_QF, _QEC, _RD, _FD, _QC],
-      [0, 0, 0, 0, 0]
-    ];
-    var DefaultRetention$ = [
-      3,
-      n04,
-      _DRe,
-      0,
-      [_Mo, _D, _Y],
-      [0, 1, 1]
-    ];
-    var Delete$ = [
-      3,
-      n04,
-      _De,
-      0,
-      [_Ob, _Q],
-      [[() => ObjectIdentifierList, { [_xF]: 1, [_xN]: _Obj }], 2],
-      1
-    ];
-    var DeleteBucketAnalyticsConfigurationRequest$ = [
-      3,
-      n04,
-      _DBACR,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var DeleteBucketCorsRequest$ = [
-      3,
-      n04,
-      _DBCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketEncryptionRequest$ = [
-      3,
-      n04,
-      _DBER,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketIntelligentTieringConfigurationRequest$ = [
-      3,
-      n04,
-      _DBITCR,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var DeleteBucketInventoryConfigurationRequest$ = [
-      3,
-      n04,
-      _DBICR,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var DeleteBucketLifecycleRequest$ = [
-      3,
-      n04,
-      _DBLR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketMetadataConfigurationRequest$ = [
-      3,
-      n04,
-      _DBMCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketMetadataTableConfigurationRequest$ = [
-      3,
-      n04,
-      _DBMTCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketMetricsConfigurationRequest$ = [
-      3,
-      n04,
-      _DBMCRe,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var DeleteBucketOwnershipControlsRequest$ = [
-      3,
-      n04,
-      _DBOCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketPolicyRequest$ = [
-      3,
-      n04,
-      _DBPR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketReplicationRequest$ = [
-      3,
-      n04,
-      _DBRR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketRequest$ = [
-      3,
-      n04,
-      _DBR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketTaggingRequest$ = [
-      3,
-      n04,
-      _DBTR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeleteBucketWebsiteRequest$ = [
-      3,
-      n04,
-      _DBWR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var DeletedObject$ = [
-      3,
-      n04,
-      _DO,
-      0,
-      [_K2, _VI, _DM, _DMVI],
-      [0, 0, 2, 0]
-    ];
-    var DeleteMarkerEntry$ = [
-      3,
-      n04,
-      _DME,
-      0,
-      [_O, _K2, _VI, _IL, _LM],
-      [() => Owner$, 0, 0, 2, 4]
-    ];
-    var DeleteMarkerReplication$ = [
-      3,
-      n04,
-      _DMR,
-      0,
-      [_S],
-      [0]
-    ];
-    var DeleteObjectOutput$ = [
-      3,
-      n04,
-      _DOO,
-      0,
-      [_DM, _VI, _RC],
-      [[2, { [_hH]: _xadm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xarc }]]
-    ];
-    var DeleteObjectRequest$ = [
-      3,
-      n04,
-      _DOR,
-      0,
-      [_B, _K2, _MFA, _VI, _RP, _BGR, _EBO, _IM, _IMLMT, _IMS],
-      [[0, 1], [0, 1], [0, { [_hH]: _xam_ }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _IM_ }], [6, { [_hH]: _xaimlmt }], [1, { [_hH]: _xaims }]],
-      2
-    ];
-    var DeleteObjectsOutput$ = [
-      3,
-      n04,
-      _DOOe,
-      { [_xN]: _DRel },
-      [_Del, _RC, _Er],
-      [[() => DeletedObjects, { [_xF]: 1 }], [0, { [_hH]: _xarc }], [() => Errors, { [_xF]: 1, [_xN]: _Err }]]
-    ];
-    var DeleteObjectsRequest$ = [
-      3,
-      n04,
-      _DORe,
-      0,
-      [_B, _De, _MFA, _RP, _BGR, _EBO, _CA2],
-      [[0, 1], [() => Delete$, { [_hP]: 1, [_xN]: _De }], [0, { [_hH]: _xam_ }], [0, { [_hH]: _xarp }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
-      2
-    ];
-    var DeleteObjectTaggingOutput$ = [
-      3,
-      n04,
-      _DOTO,
-      0,
-      [_VI],
-      [[0, { [_hH]: _xavi }]]
-    ];
-    var DeleteObjectTaggingRequest$ = [
-      3,
-      n04,
-      _DOTR,
-      0,
-      [_B, _K2, _VI, _EBO],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var DeletePublicAccessBlockRequest$ = [
-      3,
-      n04,
-      _DPABR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var Destination$ = [
-      3,
-      n04,
-      _Des,
-      0,
-      [_B, _A2, _SC, _ACT, _EC, _RT3, _Me],
-      [0, 0, 0, () => AccessControlTranslation$, () => EncryptionConfiguration$, () => ReplicationTime$, () => Metrics$],
-      1
-    ];
-    var DestinationResult$ = [
-      3,
-      n04,
-      _DRes,
-      0,
-      [_TBT, _TBA, _TN],
-      [0, 0, 0]
-    ];
-    var Encryption$ = [
-      3,
-      n04,
-      _En,
-      0,
-      [_ET, _KMSKI, _KMSC],
-      [0, [() => SSEKMSKeyId, 0], 0],
-      1
-    ];
-    var EncryptionConfiguration$ = [
-      3,
-      n04,
-      _EC,
-      0,
-      [_RKKID],
-      [0]
-    ];
-    var EncryptionTypeMismatch$ = [
-      -3,
-      n04,
-      _ETM,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(EncryptionTypeMismatch$, EncryptionTypeMismatch);
-    var EndEvent$ = [
-      3,
-      n04,
-      _EE,
-      0,
-      [],
-      []
-    ];
-    var _Error$ = [
-      3,
-      n04,
-      _Err,
-      0,
-      [_K2, _VI, _Cod, _Mes],
-      [0, 0, 0, 0]
-    ];
-    var ErrorDetails$ = [
-      3,
-      n04,
-      _ED,
-      0,
-      [_ECr, _EM],
-      [0, 0]
-    ];
-    var ErrorDocument$ = [
-      3,
-      n04,
-      _EDr,
-      0,
-      [_K2],
-      [0],
-      1
-    ];
-    var EventBridgeConfiguration$ = [
-      3,
-      n04,
-      _EBC,
-      0,
-      [],
-      []
-    ];
-    var ExistingObjectReplication$ = [
-      3,
-      n04,
-      _EOR,
-      0,
-      [_S],
-      [0],
-      1
-    ];
-    var FilterRule$ = [
-      3,
-      n04,
-      _FR,
-      0,
-      [_N, _V2],
-      [0, 0]
-    ];
-    var GetBucketAbacOutput$ = [
-      3,
-      n04,
-      _GBAO,
-      0,
-      [_AS],
-      [[() => AbacStatus$, 16]]
-    ];
-    var GetBucketAbacRequest$ = [
-      3,
-      n04,
-      _GBAR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketAccelerateConfigurationOutput$ = [
-      3,
-      n04,
-      _GBACO,
-      { [_xN]: _AC },
-      [_S, _RC],
-      [0, [0, { [_hH]: _xarc }]]
-    ];
-    var GetBucketAccelerateConfigurationRequest$ = [
-      3,
-      n04,
-      _GBACR,
-      0,
-      [_B, _EBO, _RP],
-      [[0, 1], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
-      1
-    ];
-    var GetBucketAclOutput$ = [
-      3,
-      n04,
-      _GBAOe,
-      { [_xN]: _ACP },
-      [_O, _G],
-      [() => Owner$, [() => Grants, { [_xN]: _ACL }]]
-    ];
-    var GetBucketAclRequest$ = [
-      3,
-      n04,
-      _GBARe,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketAnalyticsConfigurationOutput$ = [
-      3,
-      n04,
-      _GBACOe,
-      0,
-      [_ACn],
-      [[() => AnalyticsConfiguration$, 16]]
-    ];
-    var GetBucketAnalyticsConfigurationRequest$ = [
-      3,
-      n04,
-      _GBACRe,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetBucketCorsOutput$ = [
-      3,
-      n04,
-      _GBCO,
-      { [_xN]: _CORSC },
-      [_CORSR],
-      [[() => CORSRules, { [_xF]: 1, [_xN]: _CORSRu }]]
-    ];
-    var GetBucketCorsRequest$ = [
-      3,
-      n04,
-      _GBCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketEncryptionOutput$ = [
-      3,
-      n04,
-      _GBEO,
-      0,
-      [_SSEC],
-      [[() => ServerSideEncryptionConfiguration$, 16]]
-    ];
-    var GetBucketEncryptionRequest$ = [
-      3,
-      n04,
-      _GBER,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketIntelligentTieringConfigurationOutput$ = [
-      3,
-      n04,
-      _GBITCO,
-      0,
-      [_ITC],
-      [[() => IntelligentTieringConfiguration$, 16]]
-    ];
-    var GetBucketIntelligentTieringConfigurationRequest$ = [
-      3,
-      n04,
-      _GBITCR,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetBucketInventoryConfigurationOutput$ = [
-      3,
-      n04,
-      _GBICO,
-      0,
-      [_IC],
-      [[() => InventoryConfiguration$, 16]]
-    ];
-    var GetBucketInventoryConfigurationRequest$ = [
-      3,
-      n04,
-      _GBICR,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetBucketLifecycleConfigurationOutput$ = [
-      3,
-      n04,
-      _GBLCO,
-      { [_xN]: _LCi },
-      [_R, _TDMOS],
-      [[() => LifecycleRules, { [_xF]: 1, [_xN]: _Ru }], [0, { [_hH]: _xatdmos }]]
-    ];
-    var GetBucketLifecycleConfigurationRequest$ = [
-      3,
-      n04,
-      _GBLCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketLocationOutput$ = [
-      3,
-      n04,
-      _GBLO,
-      { [_xN]: _LC },
-      [_LC],
-      [0]
-    ];
-    var GetBucketLocationRequest$ = [
-      3,
-      n04,
-      _GBLR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketLoggingOutput$ = [
-      3,
-      n04,
-      _GBLOe,
-      { [_xN]: _BLS },
-      [_LE],
-      [[() => LoggingEnabled$, 0]]
-    ];
-    var GetBucketLoggingRequest$ = [
-      3,
-      n04,
-      _GBLRe,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketMetadataConfigurationOutput$ = [
-      3,
-      n04,
-      _GBMCO,
-      0,
-      [_GBMCR],
-      [[() => GetBucketMetadataConfigurationResult$, 16]]
-    ];
-    var GetBucketMetadataConfigurationRequest$ = [
-      3,
-      n04,
-      _GBMCRe,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketMetadataConfigurationResult$ = [
-      3,
-      n04,
-      _GBMCR,
-      0,
-      [_MCR],
-      [() => MetadataConfigurationResult$],
-      1
-    ];
-    var GetBucketMetadataTableConfigurationOutput$ = [
-      3,
-      n04,
-      _GBMTCO,
-      0,
-      [_GBMTCR],
-      [[() => GetBucketMetadataTableConfigurationResult$, 16]]
-    ];
-    var GetBucketMetadataTableConfigurationRequest$ = [
-      3,
-      n04,
-      _GBMTCRe,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketMetadataTableConfigurationResult$ = [
-      3,
-      n04,
-      _GBMTCR,
-      0,
-      [_MTCR, _S, _Err],
-      [() => MetadataTableConfigurationResult$, 0, () => ErrorDetails$],
-      2
-    ];
-    var GetBucketMetricsConfigurationOutput$ = [
-      3,
-      n04,
-      _GBMCOe,
-      0,
-      [_MCe],
-      [[() => MetricsConfiguration$, 16]]
-    ];
-    var GetBucketMetricsConfigurationRequest$ = [
-      3,
-      n04,
-      _GBMCRet,
-      0,
-      [_B, _I, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetBucketNotificationConfigurationRequest$ = [
-      3,
-      n04,
-      _GBNCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketOwnershipControlsOutput$ = [
-      3,
-      n04,
-      _GBOCO,
-      0,
-      [_OC],
-      [[() => OwnershipControls$, 16]]
-    ];
-    var GetBucketOwnershipControlsRequest$ = [
-      3,
-      n04,
-      _GBOCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketPolicyOutput$ = [
-      3,
-      n04,
-      _GBPO,
-      0,
-      [_Po],
-      [[0, 16]]
-    ];
-    var GetBucketPolicyRequest$ = [
-      3,
-      n04,
-      _GBPR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketPolicyStatusOutput$ = [
-      3,
-      n04,
-      _GBPSO,
-      0,
-      [_PS],
-      [[() => PolicyStatus$, 16]]
-    ];
-    var GetBucketPolicyStatusRequest$ = [
-      3,
-      n04,
-      _GBPSR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketReplicationOutput$ = [
-      3,
-      n04,
-      _GBRO,
-      0,
-      [_RCe],
-      [[() => ReplicationConfiguration$, 16]]
-    ];
-    var GetBucketReplicationRequest$ = [
-      3,
-      n04,
-      _GBRR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketRequestPaymentOutput$ = [
-      3,
-      n04,
-      _GBRPO,
-      { [_xN]: _RPC },
-      [_Pay],
-      [0]
-    ];
-    var GetBucketRequestPaymentRequest$ = [
-      3,
-      n04,
-      _GBRPR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketTaggingOutput$ = [
-      3,
-      n04,
-      _GBTO,
-      { [_xN]: _Tag },
-      [_TS],
-      [[() => TagSet, 0]],
-      1
-    ];
-    var GetBucketTaggingRequest$ = [
-      3,
-      n04,
-      _GBTR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketVersioningOutput$ = [
-      3,
-      n04,
-      _GBVO,
-      { [_xN]: _VC },
-      [_S, _MFAD],
-      [0, [0, { [_xN]: _MDf }]]
-    ];
-    var GetBucketVersioningRequest$ = [
-      3,
-      n04,
-      _GBVR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetBucketWebsiteOutput$ = [
-      3,
-      n04,
-      _GBWO,
-      { [_xN]: _WC },
-      [_RART, _IDn, _EDr, _RR],
-      [() => RedirectAllRequestsTo$, () => IndexDocument$, () => ErrorDocument$, [() => RoutingRules, 0]]
-    ];
-    var GetBucketWebsiteRequest$ = [
-      3,
-      n04,
-      _GBWR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetObjectAclOutput$ = [
-      3,
-      n04,
-      _GOAO,
-      { [_xN]: _ACP },
-      [_O, _G, _RC],
-      [() => Owner$, [() => Grants, { [_xN]: _ACL }], [0, { [_hH]: _xarc }]]
-    ];
-    var GetObjectAclRequest$ = [
-      3,
-      n04,
-      _GOAR,
-      0,
-      [_B, _K2, _VI, _RP, _EBO],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetObjectAttributesOutput$ = [
-      3,
-      n04,
-      _GOAOe,
-      { [_xN]: _GOARe },
-      [_DM, _LM, _VI, _RC, _ETa, _C2, _OP, _SC, _OS],
-      [[2, { [_hH]: _xadm }], [4, { [_hH]: _LM_ }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xarc }], 0, () => Checksum$, [() => GetObjectAttributesParts$, 0], 0, 1]
-    ];
-    var GetObjectAttributesParts$ = [
-      3,
-      n04,
-      _GOAP,
-      0,
-      [_TPC, _PNM, _NPNM, _MP, _IT2, _Pa],
-      [[1, { [_xN]: _PC2 }], 0, 0, 1, 2, [() => PartsList, { [_xF]: 1, [_xN]: _Par }]]
-    ];
-    var GetObjectAttributesRequest$ = [
-      3,
-      n04,
-      _GOARet,
-      0,
-      [_B, _K2, _OA, _VI, _MP, _PNM, _SSECA, _SSECK, _SSECKMD, _RP, _EBO],
-      [[0, 1], [0, 1], [64 | 0, { [_hH]: _xaoa }], [0, { [_hQ]: _vI }], [1, { [_hH]: _xamp }], [0, { [_hH]: _xapnm }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      3
-    ];
-    var GetObjectLegalHoldOutput$ = [
-      3,
-      n04,
-      _GOLHO,
-      0,
-      [_LH],
-      [[() => ObjectLockLegalHold$, { [_hP]: 1, [_xN]: _LH }]]
-    ];
-    var GetObjectLegalHoldRequest$ = [
-      3,
-      n04,
-      _GOLHR,
-      0,
-      [_B, _K2, _VI, _RP, _EBO],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetObjectLockConfigurationOutput$ = [
-      3,
-      n04,
-      _GOLCO,
-      0,
-      [_OLC],
-      [[() => ObjectLockConfiguration$, 16]]
-    ];
-    var GetObjectLockConfigurationRequest$ = [
-      3,
-      n04,
-      _GOLCR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GetObjectOutput$ = [
-      3,
-      n04,
-      _GOO,
-      0,
-      [_Bo, _DM, _AR2, _E2, _Re, _LM, _CLo, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _MM, _VI, _CC, _CDo, _CEo, _CL, _CR, _CTo, _Ex, _ES, _WRL, _SSE, _M, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _SC, _RC, _RS, _PC2, _TC2, _OLM, _OLRUD, _OLLHS],
-      [[() => StreamingBlob, 16], [2, { [_hH]: _xadm }], [0, { [_hH]: _ar }], [0, { [_hH]: _xae }], [0, { [_hH]: _xar }], [4, { [_hH]: _LM_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [1, { [_hH]: _xamm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CR_ }], [0, { [_hH]: _CT_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _ES }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasse }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xars }], [1, { [_hH]: _xampc }], [1, { [_hH]: _xatc }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }]]
-    ];
-    var GetObjectRequest$ = [
-      3,
-      n04,
-      _GOR,
-      0,
-      [_B, _K2, _IM, _IMSf, _INM, _IUS, _Ra, _RCC, _RCD, _RCE, _RCL, _RCT, _RE, _VI, _SSECA, _SSECK, _SSECKMD, _RP, _PN, _EBO, _CMh],
-      [[0, 1], [0, 1], [0, { [_hH]: _IM_ }], [4, { [_hH]: _IMS_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _Ra }], [0, { [_hQ]: _rcc }], [0, { [_hQ]: _rcd }], [0, { [_hQ]: _rce }], [0, { [_hQ]: _rcl }], [0, { [_hQ]: _rct }], [6, { [_hQ]: _re }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [1, { [_hQ]: _pN }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xacm }]],
-      2
-    ];
-    var GetObjectRetentionOutput$ = [
-      3,
-      n04,
-      _GORO,
-      0,
-      [_Ret],
-      [[() => ObjectLockRetention$, { [_hP]: 1, [_xN]: _Ret }]]
-    ];
-    var GetObjectRetentionRequest$ = [
-      3,
-      n04,
-      _GORR,
-      0,
-      [_B, _K2, _VI, _RP, _EBO],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetObjectTaggingOutput$ = [
-      3,
-      n04,
-      _GOTO,
-      { [_xN]: _Tag },
-      [_TS, _VI],
-      [[() => TagSet, 0], [0, { [_hH]: _xavi }]],
-      1
-    ];
-    var GetObjectTaggingRequest$ = [
-      3,
-      n04,
-      _GOTR,
-      0,
-      [_B, _K2, _VI, _EBO, _RP],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
-      2
-    ];
-    var GetObjectTorrentOutput$ = [
-      3,
-      n04,
-      _GOTOe,
-      0,
-      [_Bo, _RC],
-      [[() => StreamingBlob, 16], [0, { [_hH]: _xarc }]]
-    ];
-    var GetObjectTorrentRequest$ = [
-      3,
-      n04,
-      _GOTRe,
-      0,
-      [_B, _K2, _RP, _EBO],
-      [[0, 1], [0, 1], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var GetPublicAccessBlockOutput$ = [
-      3,
-      n04,
-      _GPABO,
-      0,
-      [_PABC],
-      [[() => PublicAccessBlockConfiguration$, 16]]
-    ];
-    var GetPublicAccessBlockRequest$ = [
-      3,
-      n04,
-      _GPABR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var GlacierJobParameters$ = [
-      3,
-      n04,
-      _GJP,
-      0,
-      [_Ti],
-      [0],
-      1
-    ];
-    var Grant$ = [
-      3,
-      n04,
-      _Gr,
-      0,
-      [_Gra, _Pe],
-      [[() => Grantee$, { [_xNm]: [_x, _hi] }], 0]
-    ];
-    var Grantee$ = [
-      3,
-      n04,
-      _Gra,
-      0,
-      [_Ty, _DN, _EA, _ID, _URI],
-      [[0, { [_xA]: 1, [_xN]: _xs }], 0, 0, 0, 0],
-      1
-    ];
-    var HeadBucketOutput$ = [
-      3,
-      n04,
-      _HBO,
-      0,
-      [_BA, _BLT, _BLN, _BR, _APA],
-      [[0, { [_hH]: _xaba }], [0, { [_hH]: _xablt }], [0, { [_hH]: _xabln }], [0, { [_hH]: _xabr }], [2, { [_hH]: _xaapa }]]
-    ];
-    var HeadBucketRequest$ = [
-      3,
-      n04,
-      _HBR,
-      0,
-      [_B, _EBO],
-      [[0, 1], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var HeadObjectOutput$ = [
-      3,
-      n04,
-      _HOO,
-      0,
-      [_DM, _AR2, _E2, _Re, _ASr, _LM, _CLo, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _ETa, _MM, _VI, _CC, _CDo, _CEo, _CL, _CTo, _CR, _Ex, _ES, _WRL, _SSE, _M, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _SC, _RC, _RS, _PC2, _TC2, _OLM, _OLRUD, _OLLHS],
-      [[2, { [_hH]: _xadm }], [0, { [_hH]: _ar }], [0, { [_hH]: _xae }], [0, { [_hH]: _xar }], [0, { [_hH]: _xaas }], [4, { [_hH]: _LM_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [0, { [_hH]: _ETa }], [1, { [_hH]: _xamm }], [0, { [_hH]: _xavi }], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _CR_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _ES }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasse }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xarc }], [0, { [_hH]: _xars }], [1, { [_hH]: _xampc }], [1, { [_hH]: _xatc }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }]]
-    ];
-    var HeadObjectRequest$ = [
-      3,
-      n04,
-      _HOR,
-      0,
-      [_B, _K2, _IM, _IMSf, _INM, _IUS, _Ra, _RCC, _RCD, _RCE, _RCL, _RCT, _RE, _VI, _SSECA, _SSECK, _SSECKMD, _RP, _PN, _EBO, _CMh],
-      [[0, 1], [0, 1], [0, { [_hH]: _IM_ }], [4, { [_hH]: _IMS_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _Ra }], [0, { [_hQ]: _rcc }], [0, { [_hQ]: _rcd }], [0, { [_hQ]: _rce }], [0, { [_hQ]: _rcl }], [0, { [_hQ]: _rct }], [6, { [_hQ]: _re }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [1, { [_hQ]: _pN }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xacm }]],
-      2
-    ];
-    var IdempotencyParameterMismatch$ = [
-      -3,
-      n04,
-      _IPM,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(IdempotencyParameterMismatch$, IdempotencyParameterMismatch);
-    var IndexDocument$ = [
-      3,
-      n04,
-      _IDn,
-      0,
-      [_Su],
-      [0],
-      1
-    ];
-    var Initiator$ = [
-      3,
-      n04,
-      _In,
-      0,
-      [_ID, _DN],
-      [0, 0]
-    ];
-    var InputSerialization$ = [
-      3,
-      n04,
-      _IS,
-      0,
-      [_CSV, _CTom, _JSON, _Parq],
-      [() => CSVInput$, 0, () => JSONInput$, () => ParquetInput$]
-    ];
-    var IntelligentTieringAndOperator$ = [
-      3,
-      n04,
-      _ITAO,
-      0,
-      [_P2, _T2],
-      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
-    ];
-    var IntelligentTieringConfiguration$ = [
-      3,
-      n04,
-      _ITC,
-      0,
-      [_I, _S, _Tie, _F],
-      [0, 0, [() => TieringList, { [_xF]: 1, [_xN]: _Tier }], [() => IntelligentTieringFilter$, 0]],
-      3
-    ];
-    var IntelligentTieringFilter$ = [
-      3,
-      n04,
-      _ITF,
-      0,
-      [_P2, _Ta2, _An],
-      [0, () => Tag$2, [() => IntelligentTieringAndOperator$, 0]]
-    ];
-    var InvalidObjectState$ = [
-      -3,
-      n04,
-      _IOS,
-      { [_e4]: _c4, [_hE4]: 403 },
-      [_SC, _AT3],
-      [0, 0]
-    ];
-    schema2.TypeRegistry.for(n04).registerError(InvalidObjectState$, InvalidObjectState);
-    var InvalidRequest$ = [
-      -3,
-      n04,
-      _IR,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(InvalidRequest$, InvalidRequest);
-    var InvalidWriteOffset$ = [
-      -3,
-      n04,
-      _IWO,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(InvalidWriteOffset$, InvalidWriteOffset);
-    var InventoryConfiguration$ = [
-      3,
-      n04,
-      _IC,
-      0,
-      [_Des, _IE, _I, _IOV, _Sc, _F, _OF],
-      [[() => InventoryDestination$, 0], 2, 0, 0, () => InventorySchedule$, () => InventoryFilter$, [() => InventoryOptionalFields, 0]],
-      5
-    ];
-    var InventoryDestination$ = [
-      3,
-      n04,
-      _IDnv,
-      0,
-      [_SBD],
-      [[() => InventoryS3BucketDestination$, 0]],
-      1
-    ];
-    var InventoryEncryption$ = [
-      3,
-      n04,
-      _IEn,
-      0,
-      [_SSES, _SSEKMS],
-      [[() => SSES3$, { [_xN]: _SS }], [() => SSEKMS$, { [_xN]: _SK }]]
-    ];
-    var InventoryFilter$ = [
-      3,
-      n04,
-      _IF,
-      0,
-      [_P2],
-      [0],
-      1
-    ];
-    var InventoryS3BucketDestination$ = [
-      3,
-      n04,
-      _ISBD,
-      0,
-      [_B, _Fo, _AI, _P2, _En],
-      [0, 0, 0, 0, [() => InventoryEncryption$, 0]],
-      2
-    ];
-    var InventorySchedule$ = [
-      3,
-      n04,
-      _ISn,
-      0,
-      [_Fr],
-      [0],
-      1
-    ];
-    var InventoryTableConfiguration$ = [
-      3,
-      n04,
-      _ITCn,
-      0,
-      [_CSo, _EC],
-      [0, () => MetadataTableEncryptionConfiguration$],
-      1
-    ];
-    var InventoryTableConfigurationResult$ = [
-      3,
-      n04,
-      _ITCR,
-      0,
-      [_CSo, _TSa, _Err, _TNa, _TA],
-      [0, 0, () => ErrorDetails$, 0, 0],
-      1
-    ];
-    var InventoryTableConfigurationUpdates$ = [
-      3,
-      n04,
-      _ITCU,
-      0,
-      [_CSo, _EC],
-      [0, () => MetadataTableEncryptionConfiguration$],
-      1
-    ];
-    var JournalTableConfiguration$ = [
-      3,
-      n04,
-      _JTC,
-      0,
-      [_REe, _EC],
-      [() => RecordExpiration$, () => MetadataTableEncryptionConfiguration$],
-      1
-    ];
-    var JournalTableConfigurationResult$ = [
-      3,
-      n04,
-      _JTCR,
-      0,
-      [_TSa, _TNa, _REe, _Err, _TA],
-      [0, 0, () => RecordExpiration$, () => ErrorDetails$, 0],
-      3
-    ];
-    var JournalTableConfigurationUpdates$ = [
-      3,
-      n04,
-      _JTCU,
-      0,
-      [_REe],
-      [() => RecordExpiration$],
-      1
-    ];
-    var JSONInput$ = [
-      3,
-      n04,
-      _JSONI,
-      0,
-      [_Ty],
-      [0]
-    ];
-    var JSONOutput$ = [
-      3,
-      n04,
-      _JSONO,
-      0,
-      [_RD],
-      [0]
-    ];
-    var LambdaFunctionConfiguration$ = [
-      3,
-      n04,
-      _LFC,
-      0,
-      [_LFA, _Ev, _I, _F],
-      [[0, { [_xN]: _CF }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => NotificationConfigurationFilter$, 0]],
-      2
-    ];
-    var LifecycleExpiration$ = [
-      3,
-      n04,
-      _LEi,
-      0,
-      [_Da, _D, _EODM],
-      [5, 1, 2]
-    ];
-    var LifecycleRule$ = [
-      3,
-      n04,
-      _LR,
-      0,
-      [_S, _E2, _ID, _P2, _F, _Tr, _NVT, _NVE, _AIMU],
-      [0, () => LifecycleExpiration$, 0, 0, [() => LifecycleRuleFilter$, 0], [() => TransitionList, { [_xF]: 1, [_xN]: _Tra }], [() => NoncurrentVersionTransitionList, { [_xF]: 1, [_xN]: _NVTo }], () => NoncurrentVersionExpiration$, () => AbortIncompleteMultipartUpload$],
-      1
-    ];
-    var LifecycleRuleAndOperator$ = [
-      3,
-      n04,
-      _LRAO,
-      0,
-      [_P2, _T2, _OSGT, _OSLT],
-      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }], 1, 1]
-    ];
-    var LifecycleRuleFilter$ = [
-      3,
-      n04,
-      _LRF,
-      0,
-      [_P2, _Ta2, _OSGT, _OSLT, _An],
-      [0, () => Tag$2, 1, 1, [() => LifecycleRuleAndOperator$, 0]]
-    ];
-    var ListBucketAnalyticsConfigurationsOutput$ = [
-      3,
-      n04,
-      _LBACO,
-      { [_xN]: _LBACR },
-      [_IT2, _CTon, _NCT, _ACLn],
-      [2, 0, 0, [() => AnalyticsConfigurationList, { [_xF]: 1, [_xN]: _ACn }]]
-    ];
-    var ListBucketAnalyticsConfigurationsRequest$ = [
-      3,
-      n04,
-      _LBACRi,
-      0,
-      [_B, _CTon, _EBO],
-      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var ListBucketIntelligentTieringConfigurationsOutput$ = [
-      3,
-      n04,
-      _LBITCO,
-      0,
-      [_IT2, _CTon, _NCT, _ITCL],
-      [2, 0, 0, [() => IntelligentTieringConfigurationList, { [_xF]: 1, [_xN]: _ITC }]]
-    ];
-    var ListBucketIntelligentTieringConfigurationsRequest$ = [
-      3,
-      n04,
-      _LBITCR,
-      0,
-      [_B, _CTon, _EBO],
-      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var ListBucketInventoryConfigurationsOutput$ = [
-      3,
-      n04,
-      _LBICO,
-      { [_xN]: _LICR },
-      [_CTon, _ICL, _IT2, _NCT],
-      [0, [() => InventoryConfigurationList, { [_xF]: 1, [_xN]: _IC }], 2, 0]
-    ];
-    var ListBucketInventoryConfigurationsRequest$ = [
-      3,
-      n04,
-      _LBICR,
-      0,
-      [_B, _CTon, _EBO],
-      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var ListBucketMetricsConfigurationsOutput$ = [
-      3,
-      n04,
-      _LBMCO,
-      { [_xN]: _LMCR },
-      [_IT2, _CTon, _NCT, _MCL],
-      [2, 0, 0, [() => MetricsConfigurationList, { [_xF]: 1, [_xN]: _MCe }]]
-    ];
-    var ListBucketMetricsConfigurationsRequest$ = [
-      3,
-      n04,
-      _LBMCR,
-      0,
-      [_B, _CTon, _EBO],
-      [[0, 1], [0, { [_hQ]: _ct }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var ListBucketsOutput$ = [
-      3,
-      n04,
-      _LBO,
-      { [_xN]: _LAMBR },
-      [_Bu, _O, _CTon, _P2],
-      [[() => Buckets, 0], () => Owner$, 0, 0]
-    ];
-    var ListBucketsRequest$ = [
-      3,
-      n04,
-      _LBR,
-      0,
-      [_MB, _CTon, _P2, _BR],
-      [[1, { [_hQ]: _mb }], [0, { [_hQ]: _ct }], [0, { [_hQ]: _p }], [0, { [_hQ]: _br }]]
-    ];
-    var ListDirectoryBucketsOutput$ = [
-      3,
-      n04,
-      _LDBO,
-      { [_xN]: _LAMDBR },
-      [_Bu, _CTon],
-      [[() => Buckets, 0], 0]
-    ];
-    var ListDirectoryBucketsRequest$ = [
-      3,
-      n04,
-      _LDBR,
-      0,
-      [_CTon, _MDB],
-      [[0, { [_hQ]: _ct }], [1, { [_hQ]: _mdb }]]
-    ];
-    var ListMultipartUploadsOutput$ = [
-      3,
-      n04,
-      _LMUO,
-      { [_xN]: _LMUR },
-      [_B, _KM, _UIM, _NKM, _P2, _Deli, _NUIM, _MUa, _IT2, _U, _CPom, _ETn, _RC],
-      [0, 0, 0, 0, 0, 0, 0, 1, 2, [() => MultipartUploadList, { [_xF]: 1, [_xN]: _Up }], [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
-    ];
-    var ListMultipartUploadsRequest$ = [
-      3,
-      n04,
-      _LMURi,
-      0,
-      [_B, _Deli, _ETn, _KM, _MUa, _P2, _UIM, _EBO, _RP],
-      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _km }], [1, { [_hQ]: _mu }], [0, { [_hQ]: _p }], [0, { [_hQ]: _uim }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
-      1
-    ];
-    var ListObjectsOutput$ = [
-      3,
-      n04,
-      _LOO,
-      { [_xN]: _LBRi },
-      [_IT2, _Ma, _NM, _Con, _N, _P2, _Deli, _MK, _CPom, _ETn, _RC],
-      [2, 0, 0, [() => ObjectList, { [_xF]: 1 }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
-    ];
-    var ListObjectsRequest$ = [
-      3,
-      n04,
-      _LOR,
-      0,
-      [_B, _Deli, _ETn, _Ma, _MK, _P2, _RP, _EBO, _OOA],
-      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _m3 }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [64 | 0, { [_hH]: _xaooa }]],
-      1
-    ];
-    var ListObjectsV2Output$ = [
-      3,
-      n04,
-      _LOVO,
-      { [_xN]: _LBRi },
-      [_IT2, _Con, _N, _P2, _Deli, _MK, _CPom, _ETn, _KC, _CTon, _NCT, _SA, _RC],
-      [2, [() => ObjectList, { [_xF]: 1 }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, 1, 0, 0, 0, [0, { [_hH]: _xarc }]]
-    ];
-    var ListObjectsV2Request$ = [
-      3,
-      n04,
-      _LOVR,
-      0,
-      [_B, _Deli, _ETn, _MK, _P2, _CTon, _FO, _SA, _RP, _EBO, _OOA],
-      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hQ]: _ct }], [2, { [_hQ]: _fo }], [0, { [_hQ]: _sa }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [64 | 0, { [_hH]: _xaooa }]],
-      1
-    ];
-    var ListObjectVersionsOutput$ = [
-      3,
-      n04,
-      _LOVOi,
-      { [_xN]: _LVR },
-      [_IT2, _KM, _VIM, _NKM, _NVIM, _Ve, _DMe, _N, _P2, _Deli, _MK, _CPom, _ETn, _RC],
-      [2, 0, 0, 0, 0, [() => ObjectVersionList, { [_xF]: 1, [_xN]: _Ver }], [() => DeleteMarkers, { [_xF]: 1, [_xN]: _DM }], 0, 0, 0, 1, [() => CommonPrefixList, { [_xF]: 1 }], 0, [0, { [_hH]: _xarc }]]
-    ];
-    var ListObjectVersionsRequest$ = [
-      3,
-      n04,
-      _LOVRi,
-      0,
-      [_B, _Deli, _ETn, _KM, _MK, _P2, _VIM, _EBO, _RP, _OOA],
-      [[0, 1], [0, { [_hQ]: _d }], [0, { [_hQ]: _et }], [0, { [_hQ]: _km }], [1, { [_hQ]: _mk }], [0, { [_hQ]: _p }], [0, { [_hQ]: _vim }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }], [64 | 0, { [_hH]: _xaooa }]],
-      1
-    ];
-    var ListPartsOutput$ = [
-      3,
-      n04,
-      _LPO,
-      { [_xN]: _LPR },
-      [_AD, _ARI2, _B, _K2, _UI, _PNM, _NPNM, _MP, _IT2, _Pa, _In, _O, _SC, _RC, _CA2, _CT2],
-      [[4, { [_hH]: _xaad }], [0, { [_hH]: _xaari }], 0, 0, 0, 0, 0, 1, 2, [() => Parts, { [_xF]: 1, [_xN]: _Par }], () => Initiator$, () => Owner$, 0, [0, { [_hH]: _xarc }], 0, 0]
-    ];
-    var ListPartsRequest$ = [
-      3,
-      n04,
-      _LPRi,
-      0,
-      [_B, _K2, _UI, _MP, _PNM, _RP, _EBO, _SSECA, _SSECK, _SSECKMD],
-      [[0, 1], [0, 1], [0, { [_hQ]: _uI }], [1, { [_hQ]: _mp }], [0, { [_hQ]: _pnm }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }]],
-      3
-    ];
-    var LocationInfo$ = [
-      3,
-      n04,
-      _LI,
-      0,
-      [_Ty, _N],
-      [0, 0]
-    ];
-    var LoggingEnabled$ = [
-      3,
-      n04,
-      _LE,
-      0,
-      [_TB, _TP, _TG, _TOKF],
-      [0, 0, [() => TargetGrants, 0], [() => TargetObjectKeyFormat$, 0]],
-      2
-    ];
-    var MetadataConfiguration$ = [
-      3,
-      n04,
-      _MC,
-      0,
-      [_JTC, _ITCn],
-      [() => JournalTableConfiguration$, () => InventoryTableConfiguration$],
-      1
-    ];
-    var MetadataConfigurationResult$ = [
-      3,
-      n04,
-      _MCR,
-      0,
-      [_DRes, _JTCR, _ITCR],
-      [() => DestinationResult$, () => JournalTableConfigurationResult$, () => InventoryTableConfigurationResult$],
-      1
-    ];
-    var MetadataEntry$ = [
-      3,
-      n04,
-      _ME,
-      0,
-      [_N, _V2],
-      [0, 0]
-    ];
-    var MetadataTableConfiguration$ = [
-      3,
-      n04,
-      _MTC,
-      0,
-      [_STD],
-      [() => S3TablesDestination$],
-      1
-    ];
-    var MetadataTableConfigurationResult$ = [
-      3,
-      n04,
-      _MTCR,
-      0,
-      [_STDR],
-      [() => S3TablesDestinationResult$],
-      1
-    ];
-    var MetadataTableEncryptionConfiguration$ = [
-      3,
-      n04,
-      _MTEC,
-      0,
-      [_SAs, _KKA],
-      [0, 0],
-      1
-    ];
-    var Metrics$ = [
-      3,
-      n04,
-      _Me,
-      0,
-      [_S, _ETv],
-      [0, () => ReplicationTimeValue$],
-      1
-    ];
-    var MetricsAndOperator$ = [
-      3,
-      n04,
-      _MAO,
-      0,
-      [_P2, _T2, _APAc],
-      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }], 0]
-    ];
-    var MetricsConfiguration$ = [
-      3,
-      n04,
-      _MCe,
-      0,
-      [_I, _F],
-      [0, [() => MetricsFilter$, 0]],
-      1
-    ];
-    var MultipartUpload$ = [
-      3,
-      n04,
-      _MU,
-      0,
-      [_UI, _K2, _Ini, _SC, _O, _In, _CA2, _CT2],
-      [0, 0, 4, 0, () => Owner$, () => Initiator$, 0, 0]
-    ];
-    var NoncurrentVersionExpiration$ = [
-      3,
-      n04,
-      _NVE,
-      0,
-      [_ND, _NNV],
-      [1, 1]
-    ];
-    var NoncurrentVersionTransition$ = [
-      3,
-      n04,
-      _NVTo,
-      0,
-      [_ND, _SC, _NNV],
-      [1, 0, 1]
-    ];
-    var NoSuchBucket$ = [
-      -3,
-      n04,
-      _NSB,
-      { [_e4]: _c4, [_hE4]: 404 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(NoSuchBucket$, NoSuchBucket);
-    var NoSuchKey$ = [
-      -3,
-      n04,
-      _NSK,
-      { [_e4]: _c4, [_hE4]: 404 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(NoSuchKey$, NoSuchKey);
-    var NoSuchUpload$ = [
-      -3,
-      n04,
-      _NSU,
-      { [_e4]: _c4, [_hE4]: 404 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(NoSuchUpload$, NoSuchUpload);
-    var NotFound$ = [
-      -3,
-      n04,
-      _NF,
-      { [_e4]: _c4 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(NotFound$, NotFound);
-    var NotificationConfiguration$ = [
-      3,
-      n04,
-      _NC,
-      0,
-      [_TCo, _QCu, _LFCa, _EBC],
-      [[() => TopicConfigurationList, { [_xF]: 1, [_xN]: _TCop }], [() => QueueConfigurationList, { [_xF]: 1, [_xN]: _QCue }], [() => LambdaFunctionConfigurationList, { [_xF]: 1, [_xN]: _CFC }], () => EventBridgeConfiguration$]
-    ];
-    var NotificationConfigurationFilter$ = [
-      3,
-      n04,
-      _NCF,
-      0,
-      [_K2],
-      [[() => S3KeyFilter$, { [_xN]: _SKe }]]
-    ];
-    var _Object$ = [
-      3,
-      n04,
-      _Obj,
-      0,
-      [_K2, _LM, _ETa, _CA2, _CT2, _Si, _SC, _O, _RSe],
-      [0, 4, 0, [64 | 0, { [_xF]: 1 }], 0, 1, 0, () => Owner$, () => RestoreStatus$]
-    ];
-    var ObjectAlreadyInActiveTierError$ = [
-      -3,
-      n04,
-      _OAIATE,
-      { [_e4]: _c4, [_hE4]: 403 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(ObjectAlreadyInActiveTierError$, ObjectAlreadyInActiveTierError);
-    var ObjectIdentifier$ = [
-      3,
-      n04,
-      _OI,
-      0,
-      [_K2, _VI, _ETa, _LMT, _Si],
-      [0, 0, 0, 6, 1],
-      1
-    ];
-    var ObjectLockConfiguration$ = [
-      3,
-      n04,
-      _OLC,
-      0,
-      [_OLE, _Ru],
-      [0, () => ObjectLockRule$]
-    ];
-    var ObjectLockLegalHold$ = [
-      3,
-      n04,
-      _OLLH,
-      0,
-      [_S],
-      [0]
-    ];
-    var ObjectLockRetention$ = [
-      3,
-      n04,
-      _OLR,
-      0,
-      [_Mo, _RUD],
-      [0, 5]
-    ];
-    var ObjectLockRule$ = [
-      3,
-      n04,
-      _OLRb,
-      0,
-      [_DRe],
-      [() => DefaultRetention$]
-    ];
-    var ObjectNotInActiveTierError$ = [
-      -3,
-      n04,
-      _ONIATE,
-      { [_e4]: _c4, [_hE4]: 403 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(ObjectNotInActiveTierError$, ObjectNotInActiveTierError);
-    var ObjectPart$ = [
-      3,
-      n04,
-      _OPb,
-      0,
-      [_PN, _Si, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
-      [1, 1, 0, 0, 0, 0, 0]
-    ];
-    var ObjectVersion$ = [
-      3,
-      n04,
-      _OV,
-      0,
-      [_ETa, _CA2, _CT2, _Si, _SC, _K2, _VI, _IL, _LM, _O, _RSe],
-      [0, [64 | 0, { [_xF]: 1 }], 0, 1, 0, 0, 0, 2, 4, () => Owner$, () => RestoreStatus$]
-    ];
-    var OutputLocation$ = [
-      3,
-      n04,
-      _OL,
-      0,
-      [_S_],
-      [[() => S3Location$, 0]]
-    ];
-    var OutputSerialization$ = [
-      3,
-      n04,
-      _OSu,
-      0,
-      [_CSV, _JSON],
-      [() => CSVOutput$, () => JSONOutput$]
-    ];
-    var Owner$ = [
-      3,
-      n04,
-      _O,
-      0,
-      [_DN, _ID],
-      [0, 0]
-    ];
-    var OwnershipControls$ = [
-      3,
-      n04,
-      _OC,
-      0,
-      [_R],
-      [[() => OwnershipControlsRules, { [_xF]: 1, [_xN]: _Ru }]],
-      1
-    ];
-    var OwnershipControlsRule$ = [
-      3,
-      n04,
-      _OCR,
-      0,
-      [_OO],
-      [0],
-      1
-    ];
-    var ParquetInput$ = [
-      3,
-      n04,
-      _PI2,
-      0,
-      [],
-      []
-    ];
-    var Part$ = [
-      3,
-      n04,
-      _Par,
-      0,
-      [_PN, _LM, _ETa, _Si, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh],
-      [1, 4, 0, 1, 0, 0, 0, 0, 0]
-    ];
-    var PartitionedPrefix$ = [
-      3,
-      n04,
-      _PP,
-      { [_xN]: _PP },
-      [_PDS],
-      [0]
-    ];
-    var PolicyStatus$ = [
-      3,
-      n04,
-      _PS,
-      0,
-      [_IP],
-      [[2, { [_xN]: _IP }]]
-    ];
-    var Progress$ = [
-      3,
-      n04,
-      _Pr2,
-      0,
-      [_BS, _BP, _BRy],
-      [1, 1, 1]
-    ];
-    var ProgressEvent$ = [
-      3,
-      n04,
-      _PE,
-      0,
-      [_Det],
-      [[() => Progress$, { [_eP]: 1 }]]
-    ];
-    var PublicAccessBlockConfiguration$ = [
-      3,
-      n04,
-      _PABC,
-      0,
-      [_BPA, _IPA, _BPP, _RPB],
-      [[2, { [_xN]: _BPA }], [2, { [_xN]: _IPA }], [2, { [_xN]: _BPP }], [2, { [_xN]: _RPB }]]
-    ];
-    var PutBucketAbacRequest$ = [
-      3,
-      n04,
-      _PBAR,
-      0,
-      [_B, _AS, _CMD, _CA2, _EBO],
-      [[0, 1], [() => AbacStatus$, { [_hP]: 1, [_xN]: _AS }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketAccelerateConfigurationRequest$ = [
-      3,
-      n04,
-      _PBACR,
-      0,
-      [_B, _AC, _EBO, _CA2],
-      [[0, 1], [() => AccelerateConfiguration$, { [_hP]: 1, [_xN]: _AC }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
-      2
-    ];
-    var PutBucketAclRequest$ = [
-      3,
-      n04,
-      _PBARu,
-      0,
-      [_B, _ACL_, _ACP, _CMD, _CA2, _GFC, _GR, _GRACP, _GW, _GWACP, _EBO],
-      [[0, 1], [0, { [_hH]: _xaa }], [() => AccessControlPolicy$, { [_hP]: 1, [_xN]: _ACP }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var PutBucketAnalyticsConfigurationRequest$ = [
-      3,
-      n04,
-      _PBACRu,
-      0,
-      [_B, _I, _ACn, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [() => AnalyticsConfiguration$, { [_hP]: 1, [_xN]: _ACn }], [0, { [_hH]: _xaebo }]],
-      3
-    ];
-    var PutBucketCorsRequest$ = [
-      3,
-      n04,
-      _PBCR,
-      0,
-      [_B, _CORSC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => CORSConfiguration$, { [_hP]: 1, [_xN]: _CORSC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketEncryptionRequest$ = [
-      3,
-      n04,
-      _PBER,
-      0,
-      [_B, _SSEC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => ServerSideEncryptionConfiguration$, { [_hP]: 1, [_xN]: _SSEC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketIntelligentTieringConfigurationRequest$ = [
-      3,
-      n04,
-      _PBITCR,
-      0,
-      [_B, _I, _ITC, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [() => IntelligentTieringConfiguration$, { [_hP]: 1, [_xN]: _ITC }], [0, { [_hH]: _xaebo }]],
-      3
-    ];
-    var PutBucketInventoryConfigurationRequest$ = [
-      3,
-      n04,
-      _PBICR,
-      0,
-      [_B, _I, _IC, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [() => InventoryConfiguration$, { [_hP]: 1, [_xN]: _IC }], [0, { [_hH]: _xaebo }]],
-      3
-    ];
-    var PutBucketLifecycleConfigurationOutput$ = [
-      3,
-      n04,
-      _PBLCO,
-      0,
-      [_TDMOS],
-      [[0, { [_hH]: _xatdmos }]]
-    ];
-    var PutBucketLifecycleConfigurationRequest$ = [
-      3,
-      n04,
-      _PBLCR,
-      0,
-      [_B, _CA2, _LCi, _EBO, _TDMOS],
-      [[0, 1], [0, { [_hH]: _xasca }], [() => BucketLifecycleConfiguration$, { [_hP]: 1, [_xN]: _LCi }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xatdmos }]],
-      1
-    ];
-    var PutBucketLoggingRequest$ = [
-      3,
-      n04,
-      _PBLR,
-      0,
-      [_B, _BLS, _CMD, _CA2, _EBO],
-      [[0, 1], [() => BucketLoggingStatus$, { [_hP]: 1, [_xN]: _BLS }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketMetricsConfigurationRequest$ = [
-      3,
-      n04,
-      _PBMCR,
-      0,
-      [_B, _I, _MCe, _EBO],
-      [[0, 1], [0, { [_hQ]: _i }], [() => MetricsConfiguration$, { [_hP]: 1, [_xN]: _MCe }], [0, { [_hH]: _xaebo }]],
-      3
-    ];
-    var PutBucketNotificationConfigurationRequest$ = [
-      3,
-      n04,
-      _PBNCR,
-      0,
-      [_B, _NC, _EBO, _SDV],
-      [[0, 1], [() => NotificationConfiguration$, { [_hP]: 1, [_xN]: _NC }], [0, { [_hH]: _xaebo }], [2, { [_hH]: _xasdv }]],
-      2
-    ];
-    var PutBucketOwnershipControlsRequest$ = [
-      3,
-      n04,
-      _PBOCR,
-      0,
-      [_B, _OC, _CMD, _EBO, _CA2],
-      [[0, 1], [() => OwnershipControls$, { [_hP]: 1, [_xN]: _OC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasca }]],
-      2
-    ];
-    var PutBucketPolicyRequest$ = [
-      3,
-      n04,
-      _PBPR,
-      0,
-      [_B, _Po, _CMD, _CA2, _CRSBA, _EBO],
-      [[0, 1], [0, 16], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [2, { [_hH]: _xacrsba }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketReplicationRequest$ = [
-      3,
-      n04,
-      _PBRR,
-      0,
-      [_B, _RCe, _CMD, _CA2, _To, _EBO],
-      [[0, 1], [() => ReplicationConfiguration$, { [_hP]: 1, [_xN]: _RCe }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xabolt }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketRequestPaymentRequest$ = [
-      3,
-      n04,
-      _PBRPR,
-      0,
-      [_B, _RPC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => RequestPaymentConfiguration$, { [_hP]: 1, [_xN]: _RPC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketTaggingRequest$ = [
-      3,
-      n04,
-      _PBTR,
-      0,
-      [_B, _Tag, _CMD, _CA2, _EBO],
-      [[0, 1], [() => Tagging$, { [_hP]: 1, [_xN]: _Tag }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketVersioningRequest$ = [
-      3,
-      n04,
-      _PBVR,
-      0,
-      [_B, _VC, _CMD, _CA2, _MFA, _EBO],
-      [[0, 1], [() => VersioningConfiguration$, { [_hP]: 1, [_xN]: _VC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xam_ }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutBucketWebsiteRequest$ = [
-      3,
-      n04,
-      _PBWR,
-      0,
-      [_B, _WC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => WebsiteConfiguration$, { [_hP]: 1, [_xN]: _WC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutObjectAclOutput$ = [
-      3,
-      n04,
-      _POAO,
-      0,
-      [_RC],
-      [[0, { [_hH]: _xarc }]]
-    ];
-    var PutObjectAclRequest$ = [
-      3,
-      n04,
-      _POAR,
-      0,
-      [_B, _K2, _ACL_, _ACP, _CMD, _CA2, _GFC, _GR, _GRACP, _GW, _GWACP, _RP, _VI, _EBO],
-      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [() => AccessControlPolicy$, { [_hP]: 1, [_xN]: _ACP }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagw }], [0, { [_hH]: _xagwa }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutObjectLegalHoldOutput$ = [
-      3,
-      n04,
-      _POLHO,
-      0,
-      [_RC],
-      [[0, { [_hH]: _xarc }]]
-    ];
-    var PutObjectLegalHoldRequest$ = [
-      3,
-      n04,
-      _POLHR,
-      0,
-      [_B, _K2, _LH, _RP, _VI, _CMD, _CA2, _EBO],
-      [[0, 1], [0, 1], [() => ObjectLockLegalHold$, { [_hP]: 1, [_xN]: _LH }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutObjectLockConfigurationOutput$ = [
-      3,
-      n04,
-      _POLCO,
-      0,
-      [_RC],
-      [[0, { [_hH]: _xarc }]]
-    ];
-    var PutObjectLockConfigurationRequest$ = [
-      3,
-      n04,
-      _POLCR,
-      0,
-      [_B, _OLC, _RP, _To, _CMD, _CA2, _EBO],
-      [[0, 1], [() => ObjectLockConfiguration$, { [_hP]: 1, [_xN]: _OLC }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xabolt }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      1
-    ];
-    var PutObjectOutput$ = [
-      3,
-      n04,
-      _POO,
-      0,
-      [_E2, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _CT2, _SSE, _VI, _SSECA, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _Si, _RC],
-      [[0, { [_hH]: _xae }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xact }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xavi }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [1, { [_hH]: _xaos }], [0, { [_hH]: _xarc }]]
-    ];
-    var PutObjectRequest$ = [
-      3,
-      n04,
-      _POR,
-      0,
-      [_B, _K2, _ACL_, _Bo, _CC, _CDo, _CEo, _CL, _CLo, _CMD, _CTo, _CA2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _Ex, _IM, _INM, _GFC, _GR, _GRACP, _GWACP, _WOB, _M, _SSE, _SC, _WRL, _SSECA, _SSECK, _SSECKMD, _SSEKMSKI, _SSEKMSEC, _BKE, _RP, _Tag, _OLM, _OLRUD, _OLLHS, _EBO],
-      [[0, 1], [0, 1], [0, { [_hH]: _xaa }], [() => StreamingBlob, 16], [0, { [_hH]: _CC_ }], [0, { [_hH]: _CD_ }], [0, { [_hH]: _CE_ }], [0, { [_hH]: _CL_ }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _CM }], [0, { [_hH]: _CT_ }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [4, { [_hH]: _Ex }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [0, { [_hH]: _xagfc }], [0, { [_hH]: _xagr }], [0, { [_hH]: _xagra }], [0, { [_hH]: _xagwa }], [1, { [_hH]: _xawob }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasc }], [0, { [_hH]: _xawrl }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [() => SSEKMSEncryptionContext, { [_hH]: _xassec }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xat }], [0, { [_hH]: _xaolm }], [5, { [_hH]: _xaolrud }], [0, { [_hH]: _xaollh }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutObjectRetentionOutput$ = [
-      3,
-      n04,
-      _PORO,
-      0,
-      [_RC],
-      [[0, { [_hH]: _xarc }]]
-    ];
-    var PutObjectRetentionRequest$ = [
-      3,
-      n04,
-      _PORR,
-      0,
-      [_B, _K2, _Ret, _RP, _VI, _BGR, _CMD, _CA2, _EBO],
-      [[0, 1], [0, 1], [() => ObjectLockRetention$, { [_hP]: 1, [_xN]: _Ret }], [0, { [_hH]: _xarp }], [0, { [_hQ]: _vI }], [2, { [_hH]: _xabgr }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var PutObjectTaggingOutput$ = [
-      3,
-      n04,
-      _POTO,
-      0,
-      [_VI],
-      [[0, { [_hH]: _xavi }]]
-    ];
-    var PutObjectTaggingRequest$ = [
-      3,
-      n04,
-      _POTR,
-      0,
-      [_B, _K2, _Tag, _VI, _CMD, _CA2, _EBO, _RP],
-      [[0, 1], [0, 1], [() => Tagging$, { [_hP]: 1, [_xN]: _Tag }], [0, { [_hQ]: _vI }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xarp }]],
-      3
-    ];
-    var PutPublicAccessBlockRequest$ = [
-      3,
-      n04,
-      _PPABR,
-      0,
-      [_B, _PABC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => PublicAccessBlockConfiguration$, { [_hP]: 1, [_xN]: _PABC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var QueueConfiguration$ = [
-      3,
-      n04,
-      _QCue,
-      0,
-      [_QA, _Ev, _I, _F],
-      [[0, { [_xN]: _Qu }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => NotificationConfigurationFilter$, 0]],
-      2
-    ];
-    var RecordExpiration$ = [
-      3,
-      n04,
-      _REe,
-      0,
-      [_E2, _D],
-      [0, 1],
-      1
-    ];
-    var RecordsEvent$ = [
-      3,
-      n04,
-      _REec,
-      0,
-      [_Payl],
-      [[21, { [_eP]: 1 }]]
-    ];
-    var Redirect$ = [
-      3,
-      n04,
-      _Red,
-      0,
-      [_HN, _HRC, _Pro, _RKPW, _RKW],
-      [0, 0, 0, 0, 0]
-    ];
-    var RedirectAllRequestsTo$ = [
-      3,
-      n04,
-      _RART,
-      0,
-      [_HN, _Pro],
-      [0, 0],
-      1
-    ];
-    var RenameObjectOutput$ = [
-      3,
-      n04,
-      _ROO,
-      0,
-      [],
-      []
-    ];
-    var RenameObjectRequest$ = [
-      3,
-      n04,
-      _ROR,
-      0,
-      [_B, _K2, _RSen, _DIM, _DINM, _DIMS, _DIUS, _SIM, _SINM, _SIMS, _SIUS, _CTl],
-      [[0, 1], [0, 1], [0, { [_hH]: _xars_ }], [0, { [_hH]: _IM_ }], [0, { [_hH]: _INM_ }], [4, { [_hH]: _IMS_ }], [4, { [_hH]: _IUS_ }], [0, { [_hH]: _xarsim }], [0, { [_hH]: _xarsinm }], [6, { [_hH]: _xarsims }], [6, { [_hH]: _xarsius }], [0, { [_hH]: _xact_, [_iT3]: 1 }]],
-      3
-    ];
-    var ReplicaModifications$ = [
-      3,
-      n04,
-      _RM,
-      0,
-      [_S],
-      [0],
-      1
-    ];
-    var ReplicationConfiguration$ = [
-      3,
-      n04,
-      _RCe,
-      0,
-      [_Ro, _R],
-      [0, [() => ReplicationRules, { [_xF]: 1, [_xN]: _Ru }]],
-      2
-    ];
-    var ReplicationRule$ = [
-      3,
-      n04,
-      _RRe,
-      0,
-      [_S, _Des, _ID, _Pri, _P2, _F, _SSC, _EOR, _DMR],
-      [0, () => Destination$, 0, 1, 0, [() => ReplicationRuleFilter$, 0], () => SourceSelectionCriteria$, () => ExistingObjectReplication$, () => DeleteMarkerReplication$],
-      2
-    ];
-    var ReplicationRuleAndOperator$ = [
-      3,
-      n04,
-      _RRAO,
-      0,
-      [_P2, _T2],
-      [0, [() => TagSet, { [_xF]: 1, [_xN]: _Ta2 }]]
-    ];
-    var ReplicationRuleFilter$ = [
-      3,
-      n04,
-      _RRF,
-      0,
-      [_P2, _Ta2, _An],
-      [0, () => Tag$2, [() => ReplicationRuleAndOperator$, 0]]
-    ];
-    var ReplicationTime$ = [
-      3,
-      n04,
-      _RT3,
-      0,
-      [_S, _Tim],
-      [0, () => ReplicationTimeValue$],
-      2
-    ];
-    var ReplicationTimeValue$ = [
-      3,
-      n04,
-      _RTV,
-      0,
-      [_Mi],
-      [1]
-    ];
-    var RequestPaymentConfiguration$ = [
-      3,
-      n04,
-      _RPC,
-      0,
-      [_Pay],
-      [0],
-      1
-    ];
-    var RequestProgress$ = [
-      3,
-      n04,
-      _RPe,
-      0,
-      [_Ena],
-      [2]
-    ];
-    var RestoreObjectOutput$ = [
-      3,
-      n04,
-      _ROOe,
-      0,
-      [_RC, _ROP],
-      [[0, { [_hH]: _xarc }], [0, { [_hH]: _xarop }]]
-    ];
-    var RestoreObjectRequest$ = [
-      3,
-      n04,
-      _RORe,
-      0,
-      [_B, _K2, _VI, _RRes, _RP, _CA2, _EBO],
-      [[0, 1], [0, 1], [0, { [_hQ]: _vI }], [() => RestoreRequest$, { [_hP]: 1, [_xN]: _RRes }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var RestoreRequest$ = [
-      3,
-      n04,
-      _RRes,
-      0,
-      [_D, _GJP, _Ty, _Ti, _Desc, _SP, _OL],
-      [1, () => GlacierJobParameters$, 0, 0, 0, () => SelectParameters$, [() => OutputLocation$, 0]]
-    ];
-    var RestoreStatus$ = [
-      3,
-      n04,
-      _RSe,
-      0,
-      [_IRIP, _RED],
-      [2, 4]
-    ];
-    var RoutingRule$ = [
-      3,
-      n04,
-      _RRo,
-      0,
-      [_Red, _Co],
-      [() => Redirect$, () => Condition$],
-      1
-    ];
-    var S3KeyFilter$ = [
-      3,
-      n04,
-      _SKF,
-      0,
-      [_FRi],
-      [[() => FilterRuleList, { [_xF]: 1, [_xN]: _FR }]]
-    ];
-    var S3Location$ = [
-      3,
-      n04,
-      _SL,
-      0,
-      [_BN, _P2, _En, _CACL, _ACL, _Tag, _UM, _SC],
-      [0, 0, [() => Encryption$, 0], 0, [() => Grants, 0], [() => Tagging$, 0], [() => UserMetadata, 0], 0],
-      2
-    ];
-    var S3TablesDestination$ = [
-      3,
-      n04,
-      _STD,
-      0,
-      [_TBA, _TNa],
-      [0, 0],
-      2
-    ];
-    var S3TablesDestinationResult$ = [
-      3,
-      n04,
-      _STDR,
-      0,
-      [_TBA, _TNa, _TA, _TN],
-      [0, 0, 0, 0],
-      4
-    ];
-    var ScanRange$ = [
-      3,
-      n04,
-      _SR,
-      0,
-      [_St, _End],
-      [1, 1]
-    ];
-    var SelectObjectContentOutput$ = [
-      3,
-      n04,
-      _SOCO,
-      0,
-      [_Payl],
-      [[() => SelectObjectContentEventStream$, 16]]
-    ];
-    var SelectObjectContentRequest$ = [
-      3,
-      n04,
-      _SOCR,
-      0,
-      [_B, _K2, _Exp, _ETx, _IS, _OSu, _SSECA, _SSECK, _SSECKMD, _RPe, _SR, _EBO],
-      [[0, 1], [0, 1], 0, 0, () => InputSerialization$, () => OutputSerialization$, [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], () => RequestProgress$, () => ScanRange$, [0, { [_hH]: _xaebo }]],
-      6
-    ];
-    var SelectParameters$ = [
-      3,
-      n04,
-      _SP,
-      0,
-      [_IS, _ETx, _Exp, _OSu],
-      [() => InputSerialization$, 0, 0, () => OutputSerialization$],
-      4
-    ];
-    var ServerSideEncryptionByDefault$ = [
-      3,
-      n04,
-      _SSEBD,
-      0,
-      [_SSEA, _KMSMKID],
-      [0, [() => SSEKMSKeyId, 0]],
-      1
-    ];
-    var ServerSideEncryptionConfiguration$ = [
-      3,
-      n04,
-      _SSEC,
-      0,
-      [_R],
-      [[() => ServerSideEncryptionRules, { [_xF]: 1, [_xN]: _Ru }]],
-      1
-    ];
-    var ServerSideEncryptionRule$ = [
-      3,
-      n04,
-      _SSER,
-      0,
-      [_ASSEBD, _BKE, _BET],
-      [[() => ServerSideEncryptionByDefault$, 0], 2, [() => BlockedEncryptionTypes$, 0]]
-    ];
-    var SessionCredentials$ = [
-      3,
-      n04,
-      _SCe,
-      0,
-      [_AKI2, _SAK2, _ST2, _E2],
-      [[0, { [_xN]: _AKI2 }], [() => SessionCredentialValue, { [_xN]: _SAK2 }], [() => SessionCredentialValue, { [_xN]: _ST2 }], [4, { [_xN]: _E2 }]],
-      4
-    ];
-    var SimplePrefix$ = [
-      3,
-      n04,
-      _SPi,
-      { [_xN]: _SPi },
-      [],
-      []
-    ];
-    var SourceSelectionCriteria$ = [
-      3,
-      n04,
-      _SSC,
-      0,
-      [_SKEO, _RM],
-      [() => SseKmsEncryptedObjects$, () => ReplicaModifications$]
-    ];
-    var SSEKMS$ = [
-      3,
-      n04,
-      _SSEKMS,
-      { [_xN]: _SK },
-      [_KI],
-      [[() => SSEKMSKeyId, 0]],
-      1
-    ];
-    var SseKmsEncryptedObjects$ = [
-      3,
-      n04,
-      _SKEO,
-      0,
-      [_S],
-      [0],
-      1
-    ];
-    var SSES3$ = [
-      3,
-      n04,
-      _SSES,
-      { [_xN]: _SS },
-      [],
-      []
-    ];
-    var Stats$ = [
-      3,
-      n04,
-      _Sta,
-      0,
-      [_BS, _BP, _BRy],
-      [1, 1, 1]
-    ];
-    var StatsEvent$ = [
-      3,
-      n04,
-      _SE,
-      0,
-      [_Det],
-      [[() => Stats$, { [_eP]: 1 }]]
-    ];
-    var StorageClassAnalysis$ = [
-      3,
-      n04,
-      _SCA,
-      0,
-      [_DE],
-      [() => StorageClassAnalysisDataExport$]
-    ];
-    var StorageClassAnalysisDataExport$ = [
-      3,
-      n04,
-      _SCADE,
-      0,
-      [_OSV, _Des],
-      [0, () => AnalyticsExportDestination$],
-      2
-    ];
-    var Tag$2 = [
-      3,
-      n04,
-      _Ta2,
-      0,
-      [_K2, _V2],
-      [0, 0],
-      2
-    ];
-    var Tagging$ = [
-      3,
-      n04,
-      _Tag,
-      0,
-      [_TS],
-      [[() => TagSet, 0]],
-      1
-    ];
-    var TargetGrant$ = [
-      3,
-      n04,
-      _TGa,
-      0,
-      [_Gra, _Pe],
-      [[() => Grantee$, { [_xNm]: [_x, _hi] }], 0]
-    ];
-    var TargetObjectKeyFormat$ = [
-      3,
-      n04,
-      _TOKF,
-      0,
-      [_SPi, _PP],
-      [[() => SimplePrefix$, { [_xN]: _SPi }], [() => PartitionedPrefix$, { [_xN]: _PP }]]
-    ];
-    var Tiering$ = [
-      3,
-      n04,
-      _Tier,
-      0,
-      [_D, _AT3],
-      [1, 0],
-      2
-    ];
-    var TooManyParts$ = [
-      -3,
-      n04,
-      _TMP,
-      { [_e4]: _c4, [_hE4]: 400 },
-      [],
-      []
-    ];
-    schema2.TypeRegistry.for(n04).registerError(TooManyParts$, TooManyParts);
-    var TopicConfiguration$ = [
-      3,
-      n04,
-      _TCop,
-      0,
-      [_TAo, _Ev, _I, _F],
-      [[0, { [_xN]: _Top }], [64 | 0, { [_xF]: 1, [_xN]: _Eve }], 0, [() => NotificationConfigurationFilter$, 0]],
-      2
-    ];
-    var Transition$ = [
-      3,
-      n04,
-      _Tra,
-      0,
-      [_Da, _D, _SC],
-      [5, 1, 0]
-    ];
-    var UpdateBucketMetadataInventoryTableConfigurationRequest$ = [
-      3,
-      n04,
-      _UBMITCR,
-      0,
-      [_B, _ITCn, _CMD, _CA2, _EBO],
-      [[0, 1], [() => InventoryTableConfigurationUpdates$, { [_hP]: 1, [_xN]: _ITCn }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var UpdateBucketMetadataJournalTableConfigurationRequest$ = [
-      3,
-      n04,
-      _UBMJTCR,
-      0,
-      [_B, _JTC, _CMD, _CA2, _EBO],
-      [[0, 1], [() => JournalTableConfigurationUpdates$, { [_hP]: 1, [_xN]: _JTC }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xaebo }]],
-      2
-    ];
-    var UploadPartCopyOutput$ = [
-      3,
-      n04,
-      _UPCO,
-      0,
-      [_CSVI, _CPR, _SSE, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _RC],
-      [[0, { [_hH]: _xacsvi }], [() => CopyPartResult$, 16], [0, { [_hH]: _xasse }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
-    ];
-    var UploadPartCopyRequest$ = [
-      3,
-      n04,
-      _UPCR,
-      0,
-      [_B, _CS2, _K2, _PN, _UI, _CSIM, _CSIMS, _CSINM, _CSIUS, _CSRo, _SSECA, _SSECK, _SSECKMD, _CSSSECA, _CSSSECK, _CSSSECKMD, _RP, _EBO, _ESBO],
-      [[0, 1], [0, { [_hH]: _xacs__ }], [0, 1], [1, { [_hQ]: _pN }], [0, { [_hQ]: _uI }], [0, { [_hH]: _xacsim }], [4, { [_hH]: _xacsims }], [0, { [_hH]: _xacsinm }], [4, { [_hH]: _xacsius }], [0, { [_hH]: _xacsr }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xacssseca }], [() => CopySourceSSECustomerKey, { [_hH]: _xacssseck }], [0, { [_hH]: _xacssseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }], [0, { [_hH]: _xasebo }]],
-      5
-    ];
-    var UploadPartOutput$ = [
-      3,
-      n04,
-      _UPO,
-      0,
-      [_SSE, _ETa, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _SSECA, _SSECKMD, _SSEKMSKI, _BKE, _RC],
-      [[0, { [_hH]: _xasse }], [0, { [_hH]: _ETa }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xasseca }], [0, { [_hH]: _xasseckM }], [() => SSEKMSKeyId, { [_hH]: _xasseakki }], [2, { [_hH]: _xassebke }], [0, { [_hH]: _xarc }]]
-    ];
-    var UploadPartRequest$ = [
-      3,
-      n04,
-      _UPR,
-      0,
-      [_B, _K2, _PN, _UI, _Bo, _CLo, _CMD, _CA2, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _SSECA, _SSECK, _SSECKMD, _RP, _EBO],
-      [[0, 1], [0, 1], [1, { [_hQ]: _pN }], [0, { [_hQ]: _uI }], [() => StreamingBlob, 16], [1, { [_hH]: _CL__ }], [0, { [_hH]: _CM }], [0, { [_hH]: _xasca }], [0, { [_hH]: _xacc }], [0, { [_hH]: _xacc_ }], [0, { [_hH]: _xacc__ }], [0, { [_hH]: _xacs }], [0, { [_hH]: _xacs_ }], [0, { [_hH]: _xasseca }], [() => SSECustomerKey, { [_hH]: _xasseck }], [0, { [_hH]: _xasseckM }], [0, { [_hH]: _xarp }], [0, { [_hH]: _xaebo }]],
-      4
-    ];
-    var VersioningConfiguration$ = [
-      3,
-      n04,
-      _VC,
-      0,
-      [_MFAD, _S],
-      [[0, { [_xN]: _MDf }], 0]
-    ];
-    var WebsiteConfiguration$ = [
-      3,
-      n04,
-      _WC,
-      0,
-      [_EDr, _IDn, _RART, _RR],
-      [() => ErrorDocument$, () => IndexDocument$, () => RedirectAllRequestsTo$, [() => RoutingRules, 0]]
-    ];
-    var WriteGetObjectResponseRequest$ = [
-      3,
-      n04,
-      _WGORR,
-      0,
-      [_RReq, _RTe, _Bo, _SCt, _ECr, _EM, _AR2, _CC, _CDo, _CEo, _CL, _CLo, _CR, _CTo, _CCRC, _CCRCC, _CCRCNVME, _CSHA, _CSHAh, _DM, _ETa, _Ex, _E2, _LM, _MM, _M, _OLM, _OLLHS, _OLRUD, _PC2, _RS, _RC, _Re, _SSE, _SSECA, _SSEKMSKI, _SSECKMD, _SC, _TC2, _VI, _BKE],
-      [[0, { [_hL]: 1, [_hH]: _xarr }], [0, { [_hH]: _xart }], [() => StreamingBlob, 16], [1, { [_hH]: _xafs }], [0, { [_hH]: _xafec }], [0, { [_hH]: _xafem }], [0, { [_hH]: _xafhar }], [0, { [_hH]: _xafhCC }], [0, { [_hH]: _xafhCD }], [0, { [_hH]: _xafhCE }], [0, { [_hH]: _xafhCL }], [1, { [_hH]: _CL__ }], [0, { [_hH]: _xafhCR }], [0, { [_hH]: _xafhCT }], [0, { [_hH]: _xafhxacc }], [0, { [_hH]: _xafhxacc_ }], [0, { [_hH]: _xafhxacc__ }], [0, { [_hH]: _xafhxacs }], [0, { [_hH]: _xafhxacs_ }], [2, { [_hH]: _xafhxadm }], [0, { [_hH]: _xafhE }], [4, { [_hH]: _xafhE_ }], [0, { [_hH]: _xafhxae }], [4, { [_hH]: _xafhLM }], [1, { [_hH]: _xafhxamm }], [128 | 0, { [_hPH]: _xam }], [0, { [_hH]: _xafhxaolm }], [0, { [_hH]: _xafhxaollh }], [5, { [_hH]: _xafhxaolrud }], [1, { [_hH]: _xafhxampc }], [0, { [_hH]: _xafhxars }], [0, { [_hH]: _xafhxarc }], [0, { [_hH]: _xafhxar }], [0, { [_hH]: _xafhxasse }], [0, { [_hH]: _xafhxasseca }], [() => SSEKMSKeyId, { [_hH]: _xafhxasseakki }], [0, { [_hH]: _xafhxasseckM }], [0, { [_hH]: _xafhxasc }], [1, { [_hH]: _xafhxatc }], [0, { [_hH]: _xafhxavi }], [2, { [_hH]: _xafhxassebke }]],
-      2
-    ];
-    var __Unit = "unit";
-    var S3ServiceException$ = [-3, _sm3, "S3ServiceException", 0, [], []];
-    schema2.TypeRegistry.for(_sm3).registerError(S3ServiceException$, S3ServiceException2);
-    var AnalyticsConfigurationList = [
-      1,
-      n04,
-      _ACLn,
-      0,
-      [
-        () => AnalyticsConfiguration$,
-        0
-      ]
-    ];
-    var Buckets = [
-      1,
-      n04,
-      _Bu,
-      0,
-      [
-        () => Bucket$,
-        { [_xN]: _B }
-      ]
-    ];
-    var CommonPrefixList = [
-      1,
-      n04,
-      _CPL,
-      0,
-      () => CommonPrefix$
-    ];
-    var CompletedPartList = [
-      1,
-      n04,
-      _CPLo,
-      0,
-      () => CompletedPart$
-    ];
-    var CORSRules = [
-      1,
-      n04,
-      _CORSR,
-      0,
-      [
-        () => CORSRule$,
-        0
-      ]
-    ];
-    var DeletedObjects = [
-      1,
-      n04,
-      _DOe,
-      0,
-      () => DeletedObject$
-    ];
-    var DeleteMarkers = [
-      1,
-      n04,
-      _DMe,
-      0,
-      () => DeleteMarkerEntry$
-    ];
-    var EncryptionTypeList = [
-      1,
-      n04,
-      _ETL,
-      0,
-      [
-        0,
-        { [_xN]: _ET }
-      ]
-    ];
-    var Errors = [
-      1,
-      n04,
-      _Er,
-      0,
-      () => _Error$
-    ];
-    var FilterRuleList = [
-      1,
-      n04,
-      _FRL,
-      0,
-      () => FilterRule$
-    ];
-    var Grants = [
-      1,
-      n04,
-      _G,
-      0,
-      [
-        () => Grant$,
-        { [_xN]: _Gr }
-      ]
-    ];
-    var IntelligentTieringConfigurationList = [
-      1,
-      n04,
-      _ITCL,
-      0,
-      [
-        () => IntelligentTieringConfiguration$,
-        0
-      ]
-    ];
-    var InventoryConfigurationList = [
-      1,
-      n04,
-      _ICL,
-      0,
-      [
-        () => InventoryConfiguration$,
-        0
-      ]
-    ];
-    var InventoryOptionalFields = [
-      1,
-      n04,
-      _IOF,
-      0,
-      [
-        0,
-        { [_xN]: _Fi }
-      ]
-    ];
-    var LambdaFunctionConfigurationList = [
-      1,
-      n04,
-      _LFCL,
-      0,
-      [
-        () => LambdaFunctionConfiguration$,
-        0
-      ]
-    ];
-    var LifecycleRules = [
-      1,
-      n04,
-      _LRi,
-      0,
-      [
-        () => LifecycleRule$,
-        0
-      ]
-    ];
-    var MetricsConfigurationList = [
-      1,
-      n04,
-      _MCL,
-      0,
-      [
-        () => MetricsConfiguration$,
-        0
-      ]
-    ];
-    var MultipartUploadList = [
-      1,
-      n04,
-      _MUL,
-      0,
-      () => MultipartUpload$
-    ];
-    var NoncurrentVersionTransitionList = [
-      1,
-      n04,
-      _NVTL,
-      0,
-      () => NoncurrentVersionTransition$
-    ];
-    var ObjectIdentifierList = [
-      1,
-      n04,
-      _OIL,
-      0,
-      () => ObjectIdentifier$
-    ];
-    var ObjectList = [
-      1,
-      n04,
-      _OLb,
-      0,
-      [
-        () => _Object$,
-        0
-      ]
-    ];
-    var ObjectVersionList = [
-      1,
-      n04,
-      _OVL,
-      0,
-      [
-        () => ObjectVersion$,
-        0
-      ]
-    ];
-    var OwnershipControlsRules = [
-      1,
-      n04,
-      _OCRw,
-      0,
-      () => OwnershipControlsRule$
-    ];
-    var Parts = [
-      1,
-      n04,
-      _Pa,
-      0,
-      () => Part$
-    ];
-    var PartsList = [
-      1,
-      n04,
-      _PL,
-      0,
-      () => ObjectPart$
-    ];
-    var QueueConfigurationList = [
-      1,
-      n04,
-      _QCL,
-      0,
-      [
-        () => QueueConfiguration$,
-        0
-      ]
-    ];
-    var ReplicationRules = [
-      1,
-      n04,
-      _RRep,
-      0,
-      [
-        () => ReplicationRule$,
-        0
-      ]
-    ];
-    var RoutingRules = [
-      1,
-      n04,
-      _RR,
-      0,
-      [
-        () => RoutingRule$,
-        { [_xN]: _RRo }
-      ]
-    ];
-    var ServerSideEncryptionRules = [
-      1,
-      n04,
-      _SSERe,
-      0,
-      [
-        () => ServerSideEncryptionRule$,
-        0
-      ]
-    ];
-    var TagSet = [
-      1,
-      n04,
-      _TS,
-      0,
-      [
-        () => Tag$2,
-        { [_xN]: _Ta2 }
-      ]
-    ];
-    var TargetGrants = [
-      1,
-      n04,
-      _TG,
-      0,
-      [
-        () => TargetGrant$,
-        { [_xN]: _Gr }
-      ]
-    ];
-    var TieringList = [
-      1,
-      n04,
-      _TL,
-      0,
-      () => Tiering$
-    ];
-    var TopicConfigurationList = [
-      1,
-      n04,
-      _TCL,
-      0,
-      [
-        () => TopicConfiguration$,
-        0
-      ]
-    ];
-    var TransitionList = [
-      1,
-      n04,
-      _TLr,
-      0,
-      () => Transition$
-    ];
-    var UserMetadata = [
-      1,
-      n04,
-      _UM,
-      0,
-      [
-        () => MetadataEntry$,
-        { [_xN]: _ME }
-      ]
-    ];
-    var AnalyticsFilter$ = [
-      4,
-      n04,
-      _AF,
-      0,
-      [_P2, _Ta2, _An],
-      [0, () => Tag$2, [() => AnalyticsAndOperator$, 0]]
-    ];
-    var MetricsFilter$ = [
-      4,
-      n04,
-      _MF,
-      0,
-      [_P2, _Ta2, _APAc, _An],
-      [0, () => Tag$2, 0, [() => MetricsAndOperator$, 0]]
-    ];
-    var SelectObjectContentEventStream$ = [
-      4,
-      n04,
-      _SOCES,
-      { [_s4]: 1 },
-      [_Rec, _Sta, _Pr2, _Cont, _End],
-      [[() => RecordsEvent$, 0], [() => StatsEvent$, 0], [() => ProgressEvent$, 0], () => ContinuationEvent$, () => EndEvent$]
-    ];
-    var AbortMultipartUpload$ = [
-      9,
-      n04,
-      _AMU,
-      { [_h3]: ["DELETE", "/{Key+}?x-id=AbortMultipartUpload", 204] },
-      () => AbortMultipartUploadRequest$,
-      () => AbortMultipartUploadOutput$
-    ];
-    var CompleteMultipartUpload$ = [
-      9,
-      n04,
-      _CMUo,
-      { [_h3]: ["POST", "/{Key+}", 200] },
-      () => CompleteMultipartUploadRequest$,
-      () => CompleteMultipartUploadOutput$
-    ];
-    var CopyObject$ = [
-      9,
-      n04,
-      _CO,
-      { [_h3]: ["PUT", "/{Key+}?x-id=CopyObject", 200] },
-      () => CopyObjectRequest$,
-      () => CopyObjectOutput$
-    ];
-    var CreateBucket$ = [
-      9,
-      n04,
-      _CB,
-      { [_h3]: ["PUT", "/", 200] },
-      () => CreateBucketRequest$,
-      () => CreateBucketOutput$
-    ];
-    var CreateBucketMetadataConfiguration$ = [
-      9,
-      n04,
-      _CBMC,
-      { [_hC]: "-", [_h3]: ["POST", "/?metadataConfiguration", 200] },
-      () => CreateBucketMetadataConfigurationRequest$,
-      () => __Unit
-    ];
-    var CreateBucketMetadataTableConfiguration$ = [
-      9,
-      n04,
-      _CBMTC,
-      { [_hC]: "-", [_h3]: ["POST", "/?metadataTable", 200] },
-      () => CreateBucketMetadataTableConfigurationRequest$,
-      () => __Unit
-    ];
-    var CreateMultipartUpload$ = [
-      9,
-      n04,
-      _CMUr,
-      { [_h3]: ["POST", "/{Key+}?uploads", 200] },
-      () => CreateMultipartUploadRequest$,
-      () => CreateMultipartUploadOutput$
-    ];
-    var CreateSession$ = [
-      9,
-      n04,
-      _CSr,
-      { [_h3]: ["GET", "/?session", 200] },
-      () => CreateSessionRequest$,
-      () => CreateSessionOutput$
-    ];
-    var DeleteBucket$ = [
-      9,
-      n04,
-      _DB,
-      { [_h3]: ["DELETE", "/", 204] },
-      () => DeleteBucketRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketAnalyticsConfiguration$ = [
-      9,
-      n04,
-      _DBAC,
-      { [_h3]: ["DELETE", "/?analytics", 204] },
-      () => DeleteBucketAnalyticsConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketCors$ = [
-      9,
-      n04,
-      _DBC,
-      { [_h3]: ["DELETE", "/?cors", 204] },
-      () => DeleteBucketCorsRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketEncryption$ = [
-      9,
-      n04,
-      _DBE,
-      { [_h3]: ["DELETE", "/?encryption", 204] },
-      () => DeleteBucketEncryptionRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketIntelligentTieringConfiguration$ = [
-      9,
-      n04,
-      _DBITC,
-      { [_h3]: ["DELETE", "/?intelligent-tiering", 204] },
-      () => DeleteBucketIntelligentTieringConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketInventoryConfiguration$ = [
-      9,
-      n04,
-      _DBIC,
-      { [_h3]: ["DELETE", "/?inventory", 204] },
-      () => DeleteBucketInventoryConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketLifecycle$ = [
-      9,
-      n04,
-      _DBL,
-      { [_h3]: ["DELETE", "/?lifecycle", 204] },
-      () => DeleteBucketLifecycleRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketMetadataConfiguration$ = [
-      9,
-      n04,
-      _DBMC,
-      { [_h3]: ["DELETE", "/?metadataConfiguration", 204] },
-      () => DeleteBucketMetadataConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketMetadataTableConfiguration$ = [
-      9,
-      n04,
-      _DBMTC,
-      { [_h3]: ["DELETE", "/?metadataTable", 204] },
-      () => DeleteBucketMetadataTableConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketMetricsConfiguration$ = [
-      9,
-      n04,
-      _DBMCe,
-      { [_h3]: ["DELETE", "/?metrics", 204] },
-      () => DeleteBucketMetricsConfigurationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketOwnershipControls$ = [
-      9,
-      n04,
-      _DBOC,
-      { [_h3]: ["DELETE", "/?ownershipControls", 204] },
-      () => DeleteBucketOwnershipControlsRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketPolicy$ = [
-      9,
-      n04,
-      _DBP,
-      { [_h3]: ["DELETE", "/?policy", 204] },
-      () => DeleteBucketPolicyRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketReplication$ = [
-      9,
-      n04,
-      _DBRe,
-      { [_h3]: ["DELETE", "/?replication", 204] },
-      () => DeleteBucketReplicationRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketTagging$ = [
-      9,
-      n04,
-      _DBT,
-      { [_h3]: ["DELETE", "/?tagging", 204] },
-      () => DeleteBucketTaggingRequest$,
-      () => __Unit
-    ];
-    var DeleteBucketWebsite$ = [
-      9,
-      n04,
-      _DBW,
-      { [_h3]: ["DELETE", "/?website", 204] },
-      () => DeleteBucketWebsiteRequest$,
-      () => __Unit
-    ];
-    var DeleteObject$ = [
-      9,
-      n04,
-      _DOel,
-      { [_h3]: ["DELETE", "/{Key+}?x-id=DeleteObject", 204] },
-      () => DeleteObjectRequest$,
-      () => DeleteObjectOutput$
-    ];
-    var DeleteObjects$ = [
-      9,
-      n04,
-      _DOele,
-      { [_hC]: "-", [_h3]: ["POST", "/?delete", 200] },
-      () => DeleteObjectsRequest$,
-      () => DeleteObjectsOutput$
-    ];
-    var DeleteObjectTagging$ = [
-      9,
-      n04,
-      _DOT,
-      { [_h3]: ["DELETE", "/{Key+}?tagging", 204] },
-      () => DeleteObjectTaggingRequest$,
-      () => DeleteObjectTaggingOutput$
-    ];
-    var DeletePublicAccessBlock$ = [
-      9,
-      n04,
-      _DPAB,
-      { [_h3]: ["DELETE", "/?publicAccessBlock", 204] },
-      () => DeletePublicAccessBlockRequest$,
-      () => __Unit
-    ];
-    var GetBucketAbac$ = [
-      9,
-      n04,
-      _GBA,
-      { [_h3]: ["GET", "/?abac", 200] },
-      () => GetBucketAbacRequest$,
-      () => GetBucketAbacOutput$
-    ];
-    var GetBucketAccelerateConfiguration$ = [
-      9,
-      n04,
-      _GBAC,
-      { [_h3]: ["GET", "/?accelerate", 200] },
-      () => GetBucketAccelerateConfigurationRequest$,
-      () => GetBucketAccelerateConfigurationOutput$
-    ];
-    var GetBucketAcl$ = [
-      9,
-      n04,
-      _GBAe,
-      { [_h3]: ["GET", "/?acl", 200] },
-      () => GetBucketAclRequest$,
-      () => GetBucketAclOutput$
-    ];
-    var GetBucketAnalyticsConfiguration$ = [
-      9,
-      n04,
-      _GBACe,
-      { [_h3]: ["GET", "/?analytics&x-id=GetBucketAnalyticsConfiguration", 200] },
-      () => GetBucketAnalyticsConfigurationRequest$,
-      () => GetBucketAnalyticsConfigurationOutput$
-    ];
-    var GetBucketCors$ = [
-      9,
-      n04,
-      _GBC,
-      { [_h3]: ["GET", "/?cors", 200] },
-      () => GetBucketCorsRequest$,
-      () => GetBucketCorsOutput$
-    ];
-    var GetBucketEncryption$ = [
-      9,
-      n04,
-      _GBE,
-      { [_h3]: ["GET", "/?encryption", 200] },
-      () => GetBucketEncryptionRequest$,
-      () => GetBucketEncryptionOutput$
-    ];
-    var GetBucketIntelligentTieringConfiguration$ = [
-      9,
-      n04,
-      _GBITC,
-      { [_h3]: ["GET", "/?intelligent-tiering&x-id=GetBucketIntelligentTieringConfiguration", 200] },
-      () => GetBucketIntelligentTieringConfigurationRequest$,
-      () => GetBucketIntelligentTieringConfigurationOutput$
-    ];
-    var GetBucketInventoryConfiguration$ = [
-      9,
-      n04,
-      _GBIC,
-      { [_h3]: ["GET", "/?inventory&x-id=GetBucketInventoryConfiguration", 200] },
-      () => GetBucketInventoryConfigurationRequest$,
-      () => GetBucketInventoryConfigurationOutput$
-    ];
-    var GetBucketLifecycleConfiguration$ = [
-      9,
-      n04,
-      _GBLC,
-      { [_h3]: ["GET", "/?lifecycle", 200] },
-      () => GetBucketLifecycleConfigurationRequest$,
-      () => GetBucketLifecycleConfigurationOutput$
-    ];
-    var GetBucketLocation$ = [
-      9,
-      n04,
-      _GBL,
-      { [_h3]: ["GET", "/?location", 200] },
-      () => GetBucketLocationRequest$,
-      () => GetBucketLocationOutput$
-    ];
-    var GetBucketLogging$ = [
-      9,
-      n04,
-      _GBLe,
-      { [_h3]: ["GET", "/?logging", 200] },
-      () => GetBucketLoggingRequest$,
-      () => GetBucketLoggingOutput$
-    ];
-    var GetBucketMetadataConfiguration$ = [
-      9,
-      n04,
-      _GBMC,
-      { [_h3]: ["GET", "/?metadataConfiguration", 200] },
-      () => GetBucketMetadataConfigurationRequest$,
-      () => GetBucketMetadataConfigurationOutput$
-    ];
-    var GetBucketMetadataTableConfiguration$ = [
-      9,
-      n04,
-      _GBMTC,
-      { [_h3]: ["GET", "/?metadataTable", 200] },
-      () => GetBucketMetadataTableConfigurationRequest$,
-      () => GetBucketMetadataTableConfigurationOutput$
-    ];
-    var GetBucketMetricsConfiguration$ = [
-      9,
-      n04,
-      _GBMCe,
-      { [_h3]: ["GET", "/?metrics&x-id=GetBucketMetricsConfiguration", 200] },
-      () => GetBucketMetricsConfigurationRequest$,
-      () => GetBucketMetricsConfigurationOutput$
-    ];
-    var GetBucketNotificationConfiguration$ = [
-      9,
-      n04,
-      _GBNC,
-      { [_h3]: ["GET", "/?notification", 200] },
-      () => GetBucketNotificationConfigurationRequest$,
-      () => NotificationConfiguration$
-    ];
-    var GetBucketOwnershipControls$ = [
-      9,
-      n04,
-      _GBOC,
-      { [_h3]: ["GET", "/?ownershipControls", 200] },
-      () => GetBucketOwnershipControlsRequest$,
-      () => GetBucketOwnershipControlsOutput$
-    ];
-    var GetBucketPolicy$ = [
-      9,
-      n04,
-      _GBP,
-      { [_h3]: ["GET", "/?policy", 200] },
-      () => GetBucketPolicyRequest$,
-      () => GetBucketPolicyOutput$
-    ];
-    var GetBucketPolicyStatus$ = [
-      9,
-      n04,
-      _GBPS,
-      { [_h3]: ["GET", "/?policyStatus", 200] },
-      () => GetBucketPolicyStatusRequest$,
-      () => GetBucketPolicyStatusOutput$
-    ];
-    var GetBucketReplication$ = [
-      9,
-      n04,
-      _GBR,
-      { [_h3]: ["GET", "/?replication", 200] },
-      () => GetBucketReplicationRequest$,
-      () => GetBucketReplicationOutput$
-    ];
-    var GetBucketRequestPayment$ = [
-      9,
-      n04,
-      _GBRP,
-      { [_h3]: ["GET", "/?requestPayment", 200] },
-      () => GetBucketRequestPaymentRequest$,
-      () => GetBucketRequestPaymentOutput$
-    ];
-    var GetBucketTagging$ = [
-      9,
-      n04,
-      _GBT,
-      { [_h3]: ["GET", "/?tagging", 200] },
-      () => GetBucketTaggingRequest$,
-      () => GetBucketTaggingOutput$
-    ];
-    var GetBucketVersioning$ = [
-      9,
-      n04,
-      _GBV,
-      { [_h3]: ["GET", "/?versioning", 200] },
-      () => GetBucketVersioningRequest$,
-      () => GetBucketVersioningOutput$
-    ];
-    var GetBucketWebsite$ = [
-      9,
-      n04,
-      _GBW,
-      { [_h3]: ["GET", "/?website", 200] },
-      () => GetBucketWebsiteRequest$,
-      () => GetBucketWebsiteOutput$
-    ];
-    var GetObject$ = [
-      9,
-      n04,
-      _GO,
-      { [_hC]: "-", [_h3]: ["GET", "/{Key+}?x-id=GetObject", 200] },
-      () => GetObjectRequest$,
-      () => GetObjectOutput$
-    ];
-    var GetObjectAcl$ = [
-      9,
-      n04,
-      _GOA,
-      { [_h3]: ["GET", "/{Key+}?acl", 200] },
-      () => GetObjectAclRequest$,
-      () => GetObjectAclOutput$
-    ];
-    var GetObjectAttributes$ = [
-      9,
-      n04,
-      _GOAe,
-      { [_h3]: ["GET", "/{Key+}?attributes", 200] },
-      () => GetObjectAttributesRequest$,
-      () => GetObjectAttributesOutput$
-    ];
-    var GetObjectLegalHold$ = [
-      9,
-      n04,
-      _GOLH,
-      { [_h3]: ["GET", "/{Key+}?legal-hold", 200] },
-      () => GetObjectLegalHoldRequest$,
-      () => GetObjectLegalHoldOutput$
-    ];
-    var GetObjectLockConfiguration$ = [
-      9,
-      n04,
-      _GOLC,
-      { [_h3]: ["GET", "/?object-lock", 200] },
-      () => GetObjectLockConfigurationRequest$,
-      () => GetObjectLockConfigurationOutput$
-    ];
-    var GetObjectRetention$ = [
-      9,
-      n04,
-      _GORe,
-      { [_h3]: ["GET", "/{Key+}?retention", 200] },
-      () => GetObjectRetentionRequest$,
-      () => GetObjectRetentionOutput$
-    ];
-    var GetObjectTagging$ = [
-      9,
-      n04,
-      _GOT,
-      { [_h3]: ["GET", "/{Key+}?tagging", 200] },
-      () => GetObjectTaggingRequest$,
-      () => GetObjectTaggingOutput$
-    ];
-    var GetObjectTorrent$ = [
-      9,
-      n04,
-      _GOTe,
-      { [_h3]: ["GET", "/{Key+}?torrent", 200] },
-      () => GetObjectTorrentRequest$,
-      () => GetObjectTorrentOutput$
-    ];
-    var GetPublicAccessBlock$ = [
-      9,
-      n04,
-      _GPAB,
-      { [_h3]: ["GET", "/?publicAccessBlock", 200] },
-      () => GetPublicAccessBlockRequest$,
-      () => GetPublicAccessBlockOutput$
-    ];
-    var HeadBucket$ = [
-      9,
-      n04,
-      _HB,
-      { [_h3]: ["HEAD", "/", 200] },
-      () => HeadBucketRequest$,
-      () => HeadBucketOutput$
-    ];
-    var HeadObject$ = [
-      9,
-      n04,
-      _HO,
-      { [_h3]: ["HEAD", "/{Key+}", 200] },
-      () => HeadObjectRequest$,
-      () => HeadObjectOutput$
-    ];
-    var ListBucketAnalyticsConfigurations$ = [
-      9,
-      n04,
-      _LBAC,
-      { [_h3]: ["GET", "/?analytics&x-id=ListBucketAnalyticsConfigurations", 200] },
-      () => ListBucketAnalyticsConfigurationsRequest$,
-      () => ListBucketAnalyticsConfigurationsOutput$
-    ];
-    var ListBucketIntelligentTieringConfigurations$ = [
-      9,
-      n04,
-      _LBITC,
-      { [_h3]: ["GET", "/?intelligent-tiering&x-id=ListBucketIntelligentTieringConfigurations", 200] },
-      () => ListBucketIntelligentTieringConfigurationsRequest$,
-      () => ListBucketIntelligentTieringConfigurationsOutput$
-    ];
-    var ListBucketInventoryConfigurations$ = [
-      9,
-      n04,
-      _LBIC,
-      { [_h3]: ["GET", "/?inventory&x-id=ListBucketInventoryConfigurations", 200] },
-      () => ListBucketInventoryConfigurationsRequest$,
-      () => ListBucketInventoryConfigurationsOutput$
-    ];
-    var ListBucketMetricsConfigurations$ = [
-      9,
-      n04,
-      _LBMC,
-      { [_h3]: ["GET", "/?metrics&x-id=ListBucketMetricsConfigurations", 200] },
-      () => ListBucketMetricsConfigurationsRequest$,
-      () => ListBucketMetricsConfigurationsOutput$
-    ];
-    var ListBuckets$ = [
-      9,
-      n04,
-      _LB,
-      { [_h3]: ["GET", "/?x-id=ListBuckets", 200] },
-      () => ListBucketsRequest$,
-      () => ListBucketsOutput$
-    ];
-    var ListDirectoryBuckets$ = [
-      9,
-      n04,
-      _LDB,
-      { [_h3]: ["GET", "/?x-id=ListDirectoryBuckets", 200] },
-      () => ListDirectoryBucketsRequest$,
-      () => ListDirectoryBucketsOutput$
-    ];
-    var ListMultipartUploads$ = [
-      9,
-      n04,
-      _LMU,
-      { [_h3]: ["GET", "/?uploads", 200] },
-      () => ListMultipartUploadsRequest$,
-      () => ListMultipartUploadsOutput$
-    ];
-    var ListObjects$ = [
-      9,
-      n04,
-      _LO,
-      { [_h3]: ["GET", "/", 200] },
-      () => ListObjectsRequest$,
-      () => ListObjectsOutput$
-    ];
-    var ListObjectsV2$ = [
-      9,
-      n04,
-      _LOV,
-      { [_h3]: ["GET", "/?list-type=2", 200] },
-      () => ListObjectsV2Request$,
-      () => ListObjectsV2Output$
-    ];
-    var ListObjectVersions$ = [
-      9,
-      n04,
-      _LOVi,
-      { [_h3]: ["GET", "/?versions", 200] },
-      () => ListObjectVersionsRequest$,
-      () => ListObjectVersionsOutput$
-    ];
-    var ListParts$ = [
-      9,
-      n04,
-      _LP,
-      { [_h3]: ["GET", "/{Key+}?x-id=ListParts", 200] },
-      () => ListPartsRequest$,
-      () => ListPartsOutput$
-    ];
-    var PutBucketAbac$ = [
-      9,
-      n04,
-      _PBA,
-      { [_hC]: "-", [_h3]: ["PUT", "/?abac", 200] },
-      () => PutBucketAbacRequest$,
-      () => __Unit
-    ];
-    var PutBucketAccelerateConfiguration$ = [
-      9,
-      n04,
-      _PBAC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?accelerate", 200] },
-      () => PutBucketAccelerateConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketAcl$ = [
-      9,
-      n04,
-      _PBAu,
-      { [_hC]: "-", [_h3]: ["PUT", "/?acl", 200] },
-      () => PutBucketAclRequest$,
-      () => __Unit
-    ];
-    var PutBucketAnalyticsConfiguration$ = [
-      9,
-      n04,
-      _PBACu,
-      { [_h3]: ["PUT", "/?analytics", 200] },
-      () => PutBucketAnalyticsConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketCors$ = [
-      9,
-      n04,
-      _PBC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?cors", 200] },
-      () => PutBucketCorsRequest$,
-      () => __Unit
-    ];
-    var PutBucketEncryption$ = [
-      9,
-      n04,
-      _PBE,
-      { [_hC]: "-", [_h3]: ["PUT", "/?encryption", 200] },
-      () => PutBucketEncryptionRequest$,
-      () => __Unit
-    ];
-    var PutBucketIntelligentTieringConfiguration$ = [
-      9,
-      n04,
-      _PBITC,
-      { [_h3]: ["PUT", "/?intelligent-tiering", 200] },
-      () => PutBucketIntelligentTieringConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketInventoryConfiguration$ = [
-      9,
-      n04,
-      _PBIC,
-      { [_h3]: ["PUT", "/?inventory", 200] },
-      () => PutBucketInventoryConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketLifecycleConfiguration$ = [
-      9,
-      n04,
-      _PBLC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?lifecycle", 200] },
-      () => PutBucketLifecycleConfigurationRequest$,
-      () => PutBucketLifecycleConfigurationOutput$
-    ];
-    var PutBucketLogging$ = [
-      9,
-      n04,
-      _PBL,
-      { [_hC]: "-", [_h3]: ["PUT", "/?logging", 200] },
-      () => PutBucketLoggingRequest$,
-      () => __Unit
-    ];
-    var PutBucketMetricsConfiguration$ = [
-      9,
-      n04,
-      _PBMC,
-      { [_h3]: ["PUT", "/?metrics", 200] },
-      () => PutBucketMetricsConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketNotificationConfiguration$ = [
-      9,
-      n04,
-      _PBNC,
-      { [_h3]: ["PUT", "/?notification", 200] },
-      () => PutBucketNotificationConfigurationRequest$,
-      () => __Unit
-    ];
-    var PutBucketOwnershipControls$ = [
-      9,
-      n04,
-      _PBOC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?ownershipControls", 200] },
-      () => PutBucketOwnershipControlsRequest$,
-      () => __Unit
-    ];
-    var PutBucketPolicy$ = [
-      9,
-      n04,
-      _PBP,
-      { [_hC]: "-", [_h3]: ["PUT", "/?policy", 200] },
-      () => PutBucketPolicyRequest$,
-      () => __Unit
-    ];
-    var PutBucketReplication$ = [
-      9,
-      n04,
-      _PBR,
-      { [_hC]: "-", [_h3]: ["PUT", "/?replication", 200] },
-      () => PutBucketReplicationRequest$,
-      () => __Unit
-    ];
-    var PutBucketRequestPayment$ = [
-      9,
-      n04,
-      _PBRP,
-      { [_hC]: "-", [_h3]: ["PUT", "/?requestPayment", 200] },
-      () => PutBucketRequestPaymentRequest$,
-      () => __Unit
-    ];
-    var PutBucketTagging$ = [
-      9,
-      n04,
-      _PBT,
-      { [_hC]: "-", [_h3]: ["PUT", "/?tagging", 200] },
-      () => PutBucketTaggingRequest$,
-      () => __Unit
-    ];
-    var PutBucketVersioning$ = [
-      9,
-      n04,
-      _PBV,
-      { [_hC]: "-", [_h3]: ["PUT", "/?versioning", 200] },
-      () => PutBucketVersioningRequest$,
-      () => __Unit
-    ];
-    var PutBucketWebsite$ = [
-      9,
-      n04,
-      _PBW,
-      { [_hC]: "-", [_h3]: ["PUT", "/?website", 200] },
-      () => PutBucketWebsiteRequest$,
-      () => __Unit
-    ];
-    var PutObject$ = [
-      9,
-      n04,
-      _PO,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?x-id=PutObject", 200] },
-      () => PutObjectRequest$,
-      () => PutObjectOutput$
-    ];
-    var PutObjectAcl$ = [
-      9,
-      n04,
-      _POA,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?acl", 200] },
-      () => PutObjectAclRequest$,
-      () => PutObjectAclOutput$
-    ];
-    var PutObjectLegalHold$ = [
-      9,
-      n04,
-      _POLH,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?legal-hold", 200] },
-      () => PutObjectLegalHoldRequest$,
-      () => PutObjectLegalHoldOutput$
-    ];
-    var PutObjectLockConfiguration$ = [
-      9,
-      n04,
-      _POLC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?object-lock", 200] },
-      () => PutObjectLockConfigurationRequest$,
-      () => PutObjectLockConfigurationOutput$
-    ];
-    var PutObjectRetention$ = [
-      9,
-      n04,
-      _PORu,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?retention", 200] },
-      () => PutObjectRetentionRequest$,
-      () => PutObjectRetentionOutput$
-    ];
-    var PutObjectTagging$ = [
-      9,
-      n04,
-      _POT,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?tagging", 200] },
-      () => PutObjectTaggingRequest$,
-      () => PutObjectTaggingOutput$
-    ];
-    var PutPublicAccessBlock$ = [
-      9,
-      n04,
-      _PPAB,
-      { [_hC]: "-", [_h3]: ["PUT", "/?publicAccessBlock", 200] },
-      () => PutPublicAccessBlockRequest$,
-      () => __Unit
-    ];
-    var RenameObject$ = [
-      9,
-      n04,
-      _RO,
-      { [_h3]: ["PUT", "/{Key+}?renameObject", 200] },
-      () => RenameObjectRequest$,
-      () => RenameObjectOutput$
-    ];
-    var RestoreObject$ = [
-      9,
-      n04,
-      _ROe,
-      { [_hC]: "-", [_h3]: ["POST", "/{Key+}?restore", 200] },
-      () => RestoreObjectRequest$,
-      () => RestoreObjectOutput$
-    ];
-    var SelectObjectContent$ = [
-      9,
-      n04,
-      _SOC,
-      { [_h3]: ["POST", "/{Key+}?select&select-type=2", 200] },
-      () => SelectObjectContentRequest$,
-      () => SelectObjectContentOutput$
-    ];
-    var UpdateBucketMetadataInventoryTableConfiguration$ = [
-      9,
-      n04,
-      _UBMITC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?metadataInventoryTable", 200] },
-      () => UpdateBucketMetadataInventoryTableConfigurationRequest$,
-      () => __Unit
-    ];
-    var UpdateBucketMetadataJournalTableConfiguration$ = [
-      9,
-      n04,
-      _UBMJTC,
-      { [_hC]: "-", [_h3]: ["PUT", "/?metadataJournalTable", 200] },
-      () => UpdateBucketMetadataJournalTableConfigurationRequest$,
-      () => __Unit
-    ];
-    var UploadPart$ = [
-      9,
-      n04,
-      _UP,
-      { [_hC]: "-", [_h3]: ["PUT", "/{Key+}?x-id=UploadPart", 200] },
-      () => UploadPartRequest$,
-      () => UploadPartOutput$
-    ];
-    var UploadPartCopy$ = [
-      9,
-      n04,
-      _UPC,
-      { [_h3]: ["PUT", "/{Key+}?x-id=UploadPartCopy", 200] },
-      () => UploadPartCopyRequest$,
-      () => UploadPartCopyOutput$
-    ];
-    var WriteGetObjectResponse$ = [
-      9,
-      n04,
-      _WGOR,
-      { [_en]: ["{RequestRoute}."], [_h3]: ["POST", "/WriteGetObjectResponse", 200] },
-      () => WriteGetObjectResponseRequest$,
-      () => __Unit
-    ];
     var CreateSessionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
       DisableS3ExpressSessionAuth: { type: "staticContextParams", value: true },
@@ -54527,7 +54853,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "CreateSession", {}).n("S3Client", "CreateSessionCommand").sc(CreateSession$).build() {
+    }).s("AmazonS3", "CreateSession", {}).n("S3Client", "CreateSessionCommand").sc(schemas_0.CreateSession$).build() {
     };
     var getHttpAuthExtensionConfiguration4 = (runtimeConfig2) => {
       const _httpAuthSchemes = runtimeConfig2.httpAuthSchemes;
@@ -54623,7 +54949,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "AbortMultipartUpload", {}).n("S3Client", "AbortMultipartUploadCommand").sc(AbortMultipartUpload$).build() {
+    }).s("AmazonS3", "AbortMultipartUpload", {}).n("S3Client", "AbortMultipartUploadCommand").sc(schemas_0.AbortMultipartUpload$).build() {
     };
     var CompleteMultipartUploadCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54635,7 +54961,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "CompleteMultipartUpload", {}).n("S3Client", "CompleteMultipartUploadCommand").sc(CompleteMultipartUpload$).build() {
+    }).s("AmazonS3", "CompleteMultipartUpload", {}).n("S3Client", "CompleteMultipartUploadCommand").sc(schemas_0.CompleteMultipartUpload$).build() {
     };
     var CopyObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54649,7 +54975,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "CopyObject", {}).n("S3Client", "CopyObjectCommand").sc(CopyObject$).build() {
+    }).s("AmazonS3", "CopyObject", {}).n("S3Client", "CopyObjectCommand").sc(schemas_0.CopyObject$).build() {
     };
     var CreateBucketCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54662,7 +54988,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareLocationConstraint.getLocationConstraintPlugin(config)
       ];
-    }).s("AmazonS3", "CreateBucket", {}).n("S3Client", "CreateBucketCommand").sc(CreateBucket$).build() {
+    }).s("AmazonS3", "CreateBucket", {}).n("S3Client", "CreateBucketCommand").sc(schemas_0.CreateBucket$).build() {
     };
     var CreateBucketMetadataConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54676,7 +55002,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "CreateBucketMetadataConfiguration", {}).n("S3Client", "CreateBucketMetadataConfigurationCommand").sc(CreateBucketMetadataConfiguration$).build() {
+    }).s("AmazonS3", "CreateBucketMetadataConfiguration", {}).n("S3Client", "CreateBucketMetadataConfigurationCommand").sc(schemas_0.CreateBucketMetadataConfiguration$).build() {
     };
     var CreateBucketMetadataTableConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54690,7 +55016,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "CreateBucketMetadataTableConfiguration", {}).n("S3Client", "CreateBucketMetadataTableConfigurationCommand").sc(CreateBucketMetadataTableConfiguration$).build() {
+    }).s("AmazonS3", "CreateBucketMetadataTableConfiguration", {}).n("S3Client", "CreateBucketMetadataTableConfigurationCommand").sc(schemas_0.CreateBucketMetadataTableConfiguration$).build() {
     };
     var CreateMultipartUploadCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54702,7 +55028,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "CreateMultipartUpload", {}).n("S3Client", "CreateMultipartUploadCommand").sc(CreateMultipartUpload$).build() {
+    }).s("AmazonS3", "CreateMultipartUpload", {}).n("S3Client", "CreateMultipartUploadCommand").sc(schemas_0.CreateMultipartUpload$).build() {
     };
     var DeleteBucketAnalyticsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54710,7 +55036,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketAnalyticsConfiguration", {}).n("S3Client", "DeleteBucketAnalyticsConfigurationCommand").sc(DeleteBucketAnalyticsConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketAnalyticsConfiguration", {}).n("S3Client", "DeleteBucketAnalyticsConfigurationCommand").sc(schemas_0.DeleteBucketAnalyticsConfiguration$).build() {
     };
     var DeleteBucketCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54718,7 +55044,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucket", {}).n("S3Client", "DeleteBucketCommand").sc(DeleteBucket$).build() {
+    }).s("AmazonS3", "DeleteBucket", {}).n("S3Client", "DeleteBucketCommand").sc(schemas_0.DeleteBucket$).build() {
     };
     var DeleteBucketCorsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54726,7 +55052,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketCors", {}).n("S3Client", "DeleteBucketCorsCommand").sc(DeleteBucketCors$).build() {
+    }).s("AmazonS3", "DeleteBucketCors", {}).n("S3Client", "DeleteBucketCorsCommand").sc(schemas_0.DeleteBucketCors$).build() {
     };
     var DeleteBucketEncryptionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54734,7 +55060,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketEncryption", {}).n("S3Client", "DeleteBucketEncryptionCommand").sc(DeleteBucketEncryption$).build() {
+    }).s("AmazonS3", "DeleteBucketEncryption", {}).n("S3Client", "DeleteBucketEncryptionCommand").sc(schemas_0.DeleteBucketEncryption$).build() {
     };
     var DeleteBucketIntelligentTieringConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54742,7 +55068,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketIntelligentTieringConfiguration", {}).n("S3Client", "DeleteBucketIntelligentTieringConfigurationCommand").sc(DeleteBucketIntelligentTieringConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketIntelligentTieringConfiguration", {}).n("S3Client", "DeleteBucketIntelligentTieringConfigurationCommand").sc(schemas_0.DeleteBucketIntelligentTieringConfiguration$).build() {
     };
     var DeleteBucketInventoryConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54750,7 +55076,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketInventoryConfiguration", {}).n("S3Client", "DeleteBucketInventoryConfigurationCommand").sc(DeleteBucketInventoryConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketInventoryConfiguration", {}).n("S3Client", "DeleteBucketInventoryConfigurationCommand").sc(schemas_0.DeleteBucketInventoryConfiguration$).build() {
     };
     var DeleteBucketLifecycleCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54758,7 +55084,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketLifecycle", {}).n("S3Client", "DeleteBucketLifecycleCommand").sc(DeleteBucketLifecycle$).build() {
+    }).s("AmazonS3", "DeleteBucketLifecycle", {}).n("S3Client", "DeleteBucketLifecycleCommand").sc(schemas_0.DeleteBucketLifecycle$).build() {
     };
     var DeleteBucketMetadataConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54766,7 +55092,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketMetadataConfiguration", {}).n("S3Client", "DeleteBucketMetadataConfigurationCommand").sc(DeleteBucketMetadataConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketMetadataConfiguration", {}).n("S3Client", "DeleteBucketMetadataConfigurationCommand").sc(schemas_0.DeleteBucketMetadataConfiguration$).build() {
     };
     var DeleteBucketMetadataTableConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54774,7 +55100,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketMetadataTableConfiguration", {}).n("S3Client", "DeleteBucketMetadataTableConfigurationCommand").sc(DeleteBucketMetadataTableConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketMetadataTableConfiguration", {}).n("S3Client", "DeleteBucketMetadataTableConfigurationCommand").sc(schemas_0.DeleteBucketMetadataTableConfiguration$).build() {
     };
     var DeleteBucketMetricsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54782,7 +55108,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketMetricsConfiguration", {}).n("S3Client", "DeleteBucketMetricsConfigurationCommand").sc(DeleteBucketMetricsConfiguration$).build() {
+    }).s("AmazonS3", "DeleteBucketMetricsConfiguration", {}).n("S3Client", "DeleteBucketMetricsConfigurationCommand").sc(schemas_0.DeleteBucketMetricsConfiguration$).build() {
     };
     var DeleteBucketOwnershipControlsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54790,7 +55116,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketOwnershipControls", {}).n("S3Client", "DeleteBucketOwnershipControlsCommand").sc(DeleteBucketOwnershipControls$).build() {
+    }).s("AmazonS3", "DeleteBucketOwnershipControls", {}).n("S3Client", "DeleteBucketOwnershipControlsCommand").sc(schemas_0.DeleteBucketOwnershipControls$).build() {
     };
     var DeleteBucketPolicyCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54798,7 +55124,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketPolicy", {}).n("S3Client", "DeleteBucketPolicyCommand").sc(DeleteBucketPolicy$).build() {
+    }).s("AmazonS3", "DeleteBucketPolicy", {}).n("S3Client", "DeleteBucketPolicyCommand").sc(schemas_0.DeleteBucketPolicy$).build() {
     };
     var DeleteBucketReplicationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54806,7 +55132,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketReplication", {}).n("S3Client", "DeleteBucketReplicationCommand").sc(DeleteBucketReplication$).build() {
+    }).s("AmazonS3", "DeleteBucketReplication", {}).n("S3Client", "DeleteBucketReplicationCommand").sc(schemas_0.DeleteBucketReplication$).build() {
     };
     var DeleteBucketTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54814,7 +55140,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketTagging", {}).n("S3Client", "DeleteBucketTaggingCommand").sc(DeleteBucketTagging$).build() {
+    }).s("AmazonS3", "DeleteBucketTagging", {}).n("S3Client", "DeleteBucketTaggingCommand").sc(schemas_0.DeleteBucketTagging$).build() {
     };
     var DeleteBucketWebsiteCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54822,7 +55148,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeleteBucketWebsite", {}).n("S3Client", "DeleteBucketWebsiteCommand").sc(DeleteBucketWebsite$).build() {
+    }).s("AmazonS3", "DeleteBucketWebsite", {}).n("S3Client", "DeleteBucketWebsiteCommand").sc(schemas_0.DeleteBucketWebsite$).build() {
     };
     var DeleteObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54833,7 +55159,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "DeleteObject", {}).n("S3Client", "DeleteObjectCommand").sc(DeleteObject$).build() {
+    }).s("AmazonS3", "DeleteObject", {}).n("S3Client", "DeleteObjectCommand").sc(schemas_0.DeleteObject$).build() {
     };
     var DeleteObjectsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54847,7 +55173,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "DeleteObjects", {}).n("S3Client", "DeleteObjectsCommand").sc(DeleteObjects$).build() {
+    }).s("AmazonS3", "DeleteObjects", {}).n("S3Client", "DeleteObjectsCommand").sc(schemas_0.DeleteObjects$).build() {
     };
     var DeleteObjectTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54857,7 +55183,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "DeleteObjectTagging", {}).n("S3Client", "DeleteObjectTaggingCommand").sc(DeleteObjectTagging$).build() {
+    }).s("AmazonS3", "DeleteObjectTagging", {}).n("S3Client", "DeleteObjectTaggingCommand").sc(schemas_0.DeleteObjectTagging$).build() {
     };
     var DeletePublicAccessBlockCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54865,7 +55191,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "DeletePublicAccessBlock", {}).n("S3Client", "DeletePublicAccessBlockCommand").sc(DeletePublicAccessBlock$).build() {
+    }).s("AmazonS3", "DeletePublicAccessBlock", {}).n("S3Client", "DeletePublicAccessBlockCommand").sc(schemas_0.DeletePublicAccessBlock$).build() {
     };
     var GetBucketAbacCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54875,7 +55201,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketAbac", {}).n("S3Client", "GetBucketAbacCommand").sc(GetBucketAbac$).build() {
+    }).s("AmazonS3", "GetBucketAbac", {}).n("S3Client", "GetBucketAbacCommand").sc(schemas_0.GetBucketAbac$).build() {
     };
     var GetBucketAccelerateConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54886,7 +55212,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketAccelerateConfiguration", {}).n("S3Client", "GetBucketAccelerateConfigurationCommand").sc(GetBucketAccelerateConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketAccelerateConfiguration", {}).n("S3Client", "GetBucketAccelerateConfigurationCommand").sc(schemas_0.GetBucketAccelerateConfiguration$).build() {
     };
     var GetBucketAclCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54897,7 +55223,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketAcl", {}).n("S3Client", "GetBucketAclCommand").sc(GetBucketAcl$).build() {
+    }).s("AmazonS3", "GetBucketAcl", {}).n("S3Client", "GetBucketAclCommand").sc(schemas_0.GetBucketAcl$).build() {
     };
     var GetBucketAnalyticsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54908,7 +55234,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketAnalyticsConfiguration", {}).n("S3Client", "GetBucketAnalyticsConfigurationCommand").sc(GetBucketAnalyticsConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketAnalyticsConfiguration", {}).n("S3Client", "GetBucketAnalyticsConfigurationCommand").sc(schemas_0.GetBucketAnalyticsConfiguration$).build() {
     };
     var GetBucketCorsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54919,7 +55245,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketCors", {}).n("S3Client", "GetBucketCorsCommand").sc(GetBucketCors$).build() {
+    }).s("AmazonS3", "GetBucketCors", {}).n("S3Client", "GetBucketCorsCommand").sc(schemas_0.GetBucketCors$).build() {
     };
     var GetBucketEncryptionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54930,7 +55256,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketEncryption", {}).n("S3Client", "GetBucketEncryptionCommand").sc(GetBucketEncryption$).build() {
+    }).s("AmazonS3", "GetBucketEncryption", {}).n("S3Client", "GetBucketEncryptionCommand").sc(schemas_0.GetBucketEncryption$).build() {
     };
     var GetBucketIntelligentTieringConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54941,7 +55267,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketIntelligentTieringConfiguration", {}).n("S3Client", "GetBucketIntelligentTieringConfigurationCommand").sc(GetBucketIntelligentTieringConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketIntelligentTieringConfiguration", {}).n("S3Client", "GetBucketIntelligentTieringConfigurationCommand").sc(schemas_0.GetBucketIntelligentTieringConfiguration$).build() {
     };
     var GetBucketInventoryConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54952,7 +55278,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketInventoryConfiguration", {}).n("S3Client", "GetBucketInventoryConfigurationCommand").sc(GetBucketInventoryConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketInventoryConfiguration", {}).n("S3Client", "GetBucketInventoryConfigurationCommand").sc(schemas_0.GetBucketInventoryConfiguration$).build() {
     };
     var GetBucketLifecycleConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54963,7 +55289,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketLifecycleConfiguration", {}).n("S3Client", "GetBucketLifecycleConfigurationCommand").sc(GetBucketLifecycleConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketLifecycleConfiguration", {}).n("S3Client", "GetBucketLifecycleConfigurationCommand").sc(schemas_0.GetBucketLifecycleConfiguration$).build() {
     };
     var GetBucketLocationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54974,7 +55300,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketLocation", {}).n("S3Client", "GetBucketLocationCommand").sc(GetBucketLocation$).build() {
+    }).s("AmazonS3", "GetBucketLocation", {}).n("S3Client", "GetBucketLocationCommand").sc(schemas_0.GetBucketLocation$).build() {
     };
     var GetBucketLoggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54985,7 +55311,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketLogging", {}).n("S3Client", "GetBucketLoggingCommand").sc(GetBucketLogging$).build() {
+    }).s("AmazonS3", "GetBucketLogging", {}).n("S3Client", "GetBucketLoggingCommand").sc(schemas_0.GetBucketLogging$).build() {
     };
     var GetBucketMetadataConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -54996,7 +55322,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketMetadataConfiguration", {}).n("S3Client", "GetBucketMetadataConfigurationCommand").sc(GetBucketMetadataConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketMetadataConfiguration", {}).n("S3Client", "GetBucketMetadataConfigurationCommand").sc(schemas_0.GetBucketMetadataConfiguration$).build() {
     };
     var GetBucketMetadataTableConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55007,7 +55333,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketMetadataTableConfiguration", {}).n("S3Client", "GetBucketMetadataTableConfigurationCommand").sc(GetBucketMetadataTableConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketMetadataTableConfiguration", {}).n("S3Client", "GetBucketMetadataTableConfigurationCommand").sc(schemas_0.GetBucketMetadataTableConfiguration$).build() {
     };
     var GetBucketMetricsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55018,7 +55344,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketMetricsConfiguration", {}).n("S3Client", "GetBucketMetricsConfigurationCommand").sc(GetBucketMetricsConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketMetricsConfiguration", {}).n("S3Client", "GetBucketMetricsConfigurationCommand").sc(schemas_0.GetBucketMetricsConfiguration$).build() {
     };
     var GetBucketNotificationConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55029,7 +55355,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketNotificationConfiguration", {}).n("S3Client", "GetBucketNotificationConfigurationCommand").sc(GetBucketNotificationConfiguration$).build() {
+    }).s("AmazonS3", "GetBucketNotificationConfiguration", {}).n("S3Client", "GetBucketNotificationConfigurationCommand").sc(schemas_0.GetBucketNotificationConfiguration$).build() {
     };
     var GetBucketOwnershipControlsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55040,7 +55366,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketOwnershipControls", {}).n("S3Client", "GetBucketOwnershipControlsCommand").sc(GetBucketOwnershipControls$).build() {
+    }).s("AmazonS3", "GetBucketOwnershipControls", {}).n("S3Client", "GetBucketOwnershipControlsCommand").sc(schemas_0.GetBucketOwnershipControls$).build() {
     };
     var GetBucketPolicyCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55051,7 +55377,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketPolicy", {}).n("S3Client", "GetBucketPolicyCommand").sc(GetBucketPolicy$).build() {
+    }).s("AmazonS3", "GetBucketPolicy", {}).n("S3Client", "GetBucketPolicyCommand").sc(schemas_0.GetBucketPolicy$).build() {
     };
     var GetBucketPolicyStatusCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55062,7 +55388,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketPolicyStatus", {}).n("S3Client", "GetBucketPolicyStatusCommand").sc(GetBucketPolicyStatus$).build() {
+    }).s("AmazonS3", "GetBucketPolicyStatus", {}).n("S3Client", "GetBucketPolicyStatusCommand").sc(schemas_0.GetBucketPolicyStatus$).build() {
     };
     var GetBucketReplicationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55073,7 +55399,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketReplication", {}).n("S3Client", "GetBucketReplicationCommand").sc(GetBucketReplication$).build() {
+    }).s("AmazonS3", "GetBucketReplication", {}).n("S3Client", "GetBucketReplicationCommand").sc(schemas_0.GetBucketReplication$).build() {
     };
     var GetBucketRequestPaymentCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55084,7 +55410,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketRequestPayment", {}).n("S3Client", "GetBucketRequestPaymentCommand").sc(GetBucketRequestPayment$).build() {
+    }).s("AmazonS3", "GetBucketRequestPayment", {}).n("S3Client", "GetBucketRequestPaymentCommand").sc(schemas_0.GetBucketRequestPayment$).build() {
     };
     var GetBucketTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55095,7 +55421,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketTagging", {}).n("S3Client", "GetBucketTaggingCommand").sc(GetBucketTagging$).build() {
+    }).s("AmazonS3", "GetBucketTagging", {}).n("S3Client", "GetBucketTaggingCommand").sc(schemas_0.GetBucketTagging$).build() {
     };
     var GetBucketVersioningCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55106,7 +55432,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketVersioning", {}).n("S3Client", "GetBucketVersioningCommand").sc(GetBucketVersioning$).build() {
+    }).s("AmazonS3", "GetBucketVersioning", {}).n("S3Client", "GetBucketVersioningCommand").sc(schemas_0.GetBucketVersioning$).build() {
     };
     var GetBucketWebsiteCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55117,7 +55443,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetBucketWebsite", {}).n("S3Client", "GetBucketWebsiteCommand").sc(GetBucketWebsite$).build() {
+    }).s("AmazonS3", "GetBucketWebsite", {}).n("S3Client", "GetBucketWebsiteCommand").sc(schemas_0.GetBucketWebsite$).build() {
     };
     var GetObjectAclCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55128,7 +55454,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectAcl", {}).n("S3Client", "GetObjectAclCommand").sc(GetObjectAcl$).build() {
+    }).s("AmazonS3", "GetObjectAcl", {}).n("S3Client", "GetObjectAclCommand").sc(schemas_0.GetObjectAcl$).build() {
     };
     var GetObjectAttributesCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55139,7 +55465,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectAttributes", {}).n("S3Client", "GetObjectAttributesCommand").sc(GetObjectAttributes$).build() {
+    }).s("AmazonS3", "GetObjectAttributes", {}).n("S3Client", "GetObjectAttributesCommand").sc(schemas_0.GetObjectAttributes$).build() {
     };
     var GetObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55156,7 +55482,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSsec.getSsecPlugin(config),
         middlewareSdkS3.getS3ExpiresMiddlewarePlugin(config)
       ];
-    }).s("AmazonS3", "GetObject", {}).n("S3Client", "GetObjectCommand").sc(GetObject$).build() {
+    }).s("AmazonS3", "GetObject", {}).n("S3Client", "GetObjectCommand").sc(schemas_0.GetObject$).build() {
     };
     var GetObjectLegalHoldCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55166,7 +55492,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectLegalHold", {}).n("S3Client", "GetObjectLegalHoldCommand").sc(GetObjectLegalHold$).build() {
+    }).s("AmazonS3", "GetObjectLegalHold", {}).n("S3Client", "GetObjectLegalHoldCommand").sc(schemas_0.GetObjectLegalHold$).build() {
     };
     var GetObjectLockConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55176,7 +55502,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectLockConfiguration", {}).n("S3Client", "GetObjectLockConfigurationCommand").sc(GetObjectLockConfiguration$).build() {
+    }).s("AmazonS3", "GetObjectLockConfiguration", {}).n("S3Client", "GetObjectLockConfigurationCommand").sc(schemas_0.GetObjectLockConfiguration$).build() {
     };
     var GetObjectRetentionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55186,7 +55512,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectRetention", {}).n("S3Client", "GetObjectRetentionCommand").sc(GetObjectRetention$).build() {
+    }).s("AmazonS3", "GetObjectRetention", {}).n("S3Client", "GetObjectRetentionCommand").sc(schemas_0.GetObjectRetention$).build() {
     };
     var GetObjectTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55196,14 +55522,14 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetObjectTagging", {}).n("S3Client", "GetObjectTaggingCommand").sc(GetObjectTagging$).build() {
+    }).s("AmazonS3", "GetObjectTagging", {}).n("S3Client", "GetObjectTaggingCommand").sc(schemas_0.GetObjectTagging$).build() {
     };
     var GetObjectTorrentCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "GetObjectTorrent", {}).n("S3Client", "GetObjectTorrentCommand").sc(GetObjectTorrent$).build() {
+    }).s("AmazonS3", "GetObjectTorrent", {}).n("S3Client", "GetObjectTorrentCommand").sc(schemas_0.GetObjectTorrent$).build() {
     };
     var GetPublicAccessBlockCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55214,7 +55540,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "GetPublicAccessBlock", {}).n("S3Client", "GetPublicAccessBlockCommand").sc(GetPublicAccessBlock$).build() {
+    }).s("AmazonS3", "GetPublicAccessBlock", {}).n("S3Client", "GetPublicAccessBlockCommand").sc(schemas_0.GetPublicAccessBlock$).build() {
     };
     var HeadBucketCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55224,7 +55550,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "HeadBucket", {}).n("S3Client", "HeadBucketCommand").sc(HeadBucket$).build() {
+    }).s("AmazonS3", "HeadBucket", {}).n("S3Client", "HeadBucketCommand").sc(schemas_0.HeadBucket$).build() {
     };
     var HeadObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55237,7 +55563,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSsec.getSsecPlugin(config),
         middlewareSdkS3.getS3ExpiresMiddlewarePlugin(config)
       ];
-    }).s("AmazonS3", "HeadObject", {}).n("S3Client", "HeadObjectCommand").sc(HeadObject$).build() {
+    }).s("AmazonS3", "HeadObject", {}).n("S3Client", "HeadObjectCommand").sc(schemas_0.HeadObject$).build() {
     };
     var ListBucketAnalyticsConfigurationsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55248,7 +55574,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListBucketAnalyticsConfigurations", {}).n("S3Client", "ListBucketAnalyticsConfigurationsCommand").sc(ListBucketAnalyticsConfigurations$).build() {
+    }).s("AmazonS3", "ListBucketAnalyticsConfigurations", {}).n("S3Client", "ListBucketAnalyticsConfigurationsCommand").sc(schemas_0.ListBucketAnalyticsConfigurations$).build() {
     };
     var ListBucketIntelligentTieringConfigurationsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55259,7 +55585,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListBucketIntelligentTieringConfigurations", {}).n("S3Client", "ListBucketIntelligentTieringConfigurationsCommand").sc(ListBucketIntelligentTieringConfigurations$).build() {
+    }).s("AmazonS3", "ListBucketIntelligentTieringConfigurations", {}).n("S3Client", "ListBucketIntelligentTieringConfigurationsCommand").sc(schemas_0.ListBucketIntelligentTieringConfigurations$).build() {
     };
     var ListBucketInventoryConfigurationsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55270,7 +55596,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListBucketInventoryConfigurations", {}).n("S3Client", "ListBucketInventoryConfigurationsCommand").sc(ListBucketInventoryConfigurations$).build() {
+    }).s("AmazonS3", "ListBucketInventoryConfigurations", {}).n("S3Client", "ListBucketInventoryConfigurationsCommand").sc(schemas_0.ListBucketInventoryConfigurations$).build() {
     };
     var ListBucketMetricsConfigurationsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55280,14 +55606,14 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListBucketMetricsConfigurations", {}).n("S3Client", "ListBucketMetricsConfigurationsCommand").sc(ListBucketMetricsConfigurations$).build() {
+    }).s("AmazonS3", "ListBucketMetricsConfigurations", {}).n("S3Client", "ListBucketMetricsConfigurationsCommand").sc(schemas_0.ListBucketMetricsConfigurations$).build() {
     };
     var ListBucketsCommand = class extends smithyClient.Command.classBuilder().ep(commonParams4).m(function(Command, cs, config, o4) {
       return [
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListBuckets", {}).n("S3Client", "ListBucketsCommand").sc(ListBuckets$).build() {
+    }).s("AmazonS3", "ListBuckets", {}).n("S3Client", "ListBucketsCommand").sc(schemas_0.ListBuckets$).build() {
     };
     var ListDirectoryBucketsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55297,7 +55623,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListDirectoryBuckets", {}).n("S3Client", "ListDirectoryBucketsCommand").sc(ListDirectoryBuckets$).build() {
+    }).s("AmazonS3", "ListDirectoryBuckets", {}).n("S3Client", "ListDirectoryBucketsCommand").sc(schemas_0.ListDirectoryBuckets$).build() {
     };
     var ListMultipartUploadsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55308,7 +55634,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListMultipartUploads", {}).n("S3Client", "ListMultipartUploadsCommand").sc(ListMultipartUploads$).build() {
+    }).s("AmazonS3", "ListMultipartUploads", {}).n("S3Client", "ListMultipartUploadsCommand").sc(schemas_0.ListMultipartUploads$).build() {
     };
     var ListObjectsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55319,7 +55645,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListObjects", {}).n("S3Client", "ListObjectsCommand").sc(ListObjects$).build() {
+    }).s("AmazonS3", "ListObjects", {}).n("S3Client", "ListObjectsCommand").sc(schemas_0.ListObjects$).build() {
     };
     var ListObjectsV2Command = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55330,7 +55656,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListObjectsV2", {}).n("S3Client", "ListObjectsV2Command").sc(ListObjectsV2$).build() {
+    }).s("AmazonS3", "ListObjectsV2", {}).n("S3Client", "ListObjectsV2Command").sc(schemas_0.ListObjectsV2$).build() {
     };
     var ListObjectVersionsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55341,7 +55667,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "ListObjectVersions", {}).n("S3Client", "ListObjectVersionsCommand").sc(ListObjectVersions$).build() {
+    }).s("AmazonS3", "ListObjectVersions", {}).n("S3Client", "ListObjectVersionsCommand").sc(schemas_0.ListObjectVersions$).build() {
     };
     var ListPartsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55353,7 +55679,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "ListParts", {}).n("S3Client", "ListPartsCommand").sc(ListParts$).build() {
+    }).s("AmazonS3", "ListParts", {}).n("S3Client", "ListPartsCommand").sc(schemas_0.ListParts$).build() {
     };
     var PutBucketAbacCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55366,7 +55692,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: false
         })
       ];
-    }).s("AmazonS3", "PutBucketAbac", {}).n("S3Client", "PutBucketAbacCommand").sc(PutBucketAbac$).build() {
+    }).s("AmazonS3", "PutBucketAbac", {}).n("S3Client", "PutBucketAbacCommand").sc(schemas_0.PutBucketAbac$).build() {
     };
     var PutBucketAccelerateConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55380,7 +55706,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: false
         })
       ];
-    }).s("AmazonS3", "PutBucketAccelerateConfiguration", {}).n("S3Client", "PutBucketAccelerateConfigurationCommand").sc(PutBucketAccelerateConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketAccelerateConfiguration", {}).n("S3Client", "PutBucketAccelerateConfigurationCommand").sc(schemas_0.PutBucketAccelerateConfiguration$).build() {
     };
     var PutBucketAclCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55394,7 +55720,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketAcl", {}).n("S3Client", "PutBucketAclCommand").sc(PutBucketAcl$).build() {
+    }).s("AmazonS3", "PutBucketAcl", {}).n("S3Client", "PutBucketAclCommand").sc(schemas_0.PutBucketAcl$).build() {
     };
     var PutBucketAnalyticsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55402,7 +55728,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "PutBucketAnalyticsConfiguration", {}).n("S3Client", "PutBucketAnalyticsConfigurationCommand").sc(PutBucketAnalyticsConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketAnalyticsConfiguration", {}).n("S3Client", "PutBucketAnalyticsConfigurationCommand").sc(schemas_0.PutBucketAnalyticsConfiguration$).build() {
     };
     var PutBucketCorsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55416,7 +55742,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketCors", {}).n("S3Client", "PutBucketCorsCommand").sc(PutBucketCors$).build() {
+    }).s("AmazonS3", "PutBucketCors", {}).n("S3Client", "PutBucketCorsCommand").sc(schemas_0.PutBucketCors$).build() {
     };
     var PutBucketEncryptionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55430,7 +55756,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketEncryption", {}).n("S3Client", "PutBucketEncryptionCommand").sc(PutBucketEncryption$).build() {
+    }).s("AmazonS3", "PutBucketEncryption", {}).n("S3Client", "PutBucketEncryptionCommand").sc(schemas_0.PutBucketEncryption$).build() {
     };
     var PutBucketIntelligentTieringConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55438,7 +55764,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "PutBucketIntelligentTieringConfiguration", {}).n("S3Client", "PutBucketIntelligentTieringConfigurationCommand").sc(PutBucketIntelligentTieringConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketIntelligentTieringConfiguration", {}).n("S3Client", "PutBucketIntelligentTieringConfigurationCommand").sc(schemas_0.PutBucketIntelligentTieringConfiguration$).build() {
     };
     var PutBucketInventoryConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55446,7 +55772,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "PutBucketInventoryConfiguration", {}).n("S3Client", "PutBucketInventoryConfigurationCommand").sc(PutBucketInventoryConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketInventoryConfiguration", {}).n("S3Client", "PutBucketInventoryConfigurationCommand").sc(schemas_0.PutBucketInventoryConfiguration$).build() {
     };
     var PutBucketLifecycleConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55461,7 +55787,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutBucketLifecycleConfiguration", {}).n("S3Client", "PutBucketLifecycleConfigurationCommand").sc(PutBucketLifecycleConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketLifecycleConfiguration", {}).n("S3Client", "PutBucketLifecycleConfigurationCommand").sc(schemas_0.PutBucketLifecycleConfiguration$).build() {
     };
     var PutBucketLoggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55475,7 +55801,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketLogging", {}).n("S3Client", "PutBucketLoggingCommand").sc(PutBucketLogging$).build() {
+    }).s("AmazonS3", "PutBucketLogging", {}).n("S3Client", "PutBucketLoggingCommand").sc(schemas_0.PutBucketLogging$).build() {
     };
     var PutBucketMetricsConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55483,7 +55809,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "PutBucketMetricsConfiguration", {}).n("S3Client", "PutBucketMetricsConfigurationCommand").sc(PutBucketMetricsConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketMetricsConfiguration", {}).n("S3Client", "PutBucketMetricsConfigurationCommand").sc(schemas_0.PutBucketMetricsConfiguration$).build() {
     };
     var PutBucketNotificationConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55491,7 +55817,7 @@ var require_dist_cjs72 = __commonJS({
       Bucket: { type: "contextParams", name: "Bucket" }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "PutBucketNotificationConfiguration", {}).n("S3Client", "PutBucketNotificationConfigurationCommand").sc(PutBucketNotificationConfiguration$).build() {
+    }).s("AmazonS3", "PutBucketNotificationConfiguration", {}).n("S3Client", "PutBucketNotificationConfigurationCommand").sc(schemas_0.PutBucketNotificationConfiguration$).build() {
     };
     var PutBucketOwnershipControlsCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55505,7 +55831,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketOwnershipControls", {}).n("S3Client", "PutBucketOwnershipControlsCommand").sc(PutBucketOwnershipControls$).build() {
+    }).s("AmazonS3", "PutBucketOwnershipControls", {}).n("S3Client", "PutBucketOwnershipControlsCommand").sc(schemas_0.PutBucketOwnershipControls$).build() {
     };
     var PutBucketPolicyCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55519,7 +55845,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketPolicy", {}).n("S3Client", "PutBucketPolicyCommand").sc(PutBucketPolicy$).build() {
+    }).s("AmazonS3", "PutBucketPolicy", {}).n("S3Client", "PutBucketPolicyCommand").sc(schemas_0.PutBucketPolicy$).build() {
     };
     var PutBucketReplicationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55533,7 +55859,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketReplication", {}).n("S3Client", "PutBucketReplicationCommand").sc(PutBucketReplication$).build() {
+    }).s("AmazonS3", "PutBucketReplication", {}).n("S3Client", "PutBucketReplicationCommand").sc(schemas_0.PutBucketReplication$).build() {
     };
     var PutBucketRequestPaymentCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55547,7 +55873,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketRequestPayment", {}).n("S3Client", "PutBucketRequestPaymentCommand").sc(PutBucketRequestPayment$).build() {
+    }).s("AmazonS3", "PutBucketRequestPayment", {}).n("S3Client", "PutBucketRequestPaymentCommand").sc(schemas_0.PutBucketRequestPayment$).build() {
     };
     var PutBucketTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55561,7 +55887,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketTagging", {}).n("S3Client", "PutBucketTaggingCommand").sc(PutBucketTagging$).build() {
+    }).s("AmazonS3", "PutBucketTagging", {}).n("S3Client", "PutBucketTaggingCommand").sc(schemas_0.PutBucketTagging$).build() {
     };
     var PutBucketVersioningCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55575,7 +55901,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketVersioning", {}).n("S3Client", "PutBucketVersioningCommand").sc(PutBucketVersioning$).build() {
+    }).s("AmazonS3", "PutBucketVersioning", {}).n("S3Client", "PutBucketVersioningCommand").sc(schemas_0.PutBucketVersioning$).build() {
     };
     var PutBucketWebsiteCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55589,7 +55915,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutBucketWebsite", {}).n("S3Client", "PutBucketWebsiteCommand").sc(PutBucketWebsite$).build() {
+    }).s("AmazonS3", "PutBucketWebsite", {}).n("S3Client", "PutBucketWebsiteCommand").sc(schemas_0.PutBucketWebsite$).build() {
     };
     var PutObjectAclCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55604,7 +55930,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutObjectAcl", {}).n("S3Client", "PutObjectAclCommand").sc(PutObjectAcl$).build() {
+    }).s("AmazonS3", "PutObjectAcl", {}).n("S3Client", "PutObjectAclCommand").sc(schemas_0.PutObjectAcl$).build() {
     };
     var PutObjectCommand2 = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55621,7 +55947,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "PutObject", {}).n("S3Client", "PutObjectCommand").sc(PutObject$).build() {
+    }).s("AmazonS3", "PutObject", {}).n("S3Client", "PutObjectCommand").sc(schemas_0.PutObject$).build() {
     };
     var PutObjectLegalHoldCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55635,7 +55961,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutObjectLegalHold", {}).n("S3Client", "PutObjectLegalHoldCommand").sc(PutObjectLegalHold$).build() {
+    }).s("AmazonS3", "PutObjectLegalHold", {}).n("S3Client", "PutObjectLegalHoldCommand").sc(schemas_0.PutObjectLegalHold$).build() {
     };
     var PutObjectLockConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55649,7 +55975,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutObjectLockConfiguration", {}).n("S3Client", "PutObjectLockConfigurationCommand").sc(PutObjectLockConfiguration$).build() {
+    }).s("AmazonS3", "PutObjectLockConfiguration", {}).n("S3Client", "PutObjectLockConfigurationCommand").sc(schemas_0.PutObjectLockConfiguration$).build() {
     };
     var PutObjectRetentionCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55663,7 +55989,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutObjectRetention", {}).n("S3Client", "PutObjectRetentionCommand").sc(PutObjectRetention$).build() {
+    }).s("AmazonS3", "PutObjectRetention", {}).n("S3Client", "PutObjectRetentionCommand").sc(schemas_0.PutObjectRetention$).build() {
     };
     var PutObjectTaggingCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55677,7 +56003,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "PutObjectTagging", {}).n("S3Client", "PutObjectTaggingCommand").sc(PutObjectTagging$).build() {
+    }).s("AmazonS3", "PutObjectTagging", {}).n("S3Client", "PutObjectTaggingCommand").sc(schemas_0.PutObjectTagging$).build() {
     };
     var PutPublicAccessBlockCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55691,7 +56017,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "PutPublicAccessBlock", {}).n("S3Client", "PutPublicAccessBlockCommand").sc(PutPublicAccessBlock$).build() {
+    }).s("AmazonS3", "PutPublicAccessBlock", {}).n("S3Client", "PutPublicAccessBlockCommand").sc(schemas_0.PutPublicAccessBlock$).build() {
     };
     var RenameObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55702,7 +56028,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "RenameObject", {}).n("S3Client", "RenameObjectCommand").sc(RenameObject$).build() {
+    }).s("AmazonS3", "RenameObject", {}).n("S3Client", "RenameObjectCommand").sc(schemas_0.RenameObject$).build() {
     };
     var RestoreObjectCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55716,7 +56042,7 @@ var require_dist_cjs72 = __commonJS({
         }),
         middlewareSdkS3.getThrow200ExceptionsPlugin(config)
       ];
-    }).s("AmazonS3", "RestoreObject", {}).n("S3Client", "RestoreObjectCommand").sc(RestoreObject$).build() {
+    }).s("AmazonS3", "RestoreObject", {}).n("S3Client", "RestoreObjectCommand").sc(schemas_0.RestoreObject$).build() {
     };
     var SelectObjectContentCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55731,7 +56057,7 @@ var require_dist_cjs72 = __commonJS({
       eventStream: {
         output: true
       }
-    }).n("S3Client", "SelectObjectContentCommand").sc(SelectObjectContent$).build() {
+    }).n("S3Client", "SelectObjectContentCommand").sc(schemas_0.SelectObjectContent$).build() {
     };
     var UpdateBucketMetadataInventoryTableConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55745,7 +56071,7 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "UpdateBucketMetadataInventoryTableConfiguration", {}).n("S3Client", "UpdateBucketMetadataInventoryTableConfigurationCommand").sc(UpdateBucketMetadataInventoryTableConfiguration$).build() {
+    }).s("AmazonS3", "UpdateBucketMetadataInventoryTableConfiguration", {}).n("S3Client", "UpdateBucketMetadataInventoryTableConfigurationCommand").sc(schemas_0.UpdateBucketMetadataInventoryTableConfiguration$).build() {
     };
     var UpdateBucketMetadataJournalTableConfigurationCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55759,7 +56085,21 @@ var require_dist_cjs72 = __commonJS({
           requestChecksumRequired: true
         })
       ];
-    }).s("AmazonS3", "UpdateBucketMetadataJournalTableConfiguration", {}).n("S3Client", "UpdateBucketMetadataJournalTableConfigurationCommand").sc(UpdateBucketMetadataJournalTableConfiguration$).build() {
+    }).s("AmazonS3", "UpdateBucketMetadataJournalTableConfiguration", {}).n("S3Client", "UpdateBucketMetadataJournalTableConfigurationCommand").sc(schemas_0.UpdateBucketMetadataJournalTableConfiguration$).build() {
+    };
+    var UpdateObjectEncryptionCommand = class extends smithyClient.Command.classBuilder().ep({
+      ...commonParams4,
+      Bucket: { type: "contextParams", name: "Bucket" }
+    }).m(function(Command, cs, config, o4) {
+      return [
+        middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
+        middlewareFlexibleChecksums.getFlexibleChecksumsPlugin(config, {
+          requestAlgorithmMember: { "httpHeader": "x-amz-sdk-checksum-algorithm", "name": "ChecksumAlgorithm" },
+          requestChecksumRequired: true
+        }),
+        middlewareSdkS3.getThrow200ExceptionsPlugin(config)
+      ];
+    }).s("AmazonS3", "UpdateObjectEncryption", {}).n("S3Client", "UpdateObjectEncryptionCommand").sc(schemas_0.UpdateObjectEncryption$).build() {
     };
     var UploadPartCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55775,7 +56115,7 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "UploadPart", {}).n("S3Client", "UploadPartCommand").sc(UploadPart$).build() {
+    }).s("AmazonS3", "UploadPart", {}).n("S3Client", "UploadPartCommand").sc(schemas_0.UploadPart$).build() {
     };
     var UploadPartCopyCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
@@ -55787,14 +56127,108 @@ var require_dist_cjs72 = __commonJS({
         middlewareSdkS3.getThrow200ExceptionsPlugin(config),
         middlewareSsec.getSsecPlugin(config)
       ];
-    }).s("AmazonS3", "UploadPartCopy", {}).n("S3Client", "UploadPartCopyCommand").sc(UploadPartCopy$).build() {
+    }).s("AmazonS3", "UploadPartCopy", {}).n("S3Client", "UploadPartCopyCommand").sc(schemas_0.UploadPartCopy$).build() {
     };
     var WriteGetObjectResponseCommand = class extends smithyClient.Command.classBuilder().ep({
       ...commonParams4,
       UseObjectLambdaEndpoint: { type: "staticContextParams", value: true }
     }).m(function(Command, cs, config, o4) {
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
-    }).s("AmazonS3", "WriteGetObjectResponse", {}).n("S3Client", "WriteGetObjectResponseCommand").sc(WriteGetObjectResponse$).build() {
+    }).s("AmazonS3", "WriteGetObjectResponse", {}).n("S3Client", "WriteGetObjectResponseCommand").sc(schemas_0.WriteGetObjectResponse$).build() {
+    };
+    var paginateListBuckets = core6.createPaginator(S3Client2, ListBucketsCommand, "ContinuationToken", "ContinuationToken", "MaxBuckets");
+    var paginateListDirectoryBuckets = core6.createPaginator(S3Client2, ListDirectoryBucketsCommand, "ContinuationToken", "ContinuationToken", "MaxDirectoryBuckets");
+    var paginateListObjectsV2 = core6.createPaginator(S3Client2, ListObjectsV2Command, "ContinuationToken", "NextContinuationToken", "MaxKeys");
+    var paginateListParts = core6.createPaginator(S3Client2, ListPartsCommand, "PartNumberMarker", "NextPartNumberMarker", "MaxParts");
+    var checkState$3 = async (client, input) => {
+      let reason;
+      try {
+        let result = await client.send(new HeadBucketCommand(input));
+        reason = result;
+        return { state: utilWaiter.WaiterState.SUCCESS, reason };
+      } catch (exception2) {
+        reason = exception2;
+        if (exception2.name && exception2.name == "NotFound") {
+          return { state: utilWaiter.WaiterState.RETRY, reason };
+        }
+      }
+      return { state: utilWaiter.WaiterState.RETRY, reason };
+    };
+    var waitForBucketExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
+    };
+    var waitUntilBucketExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
+      return utilWaiter.checkExceptions(result);
+    };
+    var checkState$2 = async (client, input) => {
+      let reason;
+      try {
+        let result = await client.send(new HeadBucketCommand(input));
+        reason = result;
+      } catch (exception2) {
+        reason = exception2;
+        if (exception2.name && exception2.name == "NotFound") {
+          return { state: utilWaiter.WaiterState.SUCCESS, reason };
+        }
+      }
+      return { state: utilWaiter.WaiterState.RETRY, reason };
+    };
+    var waitForBucketNotExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
+    };
+    var waitUntilBucketNotExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
+      return utilWaiter.checkExceptions(result);
+    };
+    var checkState$1 = async (client, input) => {
+      let reason;
+      try {
+        let result = await client.send(new HeadObjectCommand(input));
+        reason = result;
+        return { state: utilWaiter.WaiterState.SUCCESS, reason };
+      } catch (exception2) {
+        reason = exception2;
+        if (exception2.name && exception2.name == "NotFound") {
+          return { state: utilWaiter.WaiterState.RETRY, reason };
+        }
+      }
+      return { state: utilWaiter.WaiterState.RETRY, reason };
+    };
+    var waitForObjectExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
+    };
+    var waitUntilObjectExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
+      return utilWaiter.checkExceptions(result);
+    };
+    var checkState = async (client, input) => {
+      let reason;
+      try {
+        let result = await client.send(new HeadObjectCommand(input));
+        reason = result;
+      } catch (exception2) {
+        reason = exception2;
+        if (exception2.name && exception2.name == "NotFound") {
+          return { state: utilWaiter.WaiterState.SUCCESS, reason };
+        }
+      }
+      return { state: utilWaiter.WaiterState.RETRY, reason };
+    };
+    var waitForObjectNotExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
+    };
+    var waitUntilObjectNotExists = async (params, input) => {
+      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
+      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
+      return utilWaiter.checkExceptions(result);
     };
     var commands4 = {
       AbortMultipartUploadCommand,
@@ -55900,107 +56334,26 @@ var require_dist_cjs72 = __commonJS({
       SelectObjectContentCommand,
       UpdateBucketMetadataInventoryTableConfigurationCommand,
       UpdateBucketMetadataJournalTableConfigurationCommand,
+      UpdateObjectEncryptionCommand,
       UploadPartCommand,
       UploadPartCopyCommand,
       WriteGetObjectResponseCommand
     };
+    var paginators = {
+      paginateListBuckets,
+      paginateListDirectoryBuckets,
+      paginateListObjectsV2,
+      paginateListParts
+    };
+    var waiters = {
+      waitUntilBucketExists,
+      waitUntilBucketNotExists,
+      waitUntilObjectExists,
+      waitUntilObjectNotExists
+    };
     var S3 = class extends S3Client2 {
     };
-    smithyClient.createAggregatedClient(commands4, S3);
-    var paginateListBuckets = core6.createPaginator(S3Client2, ListBucketsCommand, "ContinuationToken", "ContinuationToken", "MaxBuckets");
-    var paginateListDirectoryBuckets = core6.createPaginator(S3Client2, ListDirectoryBucketsCommand, "ContinuationToken", "ContinuationToken", "MaxDirectoryBuckets");
-    var paginateListObjectsV2 = core6.createPaginator(S3Client2, ListObjectsV2Command, "ContinuationToken", "NextContinuationToken", "MaxKeys");
-    var paginateListParts = core6.createPaginator(S3Client2, ListPartsCommand, "PartNumberMarker", "NextPartNumberMarker", "MaxParts");
-    var checkState$3 = async (client, input) => {
-      let reason;
-      try {
-        let result = await client.send(new HeadBucketCommand(input));
-        reason = result;
-        return { state: utilWaiter.WaiterState.SUCCESS, reason };
-      } catch (exception2) {
-        reason = exception2;
-        if (exception2.name && exception2.name == "NotFound") {
-          return { state: utilWaiter.WaiterState.RETRY, reason };
-        }
-      }
-      return { state: utilWaiter.WaiterState.RETRY, reason };
-    };
-    var waitForBucketExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
-    };
-    var waitUntilBucketExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
-      return utilWaiter.checkExceptions(result);
-    };
-    var checkState$2 = async (client, input) => {
-      let reason;
-      try {
-        let result = await client.send(new HeadBucketCommand(input));
-        reason = result;
-      } catch (exception2) {
-        reason = exception2;
-        if (exception2.name && exception2.name == "NotFound") {
-          return { state: utilWaiter.WaiterState.SUCCESS, reason };
-        }
-      }
-      return { state: utilWaiter.WaiterState.RETRY, reason };
-    };
-    var waitForBucketNotExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
-    };
-    var waitUntilBucketNotExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
-      return utilWaiter.checkExceptions(result);
-    };
-    var checkState$1 = async (client, input) => {
-      let reason;
-      try {
-        let result = await client.send(new HeadObjectCommand(input));
-        reason = result;
-        return { state: utilWaiter.WaiterState.SUCCESS, reason };
-      } catch (exception2) {
-        reason = exception2;
-        if (exception2.name && exception2.name == "NotFound") {
-          return { state: utilWaiter.WaiterState.RETRY, reason };
-        }
-      }
-      return { state: utilWaiter.WaiterState.RETRY, reason };
-    };
-    var waitForObjectExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
-    };
-    var waitUntilObjectExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
-      return utilWaiter.checkExceptions(result);
-    };
-    var checkState = async (client, input) => {
-      let reason;
-      try {
-        let result = await client.send(new HeadObjectCommand(input));
-        reason = result;
-      } catch (exception2) {
-        reason = exception2;
-        if (exception2.name && exception2.name == "NotFound") {
-          return { state: utilWaiter.WaiterState.SUCCESS, reason };
-        }
-      }
-      return { state: utilWaiter.WaiterState.RETRY, reason };
-    };
-    var waitForObjectNotExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
-    };
-    var waitUntilObjectNotExists = async (params, input) => {
-      const serviceDefaults = { minDelay: 5, maxDelay: 120 };
-      const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
-      return utilWaiter.checkExceptions(result);
-    };
+    smithyClient.createAggregatedClient(commands4, S3, { paginators, waiters });
     var BucketAbacStatus = {
       Disabled: "Disabled",
       Enabled: "Enabled"
@@ -56412,651 +56765,193 @@ var require_dist_cjs72 = __commonJS({
         return smithyClient.Client;
       }
     });
-    exports2.AbacStatus$ = AbacStatus$;
-    exports2.AbortIncompleteMultipartUpload$ = AbortIncompleteMultipartUpload$;
-    exports2.AbortMultipartUpload$ = AbortMultipartUpload$;
+    Object.defineProperty(exports2, "S3ServiceException", {
+      enumerable: true,
+      get: function() {
+        return S3ServiceException2.S3ServiceException;
+      }
+    });
     exports2.AbortMultipartUploadCommand = AbortMultipartUploadCommand;
-    exports2.AbortMultipartUploadOutput$ = AbortMultipartUploadOutput$;
-    exports2.AbortMultipartUploadRequest$ = AbortMultipartUploadRequest$;
-    exports2.AccelerateConfiguration$ = AccelerateConfiguration$;
-    exports2.AccessControlPolicy$ = AccessControlPolicy$;
-    exports2.AccessControlTranslation$ = AccessControlTranslation$;
-    exports2.AnalyticsAndOperator$ = AnalyticsAndOperator$;
-    exports2.AnalyticsConfiguration$ = AnalyticsConfiguration$;
-    exports2.AnalyticsExportDestination$ = AnalyticsExportDestination$;
-    exports2.AnalyticsFilter$ = AnalyticsFilter$;
-    exports2.AnalyticsS3BucketDestination$ = AnalyticsS3BucketDestination$;
     exports2.AnalyticsS3ExportFileFormat = AnalyticsS3ExportFileFormat;
     exports2.ArchiveStatus = ArchiveStatus;
-    exports2.BlockedEncryptionTypes$ = BlockedEncryptionTypes$;
-    exports2.Bucket$ = Bucket$;
     exports2.BucketAbacStatus = BucketAbacStatus;
     exports2.BucketAccelerateStatus = BucketAccelerateStatus;
-    exports2.BucketAlreadyExists = BucketAlreadyExists;
-    exports2.BucketAlreadyExists$ = BucketAlreadyExists$;
-    exports2.BucketAlreadyOwnedByYou = BucketAlreadyOwnedByYou;
-    exports2.BucketAlreadyOwnedByYou$ = BucketAlreadyOwnedByYou$;
     exports2.BucketCannedACL = BucketCannedACL;
-    exports2.BucketInfo$ = BucketInfo$;
-    exports2.BucketLifecycleConfiguration$ = BucketLifecycleConfiguration$;
     exports2.BucketLocationConstraint = BucketLocationConstraint;
-    exports2.BucketLoggingStatus$ = BucketLoggingStatus$;
     exports2.BucketLogsPermission = BucketLogsPermission;
     exports2.BucketType = BucketType;
     exports2.BucketVersioningStatus = BucketVersioningStatus;
-    exports2.CORSConfiguration$ = CORSConfiguration$;
-    exports2.CORSRule$ = CORSRule$;
-    exports2.CSVInput$ = CSVInput$;
-    exports2.CSVOutput$ = CSVOutput$;
-    exports2.Checksum$ = Checksum$;
     exports2.ChecksumAlgorithm = ChecksumAlgorithm;
     exports2.ChecksumMode = ChecksumMode;
     exports2.ChecksumType = ChecksumType;
-    exports2.CommonPrefix$ = CommonPrefix$;
-    exports2.CompleteMultipartUpload$ = CompleteMultipartUpload$;
     exports2.CompleteMultipartUploadCommand = CompleteMultipartUploadCommand;
-    exports2.CompleteMultipartUploadOutput$ = CompleteMultipartUploadOutput$;
-    exports2.CompleteMultipartUploadRequest$ = CompleteMultipartUploadRequest$;
-    exports2.CompletedMultipartUpload$ = CompletedMultipartUpload$;
-    exports2.CompletedPart$ = CompletedPart$;
     exports2.CompressionType = CompressionType;
-    exports2.Condition$ = Condition$;
-    exports2.ContinuationEvent$ = ContinuationEvent$;
-    exports2.CopyObject$ = CopyObject$;
     exports2.CopyObjectCommand = CopyObjectCommand;
-    exports2.CopyObjectOutput$ = CopyObjectOutput$;
-    exports2.CopyObjectRequest$ = CopyObjectRequest$;
-    exports2.CopyObjectResult$ = CopyObjectResult$;
-    exports2.CopyPartResult$ = CopyPartResult$;
-    exports2.CreateBucket$ = CreateBucket$;
     exports2.CreateBucketCommand = CreateBucketCommand;
-    exports2.CreateBucketConfiguration$ = CreateBucketConfiguration$;
-    exports2.CreateBucketMetadataConfiguration$ = CreateBucketMetadataConfiguration$;
     exports2.CreateBucketMetadataConfigurationCommand = CreateBucketMetadataConfigurationCommand;
-    exports2.CreateBucketMetadataConfigurationRequest$ = CreateBucketMetadataConfigurationRequest$;
-    exports2.CreateBucketMetadataTableConfiguration$ = CreateBucketMetadataTableConfiguration$;
     exports2.CreateBucketMetadataTableConfigurationCommand = CreateBucketMetadataTableConfigurationCommand;
-    exports2.CreateBucketMetadataTableConfigurationRequest$ = CreateBucketMetadataTableConfigurationRequest$;
-    exports2.CreateBucketOutput$ = CreateBucketOutput$;
-    exports2.CreateBucketRequest$ = CreateBucketRequest$;
-    exports2.CreateMultipartUpload$ = CreateMultipartUpload$;
     exports2.CreateMultipartUploadCommand = CreateMultipartUploadCommand;
-    exports2.CreateMultipartUploadOutput$ = CreateMultipartUploadOutput$;
-    exports2.CreateMultipartUploadRequest$ = CreateMultipartUploadRequest$;
-    exports2.CreateSession$ = CreateSession$;
     exports2.CreateSessionCommand = CreateSessionCommand;
-    exports2.CreateSessionOutput$ = CreateSessionOutput$;
-    exports2.CreateSessionRequest$ = CreateSessionRequest$;
     exports2.DataRedundancy = DataRedundancy;
-    exports2.DefaultRetention$ = DefaultRetention$;
-    exports2.Delete$ = Delete$;
-    exports2.DeleteBucket$ = DeleteBucket$;
-    exports2.DeleteBucketAnalyticsConfiguration$ = DeleteBucketAnalyticsConfiguration$;
     exports2.DeleteBucketAnalyticsConfigurationCommand = DeleteBucketAnalyticsConfigurationCommand;
-    exports2.DeleteBucketAnalyticsConfigurationRequest$ = DeleteBucketAnalyticsConfigurationRequest$;
     exports2.DeleteBucketCommand = DeleteBucketCommand;
-    exports2.DeleteBucketCors$ = DeleteBucketCors$;
     exports2.DeleteBucketCorsCommand = DeleteBucketCorsCommand;
-    exports2.DeleteBucketCorsRequest$ = DeleteBucketCorsRequest$;
-    exports2.DeleteBucketEncryption$ = DeleteBucketEncryption$;
     exports2.DeleteBucketEncryptionCommand = DeleteBucketEncryptionCommand;
-    exports2.DeleteBucketEncryptionRequest$ = DeleteBucketEncryptionRequest$;
-    exports2.DeleteBucketIntelligentTieringConfiguration$ = DeleteBucketIntelligentTieringConfiguration$;
     exports2.DeleteBucketIntelligentTieringConfigurationCommand = DeleteBucketIntelligentTieringConfigurationCommand;
-    exports2.DeleteBucketIntelligentTieringConfigurationRequest$ = DeleteBucketIntelligentTieringConfigurationRequest$;
-    exports2.DeleteBucketInventoryConfiguration$ = DeleteBucketInventoryConfiguration$;
     exports2.DeleteBucketInventoryConfigurationCommand = DeleteBucketInventoryConfigurationCommand;
-    exports2.DeleteBucketInventoryConfigurationRequest$ = DeleteBucketInventoryConfigurationRequest$;
-    exports2.DeleteBucketLifecycle$ = DeleteBucketLifecycle$;
     exports2.DeleteBucketLifecycleCommand = DeleteBucketLifecycleCommand;
-    exports2.DeleteBucketLifecycleRequest$ = DeleteBucketLifecycleRequest$;
-    exports2.DeleteBucketMetadataConfiguration$ = DeleteBucketMetadataConfiguration$;
     exports2.DeleteBucketMetadataConfigurationCommand = DeleteBucketMetadataConfigurationCommand;
-    exports2.DeleteBucketMetadataConfigurationRequest$ = DeleteBucketMetadataConfigurationRequest$;
-    exports2.DeleteBucketMetadataTableConfiguration$ = DeleteBucketMetadataTableConfiguration$;
     exports2.DeleteBucketMetadataTableConfigurationCommand = DeleteBucketMetadataTableConfigurationCommand;
-    exports2.DeleteBucketMetadataTableConfigurationRequest$ = DeleteBucketMetadataTableConfigurationRequest$;
-    exports2.DeleteBucketMetricsConfiguration$ = DeleteBucketMetricsConfiguration$;
     exports2.DeleteBucketMetricsConfigurationCommand = DeleteBucketMetricsConfigurationCommand;
-    exports2.DeleteBucketMetricsConfigurationRequest$ = DeleteBucketMetricsConfigurationRequest$;
-    exports2.DeleteBucketOwnershipControls$ = DeleteBucketOwnershipControls$;
     exports2.DeleteBucketOwnershipControlsCommand = DeleteBucketOwnershipControlsCommand;
-    exports2.DeleteBucketOwnershipControlsRequest$ = DeleteBucketOwnershipControlsRequest$;
-    exports2.DeleteBucketPolicy$ = DeleteBucketPolicy$;
     exports2.DeleteBucketPolicyCommand = DeleteBucketPolicyCommand;
-    exports2.DeleteBucketPolicyRequest$ = DeleteBucketPolicyRequest$;
-    exports2.DeleteBucketReplication$ = DeleteBucketReplication$;
     exports2.DeleteBucketReplicationCommand = DeleteBucketReplicationCommand;
-    exports2.DeleteBucketReplicationRequest$ = DeleteBucketReplicationRequest$;
-    exports2.DeleteBucketRequest$ = DeleteBucketRequest$;
-    exports2.DeleteBucketTagging$ = DeleteBucketTagging$;
     exports2.DeleteBucketTaggingCommand = DeleteBucketTaggingCommand;
-    exports2.DeleteBucketTaggingRequest$ = DeleteBucketTaggingRequest$;
-    exports2.DeleteBucketWebsite$ = DeleteBucketWebsite$;
     exports2.DeleteBucketWebsiteCommand = DeleteBucketWebsiteCommand;
-    exports2.DeleteBucketWebsiteRequest$ = DeleteBucketWebsiteRequest$;
-    exports2.DeleteMarkerEntry$ = DeleteMarkerEntry$;
-    exports2.DeleteMarkerReplication$ = DeleteMarkerReplication$;
     exports2.DeleteMarkerReplicationStatus = DeleteMarkerReplicationStatus;
-    exports2.DeleteObject$ = DeleteObject$;
     exports2.DeleteObjectCommand = DeleteObjectCommand;
-    exports2.DeleteObjectOutput$ = DeleteObjectOutput$;
-    exports2.DeleteObjectRequest$ = DeleteObjectRequest$;
-    exports2.DeleteObjectTagging$ = DeleteObjectTagging$;
     exports2.DeleteObjectTaggingCommand = DeleteObjectTaggingCommand;
-    exports2.DeleteObjectTaggingOutput$ = DeleteObjectTaggingOutput$;
-    exports2.DeleteObjectTaggingRequest$ = DeleteObjectTaggingRequest$;
-    exports2.DeleteObjects$ = DeleteObjects$;
     exports2.DeleteObjectsCommand = DeleteObjectsCommand;
-    exports2.DeleteObjectsOutput$ = DeleteObjectsOutput$;
-    exports2.DeleteObjectsRequest$ = DeleteObjectsRequest$;
-    exports2.DeletePublicAccessBlock$ = DeletePublicAccessBlock$;
     exports2.DeletePublicAccessBlockCommand = DeletePublicAccessBlockCommand;
-    exports2.DeletePublicAccessBlockRequest$ = DeletePublicAccessBlockRequest$;
-    exports2.DeletedObject$ = DeletedObject$;
-    exports2.Destination$ = Destination$;
-    exports2.DestinationResult$ = DestinationResult$;
     exports2.EncodingType = EncodingType;
-    exports2.Encryption$ = Encryption$;
-    exports2.EncryptionConfiguration$ = EncryptionConfiguration$;
     exports2.EncryptionType = EncryptionType;
-    exports2.EncryptionTypeMismatch = EncryptionTypeMismatch;
-    exports2.EncryptionTypeMismatch$ = EncryptionTypeMismatch$;
-    exports2.EndEvent$ = EndEvent$;
-    exports2.ErrorDetails$ = ErrorDetails$;
-    exports2.ErrorDocument$ = ErrorDocument$;
     exports2.Event = Event2;
-    exports2.EventBridgeConfiguration$ = EventBridgeConfiguration$;
-    exports2.ExistingObjectReplication$ = ExistingObjectReplication$;
     exports2.ExistingObjectReplicationStatus = ExistingObjectReplicationStatus;
     exports2.ExpirationState = ExpirationState;
     exports2.ExpirationStatus = ExpirationStatus;
     exports2.ExpressionType = ExpressionType;
     exports2.FileHeaderInfo = FileHeaderInfo;
-    exports2.FilterRule$ = FilterRule$;
     exports2.FilterRuleName = FilterRuleName;
-    exports2.GetBucketAbac$ = GetBucketAbac$;
     exports2.GetBucketAbacCommand = GetBucketAbacCommand;
-    exports2.GetBucketAbacOutput$ = GetBucketAbacOutput$;
-    exports2.GetBucketAbacRequest$ = GetBucketAbacRequest$;
-    exports2.GetBucketAccelerateConfiguration$ = GetBucketAccelerateConfiguration$;
     exports2.GetBucketAccelerateConfigurationCommand = GetBucketAccelerateConfigurationCommand;
-    exports2.GetBucketAccelerateConfigurationOutput$ = GetBucketAccelerateConfigurationOutput$;
-    exports2.GetBucketAccelerateConfigurationRequest$ = GetBucketAccelerateConfigurationRequest$;
-    exports2.GetBucketAcl$ = GetBucketAcl$;
     exports2.GetBucketAclCommand = GetBucketAclCommand;
-    exports2.GetBucketAclOutput$ = GetBucketAclOutput$;
-    exports2.GetBucketAclRequest$ = GetBucketAclRequest$;
-    exports2.GetBucketAnalyticsConfiguration$ = GetBucketAnalyticsConfiguration$;
     exports2.GetBucketAnalyticsConfigurationCommand = GetBucketAnalyticsConfigurationCommand;
-    exports2.GetBucketAnalyticsConfigurationOutput$ = GetBucketAnalyticsConfigurationOutput$;
-    exports2.GetBucketAnalyticsConfigurationRequest$ = GetBucketAnalyticsConfigurationRequest$;
-    exports2.GetBucketCors$ = GetBucketCors$;
     exports2.GetBucketCorsCommand = GetBucketCorsCommand;
-    exports2.GetBucketCorsOutput$ = GetBucketCorsOutput$;
-    exports2.GetBucketCorsRequest$ = GetBucketCorsRequest$;
-    exports2.GetBucketEncryption$ = GetBucketEncryption$;
     exports2.GetBucketEncryptionCommand = GetBucketEncryptionCommand;
-    exports2.GetBucketEncryptionOutput$ = GetBucketEncryptionOutput$;
-    exports2.GetBucketEncryptionRequest$ = GetBucketEncryptionRequest$;
-    exports2.GetBucketIntelligentTieringConfiguration$ = GetBucketIntelligentTieringConfiguration$;
     exports2.GetBucketIntelligentTieringConfigurationCommand = GetBucketIntelligentTieringConfigurationCommand;
-    exports2.GetBucketIntelligentTieringConfigurationOutput$ = GetBucketIntelligentTieringConfigurationOutput$;
-    exports2.GetBucketIntelligentTieringConfigurationRequest$ = GetBucketIntelligentTieringConfigurationRequest$;
-    exports2.GetBucketInventoryConfiguration$ = GetBucketInventoryConfiguration$;
     exports2.GetBucketInventoryConfigurationCommand = GetBucketInventoryConfigurationCommand;
-    exports2.GetBucketInventoryConfigurationOutput$ = GetBucketInventoryConfigurationOutput$;
-    exports2.GetBucketInventoryConfigurationRequest$ = GetBucketInventoryConfigurationRequest$;
-    exports2.GetBucketLifecycleConfiguration$ = GetBucketLifecycleConfiguration$;
     exports2.GetBucketLifecycleConfigurationCommand = GetBucketLifecycleConfigurationCommand;
-    exports2.GetBucketLifecycleConfigurationOutput$ = GetBucketLifecycleConfigurationOutput$;
-    exports2.GetBucketLifecycleConfigurationRequest$ = GetBucketLifecycleConfigurationRequest$;
-    exports2.GetBucketLocation$ = GetBucketLocation$;
     exports2.GetBucketLocationCommand = GetBucketLocationCommand;
-    exports2.GetBucketLocationOutput$ = GetBucketLocationOutput$;
-    exports2.GetBucketLocationRequest$ = GetBucketLocationRequest$;
-    exports2.GetBucketLogging$ = GetBucketLogging$;
     exports2.GetBucketLoggingCommand = GetBucketLoggingCommand;
-    exports2.GetBucketLoggingOutput$ = GetBucketLoggingOutput$;
-    exports2.GetBucketLoggingRequest$ = GetBucketLoggingRequest$;
-    exports2.GetBucketMetadataConfiguration$ = GetBucketMetadataConfiguration$;
     exports2.GetBucketMetadataConfigurationCommand = GetBucketMetadataConfigurationCommand;
-    exports2.GetBucketMetadataConfigurationOutput$ = GetBucketMetadataConfigurationOutput$;
-    exports2.GetBucketMetadataConfigurationRequest$ = GetBucketMetadataConfigurationRequest$;
-    exports2.GetBucketMetadataConfigurationResult$ = GetBucketMetadataConfigurationResult$;
-    exports2.GetBucketMetadataTableConfiguration$ = GetBucketMetadataTableConfiguration$;
     exports2.GetBucketMetadataTableConfigurationCommand = GetBucketMetadataTableConfigurationCommand;
-    exports2.GetBucketMetadataTableConfigurationOutput$ = GetBucketMetadataTableConfigurationOutput$;
-    exports2.GetBucketMetadataTableConfigurationRequest$ = GetBucketMetadataTableConfigurationRequest$;
-    exports2.GetBucketMetadataTableConfigurationResult$ = GetBucketMetadataTableConfigurationResult$;
-    exports2.GetBucketMetricsConfiguration$ = GetBucketMetricsConfiguration$;
     exports2.GetBucketMetricsConfigurationCommand = GetBucketMetricsConfigurationCommand;
-    exports2.GetBucketMetricsConfigurationOutput$ = GetBucketMetricsConfigurationOutput$;
-    exports2.GetBucketMetricsConfigurationRequest$ = GetBucketMetricsConfigurationRequest$;
-    exports2.GetBucketNotificationConfiguration$ = GetBucketNotificationConfiguration$;
     exports2.GetBucketNotificationConfigurationCommand = GetBucketNotificationConfigurationCommand;
-    exports2.GetBucketNotificationConfigurationRequest$ = GetBucketNotificationConfigurationRequest$;
-    exports2.GetBucketOwnershipControls$ = GetBucketOwnershipControls$;
     exports2.GetBucketOwnershipControlsCommand = GetBucketOwnershipControlsCommand;
-    exports2.GetBucketOwnershipControlsOutput$ = GetBucketOwnershipControlsOutput$;
-    exports2.GetBucketOwnershipControlsRequest$ = GetBucketOwnershipControlsRequest$;
-    exports2.GetBucketPolicy$ = GetBucketPolicy$;
     exports2.GetBucketPolicyCommand = GetBucketPolicyCommand;
-    exports2.GetBucketPolicyOutput$ = GetBucketPolicyOutput$;
-    exports2.GetBucketPolicyRequest$ = GetBucketPolicyRequest$;
-    exports2.GetBucketPolicyStatus$ = GetBucketPolicyStatus$;
     exports2.GetBucketPolicyStatusCommand = GetBucketPolicyStatusCommand;
-    exports2.GetBucketPolicyStatusOutput$ = GetBucketPolicyStatusOutput$;
-    exports2.GetBucketPolicyStatusRequest$ = GetBucketPolicyStatusRequest$;
-    exports2.GetBucketReplication$ = GetBucketReplication$;
     exports2.GetBucketReplicationCommand = GetBucketReplicationCommand;
-    exports2.GetBucketReplicationOutput$ = GetBucketReplicationOutput$;
-    exports2.GetBucketReplicationRequest$ = GetBucketReplicationRequest$;
-    exports2.GetBucketRequestPayment$ = GetBucketRequestPayment$;
     exports2.GetBucketRequestPaymentCommand = GetBucketRequestPaymentCommand;
-    exports2.GetBucketRequestPaymentOutput$ = GetBucketRequestPaymentOutput$;
-    exports2.GetBucketRequestPaymentRequest$ = GetBucketRequestPaymentRequest$;
-    exports2.GetBucketTagging$ = GetBucketTagging$;
     exports2.GetBucketTaggingCommand = GetBucketTaggingCommand;
-    exports2.GetBucketTaggingOutput$ = GetBucketTaggingOutput$;
-    exports2.GetBucketTaggingRequest$ = GetBucketTaggingRequest$;
-    exports2.GetBucketVersioning$ = GetBucketVersioning$;
     exports2.GetBucketVersioningCommand = GetBucketVersioningCommand;
-    exports2.GetBucketVersioningOutput$ = GetBucketVersioningOutput$;
-    exports2.GetBucketVersioningRequest$ = GetBucketVersioningRequest$;
-    exports2.GetBucketWebsite$ = GetBucketWebsite$;
     exports2.GetBucketWebsiteCommand = GetBucketWebsiteCommand;
-    exports2.GetBucketWebsiteOutput$ = GetBucketWebsiteOutput$;
-    exports2.GetBucketWebsiteRequest$ = GetBucketWebsiteRequest$;
-    exports2.GetObject$ = GetObject$;
-    exports2.GetObjectAcl$ = GetObjectAcl$;
     exports2.GetObjectAclCommand = GetObjectAclCommand;
-    exports2.GetObjectAclOutput$ = GetObjectAclOutput$;
-    exports2.GetObjectAclRequest$ = GetObjectAclRequest$;
-    exports2.GetObjectAttributes$ = GetObjectAttributes$;
     exports2.GetObjectAttributesCommand = GetObjectAttributesCommand;
-    exports2.GetObjectAttributesOutput$ = GetObjectAttributesOutput$;
-    exports2.GetObjectAttributesParts$ = GetObjectAttributesParts$;
-    exports2.GetObjectAttributesRequest$ = GetObjectAttributesRequest$;
     exports2.GetObjectCommand = GetObjectCommand;
-    exports2.GetObjectLegalHold$ = GetObjectLegalHold$;
     exports2.GetObjectLegalHoldCommand = GetObjectLegalHoldCommand;
-    exports2.GetObjectLegalHoldOutput$ = GetObjectLegalHoldOutput$;
-    exports2.GetObjectLegalHoldRequest$ = GetObjectLegalHoldRequest$;
-    exports2.GetObjectLockConfiguration$ = GetObjectLockConfiguration$;
     exports2.GetObjectLockConfigurationCommand = GetObjectLockConfigurationCommand;
-    exports2.GetObjectLockConfigurationOutput$ = GetObjectLockConfigurationOutput$;
-    exports2.GetObjectLockConfigurationRequest$ = GetObjectLockConfigurationRequest$;
-    exports2.GetObjectOutput$ = GetObjectOutput$;
-    exports2.GetObjectRequest$ = GetObjectRequest$;
-    exports2.GetObjectRetention$ = GetObjectRetention$;
     exports2.GetObjectRetentionCommand = GetObjectRetentionCommand;
-    exports2.GetObjectRetentionOutput$ = GetObjectRetentionOutput$;
-    exports2.GetObjectRetentionRequest$ = GetObjectRetentionRequest$;
-    exports2.GetObjectTagging$ = GetObjectTagging$;
     exports2.GetObjectTaggingCommand = GetObjectTaggingCommand;
-    exports2.GetObjectTaggingOutput$ = GetObjectTaggingOutput$;
-    exports2.GetObjectTaggingRequest$ = GetObjectTaggingRequest$;
-    exports2.GetObjectTorrent$ = GetObjectTorrent$;
     exports2.GetObjectTorrentCommand = GetObjectTorrentCommand;
-    exports2.GetObjectTorrentOutput$ = GetObjectTorrentOutput$;
-    exports2.GetObjectTorrentRequest$ = GetObjectTorrentRequest$;
-    exports2.GetPublicAccessBlock$ = GetPublicAccessBlock$;
     exports2.GetPublicAccessBlockCommand = GetPublicAccessBlockCommand;
-    exports2.GetPublicAccessBlockOutput$ = GetPublicAccessBlockOutput$;
-    exports2.GetPublicAccessBlockRequest$ = GetPublicAccessBlockRequest$;
-    exports2.GlacierJobParameters$ = GlacierJobParameters$;
-    exports2.Grant$ = Grant$;
-    exports2.Grantee$ = Grantee$;
-    exports2.HeadBucket$ = HeadBucket$;
     exports2.HeadBucketCommand = HeadBucketCommand;
-    exports2.HeadBucketOutput$ = HeadBucketOutput$;
-    exports2.HeadBucketRequest$ = HeadBucketRequest$;
-    exports2.HeadObject$ = HeadObject$;
     exports2.HeadObjectCommand = HeadObjectCommand;
-    exports2.HeadObjectOutput$ = HeadObjectOutput$;
-    exports2.HeadObjectRequest$ = HeadObjectRequest$;
-    exports2.IdempotencyParameterMismatch = IdempotencyParameterMismatch;
-    exports2.IdempotencyParameterMismatch$ = IdempotencyParameterMismatch$;
-    exports2.IndexDocument$ = IndexDocument$;
-    exports2.Initiator$ = Initiator$;
-    exports2.InputSerialization$ = InputSerialization$;
     exports2.IntelligentTieringAccessTier = IntelligentTieringAccessTier;
-    exports2.IntelligentTieringAndOperator$ = IntelligentTieringAndOperator$;
-    exports2.IntelligentTieringConfiguration$ = IntelligentTieringConfiguration$;
-    exports2.IntelligentTieringFilter$ = IntelligentTieringFilter$;
     exports2.IntelligentTieringStatus = IntelligentTieringStatus;
-    exports2.InvalidObjectState = InvalidObjectState;
-    exports2.InvalidObjectState$ = InvalidObjectState$;
-    exports2.InvalidRequest = InvalidRequest;
-    exports2.InvalidRequest$ = InvalidRequest$;
-    exports2.InvalidWriteOffset = InvalidWriteOffset;
-    exports2.InvalidWriteOffset$ = InvalidWriteOffset$;
-    exports2.InventoryConfiguration$ = InventoryConfiguration$;
     exports2.InventoryConfigurationState = InventoryConfigurationState;
-    exports2.InventoryDestination$ = InventoryDestination$;
-    exports2.InventoryEncryption$ = InventoryEncryption$;
-    exports2.InventoryFilter$ = InventoryFilter$;
     exports2.InventoryFormat = InventoryFormat;
     exports2.InventoryFrequency = InventoryFrequency;
     exports2.InventoryIncludedObjectVersions = InventoryIncludedObjectVersions;
     exports2.InventoryOptionalField = InventoryOptionalField;
-    exports2.InventoryS3BucketDestination$ = InventoryS3BucketDestination$;
-    exports2.InventorySchedule$ = InventorySchedule$;
-    exports2.InventoryTableConfiguration$ = InventoryTableConfiguration$;
-    exports2.InventoryTableConfigurationResult$ = InventoryTableConfigurationResult$;
-    exports2.InventoryTableConfigurationUpdates$ = InventoryTableConfigurationUpdates$;
-    exports2.JSONInput$ = JSONInput$;
-    exports2.JSONOutput$ = JSONOutput$;
     exports2.JSONType = JSONType;
-    exports2.JournalTableConfiguration$ = JournalTableConfiguration$;
-    exports2.JournalTableConfigurationResult$ = JournalTableConfigurationResult$;
-    exports2.JournalTableConfigurationUpdates$ = JournalTableConfigurationUpdates$;
-    exports2.LambdaFunctionConfiguration$ = LambdaFunctionConfiguration$;
-    exports2.LifecycleExpiration$ = LifecycleExpiration$;
-    exports2.LifecycleRule$ = LifecycleRule$;
-    exports2.LifecycleRuleAndOperator$ = LifecycleRuleAndOperator$;
-    exports2.LifecycleRuleFilter$ = LifecycleRuleFilter$;
-    exports2.ListBucketAnalyticsConfigurations$ = ListBucketAnalyticsConfigurations$;
     exports2.ListBucketAnalyticsConfigurationsCommand = ListBucketAnalyticsConfigurationsCommand;
-    exports2.ListBucketAnalyticsConfigurationsOutput$ = ListBucketAnalyticsConfigurationsOutput$;
-    exports2.ListBucketAnalyticsConfigurationsRequest$ = ListBucketAnalyticsConfigurationsRequest$;
-    exports2.ListBucketIntelligentTieringConfigurations$ = ListBucketIntelligentTieringConfigurations$;
     exports2.ListBucketIntelligentTieringConfigurationsCommand = ListBucketIntelligentTieringConfigurationsCommand;
-    exports2.ListBucketIntelligentTieringConfigurationsOutput$ = ListBucketIntelligentTieringConfigurationsOutput$;
-    exports2.ListBucketIntelligentTieringConfigurationsRequest$ = ListBucketIntelligentTieringConfigurationsRequest$;
-    exports2.ListBucketInventoryConfigurations$ = ListBucketInventoryConfigurations$;
     exports2.ListBucketInventoryConfigurationsCommand = ListBucketInventoryConfigurationsCommand;
-    exports2.ListBucketInventoryConfigurationsOutput$ = ListBucketInventoryConfigurationsOutput$;
-    exports2.ListBucketInventoryConfigurationsRequest$ = ListBucketInventoryConfigurationsRequest$;
-    exports2.ListBucketMetricsConfigurations$ = ListBucketMetricsConfigurations$;
     exports2.ListBucketMetricsConfigurationsCommand = ListBucketMetricsConfigurationsCommand;
-    exports2.ListBucketMetricsConfigurationsOutput$ = ListBucketMetricsConfigurationsOutput$;
-    exports2.ListBucketMetricsConfigurationsRequest$ = ListBucketMetricsConfigurationsRequest$;
-    exports2.ListBuckets$ = ListBuckets$;
     exports2.ListBucketsCommand = ListBucketsCommand;
-    exports2.ListBucketsOutput$ = ListBucketsOutput$;
-    exports2.ListBucketsRequest$ = ListBucketsRequest$;
-    exports2.ListDirectoryBuckets$ = ListDirectoryBuckets$;
     exports2.ListDirectoryBucketsCommand = ListDirectoryBucketsCommand;
-    exports2.ListDirectoryBucketsOutput$ = ListDirectoryBucketsOutput$;
-    exports2.ListDirectoryBucketsRequest$ = ListDirectoryBucketsRequest$;
-    exports2.ListMultipartUploads$ = ListMultipartUploads$;
     exports2.ListMultipartUploadsCommand = ListMultipartUploadsCommand;
-    exports2.ListMultipartUploadsOutput$ = ListMultipartUploadsOutput$;
-    exports2.ListMultipartUploadsRequest$ = ListMultipartUploadsRequest$;
-    exports2.ListObjectVersions$ = ListObjectVersions$;
     exports2.ListObjectVersionsCommand = ListObjectVersionsCommand;
-    exports2.ListObjectVersionsOutput$ = ListObjectVersionsOutput$;
-    exports2.ListObjectVersionsRequest$ = ListObjectVersionsRequest$;
-    exports2.ListObjects$ = ListObjects$;
     exports2.ListObjectsCommand = ListObjectsCommand;
-    exports2.ListObjectsOutput$ = ListObjectsOutput$;
-    exports2.ListObjectsRequest$ = ListObjectsRequest$;
-    exports2.ListObjectsV2$ = ListObjectsV2$;
     exports2.ListObjectsV2Command = ListObjectsV2Command;
-    exports2.ListObjectsV2Output$ = ListObjectsV2Output$;
-    exports2.ListObjectsV2Request$ = ListObjectsV2Request$;
-    exports2.ListParts$ = ListParts$;
     exports2.ListPartsCommand = ListPartsCommand;
-    exports2.ListPartsOutput$ = ListPartsOutput$;
-    exports2.ListPartsRequest$ = ListPartsRequest$;
-    exports2.LocationInfo$ = LocationInfo$;
     exports2.LocationType = LocationType;
-    exports2.LoggingEnabled$ = LoggingEnabled$;
     exports2.MFADelete = MFADelete;
     exports2.MFADeleteStatus = MFADeleteStatus;
-    exports2.MetadataConfiguration$ = MetadataConfiguration$;
-    exports2.MetadataConfigurationResult$ = MetadataConfigurationResult$;
     exports2.MetadataDirective = MetadataDirective;
-    exports2.MetadataEntry$ = MetadataEntry$;
-    exports2.MetadataTableConfiguration$ = MetadataTableConfiguration$;
-    exports2.MetadataTableConfigurationResult$ = MetadataTableConfigurationResult$;
-    exports2.MetadataTableEncryptionConfiguration$ = MetadataTableEncryptionConfiguration$;
-    exports2.Metrics$ = Metrics$;
-    exports2.MetricsAndOperator$ = MetricsAndOperator$;
-    exports2.MetricsConfiguration$ = MetricsConfiguration$;
-    exports2.MetricsFilter$ = MetricsFilter$;
     exports2.MetricsStatus = MetricsStatus;
-    exports2.MultipartUpload$ = MultipartUpload$;
-    exports2.NoSuchBucket = NoSuchBucket;
-    exports2.NoSuchBucket$ = NoSuchBucket$;
-    exports2.NoSuchKey = NoSuchKey;
-    exports2.NoSuchKey$ = NoSuchKey$;
-    exports2.NoSuchUpload = NoSuchUpload;
-    exports2.NoSuchUpload$ = NoSuchUpload$;
-    exports2.NoncurrentVersionExpiration$ = NoncurrentVersionExpiration$;
-    exports2.NoncurrentVersionTransition$ = NoncurrentVersionTransition$;
-    exports2.NotFound = NotFound;
-    exports2.NotFound$ = NotFound$;
-    exports2.NotificationConfiguration$ = NotificationConfiguration$;
-    exports2.NotificationConfigurationFilter$ = NotificationConfigurationFilter$;
-    exports2.ObjectAlreadyInActiveTierError = ObjectAlreadyInActiveTierError;
-    exports2.ObjectAlreadyInActiveTierError$ = ObjectAlreadyInActiveTierError$;
     exports2.ObjectAttributes = ObjectAttributes;
     exports2.ObjectCannedACL = ObjectCannedACL;
-    exports2.ObjectIdentifier$ = ObjectIdentifier$;
-    exports2.ObjectLockConfiguration$ = ObjectLockConfiguration$;
     exports2.ObjectLockEnabled = ObjectLockEnabled;
-    exports2.ObjectLockLegalHold$ = ObjectLockLegalHold$;
     exports2.ObjectLockLegalHoldStatus = ObjectLockLegalHoldStatus;
     exports2.ObjectLockMode = ObjectLockMode;
-    exports2.ObjectLockRetention$ = ObjectLockRetention$;
     exports2.ObjectLockRetentionMode = ObjectLockRetentionMode;
-    exports2.ObjectLockRule$ = ObjectLockRule$;
-    exports2.ObjectNotInActiveTierError = ObjectNotInActiveTierError;
-    exports2.ObjectNotInActiveTierError$ = ObjectNotInActiveTierError$;
     exports2.ObjectOwnership = ObjectOwnership;
-    exports2.ObjectPart$ = ObjectPart$;
     exports2.ObjectStorageClass = ObjectStorageClass;
-    exports2.ObjectVersion$ = ObjectVersion$;
     exports2.ObjectVersionStorageClass = ObjectVersionStorageClass;
     exports2.OptionalObjectAttributes = OptionalObjectAttributes;
-    exports2.OutputLocation$ = OutputLocation$;
-    exports2.OutputSerialization$ = OutputSerialization$;
-    exports2.Owner$ = Owner$;
     exports2.OwnerOverride = OwnerOverride;
-    exports2.OwnershipControls$ = OwnershipControls$;
-    exports2.OwnershipControlsRule$ = OwnershipControlsRule$;
-    exports2.ParquetInput$ = ParquetInput$;
-    exports2.Part$ = Part$;
     exports2.PartitionDateSource = PartitionDateSource;
-    exports2.PartitionedPrefix$ = PartitionedPrefix$;
     exports2.Payer = Payer;
     exports2.Permission = Permission;
-    exports2.PolicyStatus$ = PolicyStatus$;
-    exports2.Progress$ = Progress$;
-    exports2.ProgressEvent$ = ProgressEvent$;
     exports2.Protocol = Protocol;
-    exports2.PublicAccessBlockConfiguration$ = PublicAccessBlockConfiguration$;
-    exports2.PutBucketAbac$ = PutBucketAbac$;
     exports2.PutBucketAbacCommand = PutBucketAbacCommand;
-    exports2.PutBucketAbacRequest$ = PutBucketAbacRequest$;
-    exports2.PutBucketAccelerateConfiguration$ = PutBucketAccelerateConfiguration$;
     exports2.PutBucketAccelerateConfigurationCommand = PutBucketAccelerateConfigurationCommand;
-    exports2.PutBucketAccelerateConfigurationRequest$ = PutBucketAccelerateConfigurationRequest$;
-    exports2.PutBucketAcl$ = PutBucketAcl$;
     exports2.PutBucketAclCommand = PutBucketAclCommand;
-    exports2.PutBucketAclRequest$ = PutBucketAclRequest$;
-    exports2.PutBucketAnalyticsConfiguration$ = PutBucketAnalyticsConfiguration$;
     exports2.PutBucketAnalyticsConfigurationCommand = PutBucketAnalyticsConfigurationCommand;
-    exports2.PutBucketAnalyticsConfigurationRequest$ = PutBucketAnalyticsConfigurationRequest$;
-    exports2.PutBucketCors$ = PutBucketCors$;
     exports2.PutBucketCorsCommand = PutBucketCorsCommand;
-    exports2.PutBucketCorsRequest$ = PutBucketCorsRequest$;
-    exports2.PutBucketEncryption$ = PutBucketEncryption$;
     exports2.PutBucketEncryptionCommand = PutBucketEncryptionCommand;
-    exports2.PutBucketEncryptionRequest$ = PutBucketEncryptionRequest$;
-    exports2.PutBucketIntelligentTieringConfiguration$ = PutBucketIntelligentTieringConfiguration$;
     exports2.PutBucketIntelligentTieringConfigurationCommand = PutBucketIntelligentTieringConfigurationCommand;
-    exports2.PutBucketIntelligentTieringConfigurationRequest$ = PutBucketIntelligentTieringConfigurationRequest$;
-    exports2.PutBucketInventoryConfiguration$ = PutBucketInventoryConfiguration$;
     exports2.PutBucketInventoryConfigurationCommand = PutBucketInventoryConfigurationCommand;
-    exports2.PutBucketInventoryConfigurationRequest$ = PutBucketInventoryConfigurationRequest$;
-    exports2.PutBucketLifecycleConfiguration$ = PutBucketLifecycleConfiguration$;
     exports2.PutBucketLifecycleConfigurationCommand = PutBucketLifecycleConfigurationCommand;
-    exports2.PutBucketLifecycleConfigurationOutput$ = PutBucketLifecycleConfigurationOutput$;
-    exports2.PutBucketLifecycleConfigurationRequest$ = PutBucketLifecycleConfigurationRequest$;
-    exports2.PutBucketLogging$ = PutBucketLogging$;
     exports2.PutBucketLoggingCommand = PutBucketLoggingCommand;
-    exports2.PutBucketLoggingRequest$ = PutBucketLoggingRequest$;
-    exports2.PutBucketMetricsConfiguration$ = PutBucketMetricsConfiguration$;
     exports2.PutBucketMetricsConfigurationCommand = PutBucketMetricsConfigurationCommand;
-    exports2.PutBucketMetricsConfigurationRequest$ = PutBucketMetricsConfigurationRequest$;
-    exports2.PutBucketNotificationConfiguration$ = PutBucketNotificationConfiguration$;
     exports2.PutBucketNotificationConfigurationCommand = PutBucketNotificationConfigurationCommand;
-    exports2.PutBucketNotificationConfigurationRequest$ = PutBucketNotificationConfigurationRequest$;
-    exports2.PutBucketOwnershipControls$ = PutBucketOwnershipControls$;
     exports2.PutBucketOwnershipControlsCommand = PutBucketOwnershipControlsCommand;
-    exports2.PutBucketOwnershipControlsRequest$ = PutBucketOwnershipControlsRequest$;
-    exports2.PutBucketPolicy$ = PutBucketPolicy$;
     exports2.PutBucketPolicyCommand = PutBucketPolicyCommand;
-    exports2.PutBucketPolicyRequest$ = PutBucketPolicyRequest$;
-    exports2.PutBucketReplication$ = PutBucketReplication$;
     exports2.PutBucketReplicationCommand = PutBucketReplicationCommand;
-    exports2.PutBucketReplicationRequest$ = PutBucketReplicationRequest$;
-    exports2.PutBucketRequestPayment$ = PutBucketRequestPayment$;
     exports2.PutBucketRequestPaymentCommand = PutBucketRequestPaymentCommand;
-    exports2.PutBucketRequestPaymentRequest$ = PutBucketRequestPaymentRequest$;
-    exports2.PutBucketTagging$ = PutBucketTagging$;
     exports2.PutBucketTaggingCommand = PutBucketTaggingCommand;
-    exports2.PutBucketTaggingRequest$ = PutBucketTaggingRequest$;
-    exports2.PutBucketVersioning$ = PutBucketVersioning$;
     exports2.PutBucketVersioningCommand = PutBucketVersioningCommand;
-    exports2.PutBucketVersioningRequest$ = PutBucketVersioningRequest$;
-    exports2.PutBucketWebsite$ = PutBucketWebsite$;
     exports2.PutBucketWebsiteCommand = PutBucketWebsiteCommand;
-    exports2.PutBucketWebsiteRequest$ = PutBucketWebsiteRequest$;
-    exports2.PutObject$ = PutObject$;
-    exports2.PutObjectAcl$ = PutObjectAcl$;
     exports2.PutObjectAclCommand = PutObjectAclCommand;
-    exports2.PutObjectAclOutput$ = PutObjectAclOutput$;
-    exports2.PutObjectAclRequest$ = PutObjectAclRequest$;
     exports2.PutObjectCommand = PutObjectCommand2;
-    exports2.PutObjectLegalHold$ = PutObjectLegalHold$;
     exports2.PutObjectLegalHoldCommand = PutObjectLegalHoldCommand;
-    exports2.PutObjectLegalHoldOutput$ = PutObjectLegalHoldOutput$;
-    exports2.PutObjectLegalHoldRequest$ = PutObjectLegalHoldRequest$;
-    exports2.PutObjectLockConfiguration$ = PutObjectLockConfiguration$;
     exports2.PutObjectLockConfigurationCommand = PutObjectLockConfigurationCommand;
-    exports2.PutObjectLockConfigurationOutput$ = PutObjectLockConfigurationOutput$;
-    exports2.PutObjectLockConfigurationRequest$ = PutObjectLockConfigurationRequest$;
-    exports2.PutObjectOutput$ = PutObjectOutput$;
-    exports2.PutObjectRequest$ = PutObjectRequest$;
-    exports2.PutObjectRetention$ = PutObjectRetention$;
     exports2.PutObjectRetentionCommand = PutObjectRetentionCommand;
-    exports2.PutObjectRetentionOutput$ = PutObjectRetentionOutput$;
-    exports2.PutObjectRetentionRequest$ = PutObjectRetentionRequest$;
-    exports2.PutObjectTagging$ = PutObjectTagging$;
     exports2.PutObjectTaggingCommand = PutObjectTaggingCommand;
-    exports2.PutObjectTaggingOutput$ = PutObjectTaggingOutput$;
-    exports2.PutObjectTaggingRequest$ = PutObjectTaggingRequest$;
-    exports2.PutPublicAccessBlock$ = PutPublicAccessBlock$;
     exports2.PutPublicAccessBlockCommand = PutPublicAccessBlockCommand;
-    exports2.PutPublicAccessBlockRequest$ = PutPublicAccessBlockRequest$;
-    exports2.QueueConfiguration$ = QueueConfiguration$;
     exports2.QuoteFields = QuoteFields;
-    exports2.RecordExpiration$ = RecordExpiration$;
-    exports2.RecordsEvent$ = RecordsEvent$;
-    exports2.Redirect$ = Redirect$;
-    exports2.RedirectAllRequestsTo$ = RedirectAllRequestsTo$;
-    exports2.RenameObject$ = RenameObject$;
     exports2.RenameObjectCommand = RenameObjectCommand;
-    exports2.RenameObjectOutput$ = RenameObjectOutput$;
-    exports2.RenameObjectRequest$ = RenameObjectRequest$;
-    exports2.ReplicaModifications$ = ReplicaModifications$;
     exports2.ReplicaModificationsStatus = ReplicaModificationsStatus;
-    exports2.ReplicationConfiguration$ = ReplicationConfiguration$;
-    exports2.ReplicationRule$ = ReplicationRule$;
-    exports2.ReplicationRuleAndOperator$ = ReplicationRuleAndOperator$;
-    exports2.ReplicationRuleFilter$ = ReplicationRuleFilter$;
     exports2.ReplicationRuleStatus = ReplicationRuleStatus;
     exports2.ReplicationStatus = ReplicationStatus;
-    exports2.ReplicationTime$ = ReplicationTime$;
     exports2.ReplicationTimeStatus = ReplicationTimeStatus;
-    exports2.ReplicationTimeValue$ = ReplicationTimeValue$;
     exports2.RequestCharged = RequestCharged;
     exports2.RequestPayer = RequestPayer;
-    exports2.RequestPaymentConfiguration$ = RequestPaymentConfiguration$;
-    exports2.RequestProgress$ = RequestProgress$;
-    exports2.RestoreObject$ = RestoreObject$;
     exports2.RestoreObjectCommand = RestoreObjectCommand;
-    exports2.RestoreObjectOutput$ = RestoreObjectOutput$;
-    exports2.RestoreObjectRequest$ = RestoreObjectRequest$;
-    exports2.RestoreRequest$ = RestoreRequest$;
     exports2.RestoreRequestType = RestoreRequestType;
-    exports2.RestoreStatus$ = RestoreStatus$;
-    exports2.RoutingRule$ = RoutingRule$;
     exports2.S3 = S3;
     exports2.S3Client = S3Client2;
-    exports2.S3KeyFilter$ = S3KeyFilter$;
-    exports2.S3Location$ = S3Location$;
-    exports2.S3ServiceException = S3ServiceException2;
-    exports2.S3ServiceException$ = S3ServiceException$;
     exports2.S3TablesBucketType = S3TablesBucketType;
-    exports2.S3TablesDestination$ = S3TablesDestination$;
-    exports2.S3TablesDestinationResult$ = S3TablesDestinationResult$;
-    exports2.SSEKMS$ = SSEKMS$;
-    exports2.SSES3$ = SSES3$;
-    exports2.ScanRange$ = ScanRange$;
-    exports2.SelectObjectContent$ = SelectObjectContent$;
     exports2.SelectObjectContentCommand = SelectObjectContentCommand;
-    exports2.SelectObjectContentEventStream$ = SelectObjectContentEventStream$;
-    exports2.SelectObjectContentOutput$ = SelectObjectContentOutput$;
-    exports2.SelectObjectContentRequest$ = SelectObjectContentRequest$;
-    exports2.SelectParameters$ = SelectParameters$;
     exports2.ServerSideEncryption = ServerSideEncryption;
-    exports2.ServerSideEncryptionByDefault$ = ServerSideEncryptionByDefault$;
-    exports2.ServerSideEncryptionConfiguration$ = ServerSideEncryptionConfiguration$;
-    exports2.ServerSideEncryptionRule$ = ServerSideEncryptionRule$;
-    exports2.SessionCredentials$ = SessionCredentials$;
     exports2.SessionMode = SessionMode;
-    exports2.SimplePrefix$ = SimplePrefix$;
-    exports2.SourceSelectionCriteria$ = SourceSelectionCriteria$;
-    exports2.SseKmsEncryptedObjects$ = SseKmsEncryptedObjects$;
     exports2.SseKmsEncryptedObjectsStatus = SseKmsEncryptedObjectsStatus;
-    exports2.Stats$ = Stats$;
-    exports2.StatsEvent$ = StatsEvent$;
     exports2.StorageClass = StorageClass;
-    exports2.StorageClassAnalysis$ = StorageClassAnalysis$;
-    exports2.StorageClassAnalysisDataExport$ = StorageClassAnalysisDataExport$;
     exports2.StorageClassAnalysisSchemaVersion = StorageClassAnalysisSchemaVersion;
     exports2.TableSseAlgorithm = TableSseAlgorithm;
-    exports2.Tag$ = Tag$2;
-    exports2.Tagging$ = Tagging$;
     exports2.TaggingDirective = TaggingDirective;
-    exports2.TargetGrant$ = TargetGrant$;
-    exports2.TargetObjectKeyFormat$ = TargetObjectKeyFormat$;
     exports2.Tier = Tier;
-    exports2.Tiering$ = Tiering$;
-    exports2.TooManyParts = TooManyParts;
-    exports2.TooManyParts$ = TooManyParts$;
-    exports2.TopicConfiguration$ = TopicConfiguration$;
-    exports2.Transition$ = Transition$;
     exports2.TransitionDefaultMinimumObjectSize = TransitionDefaultMinimumObjectSize;
     exports2.TransitionStorageClass = TransitionStorageClass;
     exports2.Type = Type;
-    exports2.UpdateBucketMetadataInventoryTableConfiguration$ = UpdateBucketMetadataInventoryTableConfiguration$;
     exports2.UpdateBucketMetadataInventoryTableConfigurationCommand = UpdateBucketMetadataInventoryTableConfigurationCommand;
-    exports2.UpdateBucketMetadataInventoryTableConfigurationRequest$ = UpdateBucketMetadataInventoryTableConfigurationRequest$;
-    exports2.UpdateBucketMetadataJournalTableConfiguration$ = UpdateBucketMetadataJournalTableConfiguration$;
     exports2.UpdateBucketMetadataJournalTableConfigurationCommand = UpdateBucketMetadataJournalTableConfigurationCommand;
-    exports2.UpdateBucketMetadataJournalTableConfigurationRequest$ = UpdateBucketMetadataJournalTableConfigurationRequest$;
-    exports2.UploadPart$ = UploadPart$;
+    exports2.UpdateObjectEncryptionCommand = UpdateObjectEncryptionCommand;
     exports2.UploadPartCommand = UploadPartCommand;
-    exports2.UploadPartCopy$ = UploadPartCopy$;
     exports2.UploadPartCopyCommand = UploadPartCopyCommand;
-    exports2.UploadPartCopyOutput$ = UploadPartCopyOutput$;
-    exports2.UploadPartCopyRequest$ = UploadPartCopyRequest$;
-    exports2.UploadPartOutput$ = UploadPartOutput$;
-    exports2.UploadPartRequest$ = UploadPartRequest$;
-    exports2.VersioningConfiguration$ = VersioningConfiguration$;
-    exports2.WebsiteConfiguration$ = WebsiteConfiguration$;
-    exports2.WriteGetObjectResponse$ = WriteGetObjectResponse$;
     exports2.WriteGetObjectResponseCommand = WriteGetObjectResponseCommand;
-    exports2.WriteGetObjectResponseRequest$ = WriteGetObjectResponseRequest$;
-    exports2._Error$ = _Error$;
-    exports2._Object$ = _Object$;
     exports2.paginateListBuckets = paginateListBuckets;
     exports2.paginateListDirectoryBuckets = paginateListDirectoryBuckets;
     exports2.paginateListObjectsV2 = paginateListObjectsV2;
@@ -57069,6 +56964,22 @@ var require_dist_cjs72 = __commonJS({
     exports2.waitUntilBucketNotExists = waitUntilBucketNotExists;
     exports2.waitUntilObjectExists = waitUntilObjectExists;
     exports2.waitUntilObjectNotExists = waitUntilObjectNotExists;
+    Object.keys(schemas_0).forEach(function(k4) {
+      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
+        enumerable: true,
+        get: function() {
+          return schemas_0[k4];
+        }
+      });
+    });
+    Object.keys(errors).forEach(function(k4) {
+      if (k4 !== "default" && !Object.prototype.hasOwnProperty.call(exports2, k4)) Object.defineProperty(exports2, k4, {
+        enumerable: true,
+        get: function() {
+          return errors[k4];
+        }
+      });
+    });
   }
 });
 
@@ -57122,9 +57033,9 @@ var require_createCredentialChain = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/auth/httpAuthSchemeProvider.js
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/auth/httpAuthSchemeProvider.js
 var require_httpAuthSchemeProvider3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.resolveHttpAuthSchemeConfig = exports2.defaultCognitoIdentityHttpAuthSchemeProvider = exports2.defaultCognitoIdentityHttpAuthSchemeParametersProvider = void 0;
@@ -57203,13 +57114,13 @@ var require_httpAuthSchemeProvider3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/package.json
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/package.json
 var require_package3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/package.json"(exports2, module2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/package.json"(exports2, module2) {
     module2.exports = {
       name: "@aws-sdk/client-cognito-identity",
       description: "AWS SDK for JavaScript Cognito Identity Client for Node.js, Browser and React Native",
-      version: "3.971.0",
+      version: "3.980.0",
       scripts: {
         build: "concurrently 'yarn:build:types' 'yarn:build:es' && yarn build:cjs",
         "build:cjs": "node ../../scripts/compilation/inline client-cognito-identity",
@@ -57217,7 +57128,7 @@ var require_package3 = __commonJS({
         "build:include:deps": 'yarn g:turbo run build -F="$npm_package_name"',
         "build:types": "tsc -p tsconfig.types.json",
         "build:types:downlevel": "downlevel-dts dist-types dist-types/ts3.4",
-        clean: "rimraf ./dist-* && rimraf *.tsbuildinfo",
+        clean: "premove dist-cjs dist-es dist-types tsconfig.cjs.tsbuildinfo tsconfig.es.tsbuildinfo tsconfig.types.tsbuildinfo",
         "extract:docs": "api-extractor run --local",
         "generate:client": "node ../../scripts/generate-clients/single-service --solo cognito-identity",
         "test:e2e": "yarn g:vitest run -c vitest.config.e2e.mts --mode development",
@@ -57231,38 +57142,38 @@ var require_package3 = __commonJS({
       dependencies: {
         "@aws-crypto/sha256-browser": "5.2.0",
         "@aws-crypto/sha256-js": "5.2.0",
-        "@aws-sdk/core": "3.970.0",
-        "@aws-sdk/credential-provider-node": "3.971.0",
-        "@aws-sdk/middleware-host-header": "3.969.0",
-        "@aws-sdk/middleware-logger": "3.969.0",
-        "@aws-sdk/middleware-recursion-detection": "3.969.0",
-        "@aws-sdk/middleware-user-agent": "3.970.0",
-        "@aws-sdk/region-config-resolver": "3.969.0",
-        "@aws-sdk/types": "3.969.0",
-        "@aws-sdk/util-endpoints": "3.970.0",
-        "@aws-sdk/util-user-agent-browser": "3.969.0",
-        "@aws-sdk/util-user-agent-node": "3.971.0",
+        "@aws-sdk/core": "^3.973.5",
+        "@aws-sdk/credential-provider-node": "^3.972.4",
+        "@aws-sdk/middleware-host-header": "^3.972.3",
+        "@aws-sdk/middleware-logger": "^3.972.3",
+        "@aws-sdk/middleware-recursion-detection": "^3.972.3",
+        "@aws-sdk/middleware-user-agent": "^3.972.5",
+        "@aws-sdk/region-config-resolver": "^3.972.3",
+        "@aws-sdk/types": "^3.973.1",
+        "@aws-sdk/util-endpoints": "3.980.0",
+        "@aws-sdk/util-user-agent-browser": "^3.972.3",
+        "@aws-sdk/util-user-agent-node": "^3.972.3",
         "@smithy/config-resolver": "^4.4.6",
-        "@smithy/core": "^3.20.6",
+        "@smithy/core": "^3.22.0",
         "@smithy/fetch-http-handler": "^5.3.9",
         "@smithy/hash-node": "^4.2.8",
         "@smithy/invalid-dependency": "^4.2.8",
         "@smithy/middleware-content-length": "^4.2.8",
-        "@smithy/middleware-endpoint": "^4.4.7",
-        "@smithy/middleware-retry": "^4.4.23",
+        "@smithy/middleware-endpoint": "^4.4.12",
+        "@smithy/middleware-retry": "^4.4.29",
         "@smithy/middleware-serde": "^4.2.9",
         "@smithy/middleware-stack": "^4.2.8",
         "@smithy/node-config-provider": "^4.3.8",
         "@smithy/node-http-handler": "^4.4.8",
         "@smithy/protocol-http": "^5.3.8",
-        "@smithy/smithy-client": "^4.10.8",
+        "@smithy/smithy-client": "^4.11.1",
         "@smithy/types": "^4.12.0",
         "@smithy/url-parser": "^4.2.8",
         "@smithy/util-base64": "^4.3.0",
         "@smithy/util-body-length-browser": "^4.2.0",
         "@smithy/util-body-length-node": "^4.2.1",
-        "@smithy/util-defaults-mode-browser": "^4.3.22",
-        "@smithy/util-defaults-mode-node": "^4.2.25",
+        "@smithy/util-defaults-mode-browser": "^4.3.28",
+        "@smithy/util-defaults-mode-node": "^4.2.31",
         "@smithy/util-endpoints": "^3.2.8",
         "@smithy/util-middleware": "^4.2.8",
         "@smithy/util-retry": "^4.2.8",
@@ -57270,13 +57181,13 @@ var require_package3 = __commonJS({
         tslib: "^2.6.2"
       },
       devDependencies: {
-        "@aws-sdk/client-iam": "3.971.0",
+        "@aws-sdk/client-iam": "3.980.0",
         "@tsconfig/node20": "20.1.8",
         "@types/chai": "^4.2.11",
         "@types/node": "^20.14.8",
         concurrently: "7.0.0",
         "downlevel-dts": "0.10.1",
-        rimraf: "5.0.10",
+        premove: "4.0.0",
         typescript: "~5.8.3"
       },
       engines: {
@@ -57313,9 +57224,425 @@ var require_package3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/ruleset.js
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/util-endpoints/dist-cjs/index.js
+var require_dist_cjs73 = __commonJS({
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/util-endpoints/dist-cjs/index.js"(exports2) {
+    "use strict";
+    var utilEndpoints = require_dist_cjs33();
+    var urlParser = require_dist_cjs35();
+    var isVirtualHostableS3Bucket = (value, allowSubDomains = false) => {
+      if (allowSubDomains) {
+        for (const label of value.split(".")) {
+          if (!isVirtualHostableS3Bucket(label)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      if (!utilEndpoints.isValidHostLabel(value)) {
+        return false;
+      }
+      if (value.length < 3 || value.length > 63) {
+        return false;
+      }
+      if (value !== value.toLowerCase()) {
+        return false;
+      }
+      if (utilEndpoints.isIpAddress(value)) {
+        return false;
+      }
+      return true;
+    };
+    var ARN_DELIMITER = ":";
+    var RESOURCE_DELIMITER = "/";
+    var parseArn = (value) => {
+      const segments = value.split(ARN_DELIMITER);
+      if (segments.length < 6)
+        return null;
+      const [arn, partition2, service, region, accountId, ...resourcePath] = segments;
+      if (arn !== "arn" || partition2 === "" || service === "" || resourcePath.join(ARN_DELIMITER) === "")
+        return null;
+      const resourceId = resourcePath.map((resource) => resource.split(RESOURCE_DELIMITER)).flat();
+      return {
+        partition: partition2,
+        service,
+        region,
+        accountId,
+        resourceId
+      };
+    };
+    var partitions = [
+      {
+        id: "aws",
+        outputs: {
+          dnsSuffix: "amazonaws.com",
+          dualStackDnsSuffix: "api.aws",
+          implicitGlobalRegion: "us-east-1",
+          name: "aws",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^(us|eu|ap|sa|ca|me|af|il|mx)\\-\\w+\\-\\d+$",
+        regions: {
+          "af-south-1": {
+            description: "Africa (Cape Town)"
+          },
+          "ap-east-1": {
+            description: "Asia Pacific (Hong Kong)"
+          },
+          "ap-east-2": {
+            description: "Asia Pacific (Taipei)"
+          },
+          "ap-northeast-1": {
+            description: "Asia Pacific (Tokyo)"
+          },
+          "ap-northeast-2": {
+            description: "Asia Pacific (Seoul)"
+          },
+          "ap-northeast-3": {
+            description: "Asia Pacific (Osaka)"
+          },
+          "ap-south-1": {
+            description: "Asia Pacific (Mumbai)"
+          },
+          "ap-south-2": {
+            description: "Asia Pacific (Hyderabad)"
+          },
+          "ap-southeast-1": {
+            description: "Asia Pacific (Singapore)"
+          },
+          "ap-southeast-2": {
+            description: "Asia Pacific (Sydney)"
+          },
+          "ap-southeast-3": {
+            description: "Asia Pacific (Jakarta)"
+          },
+          "ap-southeast-4": {
+            description: "Asia Pacific (Melbourne)"
+          },
+          "ap-southeast-5": {
+            description: "Asia Pacific (Malaysia)"
+          },
+          "ap-southeast-6": {
+            description: "Asia Pacific (New Zealand)"
+          },
+          "ap-southeast-7": {
+            description: "Asia Pacific (Thailand)"
+          },
+          "aws-global": {
+            description: "aws global region"
+          },
+          "ca-central-1": {
+            description: "Canada (Central)"
+          },
+          "ca-west-1": {
+            description: "Canada West (Calgary)"
+          },
+          "eu-central-1": {
+            description: "Europe (Frankfurt)"
+          },
+          "eu-central-2": {
+            description: "Europe (Zurich)"
+          },
+          "eu-north-1": {
+            description: "Europe (Stockholm)"
+          },
+          "eu-south-1": {
+            description: "Europe (Milan)"
+          },
+          "eu-south-2": {
+            description: "Europe (Spain)"
+          },
+          "eu-west-1": {
+            description: "Europe (Ireland)"
+          },
+          "eu-west-2": {
+            description: "Europe (London)"
+          },
+          "eu-west-3": {
+            description: "Europe (Paris)"
+          },
+          "il-central-1": {
+            description: "Israel (Tel Aviv)"
+          },
+          "me-central-1": {
+            description: "Middle East (UAE)"
+          },
+          "me-south-1": {
+            description: "Middle East (Bahrain)"
+          },
+          "mx-central-1": {
+            description: "Mexico (Central)"
+          },
+          "sa-east-1": {
+            description: "South America (Sao Paulo)"
+          },
+          "us-east-1": {
+            description: "US East (N. Virginia)"
+          },
+          "us-east-2": {
+            description: "US East (Ohio)"
+          },
+          "us-west-1": {
+            description: "US West (N. California)"
+          },
+          "us-west-2": {
+            description: "US West (Oregon)"
+          }
+        }
+      },
+      {
+        id: "aws-cn",
+        outputs: {
+          dnsSuffix: "amazonaws.com.cn",
+          dualStackDnsSuffix: "api.amazonwebservices.com.cn",
+          implicitGlobalRegion: "cn-northwest-1",
+          name: "aws-cn",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^cn\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-cn-global": {
+            description: "aws-cn global region"
+          },
+          "cn-north-1": {
+            description: "China (Beijing)"
+          },
+          "cn-northwest-1": {
+            description: "China (Ningxia)"
+          }
+        }
+      },
+      {
+        id: "aws-eusc",
+        outputs: {
+          dnsSuffix: "amazonaws.eu",
+          dualStackDnsSuffix: "api.amazonwebservices.eu",
+          implicitGlobalRegion: "eusc-de-east-1",
+          name: "aws-eusc",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
+        regions: {
+          "eusc-de-east-1": {
+            description: "AWS European Sovereign Cloud (Germany)"
+          }
+        }
+      },
+      {
+        id: "aws-iso",
+        outputs: {
+          dnsSuffix: "c2s.ic.gov",
+          dualStackDnsSuffix: "api.aws.ic.gov",
+          implicitGlobalRegion: "us-iso-east-1",
+          name: "aws-iso",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-global": {
+            description: "aws-iso global region"
+          },
+          "us-iso-east-1": {
+            description: "US ISO East"
+          },
+          "us-iso-west-1": {
+            description: "US ISO WEST"
+          }
+        }
+      },
+      {
+        id: "aws-iso-b",
+        outputs: {
+          dnsSuffix: "sc2s.sgov.gov",
+          dualStackDnsSuffix: "api.aws.scloud",
+          implicitGlobalRegion: "us-isob-east-1",
+          name: "aws-iso-b",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-b-global": {
+            description: "aws-iso-b global region"
+          },
+          "us-isob-east-1": {
+            description: "US ISOB East (Ohio)"
+          },
+          "us-isob-west-1": {
+            description: "US ISOB West"
+          }
+        }
+      },
+      {
+        id: "aws-iso-e",
+        outputs: {
+          dnsSuffix: "cloud.adc-e.uk",
+          dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
+          implicitGlobalRegion: "eu-isoe-west-1",
+          name: "aws-iso-e",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-e-global": {
+            description: "aws-iso-e global region"
+          },
+          "eu-isoe-west-1": {
+            description: "EU ISOE West"
+          }
+        }
+      },
+      {
+        id: "aws-iso-f",
+        outputs: {
+          dnsSuffix: "csp.hci.ic.gov",
+          dualStackDnsSuffix: "api.aws.hci.ic.gov",
+          implicitGlobalRegion: "us-isof-south-1",
+          name: "aws-iso-f",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-iso-f-global": {
+            description: "aws-iso-f global region"
+          },
+          "us-isof-east-1": {
+            description: "US ISOF EAST"
+          },
+          "us-isof-south-1": {
+            description: "US ISOF SOUTH"
+          }
+        }
+      },
+      {
+        id: "aws-us-gov",
+        outputs: {
+          dnsSuffix: "amazonaws.com",
+          dualStackDnsSuffix: "api.aws",
+          implicitGlobalRegion: "us-gov-west-1",
+          name: "aws-us-gov",
+          supportsDualStack: true,
+          supportsFIPS: true
+        },
+        regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
+        regions: {
+          "aws-us-gov-global": {
+            description: "aws-us-gov global region"
+          },
+          "us-gov-east-1": {
+            description: "AWS GovCloud (US-East)"
+          },
+          "us-gov-west-1": {
+            description: "AWS GovCloud (US-West)"
+          }
+        }
+      }
+    ];
+    var version = "1.1";
+    var partitionsInfo = {
+      partitions,
+      version
+    };
+    var selectedPartitionsInfo = partitionsInfo;
+    var selectedUserAgentPrefix = "";
+    var partition = (value) => {
+      const { partitions: partitions2 } = selectedPartitionsInfo;
+      for (const partition2 of partitions2) {
+        const { regions, outputs } = partition2;
+        for (const [region, regionData] of Object.entries(regions)) {
+          if (region === value) {
+            return {
+              ...outputs,
+              ...regionData
+            };
+          }
+        }
+      }
+      for (const partition2 of partitions2) {
+        const { regionRegex, outputs } = partition2;
+        if (new RegExp(regionRegex).test(value)) {
+          return {
+            ...outputs
+          };
+        }
+      }
+      const DEFAULT_PARTITION = partitions2.find((partition2) => partition2.id === "aws");
+      if (!DEFAULT_PARTITION) {
+        throw new Error("Provided region was not found in the partition array or regex, and default partition with id 'aws' doesn't exist.");
+      }
+      return {
+        ...DEFAULT_PARTITION.outputs
+      };
+    };
+    var setPartitionInfo = (partitionsInfo2, userAgentPrefix = "") => {
+      selectedPartitionsInfo = partitionsInfo2;
+      selectedUserAgentPrefix = userAgentPrefix;
+    };
+    var useDefaultPartitionInfo = () => {
+      setPartitionInfo(partitionsInfo, "");
+    };
+    var getUserAgentPrefix = () => selectedUserAgentPrefix;
+    var awsEndpointFunctions4 = {
+      isVirtualHostableS3Bucket,
+      parseArn,
+      partition
+    };
+    utilEndpoints.customEndpointFunctions.aws = awsEndpointFunctions4;
+    var resolveDefaultAwsRegionalEndpointsConfig = (input) => {
+      if (typeof input.endpointProvider !== "function") {
+        throw new Error("@aws-sdk/util-endpoint - endpointProvider and endpoint missing in config for this client.");
+      }
+      const { endpoint } = input;
+      if (endpoint === void 0) {
+        input.endpoint = async () => {
+          return toEndpointV1(input.endpointProvider({
+            Region: typeof input.region === "function" ? await input.region() : input.region,
+            UseDualStack: typeof input.useDualstackEndpoint === "function" ? await input.useDualstackEndpoint() : input.useDualstackEndpoint,
+            UseFIPS: typeof input.useFipsEndpoint === "function" ? await input.useFipsEndpoint() : input.useFipsEndpoint,
+            Endpoint: void 0
+          }, { logger: input.logger }));
+        };
+      }
+      return input;
+    };
+    var toEndpointV1 = (endpoint) => urlParser.parseUrl(endpoint.url);
+    Object.defineProperty(exports2, "EndpointError", {
+      enumerable: true,
+      get: function() {
+        return utilEndpoints.EndpointError;
+      }
+    });
+    Object.defineProperty(exports2, "isIpAddress", {
+      enumerable: true,
+      get: function() {
+        return utilEndpoints.isIpAddress;
+      }
+    });
+    Object.defineProperty(exports2, "resolveEndpoint", {
+      enumerable: true,
+      get: function() {
+        return utilEndpoints.resolveEndpoint;
+      }
+    });
+    exports2.awsEndpointFunctions = awsEndpointFunctions4;
+    exports2.getUserAgentPrefix = getUserAgentPrefix;
+    exports2.partition = partition;
+    exports2.resolveDefaultAwsRegionalEndpointsConfig = resolveDefaultAwsRegionalEndpointsConfig;
+    exports2.setPartitionInfo = setPartitionInfo;
+    exports2.toEndpointV1 = toEndpointV1;
+    exports2.useDefaultPartitionInfo = useDefaultPartitionInfo;
+  }
+});
+
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/ruleset.js
 var require_ruleset3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/ruleset.js"(exports2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/ruleset.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ruleSet = void 0;
@@ -57350,13 +57677,13 @@ var require_ruleset3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/endpointResolver.js
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/endpointResolver.js
 var require_endpointResolver3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/endpointResolver.js"(exports2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/endpoint/endpointResolver.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.defaultEndpointResolver = void 0;
-    var util_endpoints_1 = require_dist_cjs36();
+    var util_endpoints_1 = require_dist_cjs73();
     var util_endpoints_2 = require_dist_cjs33();
     var ruleset_1 = require_ruleset3();
     var cache4 = new util_endpoints_2.EndpointCache({
@@ -57374,9 +57701,9 @@ var require_endpointResolver3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.shared.js
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.shared.js
 var require_runtimeConfig_shared3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.shared.js"(exports2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.shared.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getRuntimeConfig = void 0;
@@ -57428,9 +57755,9 @@ var require_runtimeConfig_shared3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.js
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.js
 var require_runtimeConfig3 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.js"(exports2) {
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/runtimeConfig.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getRuntimeConfig = void 0;
@@ -57486,9 +57813,9 @@ var require_runtimeConfig3 = __commonJS({
   }
 });
 
-// node_modules/@aws-sdk/client-cognito-identity/dist-cjs/index.js
-var require_dist_cjs73 = __commonJS({
-  "node_modules/@aws-sdk/client-cognito-identity/dist-cjs/index.js"(exports2) {
+// node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/index.js
+var require_dist_cjs74 = __commonJS({
+  "node_modules/@aws-sdk/credential-provider-cognito-identity/node_modules/@aws-sdk/client-cognito-identity/dist-cjs/index.js"(exports2) {
     "use strict";
     var middlewareHostHeader = require_dist_cjs27();
     var middlewareLogger = require_dist_cjs28();
@@ -57881,7 +58208,7 @@ var require_dist_cjs73 = __commonJS({
     var _hE4 = "httpError";
     var _m3 = "message";
     var _s4 = "server";
-    var _sm3 = "smithy.ts.sdk.synthetic.com.amazonaws.cognitoidentity";
+    var _sm = "smithy.ts.sdk.synthetic.com.amazonaws.cognitoidentity";
     var n04 = "com.amazonaws.cognitoidentity";
     var IdentityProviderToken = [0, n04, _IPT, 8, 0];
     var OIDCToken = [0, n04, _OIDCT, 8, 0];
@@ -58380,8 +58707,8 @@ var require_dist_cjs73 = __commonJS({
       []
     ];
     var __Unit = "unit";
-    var CognitoIdentityServiceException$ = [-3, _sm3, "CognitoIdentityServiceException", 0, [], []];
-    schema2.TypeRegistry.for(_sm3).registerError(CognitoIdentityServiceException$, CognitoIdentityServiceException);
+    var CognitoIdentityServiceException$ = [-3, _sm, "CognitoIdentityServiceException", 0, [], []];
+    schema2.TypeRegistry.for(_sm).registerError(CognitoIdentityServiceException$, CognitoIdentityServiceException);
     var CognitoIdentityProviderList = [
       1,
       n04,
@@ -58715,6 +59042,7 @@ var require_dist_cjs73 = __commonJS({
       return [middlewareEndpoint.getEndpointPlugin(config, Command.getEndpointParameterInstructions())];
     }).s("AWSCognitoIdentityService", "UpdateIdentityPool", {}).n("CognitoIdentityClient", "UpdateIdentityPoolCommand").sc(UpdateIdentityPool$).build() {
     };
+    var paginateListIdentityPools = core6.createPaginator(CognitoIdentityClient, ListIdentityPoolsCommand, "NextToken", "NextToken", "MaxResults");
     var commands4 = {
       CreateIdentityPoolCommand,
       DeleteIdentitiesCommand,
@@ -58740,10 +59068,12 @@ var require_dist_cjs73 = __commonJS({
       UntagResourceCommand,
       UpdateIdentityPoolCommand
     };
+    var paginators = {
+      paginateListIdentityPools
+    };
     var CognitoIdentity = class extends CognitoIdentityClient {
     };
-    smithyClient.createAggregatedClient(commands4, CognitoIdentity);
-    var paginateListIdentityPools = core6.createPaginator(CognitoIdentityClient, ListIdentityPoolsCommand, "NextToken", "NextToken", "MaxResults");
+    smithyClient.createAggregatedClient(commands4, CognitoIdentity, { paginators });
     var AmbiguousRoleResolutionType = {
       AUTHENTICATED_ROLE: "AuthenticatedRole",
       DENY: "Deny"
@@ -58904,7 +59234,7 @@ var require_dist_cjs73 = __commonJS({
 var require_loadCognitoIdentity_BPNvueUJ = __commonJS({
   "node_modules/@aws-sdk/credential-provider-cognito-identity/dist-cjs/loadCognitoIdentity-BPNvueUJ.js"(exports2) {
     "use strict";
-    var clientCognitoIdentity = require_dist_cjs73();
+    var clientCognitoIdentity = require_dist_cjs74();
     Object.defineProperty(exports2, "CognitoIdentityClient", {
       enumerable: true,
       get: function() {
@@ -58927,7 +59257,7 @@ var require_loadCognitoIdentity_BPNvueUJ = __commonJS({
 });
 
 // node_modules/@aws-sdk/credential-provider-cognito-identity/dist-cjs/index.js
-var require_dist_cjs74 = __commonJS({
+var require_dist_cjs75 = __commonJS({
   "node_modules/@aws-sdk/credential-provider-cognito-identity/dist-cjs/index.js"(exports2) {
     "use strict";
     var propertyProvider = require_dist_cjs17();
@@ -59131,7 +59461,7 @@ var require_fromCognitoIdentity = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromCognitoIdentity = void 0;
-    var credential_provider_cognito_identity_1 = require_dist_cjs74();
+    var credential_provider_cognito_identity_1 = require_dist_cjs75();
     var fromCognitoIdentity = (options) => (0, credential_provider_cognito_identity_1.fromCognitoIdentity)({
       ...options
     });
@@ -59145,7 +59475,7 @@ var require_fromCognitoIdentityPool = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fromCognitoIdentityPool = void 0;
-    var credential_provider_cognito_identity_1 = require_dist_cjs74();
+    var credential_provider_cognito_identity_1 = require_dist_cjs75();
     var fromCognitoIdentityPool = (options) => (0, credential_provider_cognito_identity_1.fromCognitoIdentityPool)({
       ...options
     });
@@ -59489,7 +59819,7 @@ var require_fromWebToken2 = __commonJS({
 });
 
 // node_modules/@aws-sdk/credential-providers/dist-cjs/index.js
-var require_dist_cjs75 = __commonJS({
+var require_dist_cjs76 = __commonJS({
   "node_modules/@aws-sdk/credential-providers/dist-cjs/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -59526,7 +59856,7 @@ var fs3 = __toESM(require("fs"));
 var core5 = __toESM(require_core());
 var import_github3 = __toESM(require_github());
 var import_client_s33 = __toESM(require_dist_cjs72());
-var import_credential_providers = __toESM(require_dist_cjs75());
+var import_credential_providers = __toESM(require_dist_cjs76());
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
