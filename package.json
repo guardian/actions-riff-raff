@@ -32,7 +32,7 @@
     "@guardian/tsconfig": "^1.0.1",
     "@types/jest": "30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "24.10.1",
+    "@types/node": "25.2.3",
     "eslint": "9.39.2",
     "eslint-plugin-prettier": "5.5.5",
     "jest": "30.2.0",
