@@ -20,6 +20,9 @@ updates:
       # adopting it requires a refactor of our project
       - dependency-name: "@actions/core"
         versions: [ ">=3.0.0" ]
+      # @actions/github v7+ is ESM-only and incompatible with our ts-jest/CJS configuration
+      - dependency-name: "@actions/github"
+        versions: [ ">=7.0.0" ]
 
   - package-ecosystem: 'github-actions'
     directory: '/'
