@@ -190,6 +190,49 @@ const getRoleArn = (): string => {
 	return roleArn;
 };
 
+/**
+ * Validates that the deployment names in contentDirectories match
+ * the deployment names defined in riff-raff.yaml.
+ *
+ * This catches configuration mismatches early at build time rather
+ * than at deploy time when the error would be more obscure.
+ */
+export const validateDeploymentNames = (
+	riffRaffYaml: RiffraffYaml,
+	deployments: Deployment[],
+): void => {
+	const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
+	const contentDirNames = new Set(deployments.map((d) => d.name));
+
+	const missingInYaml = deployments
+		.filter((d) => !yamlDeploymentNames.has(d.name))
+		.map((d) => d.name);
+
+	const missingInContentDirs = Object.keys(riffRaffYaml.deployments).filter(
+		(name) => !contentDirNames.has(name),
+	);
+
+	const errors: string[] = [];
+
+	if (missingInYaml.length > 0) {
+		errors.push(
+			`Content directories [${missingInYaml.join(', ')}] are not defined in riff-raff.yaml deployments.`,
+		);
+	}
+
+	if (missingInContentDirs.length > 0) {
+		errors.push(
+			`Deployments [${missingInContentDirs.join(', ')}] in riff-raff.yaml have no matching content directories.`,
+		);
+	}
+
+	if (errors.length > 0) {
+		throw new Error(
+			`Deployment name mismatch between riff-raff.yaml and contentDirectories:\n${errors.join('\n')}`,
+		);
+	}
+};
+
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
@@ -198,6 +241,9 @@ export function getConfiguration(): Configuration {
 	const buildNumberInput = getInput('buildNumber');
 	const buildNumberOffset = getInput('buildNumberOffset') ?? '0';
 	const stagingDirInput = getInput('stagingDir');
+	const deployments = getDeployments();
+
+	validateDeploymentNames(riffRaffYaml, deployments);
 
 	const baseBuildNumber =
 		buildNumberInput ?? envOrUndefined('GITHUB_RUN_NUMBER') ?? 'dev';
@@ -216,7 +262,7 @@ export function getConfiguration(): Configuration {
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
-		deployments: getDeployments(),
+		deployments,
 		stagingDirInput,
 		githubToken: githubToken(),
 		pullRequestComment: {
