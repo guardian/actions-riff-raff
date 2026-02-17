@@ -191,44 +191,29 @@ const getRoleArn = (): string => {
 };
 
 /**
- * Validates that the deployment names in contentDirectories match
- * the deployment names defined in riff-raff.yaml.
+ * Validates that content directory names have corresponding deployments
+ * defined in riff-raff.yaml.
  *
  * This catches configuration mismatches early at build time rather
  * than at deploy time when the error would be more obscure.
+ *
+ * Note: The check is one-directional. Deployments in riff-raff.yaml
+ * may not have content directories (e.g., deployments using `actions`
+ * that don't require artifacts).
  */
 export const validateDeploymentNames = (
 	riffRaffYaml: RiffraffYaml,
 	deployments: Deployment[],
 ): void => {
 	const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
-	const contentDirNames = new Set(deployments.map((d) => d.name));
 
 	const missingInYaml = deployments
 		.filter((d) => !yamlDeploymentNames.has(d.name))
 		.map((d) => d.name);
 
-	const missingInContentDirs = Object.keys(riffRaffYaml.deployments).filter(
-		(name) => !contentDirNames.has(name),
-	);
-
-	const errors: string[] = [];
-
 	if (missingInYaml.length > 0) {
-		errors.push(
-			`Content directories [${missingInYaml.join(', ')}] are not defined in riff-raff.yaml deployments.`,
-		);
-	}
-
-	if (missingInContentDirs.length > 0) {
-		errors.push(
-			`Deployments [${missingInContentDirs.join(', ')}] in riff-raff.yaml have no matching content directories.`,
-		);
-	}
-
-	if (errors.length > 0) {
 		throw new Error(
-			`Deployment name mismatch between riff-raff.yaml and contentDirectories:\n${errors.join('\n')}`,
+			`Content directories [${missingInYaml.join(', ')}] are not defined in riff-raff.yaml deployments.`,
 		);
 	}
 };

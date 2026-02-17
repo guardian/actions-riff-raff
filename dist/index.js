@@ -80863,26 +80863,10 @@ var getRoleArn = () => {
 };
 var validateDeploymentNames = (riffRaffYaml, deployments) => {
   const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
-  const contentDirNames = new Set(deployments.map((d4) => d4.name));
   const missingInYaml = deployments.filter((d4) => !yamlDeploymentNames.has(d4.name)).map((d4) => d4.name);
-  const missingInContentDirs = Object.keys(riffRaffYaml.deployments).filter(
-    (name) => !contentDirNames.has(name)
-  );
-  const errors = [];
   if (missingInYaml.length > 0) {
-    errors.push(
-      `Content directories [${missingInYaml.join(", ")}] are not defined in riff-raff.yaml deployments.`
-    );
-  }
-  if (missingInContentDirs.length > 0) {
-    errors.push(
-      `Deployments [${missingInContentDirs.join(", ")}] in riff-raff.yaml have no matching content directories.`
-    );
-  }
-  if (errors.length > 0) {
     throw new Error(
-      `Deployment name mismatch between riff-raff.yaml and contentDirectories:
-${errors.join("\n")}`
+      `Content directories [${missingInYaml.join(", ")}] are not defined in riff-raff.yaml deployments.`
     );
   }
 };

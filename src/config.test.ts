@@ -41,13 +41,16 @@ describe('validateDeploymentNames', () => {
 		);
 	});
 
-	it('should fail when riff-raff.yaml deployment has no matching content directory', () => {
+	it('should pass when riff-raff.yaml deployment has no matching content directory (e.g., uses actions)', () => {
 		const riffRaffYaml: RiffraffYaml = {
 			stacks: ['deploy'],
 			regions: ['eu-west-1'],
 			deployments: {
 				upload: { type: 'aws-s3' },
-				lambda: { type: 'aws-lambda' },
+				'cloudformation-action': {
+					type: 'cloud-formation',
+					actions: ['update'],
+				},
 			},
 		};
 
@@ -55,36 +58,21 @@ describe('validateDeploymentNames', () => {
 			{ name: 'upload', sources: ['dist/upload'] },
 		];
 
-		expect(() => validateDeploymentNames(riffRaffYaml, deployments)).toThrow(
-			'Deployments [lambda] in riff-raff.yaml have no matching content directories.',
-		);
+		expect(() =>
+			validateDeploymentNames(riffRaffYaml, deployments),
+		).not.toThrow();
 	});
 
-	it('should report both types of mismatches when present', () => {
+	it('should pass when content directories is empty', () => {
 		const riffRaffYaml: RiffraffYaml = {
 			stacks: ['deploy'],
 			regions: ['eu-west-1'],
 			deployments: {
-				upload: { type: 'aws-s3' },
-				lambda: { type: 'aws-lambda' },
+				'cloudformation-action': {
+					type: 'cloud-formation',
+					actions: ['update'],
+				},
 			},
-		};
-
-		const deployments: Deployment[] = [
-			{ name: 'upload', sources: ['dist/upload'] },
-			{ name: 'typo-lambda', sources: ['dist/lambda'] },
-		];
-
-		expect(() => validateDeploymentNames(riffRaffYaml, deployments)).toThrow(
-			'Deployment name mismatch between riff-raff.yaml and contentDirectories:',
-		);
-	});
-
-	it('should pass when deployments are empty on both sides', () => {
-		const riffRaffYaml: RiffraffYaml = {
-			stacks: ['deploy'],
-			regions: ['eu-west-1'],
-			deployments: {},
 		};
 
 		const deployments: Deployment[] = [];
@@ -92,5 +80,24 @@ describe('validateDeploymentNames', () => {
 		expect(() =>
 			validateDeploymentNames(riffRaffYaml, deployments),
 		).not.toThrow();
+	});
+
+	it('should fail with multiple missing content directories', () => {
+		const riffRaffYaml: RiffraffYaml = {
+			stacks: ['deploy'],
+			regions: ['eu-west-1'],
+			deployments: {
+				upload: { type: 'aws-s3' },
+			},
+		};
+
+		const deployments: Deployment[] = [
+			{ name: 'typo-upload', sources: ['dist/upload'] },
+			{ name: 'nonexistent', sources: ['dist/other'] },
+		];
+
+		expect(() => validateDeploymentNames(riffRaffYaml, deployments)).toThrow(
+			'Content directories [typo-upload, nonexistent] are not defined in riff-raff.yaml deployments.',
+		);
 	});
 });
