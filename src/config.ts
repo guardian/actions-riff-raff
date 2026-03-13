@@ -190,6 +190,37 @@ const getRoleArn = (): string => {
 	return roleArn;
 };
 
+/**
+ * Validates that content directory names have corresponding deployments
+ * defined in riff-raff.yaml.
+ *
+ * The check is one-directional: deployments in riff-raff.yaml may not have
+ * content directories (e.g., deployments using `actions` that don't require
+ * artifacts).
+ */
+export function validateDeploymentNames(
+	riffRaffYaml: RiffraffYaml,
+	deployments: Deployment[],
+): void {
+	const validNames = new Set(
+		Object.entries(riffRaffYaml.deployments).map(([name, config]) =>
+			typeof config['contentDirectory'] === 'string'
+				? config['contentDirectory']
+				: name,
+		),
+	);
+
+	const missingInYaml = deployments
+		.map((d) => d.name)
+		.filter((name) => !validNames.has(name));
+
+	if (missingInYaml.length > 0) {
+		throw new Error(
+			`Content directories [${missingInYaml.join(', ')}] are not defined in riff-raff.yaml deployments.`,
+		);
+	}
+}
+
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
@@ -198,6 +229,9 @@ export function getConfiguration(): Configuration {
 	const buildNumberInput = getInput('buildNumber');
 	const buildNumberOffset = getInput('buildNumberOffset') ?? '0';
 	const stagingDirInput = getInput('stagingDir');
+	const deployments = getDeployments();
+
+	validateDeploymentNames(riffRaffYaml, deployments);
 
 	const baseBuildNumber =
 		buildNumberInput ?? envOrUndefined('GITHUB_RUN_NUMBER') ?? 'dev';
@@ -216,7 +250,7 @@ export function getConfiguration(): Configuration {
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
 		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
-		deployments: getDeployments(),
+		deployments,
 		stagingDirInput,
 		githubToken: githubToken(),
 		pullRequestComment: {

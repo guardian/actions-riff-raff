@@ -80879,6 +80879,19 @@ var getRoleArn = () => {
   }
   return roleArn;
 };
+function validateDeploymentNames(riffRaffYaml, deployments) {
+  const validNames = new Set(
+    Object.entries(riffRaffYaml.deployments).map(
+      ([name, config]) => typeof config["contentDirectory"] === "string" ? config["contentDirectory"] : name
+    )
+  );
+  const missingInYaml = deployments.map((d4) => d4.name).filter((name) => !validNames.has(name));
+  if (missingInYaml.length > 0) {
+    throw new Error(
+      `Content directories [${missingInYaml.join(", ")}] are not defined in riff-raff.yaml deployments.`
+    );
+  }
+}
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
   const projectName = getProjectName(riffRaffYaml);
@@ -80887,6 +80900,8 @@ function getConfiguration() {
   const buildNumberInput = getInput2("buildNumber");
   const buildNumberOffset = getInput2("buildNumberOffset") ?? "0";
   const stagingDirInput = getInput2("stagingDir");
+  const deployments = getDeployments();
+  validateDeploymentNames(riffRaffYaml, deployments);
   const baseBuildNumber = buildNumberInput ?? envOrUndefined("GITHUB_RUN_NUMBER") ?? "dev";
   const buildNumber = offsetBuildNumber(baseBuildNumber, buildNumberOffset);
   const commentingStage = getInput2("commentingStage") ?? "CODE";
@@ -80900,7 +80915,7 @@ function getConfiguration() {
     branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
     revision: envOrUndefined("GITHUB_SHA") ?? "dev",
-    deployments: getDeployments(),
+    deployments,
     stagingDirInput,
     githubToken: githubToken(),
     pullRequestComment: {
