@@ -202,11 +202,17 @@ export function validateDeploymentNames(
 	riffRaffYaml: RiffraffYaml,
 	deployments: Deployment[],
 ): void {
-	const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
+	const validNames = new Set(
+		Object.entries(riffRaffYaml.deployments).map(([name, config]) =>
+			typeof config['contentDirectory'] === 'string'
+				? config['contentDirectory']
+				: name,
+		),
+	);
 
 	const missingInYaml = deployments
 		.map((d) => d.name)
-		.filter((name) => !yamlDeploymentNames.has(name));
+		.filter((name) => !validNames.has(name));
 
 	if (missingInYaml.length > 0) {
 		throw new Error(

@@ -80861,15 +80861,19 @@ var getRoleArn = () => {
   }
   return roleArn;
 };
-var validateDeploymentNames = (riffRaffYaml, deployments) => {
-  const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
-  const missingInYaml = deployments.filter((d4) => !yamlDeploymentNames.has(d4.name)).map((d4) => d4.name);
+function validateDeploymentNames(riffRaffYaml, deployments) {
+  const validNames = new Set(
+    Object.entries(riffRaffYaml.deployments).flatMap(
+      ([name, config]) => typeof config["contentDirectory"] === "string" ? [name, config["contentDirectory"]] : [name]
+    )
+  );
+  const missingInYaml = deployments.map((d4) => d4.name).filter((name) => !validNames.has(name));
   if (missingInYaml.length > 0) {
     throw new Error(
       `Content directories [${missingInYaml.join(", ")}] are not defined in riff-raff.yaml deployments.`
     );
   }
-};
+}
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
   const projectName = getProjectName(riffRaffYaml);
