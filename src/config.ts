@@ -194,29 +194,26 @@ const getRoleArn = (): string => {
  * Validates that content directory names have corresponding deployments
  * defined in riff-raff.yaml.
  *
- * This catches configuration mismatches early at build time rather
- * than at deploy time when the error would be more obscure.
- *
- * Note: The check is one-directional. Deployments in riff-raff.yaml
- * may not have content directories (e.g., deployments using `actions`
- * that don't require artifacts).
+ * The check is one-directional: deployments in riff-raff.yaml may not have
+ * content directories (e.g., deployments using `actions` that don't require
+ * artifacts).
  */
-export const validateDeploymentNames = (
+export function validateDeploymentNames(
 	riffRaffYaml: RiffraffYaml,
 	deployments: Deployment[],
-): void => {
+): void {
 	const yamlDeploymentNames = new Set(Object.keys(riffRaffYaml.deployments));
 
 	const missingInYaml = deployments
-		.filter((d) => !yamlDeploymentNames.has(d.name))
-		.map((d) => d.name);
+		.map((d) => d.name)
+		.filter((name) => !yamlDeploymentNames.has(name));
 
 	if (missingInYaml.length > 0) {
 		throw new Error(
 			`Content directories [${missingInYaml.join(', ')}] are not defined in riff-raff.yaml deployments.`,
 		);
 	}
-};
+}
 
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();

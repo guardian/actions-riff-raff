@@ -33,24 +33,21 @@ describe('validateDeploymentNames', () => {
 
 		const deployments: Deployment[] = [
 			{ name: 'upload', sources: ['dist/upload'] },
-			{ name: 'misnamed-deployment', sources: ['dist/lambda'] },
+			{ name: 'missing-deployment', sources: ['dist/lambda'] },
 		];
 
 		expect(() => validateDeploymentNames(riffRaffYaml, deployments)).toThrow(
-			'Content directories [misnamed-deployment] are not defined in riff-raff.yaml deployments.',
+			'Content directories [missing-deployment] are not defined in riff-raff.yaml deployments.',
 		);
 	});
 
-	it('should pass when riff-raff.yaml deployment has no matching content directory (e.g., uses actions)', () => {
+	it('should pass when riff-raff.yaml deployment has no matching content directory', () => {
 		const riffRaffYaml: RiffraffYaml = {
 			stacks: ['deploy'],
 			regions: ['eu-west-1'],
 			deployments: {
 				upload: { type: 'aws-s3' },
-				'cloudformation-action': {
-					type: 'cloud-formation',
-					actions: ['update'],
-				},
+				lambda: { type: 'aws-lambda' },
 			},
 		};
 
