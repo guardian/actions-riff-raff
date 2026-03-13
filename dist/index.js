@@ -80863,8 +80863,8 @@ var getRoleArn = () => {
 };
 function validateDeploymentNames(riffRaffYaml, deployments) {
   const validNames = new Set(
-    Object.entries(riffRaffYaml.deployments).flatMap(
-      ([name, config]) => typeof config["contentDirectory"] === "string" ? [name, config["contentDirectory"]] : [name]
+    Object.entries(riffRaffYaml.deployments).map(
+      ([name, config]) => typeof config["contentDirectory"] === "string" ? config["contentDirectory"] : name
     )
   );
   const missingInYaml = deployments.map((d4) => d4.name).filter((name) => !validNames.has(name));
