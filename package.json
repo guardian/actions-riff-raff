@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --packages=bundle --outfile=dist/index.js",
-    "test": "jest",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "tsc": "tsc --noEmit",
     "lint": "eslint src --ext .ts --no-error-on-unmatched-pattern",
     "format": "prettier --check \"src/**/*.ts\"",
@@ -41,7 +41,8 @@
   },
   "prettier": "@guardian/prettier",
   "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node"
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "setupFiles": ["./src/jest.setup.ts"]
   }
 }
