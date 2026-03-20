@@ -167,8 +167,8 @@ export const main = async (options: Options): Promise<void> => {
 	}
 };
 
-// execute only if invoked as main script (rather than test)
-if (require.main === module) {
+// Execute only when invoked as the main CJS script (not under test/ESM).
+if (typeof require !== 'undefined' && require.main === module) {
 	main({ WithSummary: true }).catch((err) => {
 		if (err instanceof Error) {
 			core.error(err);
