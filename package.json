@@ -42,7 +42,6 @@
   "prettier": "@guardian/prettier",
   "jest": {
     "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "node",
-    "setupFiles": ["./src/jest.setup.ts"]
+    "testEnvironment": "node"
   }
 }
