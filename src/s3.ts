@@ -1,11 +1,12 @@
 import * as fs from 'fs';
+import type { Readable } from 'stream';
 import * as core from '@actions/core';
 import type { S3Client } from '@aws-sdk/client-s3';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import { walk } from './file';
 
 export interface Store {
-	put: (data: Buffer, bucket: string, key: string) => Promise<void>;
+	put: (data: Buffer | Readable, bucket: string, key: string) => Promise<void>;
 }
 
 export class S3Store implements Store {
@@ -15,14 +16,21 @@ export class S3Store implements Store {
 		this.client = client;
 	}
 
-	async put(data: Buffer, bucket: string, key: string): Promise<void> {
-		const cmd = new PutObjectCommand({
-			Body: data,
-			Key: key,
-			Bucket: bucket,
+	async put(
+		data: Buffer | Readable,
+		bucket: string,
+		key: string,
+	): Promise<void> {
+		const upload = new Upload({
+			client: this.client,
+			params: {
+				Body: data,
+				Key: key,
+				Bucket: bucket,
+			},
 		});
 
-		await this.client.send(cmd);
+		await upload.done();
 	}
 }
 
@@ -33,7 +41,7 @@ export const sync = async (
 	keyPrefix: string,
 ): Promise<void> => {
 	const responses = walk(dir, (filePath: string) => {
-		const data = fs.readFileSync(filePath);
+		const data = fs.createReadStream(filePath);
 		const key = keyPrefix + filePath.substring(dir.length);
 
 		core.info(`s3 sync: ${filePath} -> ${key}`);
