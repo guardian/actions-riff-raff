@@ -6,7 +6,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "monthly"
+      interval: "quarterly"
 
     # We've seen issues with versions of `@aws-sdk/client-s3` later than 3.703.0 where put object requests fail with:
     #  > RequestTimeout: Your socket connection to the server was not read from or written to within the timeout period. Idle connections will be closed.
@@ -27,4 +27,4 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'monthly'
+      interval: 'quarterly'
