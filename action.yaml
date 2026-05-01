@@ -43,5 +43,5 @@ inputs:
     description: Whether to comment on the pull request with Riff-Raff deployment links. See also `commentingStage`.
     default: 'true'
 runs:
-  using: node20
+  using: node24
   main: "dist/index.js"
