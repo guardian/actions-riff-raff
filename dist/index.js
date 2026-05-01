@@ -65943,6 +65943,14 @@ var getRoleArn = () => {
   }
   return roleArn;
 };
+var getRevision = () => {
+  if (context2.eventName === "pull_request") {
+    const payload2 = context2.payload;
+    return payload2.pull_request.head.sha;
+  } else {
+    return context2.sha;
+  }
+};
 function getConfiguration() {
   const riffRaffYaml = getRiffRaffYaml();
   const projectName = getProjectName(riffRaffYaml);
@@ -65963,7 +65971,7 @@ function getConfiguration() {
     buildNumber,
     branchName: branchName() ?? "dev",
     vcsURL: vcsURL() ?? "dev",
-    revision: envOrUndefined("GITHUB_SHA") ?? "dev",
+    revision: getRevision(),
     deployments: getDeployments(),
     stagingDirInput,
     githubToken: githubToken(),
