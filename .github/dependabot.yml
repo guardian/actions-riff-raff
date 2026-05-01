@@ -7,15 +7,11 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "quarterly"
-
-    # We've seen issues with versions of `@aws-sdk/client-s3` later than 3.703.0 where put object requests fail with:
-    #  > RequestTimeout: Your socket connection to the server was not read from or written to within the timeout period. Idle connections will be closed.
-    # Attempts to increase the timeout to 10 seconds was not successful for all cases.
-    # Prevent Dependabot from issuing updates to any of the AWS SDK libraries being used (listed individually, as Dependabot cannot ignore wildcards).
-    # Once we've identified and patched the root cause, we can revert this.
+    groups:
+      aws-sdk:
+        patterns:
+          - '@aws-sdk/*'
     ignore:
-      - dependency-name: "@aws-sdk/client-s3"
-      - dependency-name: "@aws-sdk/credential-providers"
       # @actions/core has dropped support for CJS as of 3.0.0 https://github.com/actions/toolkit/blob/main/packages/core/RELEASES.md
       # adopting it requires a refactor of our project
       - dependency-name: "@actions/core"
@@ -23,7 +19,6 @@ updates:
       # @actions/github v7+ is ESM-only and incompatible with our ts-jest/CJS configuration
       - dependency-name: "@actions/github"
         versions: [ ">=7.0.0" ]
-
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
