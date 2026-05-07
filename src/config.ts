@@ -1,4 +1,6 @@
 import * as core from '@actions/core';
+import { context } from '@actions/github';
+import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 import * as yaml from 'js-yaml';
 import { read } from './file';
 import type { Deployment, RiffraffYaml } from './riffraff';
@@ -190,6 +192,16 @@ const getRoleArn = (): string => {
 	return roleArn;
 };
 
+const getRevision = (): string => {
+	if (context.eventName === 'pull_request') {
+		// See https://github.com/orgs/community/discussions/26325
+		const payload = context.payload as PullRequestEvent;
+		return payload.pull_request.head.sha;
+	} else {
+		return context.sha;
+	}
+};
+
 export function getConfiguration(): Configuration {
 	const riffRaffYaml = getRiffRaffYaml();
 	const projectName = getProjectName(riffRaffYaml);
@@ -215,7 +227,7 @@ export function getConfiguration(): Configuration {
 		buildNumber,
 		branchName: branchName() ?? 'dev',
 		vcsURL: vcsURL() ?? 'dev',
-		revision: envOrUndefined('GITHUB_SHA') ?? 'dev',
+		revision: getRevision(),
 		deployments: getDeployments(),
 		stagingDirInput,
 		githubToken: githubToken(),
