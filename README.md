@@ -64,22 +64,26 @@ jobs:
 
 ## Available inputs
 
-### `app`
-*Required* (unless setting `projectName`)
-
-The app name, used for the creating Riff-Raff project name with the format `stack::app`.
-Where `stack` is read from the provided `riff-raff.yaml` config.
-
-Note: If you have multiple stacks specified, use `projectName` instead.
-
 ### `roleArn`
 
-_Required_
+*Required*
 
 The ARN for a role that the action assumes using AssumeRoleWithWebIdentity. This is required to upload artifacts to the Riff-Raff bucket.
 
 ### `projectName`
-Used instead of `app` to override the default Riff-Raff project naming strategy.
+
+*Required*
+
+The recommended way to specify the riff raff name for your project. By convention this is often `<stack>::<app>`. Make sure this matches your entry in [the riffraff-platform repository](https://github.com/guardian/riffraff-platform).
+
+### `app`
+
+*Required* if you are not setting `projectName`.
+
+The app name, used for the creating Riff-Raff project name with the format `stack::app`.
+Where `stack` is read from the provided `riff-raff.yaml` config.
+
+Note: If you have multiple stacks specified, use `projectName` instead, and this may not work with automatically generated riff-raff.yaml configurations.
 
 ### `config`
 *Required* (unless setting `configPath`)
