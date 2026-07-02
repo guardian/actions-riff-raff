@@ -28,7 +28,7 @@
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "@guardian/eslint-config": "14.0.1",
+    "@guardian/eslint-config": "16.0.0",
     "@guardian/prettier": "^11.0.0",
     "@guardian/tsconfig": "^2.0.0",
     "@octokit/webhooks-definitions": "^3.68.1",
