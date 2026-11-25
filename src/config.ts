@@ -130,13 +130,20 @@ export const envOrUndefined = (variableName: string): string | undefined => {
 };
 
 const branchName = (): string | undefined => {
-	// `GITHUB_HEAD_REF` is only set for pull request events and represents the branch name (e.g. `feature-branch-1`).
-	// `GITHUB_REF` is the branch or tag ref that triggered the workflow (e.g. `refs/heads/feature-branch-1` or `refs/pull/259/merge`).
-	// Either can be the empty string ¯\_(ツ)_/¯
-	// See https://docs.github.com/en/actions/learn-github-actions/environment-variables
-	const branchName =
-		envOrUndefined('GITHUB_HEAD_REF') ?? envOrUndefined('GITHUB_REF');
-	return branchName ? branchName.replace('refs/heads/', '') : undefined;
+	if (context.eventName === 'pull_request') {
+		const payload = context.payload as PullRequestEvent;
+		const { head, number, base } = payload.pull_request;
+
+		// If a PR head ref is the branch which is configured for CD it will
+		// create a build which Riff-Raff will deploy automatically
+		if (base.repo.default_branch === head.ref) {
+			return `${head.ref}-PR-${number}`;
+		} else {
+			return head.ref;
+		}
+	} else {
+		return context.ref.replace('refs/heads/', '') || undefined;
+	}
 };
 
 const vcsURL = (): string | undefined => {
